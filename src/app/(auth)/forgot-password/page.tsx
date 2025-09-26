@@ -1,11 +1,8 @@
-import React from 'react'
+import React from "react";
+import PasswordResetOTP from "../../../features/auth/components/PasswordResetOtpInput";
 
 const page = () => {
-  return (
-    <div>
+  return <PasswordResetOTP />;
+};
 
-    </div>
-  )
-}
-
-export default page
+export default page;
