@@ -5,9 +5,12 @@ import { FcGoogle } from "react-icons/fc";
 import LabelInput from "./LabelInput";
 import { useForm } from "react-hook-form";
 import axios from "@/config/axios";
+import Cookies from "js-cookie";
+import { useDispatch } from "react-redux";
+import { setUser } from "../slice";
 
 const SigninForm = () => {
-
+  const dispatch = useDispatch();
   const { register, handleSubmit } = useForm()
 
   const onSubmit = (data: any) => {
@@ -15,12 +18,13 @@ const SigninForm = () => {
       email: data.email,
       password: data.password
     })
-    .then((res) => {
-      console.log(res)
-    })
-    .catch((err) => {
-      console.log(err)
-    })
+      .then((res) => {
+        Cookies.set("access", res.data.data.token);
+        dispatch(setUser(res.data.data.user))
+      })
+      .catch((err) => {
+        console.log(err)
+      })
   }
 
   return (

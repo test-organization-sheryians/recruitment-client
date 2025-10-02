@@ -36,11 +36,11 @@ axiosInstance.interceptors.response.use(
       if (
         !publicRoutes.includes(currentPath) &&
         (status === 401 ||
-        message.includes("unauthorized") ||
-        message.includes("token expired") ||
-        message.includes("unauthenticated"))
+          message.includes("unauthorized") ||
+          message.includes("token expired") ||
+          message.includes("unauthenticated"))
       ) {
-        Cookies.remove("refreshToken"); 
+        Cookies.remove("refreshToken");
         window.location.href = "/login";
       }
     }
