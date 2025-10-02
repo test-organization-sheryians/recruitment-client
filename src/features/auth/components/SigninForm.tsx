@@ -1,21 +1,46 @@
+"use client"
+
 import { CiMail } from "react-icons/ci";
 import { FcGoogle } from "react-icons/fc";
 import LabelInput from "./LabelInput";
+import { useForm } from "react-hook-form";
+import axios from "@/config/axios";
+import Cookies from "js-cookie";
+import { useDispatch } from "react-redux";
+import { setUser } from "../slice";
 
 const SigninForm = () => {
+  const dispatch = useDispatch();
+  const { register, handleSubmit } = useForm()
+
+  const onSubmit = (data: any) => {
+    axios.post(`/api/auth/login`, {
+      email: data.email,
+      password: data.password
+    })
+      .then((res) => {
+        Cookies.set("access", res.data.data.token);
+        dispatch(setUser(res.data.data.user))
+      })
+      .catch((err) => {
+        console.log(err)
+      })
+  }
+
   return (
     <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-10 px-[20%] flex flex-col justify-center">
       <h1 className="text-3xl font-semibold text-center text-gray-800">
         Sign in to Your Account
       </h1>
 
-      <form className="mt-8 space-y-5">
+      <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)}>
         {/* Email */}
         <LabelInput
           label="Email"
           placeholder="your email"
           type="email"
           id="email"
+          {...register("email")}
         />
 
         {/* Password */}
@@ -23,7 +48,8 @@ const SigninForm = () => {
           label="Password"
           placeholder="8+ characters"
           type="password"
-          id="email"
+          id="password"
+          {...register("password")}
         />
 
         {/* Continue Button */}
