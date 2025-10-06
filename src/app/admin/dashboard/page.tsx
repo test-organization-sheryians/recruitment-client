@@ -1,7 +1,8 @@
 import React from "react";
 import StatusCard from "@/features/admin/components/StatusCard";
-import ApplicantsList from "../../../features/admin/components/ApplicantsList";
+import ApplicantsList from "@/features/admin/components/ApplicantsList";
 import Navbar from "@/features/admin/components/Navbar";
+import Schedule from "@/features/admin/components/Schedule";
 
 export default function AdminDashboardPage() {
   return (
@@ -66,17 +67,7 @@ export default function AdminDashboardPage() {
 
             {/* ======= RIGHT SIDEBAR (TODAY'S SCHEDULE SECTION) ======= */}
             <aside className="col-span-12 lg:col-span-5">
-              <div className="h-full rounded-2xl bg-white p-4 border border-gray-600">
-                {/* Section Header (e.g., 'Schedule', Today Dropdown) */}
-                <div className="mb-4 h-8 rounded-lg bg-[#F5F7FA] border border-gray-600" />
-                {/* Timeline / Schedule Events */}
-                <div className="space-y-3">
-                  <div className="h-14 rounded-xl bg-[#F8FAFF] border border-gray-600" />
-                  <div className="h-14 rounded-xl bg-[#F8FAFF] border border-gray-600" />
-                  <div className="h-14 rounded-xl bg-[#F8FAFF] border border-gray-600" />
-                  <div className="h-14 rounded-xl bg-[#F8FAFF] border border-gray-600" />
-                </div>
-              </div>
+              <Schedule />
             </aside>
 
             {/* ======= APPLICANTS LIST SECTION ======= */}
