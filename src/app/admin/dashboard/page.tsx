@@ -1,6 +1,7 @@
 import React from "react";
 import StatusCard from "@/features/admin/components/StatusCard";
 import ApplicantsList from "../../../features/admin/components/ApplicantsList";
+import Navbar from "@/features/admin/components/Navbar";
 
 export default function AdminDashboardPage() {
   return (
@@ -19,17 +20,11 @@ export default function AdminDashboardPage() {
           {/* ======= TOP BAR (Dashboard Header, Search, Profile) ======= */}
           <div className="mb-4 grid grid-cols-12 gap-4">
             {/* Dashboard Title + Breadcrumb or Overview Header */}
-            <div className="col-span-8">
-              <div className="h-12 rounded-2xl bg-white border border-gray-600" />
+            <div className="col-span-12">
+              <Navbar />
             </div>
 
-            {/* Search Box / Notifications / Profile */}
-            <div className="col-span-2">
-              <div className="h-12 rounded-2xl bg-white border border-gray-600" />
-            </div>
-            <div className="col-span-2">
-              <div className="h-12 rounded-2xl bg-white border border-gray-600" />
-            </div>
+          
 
             {/* ===== KPI CARDS SECTION (Total Resumes, Shortlisted, etc.) ===== */}
             <div className="col-span-12 grid grid-cols-12 gap-4">
