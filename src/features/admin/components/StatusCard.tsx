@@ -20,7 +20,7 @@ const StatusCard: React.FC<StatusCardProps> = ({
   cardWidth = "w-[185px]",
 }) => {
   return (
-    <div className="h-screen w-full bg-[#E4E5E6] p-8 font-[gilroy]">
+    <div className=" bg-[#E4E5E6] font-[gilroy]">
       <div
         className={`group bg-white hover:border-2 hover:cursor-pointer transition-all ease-linear duration-75 border-[#719BDB] ${cardWidth} pr-4 pt-4 pl-2.5 pb-3 rounded-2xl`}
       >
