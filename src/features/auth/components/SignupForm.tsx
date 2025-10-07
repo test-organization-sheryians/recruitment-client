@@ -21,11 +21,11 @@ const SignupForm = () => {
       lastName: data.lastName,
       phoneNumber: data.phoneNumber,
       password: data.password,
-      confirmPassword: data.confirmPassword
     })
     .then((res) => {
       Cookies.set("access", res.data.data.token);
       dispatch(setUser(res.data.data.user))
+      window.location.href = "/ai-test/resume-upload"
     })
     .catch((err) => {
       console.log(err)
@@ -33,7 +33,7 @@ const SignupForm = () => {
   }
 
   return (
-    <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-[20%] px-[20%] flex flex-col justify-center">
+    <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-[20%] px-[10%] flex flex-col justify-center">
       <h1 className="text-2xl font-semibold text-center text-gray-800">
         Sign-up Account
       </h1>

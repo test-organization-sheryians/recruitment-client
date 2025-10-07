@@ -21,7 +21,7 @@ const LabelInput = React.forwardRef<HTMLInputElement, LabelInputProps>(({
     <div className="flex flex-col">
       <label
         htmlFor={_id}
-        className="text-gray-600 text-sm font-medium mb-1"
+        className="text-gray-600 text-sm font-medium mb-3"
       >
         {label}
       </label>
@@ -29,7 +29,7 @@ const LabelInput = React.forwardRef<HTMLInputElement, LabelInputProps>(({
         type={type}
         id={_id}
         placeholder={placeholder}
-        className="w-full text-base bg-[#DFECFF] rounded-base px-4 py-2.5 outline-none"
+        className="w-full text-base bg-[#DFECFF] rounded-base px-4 py-1 outline-none"
         ref={ref}
         {...rest}
       />

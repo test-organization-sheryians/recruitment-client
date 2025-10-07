@@ -21,6 +21,7 @@ const SigninForm = () => {
       .then((res) => {
         Cookies.set("access", res.data.data.token);
         dispatch(setUser(res.data.data.user))
+        window.location.href = "/ai-test/resume-upload"
       })
       .catch((err) => {
         console.log(err)
@@ -28,7 +29,7 @@ const SigninForm = () => {
   }
 
   return (
-    <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-10 px-[20%] flex flex-col justify-center">
+    <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-10 px-[10%] flex flex-col justify-center">
       <h1 className="text-3xl font-semibold text-center text-gray-800">
         Sign in to Your Account
       </h1>
