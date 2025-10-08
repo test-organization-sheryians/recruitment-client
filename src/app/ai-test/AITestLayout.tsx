@@ -1,5 +1,6 @@
 import React from "react";
 import Navbar from "@/components/Navbar";
+import SideBar from "@/features/dashboard/components/SideBar";
 
 interface AITestLayoutProps {
   children: React.ReactNode;
@@ -13,7 +14,7 @@ const AITestLayout = ({ children }: AITestLayoutProps) => {
     >
       <header className=" bg-white rounded-lg">
         <Navbar />
-      </header>
+      </header>  
 
       <div className="bg-white rounded-lg mt-3 overflow-y-auto">{children}</div>
     </div>
