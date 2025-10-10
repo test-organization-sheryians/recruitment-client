@@ -101,9 +101,9 @@ export default function ApplicantsList({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {rows.map((r) => (
+              {rows.map((r, idx) => (
                 <tr
-                  key={r.email}
+                  key={idx}
                   className="grid grid-cols-[1.6fr_1.1fr_1fr_1fr_1fr_1fr] items-center px-4 py-3"
                 >
                   <td>
