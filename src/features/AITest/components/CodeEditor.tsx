@@ -11,6 +11,7 @@ interface CodeEditorProps {
   onCodeChange: (code: string) => void;
   onLanguageChange: (language: string) => void;
   height?: number;
+  storageKey?: string;
 }
 
 const CodeEditor = ({ 
@@ -18,7 +19,8 @@ const CodeEditor = ({
   code, 
   onCodeChange, 
   onLanguageChange,
-  height = 256
+  height = 256,
+  storageKey
 }: CodeEditorProps) => {
   const [copied, setCopied] = useState(false);
   const [lineNumbers, setLineNumbers] = useState<number[]>([]);
@@ -26,13 +28,33 @@ const CodeEditor = ({
   const preRef = useRef<HTMLPreElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
 
-  
   const languageConfigs = {
     javascript: { placeholder: '// Write your JavaScript code here', extension: 'js' },
     python: { placeholder: '# Write your Python code here', extension: 'py' },
     java: { placeholder: '// Write your Java code here', extension: 'java' },
     cpp: { placeholder: '// Write your C++ code here', extension: 'cpp' }
   };
+
+  useEffect(() => {
+    if (storageKey && code !== '') {
+      localStorage.setItem(`${storageKey}_code`, code);
+      localStorage.setItem(`${storageKey}_language`, language);
+    }
+  }, [code, language, storageKey]);
+
+  useEffect(() => {
+    if (storageKey) {
+      const savedCode = localStorage.getItem(`${storageKey}_code`);
+      const savedLanguage = localStorage.getItem(`${storageKey}_language`);
+      
+      if (savedCode) {
+        onCodeChange(savedCode);
+      }
+      if (savedLanguage) {
+        onLanguageChange(savedLanguage);
+      }
+    }
+  }, [storageKey, onCodeChange, onLanguageChange]);
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newCode = e.target.value;
@@ -118,7 +140,6 @@ const CodeEditor = ({
       </div>
 
       <div className="relative flex font-mono text-sm" style={{ height: `${height}px` }}>
-        {/* Line Numbers - Fixed */}
         <div 
           ref={lineNumbersRef}
           className="flex-none py-3 px-3 text-right text-gray-500 bg-gray-900 select-none border-r border-gray-700 overflow-hidden"
@@ -147,7 +168,7 @@ const CodeEditor = ({
             onKeyDown={handleKeyDown}
             onScroll={handleScroll}
             placeholder={languageConfigs[language as keyof typeof languageConfigs]?.placeholder}
-            className="absolute inset-0 w-full h-full py-3 px-3 text-neutral-200 bg-transparent caret-white resize-none outline-none whitespace-pre overflow-auto"
+            className="absolute inset-0 w-full h-full py-3 px-3 text-neutral-300 bg-transparent caret-white resize-none outline-none whitespace-pre overflow-auto"
             spellCheck="false"
             style={{ 
               lineHeight: '1.5', 

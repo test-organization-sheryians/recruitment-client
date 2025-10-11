@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import FileUpload from './FileUpload';
 import CodeModal from './CodeModal';
@@ -50,8 +50,25 @@ export default function ResumeChat({ questions = [], resumeFile, error }: Resume
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
 
+  useEffect(() => {
+    const savedMessages = localStorage.getItem('resume_chat_messages');
+    if (savedMessages) {
+      try {
+        setMessages(JSON.parse(savedMessages));
+      } catch (error) {
+        console.error('Failed to parse saved messages:', error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('resume_chat_messages', JSON.stringify(messages));
+  }, [messages]);
+
   const handleFileUpload = (file: File) => {
     console.log('File uploaded:', file.name);
+    localStorage.setItem('resume_file_name', file.name);
+    localStorage.setItem('resume_file_size', file.size.toString());
   };
 
   const handleSendMessage = () => {
@@ -63,7 +80,7 @@ export default function ResumeChat({ questions = [], resumeFile, error }: Resume
       sender: 'user',
     };
 
-    setMessages([...messages, newMessage]);
+    setMessages(prev => [...prev, newMessage]);
     setInputValue('');
 
     setTimeout(() => {
@@ -83,6 +100,19 @@ export default function ResumeChat({ questions = [], resumeFile, error }: Resume
 
   const handleCodeSubmit = (code: string, language: string) => {
     console.log('Code submitted for question:', currentQuestion?.id, 'Language:', language, 'Code:', code);
+    
+    const submission = {
+      questionId: currentQuestion?.id,
+      question: currentQuestion?.question,
+      code,
+      language,
+      submittedAt: new Date().toISOString()
+    };
+    
+    const submissions = JSON.parse(localStorage.getItem('code_submissions') || '[]');
+    submissions.push(submission);
+    localStorage.setItem('code_submissions', JSON.stringify(submissions));
+    
     setShowCodeModal(false);
     setCurrentQuestion(null);
   };
@@ -92,9 +122,27 @@ export default function ResumeChat({ questions = [], resumeFile, error }: Resume
     setCurrentQuestion(null);
   };
 
+  const clearChatHistory = () => {
+    setMessages([]);
+    localStorage.removeItem('resume_chat_messages');
+  };
+
   return (
     <div className="flex flex-col h-full font-sans">
+      <div className="p-4 border-b bg-white flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Resume Chat</h2>
+        {messages.length > 0 && (
+          <button
+            onClick={clearChatHistory}
+            className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded transition-colors"
+          >
+            Clear Chat
+          </button>
+        )}
+      </div>
+
       <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[calc(100vh-120px)]">
+        {/* Show uploaded resume as user message if file exists */}
         {resumeFile && (
           <div className="flex items-start justify-end gap-3">
             <div className="flex flex-col items-end max-w-[80%]">
@@ -115,6 +163,7 @@ export default function ResumeChat({ questions = [], resumeFile, error }: Resume
                 <p className="font-medium">These are the {questions.length} curated questions, given below :-</p>
               </div>
               
+              {/* Questions List */}
               <div className="mt-4 space-y-3 flex flex-col items-start w-[70%]">
                 {questions.map((question, index) => (
                   <button
