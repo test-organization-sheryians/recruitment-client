@@ -21,7 +21,7 @@ const SigninForm = () => {
       .then((res) => {
         Cookies.set("access", res.data.data.token);
         dispatch(setUser(res.data.data.user))
-        window.location.href = "/ai-test/resume-upload"
+        window.location.href = "/ai-interview"
       })
       .catch((err) => {
         console.log(err)

@@ -1,9 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
+import EvaluationResults from "@/features/AITest/components/EvaluationResults";
 import { Send } from "lucide-react";
 import ResumeUpload from "@/features/AITest/components/smart/ResumeUpload";
 import CodeModal from "@/features/AITest/components/CodeModal";
 import FileUpload from "@/features/AITest/components/FileUpload";
+import axios from '@/config/axios'
 
 interface Message {
   id: string;
@@ -64,10 +66,15 @@ const AIInterviewPage = () => {
   const [questions, setQuestions] = useState<Array<any> | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
-
   const [inputValue, setInputValue] = useState("");
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [evaluationResults, setEvaluationResults] = useState<{
+    success: boolean;
+    evaluations: Array<{ score: number; feedback: string }>;
+    total: number;
+  } | null>(null);
+  const [isTestSubmitted, setIsTestSubmitted] = useState(false);
 
   const handleSendMessage = () => {
     if (inputValue.trim() === "") return;
@@ -169,21 +176,36 @@ const AIInterviewPage = () => {
     setShowCodeModal(true);
   };
 
-  const handleSubmitTest = () => {
+  const handleSubmitTest = async () => {
     console.log("Questions:", questions);
 
-    const solutions = questions?.map((question) => question.solution || "");
+    const answers = questions?.map((question) => question.solution || "");
     const questionsData = questions?.map(({ id, question, aiSolution }) => ({
       id,
       question,
       aiSolution,
     }));
 
-    console.log({ solutions, questions: questionsData });
+    console.log({ answers, questions: questionsData });
     alert("Submited Test....");
 
+    const response = await axios.post("/api/ai/evaluateset", {
+      answers,
+      questions: questionsData,
+    });
+
+    console.log(response.data);
+    setEvaluationResults(response.data);
+    setIsTestSubmitted(true);
     setShowCodeModal(false);
     setCurrentQuestion(null);
+    
+    setTimeout(() => {
+      const resultsElement = document.getElementById('evaluation-results');
+      if (resultsElement) {
+        resultsElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
   };
 
   useEffect(() => {
@@ -266,10 +288,12 @@ const AIInterviewPage = () => {
                   <div className="w-full flex justify-end">
                     <button
                       onClick={handleSubmitTest}
-                      className=" text-left px-3 py-2 bg-blue-500 text-white rounded-md border border-blue-200 hover:bg-blue-600 transition-colors flex items-start gap-3 disabled:bg-blue-200 disabled:text-gray-400 cursor-pointer"
-                      disabled={questions.length === 0}
+                      className="text-left px-3 py-2 bg-blue-500 text-white rounded-md border border-blue-200 hover:bg-blue-600 transition-colors flex items-start gap-3 disabled:bg-blue-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+                      disabled={questions.length === 0 || isTestSubmitted}
                     >
-                      <span className="font-medium">Submit Test</span>
+                      <span className="font-medium">
+                        {isTestSubmitted ? 'Test Submitted' : 'Submit Test'}
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -336,6 +360,17 @@ const AIInterviewPage = () => {
           onClose={handleCloseModal}
           onSubmit={handleCodeSave}
         />
+
+        {/* Evaluation Results Section */}
+        <div id="evaluation-results" className="mt-8">
+          {evaluationResults && (
+            <EvaluationResults 
+              evaluations={evaluationResults.evaluations} 
+              totalScore={evaluationResults.total}
+              maxPossibleScore={evaluationResults.evaluations.length * 100}
+            />
+          )}
+        </div>
       </div>
     </main>
   );
