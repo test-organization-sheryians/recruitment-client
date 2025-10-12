@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef } from "react";
 
 interface FileUploadProps {
   onFileChange: (file: File) => void;
   className?: string;
 }
 
-const FileUpload = ({ onFileChange, className = '' }: FileUploadProps) => {
+const FileUpload = ({ onFileChange, className = "" }: FileUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -35,15 +35,21 @@ const FileUpload = ({ onFileChange, className = '' }: FileUploadProps) => {
           />
         </svg>
         <div>
-          <p className="text-sm font-medium text-gray-900">{file?.name || 'No file chosen'}</p>
-          <p className="text-xs text-gray-500">{file ? `${(file.size / 1024).toFixed(0)} KB` : 'PDF, DOCX, TXT (max 5MB)'}</p>
+          <p className="text-sm font-medium text-gray-900">
+            {file?.name || "No file chosen"}
+          </p>
+          <p className="text-xs text-gray-500">
+            {file
+              ? `${(file.size / 1024).toFixed(0)} KB`
+              : "PDF, DOCX, TXT (max 5MB)"}
+          </p>
         </div>
-        <button
+        {/*  <button
           onClick={() => fileInputRef.current?.click()}
           className="ml-4 px-3 py-1 text-sm text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
         >
           {file ? 'Change' : 'Browse'}
-        </button>
+        </button> */}
         <input
           ref={fileInputRef}
           type="file"
