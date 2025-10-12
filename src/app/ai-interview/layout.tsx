@@ -1,5 +1,5 @@
 import React from "react";
-import AITestLayout from "../ai-interview/AITestLayout";
+import AITestLayout from "./AITestLayout";
 
 const layout = ({ children }: { children: React.ReactNode }) => {
   return <AITestLayout>{children}</AITestLayout>;
