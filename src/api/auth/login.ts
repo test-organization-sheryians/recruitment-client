@@ -3,7 +3,7 @@ import { isAxiosError } from "axios";
 
 export const login = async (data: any) => {
   try {
-    const response = await api.post("/api/v1/auth/login", data);
+    const response = await api.post("/api/auth/login", data);
     return response.data;
   } catch (error) {
     console.error("login failed:", error);
@@ -14,4 +14,4 @@ export const login = async (data: any) => {
     }
     throw new Error("An unexpected error occurred");
   }
-} 
+}
