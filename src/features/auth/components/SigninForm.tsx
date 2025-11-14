@@ -8,10 +8,12 @@ import axios from "@/config/axios";
 import Cookies from "js-cookie";
 import { useDispatch } from "react-redux";
 import { setUser } from "../slice";
+import { useRouter } from "next/navigation";
 
 const SigninForm = () => {
   const dispatch = useDispatch();
   const { register, handleSubmit } = useForm()
+  const router = useRouter();
 
   const onSubmit = (data: any) => {
     axios.post(`/api/auth/login`, {
@@ -21,6 +23,7 @@ const SigninForm = () => {
       .then((res) => {
         Cookies.set("access", res.data.data.token);
         dispatch(setUser(res.data.data.user))
+        router.push("/resume")
       })
       .catch((err) => {
         console.log(err)
@@ -52,8 +55,18 @@ const SigninForm = () => {
           {...register("password")}
         />
 
+        {/* Forgot Password Link */}
+        <p className="text-right -mt-3">
+        <a
+        href="/forgot-password"
+        className="text-sm text-[#4C62ED] hover:underline font-medium"
+        >
+          Forgot Password?
+        </a>
+        </p>
+
         {/* Continue Button */}
-        <button className="w-full bg-[#4C62ED] hover:bg-[#3a4cd1] transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer">
+        <button type="submit" className="w-full bg-[#4C62ED] hover:bg-[#3a4cd1] transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer">
           <CiMail className="text-lg" /> Continue with Email
         </button>
 

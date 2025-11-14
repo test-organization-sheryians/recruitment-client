@@ -1,7 +1,20 @@
+"use client"
+
 import React from "react";
 import LabelInput from "./LabelInput";
+import { useRouter } from "next/navigation";
 
 const PasswordReset = () => {
+
+  const router = useRouter()
+
+  const handleSubmit = (e: React.FormEvent)=>{
+    e.preventDefault();
+    //backend
+
+    router.push("/PasswordResetOtpInput")
+  }
+
   return (
     <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-10 px-[20%] flex flex-col justify-center">
       <h1 className="text-3xl font-semibold text-center text-gray-800">

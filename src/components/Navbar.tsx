@@ -12,7 +12,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="w-full h-full flex items-center justify-between px-8 py-4">
+    <nav className="w-full flex items-center justify-between px-8 py-4">
       <h1 className="text-2xl font-semibold">HRECT.</h1>
 
       <ul className="flex items-center gap-20">
@@ -27,11 +27,11 @@ const Navbar = () => {
 
       <div className="flex items-center gap-5">
         <button className="w-10 aspect-square rounded-full bg-zinc-50 grid place-items-center">
-          <BellDot />
+          <BellDot size={20} className="text-zinc-700" />
         </button>
         <div className="flex items-center gap-5">
           <button className="w-10 aspect-square rounded-full bg-zinc-50 grid place-items-center">
-            <UserIcon />
+            <UserIcon size={20} className="text-zinc-700" />
           </button>
           <div>
             <p className="text-base font-semibold">John Doe</p>

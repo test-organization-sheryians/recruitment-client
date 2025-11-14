@@ -2,7 +2,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL
+const baseURL = 'http://localhost:3001'
 const publicRoutes = ["/login", "/register", "/"];
 
 const axiosInstance = axios.create({
