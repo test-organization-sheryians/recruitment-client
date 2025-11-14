@@ -5,6 +5,7 @@ export const register = async (data: any) => {
   try {
     const response = await api.post("/api/auth/register", data);
     return response.data;
+    console.log("getting registered")
   } catch (error) {
     console.error("register failed:", error);
     if (isAxiosError(error)) {

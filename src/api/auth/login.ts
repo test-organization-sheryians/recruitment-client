@@ -14,4 +14,4 @@ export const login = async (data: any) => {
     }
     throw new Error("An unexpected error occurred");
   }
-} 
+}

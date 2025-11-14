@@ -78,7 +78,7 @@ const SigninForm = () => {
         </div>
 
         {/* Google Button */}
-        <button className="w-full bg-[#3B3A3A] hover:bg-black transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer">
+        <button type="button" className="w-full bg-[#3B3A3A] hover:bg-black transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer">
           <FcGoogle className="text-lg" /> Continue with Google
         </button>
       </form>
