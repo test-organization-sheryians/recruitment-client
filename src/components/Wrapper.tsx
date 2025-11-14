@@ -15,7 +15,7 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const token = Cookies.get("access") || null;
-    const publicPaths = ["/login", "/register", "/","/forgot-password"];
+    const publicPaths = ["/login", "/register", "/","/forgot-password",];
 
     if (!token && !publicPaths.includes(pathname)) {
       router.replace("/login");
