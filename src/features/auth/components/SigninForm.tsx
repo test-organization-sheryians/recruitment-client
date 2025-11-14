@@ -10,11 +10,14 @@ import { useDispatch } from "react-redux";
 import { setUser } from "../slice";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
+import { AlertCircle } from "lucide-react";
+import { useState } from "react";
 
 const SigninForm = () => {
   const dispatch = useDispatch();
   const { register, handleSubmit } = useForm();
   const router = useRouter();
+  const [errorMsg, setErrorMsg] = useState("")
 
   
   const loginMutation = useMutation({
@@ -28,9 +31,12 @@ const SigninForm = () => {
       Cookies.set("access", res.data.data.token);
       dispatch(setUser(res.data.data.user));
       router.push("/resume");
+      setErrorMsg("");
     },
 
-    onError: (error) => {
+    onError: (error: any) => {
+      const msg =  "Invalid email or password. Please try again."
+      setErrorMsg(msg);
       console.log("Login error:", error);
     },
   });
@@ -44,6 +50,14 @@ const SigninForm = () => {
       <h1 className="text-3xl font-semibold text-center text-gray-800">
         Sign in to Your Account
       </h1>
+
+      {/* ERROR BOX */}
+      {errorMsg && (
+      <div className="flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-md">
+      <AlertCircle size={18} />
+      <p className="text-sm">{errorMsg}</p>
+      </div>
+      )}
 
       <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)}>
         {/* Email */}
