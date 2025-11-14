@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { CiMail } from "react-icons/ci";
 import { FcGoogle } from "react-icons/fc";
@@ -9,26 +9,35 @@ import Cookies from "js-cookie";
 import { useDispatch } from "react-redux";
 import { setUser } from "../slice";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 
 const SigninForm = () => {
   const dispatch = useDispatch();
-  const { register, handleSubmit } = useForm()
+  const { register, handleSubmit } = useForm();
   const router = useRouter();
 
+  
+  const loginMutation = useMutation({
+    mutationFn: (data: any) =>
+      axios.post(`/api/auth/login`, {
+        email: data.email,
+        password: data.password,
+      }),
+
+    onSuccess: (res) => {
+      Cookies.set("access", res.data.data.token);
+      dispatch(setUser(res.data.data.user));
+      router.push("/resume");
+    },
+
+    onError: (error) => {
+      console.log("Login error:", error);
+    },
+  });
+
   const onSubmit = (data: any) => {
-    axios.post(`/api/auth/login`, {
-      email: data.email,
-      password: data.password
-    })
-      .then((res) => {
-        Cookies.set("access", res.data.data.token);
-        dispatch(setUser(res.data.data.user))
-        router.push("/resume")
-      })
-      .catch((err) => {
-        console.log(err)
-      })
-  }
+    loginMutation.mutate(data);
+  };
 
   return (
     <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-10 px-[20%] flex flex-col justify-center">
@@ -42,7 +51,6 @@ const SigninForm = () => {
           label="Email"
           placeholder="your email"
           type="email"
-          id="email"
           {...register("email")}
         />
 
@@ -51,23 +59,27 @@ const SigninForm = () => {
           label="Password"
           placeholder="8+ characters"
           type="password"
-          id="password"
           {...register("password")}
         />
 
         {/* Forgot Password Link */}
         <p className="text-right -mt-3">
-        <a
-        href="/forgot-password"
-        className="text-sm text-[#4C62ED] hover:underline font-medium"
-        >
-          Forgot Password?
-        </a>
+          <a
+            href="/forgot-password"
+            className="text-sm text-[#4C62ED] hover:underline font-medium"
+          >
+            Forgot Password?
+          </a>
         </p>
 
         {/* Continue Button */}
-        <button type="submit" className="w-full bg-[#4C62ED] hover:bg-[#3a4cd1] transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer">
-          <CiMail className="text-lg" /> Continue with Email
+        <button
+          type="submit"
+          disabled={loginMutation.isPending}
+          className="w-full bg-[#4C62ED] hover:bg-[#3a4cd1] transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer disabled:bg-gray-400"
+        >
+          {loginMutation.isPending ? "Signing in..." : <CiMail className="text-lg" />}
+          Continue with Email
         </button>
 
         {/* Divider */}
@@ -78,7 +90,10 @@ const SigninForm = () => {
         </div>
 
         {/* Google Button */}
-        <button type="button" className="w-full bg-[#3B3A3A] hover:bg-black transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer">
+        <button
+          type="button"
+          className="w-full bg-[#3B3A3A] hover:bg-black transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer"
+        >
           <FcGoogle className="text-lg" /> Continue with Google
         </button>
       </form>
@@ -86,10 +101,7 @@ const SigninForm = () => {
       {/* Register */}
       <p className="text-center text-gray-600 text-sm mt-6">
         Don’t have an account?{" "}
-        <a
-          href="/register"
-          className="text-[#4C62ED] underline font-medium"
-        >
+        <a href="/register" className="text-[#4C62ED] underline font-medium">
           Register
         </a>
       </p>
