@@ -8,7 +8,7 @@ import Cookies from "js-cookie";
 import { useDispatch } from "react-redux";
 import { setUser } from "../slice";
 import { useRouter } from "next/navigation";
-import useAuthApi from "../hooks/useAuthApi"; 
+import useAuthApi from "../hooks/useAuthApi";
 
 const SignupForm = () => {
   const router = useRouter();
@@ -28,11 +28,18 @@ const SignupForm = () => {
 
     // send to mutation
     registerMutation.mutate(
-      { data: formData, onProgress: () => {} }, 
+      { data: formData, onProgress: () => {} },
       {
         onSuccess: (res: any) => {
           Cookies.set("access", res.data.token);
-          dispatch(setUser(res.data.user));
+          const payload = {
+            id: res.data.user._id,
+            email: res.data.user.email,
+            firstName: res.data.user.firstName,
+            lastName: res.data.user.lastName,
+            role: res.data.user?.role?.name,
+          };
+          dispatch(setUser(payload));
           router.push("/resume");
         },
         onError: (error: any) => {
@@ -89,7 +96,11 @@ const SignupForm = () => {
           type="submit"
           disabled={registerMutation.isPending}
         >
-          {registerMutation.isPending ? "Processing..." : <CiMail className="text-lg" />}
+          {registerMutation.isPending ? (
+            "Processing..."
+          ) : (
+            <CiMail className="text-lg" />
+          )}
           Continue with Email
         </button>
 

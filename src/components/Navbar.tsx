@@ -8,10 +8,8 @@ import React from "react";
 
 const Navbar = () => {
   const user = useSelector((state: any) => state.auth.user);
- 
-  // If user NOT logged in → do NOT show navbar
+  console.log(user) 
   if (!user) return null;
-
   const navlinks = [
     { title: "Home", href: "/" },
     { title: "Courses", href: "/courses" },
@@ -33,7 +31,6 @@ const Navbar = () => {
       </ul>
 
       <div className="flex items-center gap-4">
-        {/* Notifications */}
         <button
           className="w-10 aspect-square rounded-full bg-zinc-50 grid place-items-center hover:bg-zinc-100 transition-colors"
           title="Notifications"
@@ -41,7 +38,6 @@ const Navbar = () => {
           <BellDot size={20} className="text-zinc-700" />
         </button>
 
-        {/* User Info */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
             <UserIcon size={20} className="text-blue-600" />
@@ -52,7 +48,7 @@ const Navbar = () => {
               {user.firstName }
             </p>
 
-            {user.role?.name && (
+            {user.role&& (
               <p className="text-xs text-gray-500">{user.role}</p>
             )}
           </div>

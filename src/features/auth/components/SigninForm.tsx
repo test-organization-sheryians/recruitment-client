@@ -1,5 +1,4 @@
 "use client";
-
 import { CiMail } from "react-icons/ci";
 import { FcGoogle } from "react-icons/fc";
 import LabelInput from "./LabelInput";
@@ -18,7 +17,7 @@ const SigninForm = () => {
   const [errorMsg, setErrorMsg] = useState("");
 
   const { register, handleSubmit } = useForm();
-  const { loginMutation } = useAuthApi(); 
+  const { loginMutation } = useAuthApi();
 
   const onSubmit = (formData: any) => {
     const sendData = new FormData();
@@ -30,7 +29,14 @@ const SigninForm = () => {
       {
         onSuccess: (res: any) => {
           Cookies.set("access", res.data.token);
-          dispatch(setUser(res.data.user));
+          const payload = {
+            id: res.data.user._id,
+            email: res.data.user.email,
+            firstName: res.data.user.firstName,
+            lastName: res.data.user.lastName,
+            role: res.data.user?.role?.name,
+          };
+          dispatch(setUser(payload));
           router.push("/resume");
           setErrorMsg("");
         },
@@ -85,7 +91,11 @@ const SigninForm = () => {
           disabled={loginMutation.isPending}
           className="w-full bg-[#4C62ED] hover:bg-[#3a4cd1] transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer disabled:bg-gray-400"
         >
-          {loginMutation.isPending ? "Signing in..." : <CiMail className="text-lg" />}
+          {loginMutation.isPending ? (
+            "Signing in..."
+          ) : (
+            <CiMail className="text-lg" />
+          )}
           Continue with Email
         </button>
 

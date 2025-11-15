@@ -2,7 +2,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const baseURL = 'http://localhost:3001'
+const baseURL = 'http://localhost:9000'
 const publicRoutes = ["/login", "/register", "/"];
 
 const axiosInstance = axios.create({
