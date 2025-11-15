@@ -11,20 +11,20 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const [client] = useState(() => new QueryClient());
 
-  const [authChecked, setAuthChecked] = useState(false);
+  const [authChecked, setAuthChecked] = useState(true);
 
-  useEffect(() => {
-    const token = Cookies.get("access") || null;
-    const publicPaths = ["/login", "/register", "/"];
+  // useEffect(() => {
+  //   const token = Cookies.get("access") || null;
+  //   const publicPaths = ["/login", "/register", "/"];
 
-    if (!token && !publicPaths.includes(pathname)) {
-      router.replace("/login");
-    } else if (token && publicPaths.includes(pathname)) {
-      router.replace("/resume");
-    } else {
-      setAuthChecked(true);
-    }
-  }, [pathname, router]);
+  //   if (!token && !publicPaths.includes(pathname)) {
+  //     router.replace("/login");
+  //   } else if (token && publicPaths.includes(pathname)) {
+  //     router.replace("/resume");
+  //   } else {
+  //     setAuthChecked(true);
+  //   }
+  // }, [pathname, router]);
 
   if (!authChecked) {
     return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>Loading...</div>;
