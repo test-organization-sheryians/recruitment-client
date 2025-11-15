@@ -49,7 +49,7 @@ const Navbar = () => {
 
           <div className="text-right">
             <p className="text-sm font-medium text-gray-900">
-              {user.name || "User"}
+              {user.firstName }
             </p>
 
             {user.role?.name && (

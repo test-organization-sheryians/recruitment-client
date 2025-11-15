@@ -1,45 +1,45 @@
 "use client";
+
 import { CiMail } from "react-icons/ci";
 import { FcGoogle } from "react-icons/fc";
 import LabelInput from "./LabelInput";
 import { useForm } from "react-hook-form";
-import axios from "@/config/axios";
-import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { useDispatch } from "react-redux";
 import { setUser } from "../slice";
-import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import useAuthApi from "../hooks/useAuthApi"; 
 
 const SignupForm = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-
   const { register, handleSubmit } = useForm();
 
-  
-  const registerMutation = useMutation({
-    mutationFn: (data: any) =>
-      axios.post(`/api/auth/register`, {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phoneNumber: data.phoneNumber,
-        email: data.email,
-        password: data.password,
-      }),
-
-    onSuccess: (res) => {
-      Cookies.set("access", res.data.data.token);
-      dispatch(setUser(res.data.data.user));
-      router.push("/resume");
-    },
-
-    onError: (err) => {
-      console.log("Error:", err);
-    },
-  });
+  const { registerMutation } = useAuthApi();
 
   const onSubmit = (data: any) => {
-    registerMutation.mutate(data);
+    // convert to FormData
+    const formData = new FormData();
+    formData.append("firstName", data.firstName);
+    formData.append("lastName", data.lastName);
+    formData.append("phoneNumber", data.phoneNumber);
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+
+    // send to mutation
+    registerMutation.mutate(
+      { data: formData, onProgress: () => {} }, 
+      {
+        onSuccess: (res: any) => {
+          Cookies.set("access", res.data.token);
+          dispatch(setUser(res.data.user));
+          router.push("/resume");
+        },
+        onError: (error: any) => {
+          console.log("Register Error:", error);
+        },
+      }
+    );
   };
 
   return (
@@ -84,7 +84,6 @@ const SignupForm = () => {
           {...register("password")}
         />
 
-        {/* Continue Button */}
         <button
           className="w-full bg-[#4C62ED] hover:bg-[#3A4CD1] transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer disabled:bg-gray-400"
           type="submit"
@@ -100,7 +99,10 @@ const SignupForm = () => {
           <span className="flex-1 border-t border-gray-300"></span>
         </div>
 
-        <button className="w-full bg-[#3B3A3A] hover:bg-black transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer">
+        <button
+          type="button"
+          className="w-full bg-[#3B3A3A] hover:bg-black transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer"
+        >
           <FcGoogle className="text-lg" /> Continue with Google
         </button>
       </form>

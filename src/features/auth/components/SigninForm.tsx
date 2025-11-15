@@ -4,45 +4,42 @@ import { CiMail } from "react-icons/ci";
 import { FcGoogle } from "react-icons/fc";
 import LabelInput from "./LabelInput";
 import { useForm } from "react-hook-form";
-import axios from "@/config/axios";
 import Cookies from "js-cookie";
 import { useDispatch } from "react-redux";
 import { setUser } from "../slice";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
 import { useState } from "react";
+import useAuthApi from "../hooks/useAuthApi";
 
 const SigninForm = () => {
   const dispatch = useDispatch();
-  const { register, handleSubmit } = useForm();
   const router = useRouter();
-  const [errorMsg, setErrorMsg] = useState("")
+  const [errorMsg, setErrorMsg] = useState("");
 
-  
-  const loginMutation = useMutation({
-    mutationFn: (data: any) =>
-      axios.post(`/api/auth/login`, {
-        email: data.email,
-        password: data.password,
-      }),
+  const { register, handleSubmit } = useForm();
+  const { loginMutation } = useAuthApi(); 
 
-    onSuccess: (res) => {
-      Cookies.set("access", res.data.data.token);
-      dispatch(setUser(res.data.data.user));
-      router.push("/resume");
-      setErrorMsg("");
-    },
+  const onSubmit = (formData: any) => {
+    const sendData = new FormData();
+    sendData.append("email", formData.email);
+    sendData.append("password", formData.password);
 
-    onError: (error: any) => {
-      const msg =  "Invalid email or password. Please try again."
-      setErrorMsg(msg);
-      console.log("Login error:", error);
-    },
-  });
+    loginMutation.mutate(
+      { data: sendData, onProgress: () => {} },
+      {
+        onSuccess: (res: any) => {
+          Cookies.set("access", res.data.token);
+          dispatch(setUser(res.data.user));
+          router.push("/resume");
+          setErrorMsg("");
+        },
 
-  const onSubmit = (data: any) => {
-    loginMutation.mutate(data);
+        onError: () => {
+          setErrorMsg("Invalid email or password. Please try again.");
+        },
+      }
+    );
   };
 
   return (
@@ -53,14 +50,13 @@ const SigninForm = () => {
 
       {/* ERROR BOX */}
       {errorMsg && (
-      <div className="flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-md">
-      <AlertCircle size={18} />
-      <p className="text-sm">{errorMsg}</p>
-      </div>
+        <div className="flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-md mt-4">
+          <AlertCircle size={18} />
+          <p className="text-sm">{errorMsg}</p>
+        </div>
       )}
 
       <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)}>
-        {/* Email */}
         <LabelInput
           label="Email"
           placeholder="your email"
@@ -68,7 +64,6 @@ const SigninForm = () => {
           {...register("email")}
         />
 
-        {/* Password */}
         <LabelInput
           label="Password"
           placeholder="8+ characters"
@@ -76,7 +71,6 @@ const SigninForm = () => {
           {...register("password")}
         />
 
-        {/* Forgot Password Link */}
         <p className="text-right -mt-3">
           <a
             href="/forgot-password"
@@ -86,7 +80,6 @@ const SigninForm = () => {
           </a>
         </p>
 
-        {/* Continue Button */}
         <button
           type="submit"
           disabled={loginMutation.isPending}
@@ -96,14 +89,12 @@ const SigninForm = () => {
           Continue with Email
         </button>
 
-        {/* Divider */}
         <div className="flex items-center justify-center my-4">
           <span className="flex-1 border-t border-gray-300"></span>
           <span className="mx-3 text-gray-400 text-xs font-medium">OR</span>
           <span className="flex-1 border-t border-gray-300"></span>
         </div>
 
-        {/* Google Button */}
         <button
           type="button"
           className="w-full bg-[#3B3A3A] hover:bg-black transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer"
@@ -112,7 +103,6 @@ const SigninForm = () => {
         </button>
       </form>
 
-      {/* Register */}
       <p className="text-center text-gray-600 text-sm mt-6">
         Don’t have an account?{" "}
         <a href="/register" className="text-[#4C62ED] underline font-medium">

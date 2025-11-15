@@ -1,4 +1,4 @@
-import { login, register } from '@/api';
+import { login, register, logout } from '@/api';
 import { useMutation } from '@tanstack/react-query'
 
 interface AuthParams {
@@ -21,10 +21,18 @@ const useAuthApi = () => {
     },
   });
 
+   const logoutMutation = useMutation({
+    mutationKey: ["logout"],
+    mutationFn: async () => {
+      return logout();
+    },
+  }); 
+
 
   return {
     registerMutation,
-    loginMutation
+    loginMutation,
+    logoutMutation
   };
 }
 
