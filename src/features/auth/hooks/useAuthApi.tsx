@@ -12,6 +12,7 @@ const useAuthApi = () => {
     mutationFn: async ({ data }: AuthParams) => {
       return register(data);
     },
+    retry: 1,
   });
 
   const loginMutation = useMutation({
@@ -19,6 +20,7 @@ const useAuthApi = () => {
     mutationFn: async ({ data }: AuthParams) => {
       return login(data);
     },
+    retry: 1,
   });
 
    const logoutMutation = useMutation({
@@ -26,6 +28,7 @@ const useAuthApi = () => {
     mutationFn: async () => {
       return logout();
     },
+    retry: 1,
   }); 
 
 
