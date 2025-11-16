@@ -3,23 +3,28 @@
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import Cookies from "js-cookie";
-import { logout as logoutSlice } from "../slice"; 
-import useAuthApi from "../hooks/useAuthApi";
+import { logout as logoutSlice } from "../slice";
+import { useLogout } from "../hooks/useAuthApi";
 
 const Logout = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { logoutMutation } = useAuthApi(); 
+
+  const { mutate: logoutUser, isPending } = useLogout();
 
   const handleLogout = () => {
-    logoutMutation.mutate(undefined, {
+    logoutUser(undefined, {
       onSuccess: () => {
         Cookies.remove("access");
         dispatch(logoutSlice());
         router.push("/login");
       },
-      onError: (error: any) => {
-        console.error("Logout error:", error);
+      onError: (error) => {
+        console.error("Logout failed:", error);
+        // Optional: still redirect even if API fails
+        Cookies.remove("access");
+        dispatch(logoutSlice());
+        router.push("/login");
       },
     });
   };
@@ -27,10 +32,10 @@ const Logout = () => {
   return (
     <button
       onClick={handleLogout}
-      disabled={logoutMutation.isPending}
-      className="px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:bg-blue-400 transition-colors"
+      disabled={isPending}
+      className="px-6 py-2.5 bg-red-600 text-white rounded-full hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed transition-colors font-medium text-sm"
     >
-      {logoutMutation.isPending ? "Logging out..." : "Logout"}
+      {isPending ? "Logging out..." : "Logout"}
     </button>
   );
 };

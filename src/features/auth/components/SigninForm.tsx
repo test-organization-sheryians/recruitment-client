@@ -1,4 +1,5 @@
 "use client";
+
 import { CiMail } from "react-icons/ci";
 import { FcGoogle } from "react-icons/fc";
 import LabelInput from "./LabelInput";
@@ -9,7 +10,7 @@ import { setUser } from "../slice";
 import { useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 import { useState } from "react";
-import useAuthApi from "../hooks/useAuthApi";
+import { useLogin } from "../hooks/useAuthApi";
 
 const SigninForm = () => {
   const dispatch = useDispatch();
@@ -17,67 +18,77 @@ const SigninForm = () => {
   const [errorMsg, setErrorMsg] = useState("");
 
   const { register, handleSubmit } = useForm();
-  const { loginMutation } = useAuthApi();
+
+  const {
+    mutate: loginUser,
+    isPending: isLoggingIn,
+    error,
+  } = useLogin();
 
   const onSubmit = (formData: any) => {
+    setErrorMsg("");
+
     const sendData = new FormData();
     sendData.append("email", formData.email);
     sendData.append("password", formData.password);
 
-    loginMutation.mutate(
-      { data: sendData, onProgress: () => {} },
-      {
-        onSuccess: (res: any) => {
-          Cookies.set("access", res.data.token);
-          const payload = {
+    loginUser(sendData, {
+      onSuccess: (res: any) => {
+        Cookies.set("access", res.data.token);
+
+        dispatch(
+          setUser({
             id: res.data.user._id,
             email: res.data.user.email,
             firstName: res.data.user.firstName,
             lastName: res.data.user.lastName,
-            role: res.data.user?.role?.name,
-          };
-          dispatch(setUser(payload));
-          router.push("/resume");
-          setErrorMsg("");
-        },
+            role: res.data.user?.role?.name || "user",
+          })
+        );
 
-        onError: () => {
-          setErrorMsg("Invalid email or password. Please try again.");
-        },
-      }
-    );
+        router.push("/resume");
+      },
+      onError: (err: any) => {
+        const message =
+          err?.response?.data?.message ||
+          err?.message ||
+          "Invalid email or password. Please try again.";
+        setErrorMsg(message);
+      },
+    });
   };
 
   return (
     <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-10 px-[20%] flex flex-col justify-center">
-      <h1 className="text-3xl font-semibold text-center text-gray-800">
+      <h1 className="text-3xl font-semibold text-center text-gray-800 mb-8">
         Sign in to Your Account
       </h1>
 
-      {/* ERROR BOX */}
-      {errorMsg && (
-        <div className="flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-md mt-4">
-          <AlertCircle size={18} />
-          <p className="text-sm">{errorMsg}</p>
+      {(errorMsg || error) && (
+        <div className="flex items-center gap-3 bg-red-50 text-red-700 px-5 py-3 rounded-lg border border-red-200">
+          <AlertCircle size={20} />
+          <p className="text-sm font-medium">
+            {errorMsg || "Something went wrong. Please try again."}
+          </p>
         </div>
       )}
 
-      <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)}>
+      <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
         <LabelInput
           label="Email"
           placeholder="your email"
           type="email"
-          {...register("email")}
+          {...register("email", { required: true })}
         />
 
         <LabelInput
           label="Password"
           placeholder="8+ characters"
           type="password"
-          {...register("password")}
+          {...register("password", { required: true })}
         />
 
-        <p className="text-right -mt-3">
+        <p className="text-right -mt-4">
           <a
             href="/forgot-password"
             className="text-sm text-[#4C62ED] hover:underline font-medium"
@@ -88,34 +99,37 @@ const SigninForm = () => {
 
         <button
           type="submit"
-          disabled={loginMutation.isPending}
-          className="w-full bg-[#4C62ED] hover:bg-[#3a4cd1] transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer disabled:bg-gray-400"
+          disabled={isLoggingIn}
+          className="w-full bg-[#4C62ED] hover:bg-[#3a4cd1] transition-all text-white font-medium rounded-base py-3 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          {loginMutation.isPending ? (
+          {isLoggingIn ? (
             "Signing in..."
           ) : (
-            <CiMail className="text-lg" />
+            <>
+              <CiMail className="text-lg" />
+              Continue with Email
+            </>
           )}
-          Continue with Email
         </button>
 
-        <div className="flex items-center justify-center my-4">
+        <div className="flex items-center justify-center my-6">
           <span className="flex-1 border-t border-gray-300"></span>
-          <span className="mx-3 text-gray-400 text-xs font-medium">OR</span>
+          <span className="mx-4 text-gray-400 text-xs font-medium">OR</span>
           <span className="flex-1 border-t border-gray-300"></span>
         </div>
 
         <button
           type="button"
-          className="w-full bg-[#3B3A3A] hover:bg-black transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full bg-[#3B3A3A] hover:bg-black transition-colors text-white font-medium rounded-base py-3 flex items-center justify-center gap-2"
         >
-          <FcGoogle className="text-lg" /> Continue with Google
+          <FcGoogle className="text-xl" />
+          Continue with Google
         </button>
       </form>
 
-      <p className="text-center text-gray-600 text-sm mt-6">
+      <p className="text-center text-gray-600 text-sm mt-8">
         Don’t have an account?{" "}
-        <a href="/register" className="text-[#4C62ED] underline font-medium">
+        <a href="/register" className="text-[#4C62ED] underline font-medium hover:text-[#3a4cd1]">
           Register
         </a>
       </p>

@@ -1,42 +1,26 @@
-import { login, register, logout } from '@/api';
-import { useMutation } from '@tanstack/react-query'
+import { useMutation } from "@tanstack/react-query";
+import * as api from "@/api"; 
 
-interface AuthParams {
-  data: FormData;
-  onProgress: (progress: number) => void;
-}
-
-const useAuthApi = () => {
-  const registerMutation = useMutation({
+export const useRegister = () => {
+  return useMutation({
     mutationKey: ["register"],
-    mutationFn: async ({ data }: AuthParams) => {
-      return register(data);
-    },
-    retry: 1,
+    mutationFn: (data: FormData) => api.register(data),
+    retry: 0,
   });
+};
 
-  const loginMutation = useMutation({
+export const useLogin = () => {
+  return useMutation({
     mutationKey: ["login"],
-    mutationFn: async ({ data }: AuthParams) => {
-      return login(data);
-    },
-    retry: 1,
+    mutationFn: (data: FormData) => api.login(data),
+    retry: 0,
   });
+};
 
-   const logoutMutation = useMutation({
+export const useLogout = () => {
+  return useMutation({
     mutationKey: ["logout"],
-    mutationFn: async () => {
-      return logout();
-    },
-    retry: 1,
-  }); 
-
-
-  return {
-    registerMutation,
-    loginMutation,
-    logoutMutation
-  };
-}
-
-export default useAuthApi
+    mutationFn: () => api.logout(),
+    retry: 0,
+  });
+};
