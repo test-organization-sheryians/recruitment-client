@@ -6,22 +6,19 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
       <div className="max-w-lg w-full text-center">
-        {/* 404 Text */}
         <h1 className="text-9xl font-black text-white mb-4 tracking-tighter">
           4
           <span className="inline-block animate-pulse text-purple-400">0</span>
           4
         </h1>
 
-        {/* Message */}
         <p className="text-2xl md:text-3xl font-semibold text-gray-200 mb-4">
           Oops! Page Not Found
         </p>
         <p className="text-gray-400 mb-10 max-w-md mx-auto">
-          The page you're looking for doesn't exist or has been moved.
+          The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
 
-        {/* Back Button */}
         <Link
           href="/"
           className="inline-flex items-center gap-3 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-8 rounded-full transition-all duration-300 hover:scale-105 shadow-lg"
@@ -30,7 +27,6 @@ export default function NotFound() {
           Back to Home
         </Link>
 
-        {/* Optional: Fun little element */}
         <div className="mt-16 text-gray-500 text-sm">
           Error 404 • Lost in cyberspace
         </div>

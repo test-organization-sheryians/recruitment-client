@@ -27,7 +27,7 @@ export default async function UnauthorizedPage() {
 
         <p className="text-lg font-medium text-yellow-300 mb-3">Unauthorized</p>
         <p className="text-gray-600 text-sm mb-6">
-          You don't have permission to access this page.
+          You don&apos;t have permission to access this page.
         </p>
 
         <a
