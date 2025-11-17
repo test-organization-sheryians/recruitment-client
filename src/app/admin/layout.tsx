@@ -1,6 +1,5 @@
-// src/app/admin/layout.tsx   ← This protects ALL /admin/* routes
-import { getCurrentUser } from '@/lib/auth';
-import { redirect } from 'next/navigation';
+import { getCurrentUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export default async function AdminLayout({
   children,
@@ -10,11 +9,11 @@ export default async function AdminLayout({
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect('/login');
+    redirect("/login");
   }
 
-  if (user.role !== 'admin') {
-    redirect('/unauthorized');
+  if (user.role !== "admin") {
+    redirect("/unauthorized");
   }
 
   return (
