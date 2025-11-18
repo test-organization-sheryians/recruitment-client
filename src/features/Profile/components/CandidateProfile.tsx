@@ -105,6 +105,7 @@ const [experience, setExperience] = useState([
 
     <EditSection
       title="Skills"
+      type="string"
       fields={skills.map((s, i) => ({
         key: String(i),
         label: `Skill ${i + 1}`,
@@ -138,6 +139,7 @@ const [experience, setExperience] = useState([
 
     <EditSection
       title="Experience"
+      type="experience"
       fields={experience.map((exp, i) => ({
         key: String(i),
         label: `Experience ${i + 1}`,

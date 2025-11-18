@@ -25,6 +25,7 @@ interface EditSectionProps {
   fields: Field[];
   onSave: (updatedValues: Record<string, any>) => void;
   allowAddMore?: boolean;
+  type?: "string" | "experience"; // NEWw
 }
 
 export default function EditSection({
@@ -32,6 +33,7 @@ export default function EditSection({
   fields,
   onSave,
   allowAddMore = false,
+  type = "string",
 }: EditSectionProps) {
   const [formValues, setFormValues] = useState<Record<string, any>>({});
 
@@ -69,67 +71,39 @@ export default function EditSection({
         </DialogHeader>
 
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-          {Object.entries(formValues).map(([key, value], index) => {
-            if (typeof value === "object" && value !== null && "title" in value) {
-              // Render separate inputs for each experience field
-              return (
-                <div key={key} className="space-y-2 p-2 border rounded">
-                  <p className="text-xs text-gray-500 mb-1">
-                    {fields[index]?.label || `Experience ${index + 1}`}
-                  </p>
-                  <Input
-                    placeholder="Title"
-                    value={value.title}
-                    onChange={(e) =>
-                      handleChange(key, { ...value, title: e.target.value })
-                    }
-                  />
-                  <Input
-                    placeholder="Company"
-                    value={value.company}
-                    onChange={(e) =>
-                      handleChange(key, { ...value, company: e.target.value })
-                    }
-                  />
-                  <Input
-                    placeholder="Start Date"
-                    value={value.start}
-                    onChange={(e) =>
-                      handleChange(key, { ...value, start: e.target.value })
-                    }
-                  />
-                  <Input
-                    placeholder="End Date"
-                    value={value.end}
-                    onChange={(e) =>
-                      handleChange(key, { ...value, end: e.target.value })
-                    }
-                  />
-                  <Input
-                    placeholder="Description"
-                    value={value.description}
-                    onChange={(e) =>
-                      handleChange(key, { ...value, description: e.target.value })
-                    }
-                  />
-                </div>
-              );
-            }
+{Object.entries(formValues).map(([key, value], index) => {
+  if (type === "experience") {
+    // Render multi-input experience fields
+    const exp = value;
+    return (
+      <div key={key} className="space-y-2 p-2 border rounded">
+        <p className="text-xs text-gray-500 mb-1">
+          {fields[index]?.label || `Experience ${index + 1}`}
+        </p>
+        <Input placeholder="Title" value={exp.title} onChange={(e) => handleChange(key, {...exp, title: e.target.value})} />
+        <Input placeholder="Company" value={exp.company} onChange={(e) => handleChange(key, {...exp, company: e.target.value})} />
+        <Input placeholder="Start Date" value={exp.start} onChange={(e) => handleChange(key, {...exp, start: e.target.value})} />
+        <Input placeholder="End Date" value={exp.end} onChange={(e) => handleChange(key, {...exp, end: e.target.value})} />
+        <Input placeholder="Description" value={exp.description} onChange={(e) => handleChange(key, {...exp, description: e.target.value})} />
+      </div>
+    );
+  }
 
-            // Fallback for simple string fields
-            return (
-              <div key={key}>
-                <p className="text-xs text-gray-500 mb-1">
-                  {fields[index]?.label || `Item ${index + 1}`}
-                </p>
-                <Input
-                  value={value}
-                  onChange={(e) => handleChange(key, e.target.value)}
-                  disabled={fields[index]?.disabled}
-                />
-              </div>
-            );
-          })}
+  // fallback for string inputs
+  return (
+    <div key={key}>
+      <p className="text-xs text-gray-500 mb-1">
+        {fields[index]?.label || `Item ${index + 1}`}
+      </p>
+      <Input
+        value={typeof value === "object" ? "" : value}
+        onChange={(e) => handleChange(key, e.target.value)}
+        disabled={fields[index]?.disabled}
+      />
+    </div>
+  );
+})}
+
 
           {allowAddMore && (
             <Button
