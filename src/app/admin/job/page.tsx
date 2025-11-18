@@ -1,10 +1,10 @@
 import React from 'react'
-import Client from "@/features/admin/clients"
+import Job from '@/features/admin/Job'
 
 const page = () => {
   return (
     <div>
-     <Client />
+        <Job/>
     </div>
   )
 }

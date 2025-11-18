@@ -7,7 +7,7 @@ const VerifyEmail = () => {
   const inputsRef = useRef<HTMLInputElement[]>([]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const value = e.target.value.replace(/[^0-9]/g, ""); // allow only numbers
+    const value = e.target.value.replace(/[^0-9]/g, ""); 
     e.target.value = value;
 
     if (value && index < inputsRef.current.length - 1) {
@@ -34,22 +34,29 @@ const VerifyEmail = () => {
       {/* OTP Inputs */}
       <div className="flex justify-center gap-3 mt-8">
         {[0, 1, 2, 3].map((i) => (
-          <input
-            key={i}
-            type="text"
-            inputMode="numeric"
-            maxLength={1}
-            className="w-12 h-12 text-2xl text-center rounded-lg bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            ref={(el) => {
-              if (el) inputsRef.current[i] = el;
-            }}
-            onChange={(e) => handleChange(e, i)}
-            onKeyDown={(e) => handleKeyDown(e, i)}
-          />
+          <div key={i}>
+            <label htmlFor={`otp-${i}`} className="sr-only">
+              OTP digit {i + 1}
+            </label>
+
+            <input
+              id={`otp-${i}`}
+              type="text"
+              inputMode="numeric"
+              aria-label={`OTP digit ${i + 1}`}
+              maxLength={1}
+              placeholder="•"
+              className="w-12 h-12 text-2xl text-center rounded-lg bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              ref={(el) => {
+                if (el) inputsRef.current[i] = el;
+              }}
+              onChange={(e) => handleChange(e, i)}
+              onKeyDown={(e) => handleKeyDown(e, i)}
+            />
+          </div>
         ))}
       </div>
 
-      {/* Resend link */}
       <p className="text-center mt-6 text-sm text-gray-600">
         Didn’t receive a code?{" "}
         <a href="#" className="text-blue-500 hover:underline">
@@ -57,7 +64,6 @@ const VerifyEmail = () => {
         </a>
       </p>
 
-      {/* Verify button */}
       <button className="mt-6 w-full bg-[#4C62ED] hover:bg-[#3a4cd1] transition-colors text-white text-base font-medium rounded-base py-2.5 capitalize flex items-center justify-center gap-2 cursor-pointer">
         <MdOutlineMarkEmailRead /> Verify Your Email
       </button>
