@@ -2,147 +2,146 @@ import React from "react";
 
 type Size = number | string;
 
-type ApplicantsListProps = {
-  height?: Size; 
-  width?: Size;  
+interface ApplicantsListProps {
+  height?: Size;
+  width?: Size;
   className?: string;
-};
+}
 
-type Applicant = {
+interface Applicant {
+  id: string; // added for proper key
   name: string;
   email: string;
   role: string;
   date: string;
   experience: string;
   status: "Interviewing" | "Shortlisted" | "Scheduled";
-};
+}
 
 const rows: Applicant[] = [
-  { name: "Debasish Nayak",   email: "dev@gmail.com",   role: "Frontend Dev.", date: "Oct 15, 2025", experience: "0-1 years", status: "Interviewing" },
-  { name: "Daneshwar Verma",  email: "danish@gmail.com",role: "Backend Dev.",  date: "Oct 15, 2025", experience: "0-1 years", status: "Shortlisted" },
-  { name: "Sarthak Choudhary",email: "dev@gmail.com",   role: "Frontend Dev.", date: "Oct 15, 2025", experience: "0-1 years", status: "Interviewing" },
-  { name: "Arsh Rai",         email: "arsh@gmail.com",  role: "Full Stack Dev.",date:"Oct 15, 2025", experience: "0-1 years", status: "Shortlisted" },
-  { name: "Pranita",          email: "pranita@gmail.com",role:"Frontend Dev.", date: "Oct 15, 2025", experience: "0-1 years", status: "Scheduled" },
-  { name: "Dipak Wagh",       email: "dipak@gmail.com", role: "Frontend Dev.", date: "Oct 15, 2025", experience: "0-1 years", status: "Interviewing" },
+  { id: "1", name: "Debasish Nayak", email: "dev@gmail.com", role: "Frontend Dev.", date: "Oct 15, 2025", experience: "0-1 years", status: "Interviewing" },
+  { id: "2", name: "Daneshwar Verma", email: "danish@gmail.com", role: "Backend Dev.", date: "Oct 15, 2025", experience: "0-1 years", status: "Shortlisted" },
+  { id: "3", name: "Sarthak Choudhary", email: "dev@gmail.com", role: "Frontend Dev.", date: "Oct 15, 2025", experience: "0-1 years", status: "Interviewing" },
+  { id: "4", name: "Arsh Rai", email: "arsh@gmail.com", role: "Full Stack Dev.", date: "Oct 15, 2025", experience: "0-1 years", status: "Shortlisted" },
+  { id: "5", name: "Pranita", email: "pranita@gmail.com", role: "Frontend Dev.", date: "Oct 15, 2025", experience: "0-1 years", status: "Scheduled" },
+  { id: "6", name: "Dipak Wagh", email: "dipak@gmail.com", role: "Frontend Dev.", date: "Oct 15, 2025", experience: "0-1 years", status: "Interviewing" },
 ];
 
+const statusConfig = {
+  Interviewing: { color: "yellow", label: "Interviewing" },
+  Shortlisted: { color: "emerald", label: "Shortlisted" },
+  Scheduled: { color: "violet", label: "Scheduled" },
+} as const;
+
 export default function ApplicantsList({
-  height = 520,     
+  height = 520,
   width = 840,
   className = "",
 }: ApplicantsListProps) {
-  const h = typeof height === "number" ? `${height}px` : height;
-  const w = typeof width === "number" ? `${width}px` : width;
+  const heightValue = typeof height === "number" ? `${height}px` : height;
+  const widthValue = typeof width === "number" ? `${width}px` : width;
 
   return (
     <div
-      className={`h-[var(--h)] w-[var(--w)] bg-white rounded-2xl shadow-md p-4 flex flex-col overflow-hidden ${className}`}
-      style={
-        {
-          ["--h" as any]: h,
-          ["--w" as any]: w,
-        } as React.CSSProperties
-      }
+      className={`bg-white rounded-2xl shadow-md p-6 flex flex-col overflow-hidden ${className}`}
+      style={{
+        height: heightValue,
+        width: widthValue,
+        maxHeight: heightValue,
+        maxWidth: widthValue,
+      }}
     >
-      <div className="flex items-center justify-between gap-3">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <span className="text-lg font-semibold text-gray-900">Applicants Lists</span>
-          <span className="px-3 py-1 rounded-full text-white text-xs font-semibold bg-blue-600">1124</span>
+          <h2 className="text-xl font-bold text-gray-900">Applicants List</h2>
+          <span className="px-3 py-1 rounded-full text-white text-xs font-bold bg-blue-600">
+            1,124
+          </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-sm text-gray-500">
-            <span>Sort by:</span>
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 text-sm">
+            <span className="text-gray-600">Sort by:</span>
             <select
-              className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-gray-700"
-              defaultValue="popular"
-              aria-label="Sort applicants"
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              defaultValue="latest"
             >
-              <option value="popular">Popular</option>
               <option value="latest">Latest</option>
+              <option value="popular">Popular</option>
               <option value="name">Name</option>
             </select>
           </label>
-          <button className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-900">
+
+          <button className="rounded-xl border border-gray-300 bg-white px-5 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition">
             See All
           </button>
         </div>
       </div>
 
-      <div className="mt-4 border-b-2 border-gray-200">
-        <div className="flex items-center gap-6">
-          <button className="relative pb-3 text-sm font-semibold text-gray-900">
-            All Applicants
-            <span className="absolute left-0 right-0 -bottom-[2px] h-[3px] rounded bg-blue-600" />
+      {/* Tabs */}
+      <div className="flex gap-8 border-b border-gray-200 mb-4">
+        {["All Applicants", "Screening", "Shortlisted", "Interviewing", "Job Offers"].map((tab) => (
+          <button
+            key={tab}
+            className={`relative pb-4 text-sm font-semibold transition ${
+              tab === "All Applicants"
+                ? "text-gray-900 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-blue-600 after:rounded-t"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {tab}
           </button>
-          <button className="pb-3 text-sm font-semibold text-gray-500">Screening</button>
-          <button className="pb-3 text-sm font-semibold text-gray-500">Shortlisted</button>
-          <button className="pb-3 text-sm font-semibold text-gray-500">Interviewing</button>
-          <button className="pb-3 text-sm font-semibold text-gray-500">Job Offers</button>
-        </div>
+        ))}
       </div>
 
-      <div className="mt-3 border border-gray-200 rounded-xl overflow-hidden flex-1 flex flex-col">
-       
-
-        <div className="overflow-y-auto">
-          <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-gray-50">
-              <tr className="grid grid-cols-[1.6fr_1.1fr_1fr_1fr_1fr_1fr] text-xs font-semibold text-gray-500 px-4 py-2">
-                <th className="text-left">Name</th>
-                <th className="text-left">Role</th>
-                <th className="text-left">Date</th>
-                <th className="text-left">Experience</th>
-                <th className="text-left">Resume</th>
-                <th className="text-left">Status</th>
+      {/* Table */}
+      <div className="flex-1 overflow-hidden rounded-xl border border-gray-200">
+        <div className="overflow-y-auto h-full">
+          <table className="w-full">
+            <thead className="sticky top-0 bg-gray-50 border-b border-gray-200">
+              <tr className="grid grid-cols-12 text-left text-xs font-semibold text-gray-600">
+                <th className="col-span-3 pl-6 py-4">Name</th>
+                <th className="col-span-2">Role</th>
+                <th className="col-span-2">Date</th>
+                <th className="col-span-2">Experience</th>
+                <th className="col-span-1">Resume</th>
+                <th className="col-span-2 pr-6">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {rows.map((r, idx) => (
-                <tr
-                  key={idx}
-                  className="grid grid-cols-[1.6fr_1.1fr_1fr_1fr_1fr_1fr] items-center px-4 py-3"
-                >
-                  <td>
-                    <div className="font-semibold text-gray-900">{r.name}</div>
-                    <div className="text-xs text-gray-500">{r.email}</div>
-                  </td>
-                  <td className="text-gray-900">{r.role}</td>
-                  <td className="text-gray-900">{r.date}</td>
-                  <td className="text-gray-900">{r.experience}</td>
-                  <td>
-                    <button className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-900">
-                      <span aria-hidden>📄</span>
-                      Resume
-                    </button>
-                  </td>
-                  <td>
-                    <span
-                      className={[
-                        "inline-flex items-center gap-2 font-semibold",
-                        r.status === "Interviewing" && "text-yellow-600",
-                        r.status === "Shortlisted" && "text-emerald-600",
-                        r.status === "Scheduled" && "text-violet-600",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                    >
-                      <span
-                        className={[
-                          "inline-block h-2 w-2 rounded-full",
-                          r.status === "Interviewing" && "bg-yellow-500",
-                          r.status === "Shortlisted" && "bg-emerald-500",
-                          r.status === "Scheduled" && "bg-violet-500",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        aria-hidden
-                      />
-                      {r.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {rows.map((applicant) => {
+                const status = statusConfig[applicant.status];
+                return (
+                  <tr
+                    key={applicant.id}
+                    className="grid grid-cols-12 items-center hover:bg-gray-50 transition py-3"
+                  >
+                    <td className="col-span-3 pl-6">
+                      <div className="font-medium text-gray-900">{applicant.name}</div>
+                      <div className="text-sm text-gray-500">{applicant.email}</div>
+                    </td>
+                    <td className="col-span-2 text-gray-700">{applicant.role}</td>
+                    <td className="col-span-2 text-gray-700">{applicant.date}</td>
+                    <td className="col-span-2 text-gray-700">{applicant.experience}</td>
+                    <td className="col-span-1">
+                      <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                        <span role="img" aria-label="document">Resume</span>
+                        Resume
+                      </button>
+                    </td>
+                    <td className="col-span-2 pr-6">
+                      <span className={`inline-flex items-center gap-2 text-${status.color}-600 font-semibold`}>
+                        <span
+                          className={`h-2 w-2 rounded-full bg-${status.color}-500`}
+                          aria-hidden="true"
+                        />
+                        {status.label}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

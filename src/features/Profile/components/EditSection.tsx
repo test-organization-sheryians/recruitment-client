@@ -13,19 +13,28 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+// Proper types instead of any
+interface ExperienceItem {
+  title: string;
+  company: string;
+  start: string;
+  end: string;
+  description: string;
+}
+
 interface Field {
   key: string;
   label: string;
-  value: any; // string or object (for experience)
+  value: string | ExperienceItem;
   disabled?: boolean;
 }
 
 interface EditSectionProps {
   title: string;
   fields: Field[];
-  onSave: (updatedValues: Record<string, any>) => void;
+  onSave: (updatedValues: Record<string, string | ExperienceItem>) => void;
   allowAddMore?: boolean;
-  type?: "string" | "experience"; // NEWw
+  type?: "string" | "experience";
 }
 
 export default function EditSection({
@@ -35,25 +44,36 @@ export default function EditSection({
   allowAddMore = false,
   type = "string",
 }: EditSectionProps) {
-  const [formValues, setFormValues] = useState<Record<string, any>>({});
+  const [formValues, setFormValues] = useState<
+    Record<string, string | ExperienceItem>
+  >({});
 
   useEffect(() => {
-    const initialValues: Record<string, any> = {};
+    const initialValues: Record<string, string | ExperienceItem> = {};
     fields.forEach((f) => {
       initialValues[f.key] = f.value;
     });
     setFormValues(initialValues);
   }, [fields]);
 
-  const handleChange = (key: string, value: any) => {
+  const handleChange = (
+    key: string,
+    value: string | ExperienceItem
+  ) => {
     setFormValues((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleAddField = () => {
-    const newKey = String(Object.keys(formValues).length);
+    const newKey = `new_${Date.now()}`; // better than length-based key
     setFormValues((prev) => ({
       ...prev,
-      [newKey]: { title: "", company: "", start: "", end: "", description: "" },
+      [newKey]: {
+        title: "",
+        company: "",
+        start: "",
+        end: "",
+        description: "",
+      } satisfies ExperienceItem,
     }));
   };
 
@@ -65,53 +85,86 @@ export default function EditSection({
         </Button>
       </DialogTrigger>
 
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Edit {title}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-{Object.entries(formValues).map(([key, value], index) => {
-  if (type === "experience") {
-    // Render multi-input experience fields
-    const exp = value;
-    return (
-      <div key={key} className="space-y-2 p-2 border rounded">
-        <p className="text-xs text-gray-500 mb-1">
-          {fields[index]?.label || `Experience ${index + 1}`}
-        </p>
-        <Input placeholder="Title" value={exp.title} onChange={(e) => handleChange(key, {...exp, title: e.target.value})} />
-        <Input placeholder="Company" value={exp.company} onChange={(e) => handleChange(key, {...exp, company: e.target.value})} />
-        <Input placeholder="Start Date" value={exp.start} onChange={(e) => handleChange(key, {...exp, start: e.target.value})} />
-        <Input placeholder="End Date" value={exp.end} onChange={(e) => handleChange(key, {...exp, end: e.target.value})} />
-        <Input placeholder="Description" value={exp.description} onChange={(e) => handleChange(key, {...exp, description: e.target.value})} />
-      </div>
-    );
-  }
+          {Object.entries(formValues).map(([key, value], index) => {
+            if (type === "experience") {
+              const exp = value as ExperienceItem; // safe because type === "experience"
+              return (
+                <div key={key} className="space-y-3 rounded-lg border p-4">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {fields[index]?.label || `Experience ${index + 1}`}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 space-y-3 md:grid">
+                    <Input
+                      placeholder="Job Title"
+                      value={exp.title}
+                      onChange={(e) =>
+                        handleChange(key, { ...exp, title: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Company"
+                      value={exp.company}
+                      onChange={(e) =>
+                        handleChange(key, { ...exp, company: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Start Date"
+                      value={exp.start}
+                      onChange={(e) =>
+                        handleChange(key, { ...exp, start: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="End Date (or 'Present')"
+                      value={exp.end}
+                      onChange={(e) =>
+                        handleChange(key, { ...exp, end: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Description"
+                      value={exp.description}
+                      onChange={(e) =>
+                        handleChange(key, {
+                          ...exp,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              );
+            }
 
-  // fallback for string inputs
-  return (
-    <div key={key}>
-      <p className="text-xs text-gray-500 mb-1">
-        {fields[index]?.label || `Item ${index + 1}`}
-      </p>
-      <Input
-        value={typeof value === "object" ? "" : value}
-        onChange={(e) => handleChange(key, e.target.value)}
-        disabled={fields[index]?.disabled}
-      />
-    </div>
-  );
-})}
+            // Regular string fields
+            return (
+              <div key={key}>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {fields[index]?.label || `Item ${index + 1}`}
+                </p>
+                <Input
+                  value={typeof value === "string" ? value : ""}
+                  onChange={(e) => handleChange(key, e.target.value)}
+                  disabled={fields[index]?.disabled}
+                />
+              </div>
+            );
+          })}
 
-
-          {allowAddMore && (
+          {allowAddMore && type === "experience" && (
             <Button
-              variant="ghost"
-              className="w-full mt-2 border"
+              variant="outline"
+              className="w-full"
               onClick={handleAddField}
             >
-              + Add More
+              + Add Experience
             </Button>
           )}
         </div>
@@ -120,13 +173,12 @@ export default function EditSection({
           <DialogClose asChild>
             <Button variant="outline">Cancel</Button>
           </DialogClose>
-
           <Button
             onClick={() => {
               onSave(formValues);
             }}
           >
-            Save
+            Save Changes
           </Button>
         </DialogFooter>
       </DialogContent>
