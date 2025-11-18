@@ -21,14 +21,13 @@ const Logout = () => {
       },
       onError: (error) => {
         console.error("Logout failed:", error);
-        // Optional: still redirect even if API fails
         Cookies.remove("access");
         dispatch(logoutSlice());
         router.push("/login");
       },
     });
   };
-
+  
   return (
     <button
       onClick={handleLogout}

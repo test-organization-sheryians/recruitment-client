@@ -1,23 +1,52 @@
+// components/Sidebar.tsx
+'use client';
+
 import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import clsx from 'clsx';
+import LogoutButton from './Logout';
 
-const items = ['Dashboard', 'Jobs', 'Shortlist', 'Interviews', 'Clients'];
+const navItems = [
+  { name: 'Dashboard', href: '/admin' },
+  { name: 'Jobs', href: '/admin/jobs' },
+  { name: 'Clients', href: '/admin/clients' },
+];
 
-export default function Sidebar({ active = 'Dashboard' }: { active?: string }) {
+export default function Sidebar() {
+  const pathname = usePathname();
+
+  const isActive = (href: string) => {
+    if (href === '/admin/dashboard') {
+      return pathname === '/admin' || pathname.startsWith('/admin/dashboard');
+    }
+    return pathname.startsWith(href);
+  };
+
   return (
-    <div className="h-[88vh] rounded-2xl bg-white p-4 border border-gray-200 flex flex-col">
-      <div className="text-2xl font-semibold mb-6">Require.</div>
-      <nav className="space-y-2 text-sm">
-        {items.map((item) => (
-          <button
-            key={item}
-            className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 ${
-              item === active ? 'bg-[#E9EFF7] text-[#1270B0] font-semibold' : 'text-gray-700'
-            }`}
+    <div className="h-screen rounded-2xl bg-white p-6 border border-gray-200 flex flex-col">
+      <div className="text-3xl font-bold text-[#1270B0] mb-10">Require.</div>
+
+      <nav className="space-y-1 flex-1">
+        {navItems.map((item) => (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={clsx(
+              'w-full flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all',
+              isActive(item.href)
+                ? 'bg-[#E9EFF7] text-[#1270B0] font-semibold shadow-sm'
+                : 'text-gray-700 hover:bg-gray-50 hover:text-[#1270B0]'
+            )}
           >
-            {item}
-          </button>
+            {item.name}
+          </Link>
         ))}
       </nav>
+
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <LogoutButton />
+      </div>
     </div>
   );
 }
