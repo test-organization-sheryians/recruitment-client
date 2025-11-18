@@ -2,10 +2,3 @@ export * from "./auth/login"
 export * from "./auth/register"
 export * from "./auth/logout"
 export * from "./AITest/postResumeAndGenerateQuestions"
-export * from "./profile/addSkills";
-export * from "./profile/createProfile";
-export * from "./profile/deleteProfile";
-export * from "./profile/getProfile";
-export * from "./profile/patchProfile";
-export * from "./profile/removeSkill";
-export * from "./profile/updateProfile";
