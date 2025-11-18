@@ -19,7 +19,11 @@ const SigninForm = () => {
 
   const { register, handleSubmit } = useForm();
 
-  const { mutate: loginUser, isPending: isLoggingIn, error } = useLogin();
+  const {
+    mutate: loginUser,
+    isPending: isLoggingIn,
+    error,
+  } = useLogin();
 
   const onSubmit = (formData: any) => {
     setErrorMsg("");
@@ -41,11 +45,8 @@ const SigninForm = () => {
             role: res.data.user?.role?.name || "user",
           })
         );
-        if (res.data.user?.role?.name && res.data.user?.role?.name === "admin") {
-          router.push("/admin");
-        } else {
-          router.push("/candidate/resume");
-        }
+
+        router.push("/resume");
       },
       onError: (err: any) => {
         const message =
@@ -128,10 +129,7 @@ const SigninForm = () => {
 
       <p className="text-center text-gray-600 text-sm mt-8">
         Don’t have an account?{" "}
-        <a
-          href="/register"
-          className="text-[#4C62ED] underline font-medium hover:text-[#3a4cd1]"
-        >
+        <a href="/register" className="text-[#4C62ED] underline font-medium hover:text-[#3a4cd1]">
           Register
         </a>
       </p>
