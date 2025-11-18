@@ -11,11 +11,11 @@ const Navbar = () => {
   console.log(user) 
   if (!user) return null;
   const navlinks = [
-    { title: "Home", href: "/" },
-    { title: "Courses", href: "/courses" },
-    { title: "About", href: "/about" },
-    { title: "Hire from us", href: "/hire-us" },
-    { title: "Interviews", href: "/interviews" },
+    // { title: "Home", href: "/" },
+    // { title: "Courses", href: "/courses" },
+    // { title: "About", href: "/about" },
+    // { title: "Hire from us", href: "/hire-us" },
+    // { title: "Interviews", href: "/interviews" },
   ];
 
   return (

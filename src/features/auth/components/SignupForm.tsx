@@ -50,7 +50,7 @@ const SignupForm = () => {
             role: res.data.user?.role?.name || "user",
           })
         );
-        router.push("/resume");
+        router.push("/candidate/resume");
       },
       onError: (err: any) => {
         const message =

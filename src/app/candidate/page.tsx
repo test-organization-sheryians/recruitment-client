@@ -1,11 +1,12 @@
+import UnderConstruction from '@/features/admin/UnderConstruction'
 import React from 'react'
 
 const page = () => {
 
-  
+
   return (
     <div>
-       this is  candidate page
+       <UnderConstruction/>
     </div>
   )
 }
