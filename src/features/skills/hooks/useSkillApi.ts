@@ -1,35 +1,90 @@
 import * as api from "@/api";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export const usegetAllSkills = () => {
-    return useQuery({
-        queryKey: ['getAllSkills'],
-        queryFn: () => api.getAllSkills(undefined)
-    })
-}
+export const useGetAllSkills = () => {
+  return useQuery({
+    queryKey: ["skills"],
+    queryFn: () => api.getAllSkills(),
+  });
+};
+
+
+export const useGetSkill = (id?: string) => {
+  return useQuery({
+    queryKey: ["skill", id],
+    queryFn: () => api.getSkill(id),
+    enabled: !!id,
+  });
+};
+
 
 export const useCreateSkill = () => {
-    return useMutation({
-        mutationKey: ['createSkill'],
-        mutationFn: (data) => api.createSkill(data)
-    })
-}
+  const queryClient = useQueryClient();
 
-export const useGetSkill = () => {
-    return useMutation({
-        mutationKey: ['getSkill'],
-        mutationFn: (data) => api.getSkill(data)
-    })
-}
+  return useMutation({
+    mutationKey: ["createSkill"],
+    mutationFn: (data: { name: string }) => api.createSkill(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["skills"] });
+    },
+  });
+};
+
+
 export const useUpdateSkill = () => {
-    return useMutation({
-        mutationKey: ['updateSkill'],
-        mutationFn: (data) => api.updateSkill(data)
-    })
-}
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["updateSkill"],
+    mutationFn: (data: { id: string; name: string }) => api.updateSkill(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["skills"] });
+    },
+  });
+};
+
+// export const useDeleteSkill = () => {
+//   const queryClient = useQueryClient();
+
+//   return useMutation({
+//     mutationKey: ["deleteSkill"],
+//     mutationFn: (id: string) => {
+//       console.log("Mutation Received ID:", id);
+//       return api.deleteSkill(id);
+//     },
+//     onSuccess: () => {
+//       queryClient.invalidateQueries(["skills"]);
+//     },
+//   });
+// };
+
+
 export const useDeleteSkill = () => {
-    return useMutation({
-        mutationKey: ['deleteSkill'],
-        mutationFn: (data) => api.deleteSkill(data)
-    })
-}
+  const queryClient = useQueryClient();
+
+  return useMutation({
+      mutationKey: ["deleteSkill"],
+mutationFn: (id: string | {id: string}) => {  api.deleteSkill(id),
+     console.log(id)  },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries(["skills"]);
+    },
+  });
+};
+
+
+
+// export const useDeleteSkill = () => {
+//   const queryClient = useQueryClient();
+
+//   return useMutation({
+//     mutationKey: ["deleteSkill"],
+//     mutationFn: (id: string) => {  api.deleteSkill(id),
+//       console.log("ID sending to API:", id)
+//     },
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({ queryKey: ["skills"] });
+//     },
+//   });
+// };
