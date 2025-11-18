@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const publicRoutes = ["/login", "/register", "/"] as const;
+const publicRoutes = ["/login", "/register", "/", "/admin", "/admin/jobs", "/admin/jobs/create", "/admin/jobs/:id"] as const;
 
 const api = axios.create({
   baseURL,
@@ -18,7 +18,7 @@ const api = axios.create({
 // Optional: Add auth token if you use accessToken in headers (not cookies)
 // api.interceptors.request.use((config) => {
 //   const token = Cookies.get("accessToken");
-//   if (token) config.headers.Authorization = `Bearer ${token}`;
+//   if (token) config.headers.Authorization = Bearer ${token};
 //   return config;
 // });
 
