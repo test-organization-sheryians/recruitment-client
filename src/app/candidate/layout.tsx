@@ -1,0 +1,20 @@
+import Navbar from "@/components/Navbar";
+import { getCurrentUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import React from "react";
+
+const CandidateLayout = async ({ children }: { children: React.ReactNode }) => {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+  return (
+    <div>
+      <Navbar />
+      {children}
+    </div>
+  );
+};
+
+export default CandidateLayout;
