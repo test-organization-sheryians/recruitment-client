@@ -7,9 +7,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
-  DialogClose,
-  DialogDescription, // ← added
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,7 @@ import { Button } from "@/components/ui/button";
 interface Field {
   key: string;
   label: string;
-  value: any; // string or object (for experience)
+  value: any; // string OR object
   disabled?: boolean;
 }
 
@@ -37,14 +36,11 @@ export default function EditSection({
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [open, setOpen] = useState(false);
 
-  // Initialize form values only when dialog opens
   useEffect(() => {
     if (open) {
-      const initialValues: Record<string, any> = {};
-      fields.forEach((f) => {
-        initialValues[f.key] = f.value;
-      });
-      setFormValues(initialValues);
+      const initial: Record<string, any> = {};
+      fields.forEach((f) => (initial[f.key] = f.value));
+      setFormValues(initial);
     }
   }, [open, fields]);
 
@@ -54,36 +50,44 @@ export default function EditSection({
 
   const handleAddField = () => {
     const newKey = String(Object.keys(formValues).length);
-    setFormValues((prev) => ({
-      ...prev,
-      [newKey]: { title: "", company: "", start: "", end: "", description: "" },
+    setFormValues((p) => ({
+      ...p,
+      [newKey]: {
+        title: "",
+        company: "",
+        start: "",
+        end: "",
+        description: "",
+      },
     }));
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          Edit
-        </Button>
+        <Button variant="outline" size="sm">Edit</Button>
       </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit {title}</DialogTitle>
-          <DialogDescription className="text-sm text-gray-500">
-            Modify the fields and click Save to update
+          <DialogDescription>
+            Update values and click save.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
           {Object.entries(formValues).map(([key, value], index) => {
-            if (typeof value === "object" && value !== null && "title" in value) {
+            const fieldMeta = fields[index];
+
+            // Experience object rendering
+            if (typeof value === "object" && "title" in value) {
               return (
-                <div key={key} className="space-y-2 p-2 border rounded">
+                <div key={key} className="p-2 border rounded space-y-2">
                   <p className="text-xs text-gray-500 mb-1">
-                    {fields[index]?.label || `Experience ${index + 1}`}
+                    {fieldMeta?.label || `Item ${index + 1}`}
                   </p>
+
                   <Input
                     placeholder="Title"
                     value={value.title}
@@ -116,42 +120,42 @@ export default function EditSection({
                     placeholder="Description"
                     value={value.description}
                     onChange={(e) =>
-                      handleChange(key, { ...value, description: e.target.value })
+                      handleChange(key, {
+                        ...value,
+                        description: e.target.value,
+                      })
                     }
                   />
                 </div>
               );
             }
 
+            // Simple string fields
             return (
               <div key={key}>
                 <p className="text-xs text-gray-500 mb-1">
-                  {fields[index]?.label || `Item ${index + 1}`}
+                  {fieldMeta?.label || `Item ${index + 1}`}
                 </p>
                 <Input
                   value={value}
+                  disabled={fieldMeta?.disabled}
                   onChange={(e) => handleChange(key, e.target.value)}
-                  disabled={fields[index]?.disabled}
                 />
               </div>
             );
           })}
 
           {allowAddMore && (
-            <Button
-              variant="ghost"
-              className="w-full mt-2 border"
-              onClick={handleAddField}
-            >
+            <Button variant="outline" className="w-full" onClick={handleAddField}>
               + Add More
             </Button>
           )}
         </div>
 
         <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
 
           <Button
             onClick={() => {

@@ -1,4 +1,5 @@
 import UnderConstruction from '@/features/admin/UnderConstruction'
+import CandidateProfile from '@/features/Profile/components/CandidateProfile'
 import React from 'react'
 
 const page = () => {
@@ -6,7 +7,7 @@ const page = () => {
 
   return (
     <div>
-       <UnderConstruction/>
+       <CandidateProfile />
     </div>
   )
 }
