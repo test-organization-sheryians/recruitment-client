@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import EditSection from "./EditSection";
 import { Button } from "@/components/ui/button";
 import { jwtDecode } from "jwt-decode";
+import { useQueryClient } from "@tanstack/react-query";
 
 import {
   useGetProfile,
@@ -13,6 +14,8 @@ import {
 
 export default function CandidateProfile() {
   const [userId, setUserId] = useState<string>("");
+
+  const queryClient = useQueryClient();
 
   // -------------------------------
   // LOAD USER ID FROM JWT
@@ -32,7 +35,7 @@ export default function CandidateProfile() {
   // -------------------------------
   // FETCH PROFILE
   // -------------------------------
-  const { data, isLoading, isError, refetch } = useGetProfile(userId, {
+  const { data, isLoading, isError } = useGetProfile(userId, {
     enabled: !!userId,
   });
 
@@ -57,14 +60,16 @@ export default function CandidateProfile() {
   // -------------------------------
   useEffect(() => {
     if (!data) return;
-    setFirstName(data.firstName || "");
-    setLastName(data.lastName || "");
-    setPhone(data.phone || "");
-    setEmail(data.email || "");
-    setSkills(data.skills || []);
-    setExperience(data.experience || []);
-    setLinkedin(data.linkedin || "");
-    setGithub(data.github || "");
+
+    const profile = data.data;
+    setFirstName(profile.user.firstName || "");
+    setLastName(profile.user.lastName || "");
+    setPhone(profile.user.phone || "");
+    setEmail(profile.user.email || "");
+    setSkills(profile.skills || []);
+    setExperience(profile.experience || []);
+    setLinkedin(profile.linkedin || "");
+    setGithub(profile.github || "");
   }, [data]);
 
   // -------------------------------
@@ -116,13 +121,23 @@ export default function CandidateProfile() {
                 { key: "email", label: "Email", value: email, disabled: true },
               ]}
               onSave={(updated) => {
-                setFirstName(updated.firstName);
-                setLastName(updated.lastName);
-                setPhone(updated.phone);
-
                 updateProfile.mutate(
                   { userId, data: updated },
-                  { onSuccess: () => refetch() }
+                  {
+                    onSuccess: () => {
+                      // update local state & cache after successful mutation
+                      setFirstName(updated.firstName);
+                      setLastName(updated.lastName);
+                      setPhone(updated.phone);
+                      queryClient.setQueryData(["profile", userId], (oldData: any) => ({
+                        ...oldData,
+                        data: {
+                          ...oldData.data,
+                          user: { ...oldData.data.user, ...updated },
+                        },
+                      }));
+                    },
+                  }
                 );
               }}
             />
@@ -146,9 +161,18 @@ export default function CandidateProfile() {
               allowAddMore
               onSave={(updated) => {
                 const arr = Object.values(updated).filter((s) => s.trim() !== "");
-                setSkills(arr);
-
-                patchProfile.mutate({ userId, data: { skills: arr } }, { onSuccess: () => refetch() });
+                patchProfile.mutate(
+                  { userId, data: { skills: arr } },
+                  {
+                    onSuccess: () => {
+                      setSkills(arr);
+                      queryClient.setQueryData(["profile", userId], (oldData: any) => ({
+                        ...oldData,
+                        data: { ...oldData.data, skills: arr },
+                      }));
+                    },
+                  }
+                );
               }}
             />
           </div>
@@ -170,9 +194,18 @@ export default function CandidateProfile() {
               allowAddMore
               onSave={(updated) => {
                 const arr = Object.values(updated);
-                setExperience(arr);
-
-                patchProfile.mutate({ userId, data: { experience: arr } }, { onSuccess: () => refetch() });
+                patchProfile.mutate(
+                  { userId, data: { experience: arr } },
+                  {
+                    onSuccess: () => {
+                      setExperience(arr);
+                      queryClient.setQueryData(["profile", userId], (oldData: any) => ({
+                        ...oldData,
+                        data: { ...oldData.data, experience: arr },
+                      }));
+                    },
+                  }
+                );
               }}
             />
           </div>
@@ -200,10 +233,19 @@ export default function CandidateProfile() {
                 { key: "github", label: "GitHub", value: github },
               ]}
               onSave={(updated) => {
-                setLinkedin(updated.linkedin);
-                setGithub(updated.github);
-
-                patchProfile.mutate({ userId, data: { linkedin: updated.linkedin, github: updated.github } }, { onSuccess: () => refetch() });
+                patchProfile.mutate(
+                  { userId, data: { linkedin: updated.linkedin, github: updated.github } },
+                  {
+                    onSuccess: () => {
+                      setLinkedin(updated.linkedin);
+                      setGithub(updated.github);
+                      queryClient.setQueryData(["profile", userId], (oldData: any) => ({
+                        ...oldData,
+                        data: { ...oldData.data, linkedin: updated.linkedin, github: updated.github },
+                      }));
+                    },
+                  }
+                );
               }}
             />
           </div>

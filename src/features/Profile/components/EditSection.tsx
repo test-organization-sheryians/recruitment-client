@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogDescription, // ← added
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -67,12 +68,12 @@ export default function EditSection({
         </Button>
       </DialogTrigger>
 
-      <DialogContent aria-describedby="dialog-description">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit {title}</DialogTitle>
-          <p id="dialog-description" className="text-sm text-gray-500">
+          <DialogDescription className="text-sm text-gray-500">
             Modify the fields and click Save to update
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">

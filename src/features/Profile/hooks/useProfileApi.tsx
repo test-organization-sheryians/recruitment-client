@@ -37,7 +37,7 @@ export const useUpdateProfile = () => {
   return useMutation({
     mutationKey: ["updateProfile"],
     mutationFn: ({ userId, data }: { userId: string; data: any }) =>
-      api.updateProfile(userId, data),
+      api.patchProfile(userId, data),
     retry: 0,
   });
 };
