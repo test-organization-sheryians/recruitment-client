@@ -1,16 +1,21 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation ,UseQueryOptions} from "@tanstack/react-query";
 import * as api from "../../../api";
 
 
 // --------------------------------------
 // GET PROFILE (Query)
 // --------------------------------------
-export const useGetProfile = (userId: string) => {
+
+export const useGetProfile = (
+  userId: string,
+  options?: Omit<UseQueryOptions<any, Error, any, [string, string]>, 'queryKey' | 'queryFn'>
+) => {
   return useQuery({
     queryKey: ["profile", userId],
     queryFn: () => api.getProfile(userId),
     enabled: !!userId,
     retry: 0,
+    ...options, // merge extra options safely
   });
 };
 

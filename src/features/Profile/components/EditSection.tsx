@@ -34,14 +34,18 @@ export default function EditSection({
   allowAddMore = false,
 }: EditSectionProps) {
   const [formValues, setFormValues] = useState<Record<string, any>>({});
+  const [open, setOpen] = useState(false);
 
+  // Initialize form values only when dialog opens
   useEffect(() => {
-    const initialValues: Record<string, any> = {};
-    fields.forEach((f) => {
-      initialValues[f.key] = f.value;
-    });
-    setFormValues(initialValues);
-  }, [fields]);
+    if (open) {
+      const initialValues: Record<string, any> = {};
+      fields.forEach((f) => {
+        initialValues[f.key] = f.value;
+      });
+      setFormValues(initialValues);
+    }
+  }, [open, fields]);
 
   const handleChange = (key: string, value: any) => {
     setFormValues((prev) => ({ ...prev, [key]: value }));
@@ -56,22 +60,24 @@ export default function EditSection({
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           Edit
         </Button>
       </DialogTrigger>
 
-      <DialogContent>
+      <DialogContent aria-describedby="dialog-description">
         <DialogHeader>
           <DialogTitle>Edit {title}</DialogTitle>
+          <p id="dialog-description" className="text-sm text-gray-500">
+            Modify the fields and click Save to update
+          </p>
         </DialogHeader>
 
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
           {Object.entries(formValues).map(([key, value], index) => {
             if (typeof value === "object" && value !== null && "title" in value) {
-              // Render separate inputs for each experience field
               return (
                 <div key={key} className="space-y-2 p-2 border rounded">
                   <p className="text-xs text-gray-500 mb-1">
@@ -116,7 +122,6 @@ export default function EditSection({
               );
             }
 
-            // Fallback for simple string fields
             return (
               <div key={key}>
                 <p className="text-xs text-gray-500 mb-1">
@@ -150,6 +155,7 @@ export default function EditSection({
           <Button
             onClick={() => {
               onSave(formValues);
+              setOpen(false);
             }}
           >
             Save
