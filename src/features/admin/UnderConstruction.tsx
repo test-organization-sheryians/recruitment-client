@@ -39,7 +39,6 @@ export default function UnderConstruction({
             {showBackButton && (
               <Button
                 onClick={() => window.history.back()}
-                variant="outline"
                 className="border-[#1270B0] text-[#1270B0] hover:bg-[#E9EFF7]"
               >
                 Go Back

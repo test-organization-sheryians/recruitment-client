@@ -3,14 +3,15 @@
 import { BellDot, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
+import { RootState } from "@/config/store";
 import Logout from "@/features/auth/components/Logout";
 import React from "react";
 
 const Navbar = () => {
-  const user = useSelector((state: any) => state.auth.user);
+  const user = useSelector((state: RootState) => state.auth.user);
   console.log(user) 
   if (!user) return null;
-  const navlinks = [
+  const navlinks: { title: string; href: string }[] = [
     // { title: "Home", href: "/" },
     // { title: "Courses", href: "/courses" },
     // { title: "About", href: "/about" },

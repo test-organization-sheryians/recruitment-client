@@ -25,9 +25,11 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-2 cursor-pointer">
-          <img
+          <Image
             src="https://randomuser.me/api/portraits/men/32.jpg"
             alt="profile"
+            width={32}
+            height={32}
             className="w-8 h-8 rounded-full border"
           />
           <div className="text-sm">

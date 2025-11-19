@@ -12,21 +12,16 @@ import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { useLogin } from "../hooks/useAuthApi";
 
-interface LoginFormData {
-  email: string;
-  password: string;
-}
-
 const SigninForm = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState("");
 
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit } = useForm<{ email: string; password: string }>();
 
   const { mutate: loginUser, isPending: isLoggingIn, error } = useLogin();
 
-  const onSubmit = (formData: any) => {
+  const onSubmit = (formData: { email: string; password: string }) => {
     setErrorMsg("");
 
     const sendData = new FormData();
@@ -34,7 +29,7 @@ const SigninForm = () => {
     sendData.append("password", formData.password);
 
     loginUser(sendData, {
-      onSuccess: (res: any) => {
+      onSuccess: (res: { data: { token: string; user: { _id: string; email: string; firstName: string; lastName: string; role?: { name: string } } } }) => {
         Cookies.set("access", res.data.token);
 
         dispatch(
@@ -52,7 +47,7 @@ const SigninForm = () => {
           router.push("/candidate/resume");
         }
       },
-      onError: (err: any) => {
+      onError: (err: { response?: { data?: { message: string } }; message: string }) => {
         const message =
           err?.response?.data?.message ||
           err?.message ||

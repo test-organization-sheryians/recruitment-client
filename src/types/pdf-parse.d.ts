@@ -3,10 +3,10 @@ declare module 'pdf-parse' {
     numpages: number;
     numrender: number;
     info: {
-      [key: string]: any;
+      [key: string]: unknown;
     };
     metadata: {
-      [key: string]: any;
+      [key: string]: unknown;
     };
     text: string;
     version: string;
@@ -15,7 +15,7 @@ declare module 'pdf-parse' {
   interface ParseOptions {
     max?: number;
     version?: string;
-    pagerender?: (pageData: any) => string;
+    pagerender?: (pageData: unknown) => string;
   }
 
   function PDFParse(

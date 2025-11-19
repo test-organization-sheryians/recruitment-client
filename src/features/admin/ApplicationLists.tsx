@@ -39,8 +39,8 @@ export default function ApplicantsList({
       className={`h-[var(--h)] w-[var(--w)] bg-white rounded-2xl shadow-md p-4 flex flex-col overflow-hidden ${className}`}
       style={
         {
-          ["--h" as any]: h,
-          ["--w" as any]: w,
+          ["--h"]: h,
+          ["--w"]: w,
         } as React.CSSProperties
       }
     >
