@@ -11,6 +11,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useRegister } from "../hooks/useAuthApi";
 
+interface SignupFormData {
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
 const SignupForm = () => {
   const router = useRouter();
   const dispatch = useDispatch();

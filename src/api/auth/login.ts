@@ -1,3 +1,8 @@
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
 import api from "@/config/axios";
 
 export const login = async (data: any) => {

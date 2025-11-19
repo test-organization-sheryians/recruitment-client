@@ -12,6 +12,11 @@ import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { useLogin } from "../hooks/useAuthApi";
 
+interface LoginFormData {
+  email: string;
+  password: string;
+}
+
 const SigninForm = () => {
   const dispatch = useDispatch();
   const router = useRouter();
