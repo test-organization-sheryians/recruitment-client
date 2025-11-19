@@ -3,6 +3,16 @@
 import { useEffect, useState } from 'react';
 import { getJobs } from '@/api/jobs';
 import { useRouter } from 'next/navigation';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import CreateJob from './CreateJob';
+import DeleteJob from './DeleteJob';
+import UpdateJob from './UpdateJob';
 
 interface Job {
   _id: string;
@@ -59,6 +69,63 @@ export default function Jobs() {
     loadJobs();
   }, []);
 
+  const handleJobCreated = () => {
+    // Refresh the jobs list after creating a new job
+    const loadJobs = async () => {
+      try {
+        const response: ApiResponse = await getJobs();
+        if (response.success && response.data) {
+          if (Array.isArray(response.data)) {
+            setJobs(response.data);
+          } else {
+            setJobs([response.data]);
+          }
+        }
+      } catch (err) {
+        console.error('Error refreshing jobs:', err);
+      }
+    };
+    loadJobs();
+  };
+
+  const handleJobUpdated = () => {
+    // Refresh the jobs list after updating a job
+    const loadJobs = async () => {
+      try {
+        const response: ApiResponse = await getJobs();
+        if (response.success && response.data) {
+          if (Array.isArray(response.data)) {
+            setJobs(response.data);
+          } else {
+            setJobs([response.data]);
+          }
+        }
+      } catch (err) {
+        console.error('Error refreshing jobs:', err);
+      }
+    };
+    loadJobs();
+  };
+
+  const handleJobDeleted = () => {
+    // Refresh the jobs list after deleting a job
+    const loadJobs = async () => {
+      try {
+        const response: ApiResponse = await getJobs();
+        if (response.success && response.data) {
+          if (Array.isArray(response.data)) {
+            setJobs(response.data);
+          } else {
+            setJobs([response.data]);
+          }
+        }
+      } catch (err) {
+        console.error('Error refreshing jobs:', err);
+      }
+    };
+    loadJobs();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -85,12 +152,19 @@ export default function Jobs() {
             <span className="text-sm text-gray-500">
               {jobs.length} {jobs.length === 1 ? 'job' : 'jobs'} found
             </span>
-            <button
-              onClick={() => router.push('/admin/jobs/create')}
-              className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              + Create Job
-            </button>
+            <div>
+              <Dialog>
+                <DialogTrigger className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
+                  Create job
+                </DialogTrigger>
+                <DialogContent className="w-full h-[96vh] mt-2 p-6">
+                  <DialogHeader>
+                    <DialogTitle>Create a Job</DialogTitle>
+                    <CreateJob onJobCreated={handleJobCreated} />
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
       </div>
@@ -116,9 +190,14 @@ export default function Jobs() {
                         💼 {job.requiredExperience}
                       </span>
                     )}
-                    {job.skills?.length > 0 && (
+                    {job.skills && job.skills.length > 0 && (
                       <span className="flex items-center">
                         🛠️ {job.skills.join(', ')}
+                      </span>
+                    )}
+                    {job.category && (
+                      <span className="flex items-center">
+                        📁 {job.category.name}
                       </span>
                     )}
                   </div>
@@ -127,20 +206,46 @@ export default function Jobs() {
                       Expires: {new Date(job.expiry).toLocaleDateString()}
                     </div>
                   )}
+                  {job.client?.email && (
+                    <div className="mt-1 text-xs text-gray-400">
+                      Client: {job.client.email}
+                    </div>
+                  )}
                 </div>
                 <div className="flex space-x-2 ml-4">
-                  <button 
-                    onClick={() => router.push(`/admin/jobs/update/${job._id}`)}
-                    className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => router.push(`/admin/jobs/delete?id=${job._id}`)}
-                    className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
-                  >
-                    Delete
-                  </button>
+                  {/* Edit Job Dialog */}
+                  <Dialog>
+                    <DialogTrigger className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
+                      Edit Job
+                    </DialogTrigger>
+                    <DialogContent className="w-full h-[96vh] mt-2 p-6">
+                      <DialogHeader>
+                        <DialogTitle>Edit Job: {job.title}</DialogTitle>
+                        <UpdateJob 
+                          jobId={job._id} 
+                          jobData={job}
+                          onJobUpdated={handleJobUpdated}
+                        />
+                      </DialogHeader>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Delete Job Dialog */}
+                  <Dialog>
+                    <DialogTrigger className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm">
+                      Delete Job
+                    </DialogTrigger>
+                    <DialogContent className="w-full max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Delete Job</DialogTitle>
+                        <DeleteJob 
+                          jobId={job._id} 
+                          jobTitle={job.title}
+                          onJobDeleted={handleJobDeleted}
+                        />
+                      </DialogHeader>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </div>
@@ -152,12 +257,19 @@ export default function Jobs() {
           <p className="text-sm text-gray-400 mt-1">
             There are currently no job listings available.
           </p>
-          <button
-            onClick={() => router.push('/admin/jobs/create')}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            + Create Your First Job
-          </button>
+          <div className="mt-4">
+            <Dialog>
+              <DialogTrigger className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                + Create Your First Job
+              </DialogTrigger>
+              <DialogContent className="w-full h-[96vh] mt-2 p-6">
+                <DialogHeader>
+                  <DialogTitle>Create a Job</DialogTitle>
+                  <CreateJob onJobCreated={handleJobCreated} />
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       )}
     </div>

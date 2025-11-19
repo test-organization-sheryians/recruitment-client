@@ -4,11 +4,18 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { updateJob, getJobs } from '@/api/jobs';
 
-export default function UpdateJobPage() {
-  const params = useParams<{ id: string }>();
+interface UpdateJobProps {
+  jobId: string;
+  onJobUpdated?: () => void;
+}
+
+export default function UpdateJobPage({ jobId, onJobUpdated }: UpdateJobProps) {
+  const data = useParams();
+  console.log("aao data",data);
+  const params = useParams<{ _id: string }>();
+  console.log("params.id",params._id);
   const router = useRouter();
   // Get the job ID from params
-  const jobId = params.id;
   
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);

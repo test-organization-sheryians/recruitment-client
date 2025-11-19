@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createJob } from '@/api/jobs';
 import { useRouter } from 'next/navigation';
-
+ 
 export default function CreateJob() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -118,23 +118,22 @@ export default function CreateJob() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="w-full h-[90vh] ">
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100">
-          <h1 className="text-2xl font-semibold text-gray-800">Create New Job Role</h1>
+        <div className="p-1 border-b border-gray-100">
           <p className="text-gray-600 mt-1">Fill in the details to create a new job listing</p>
         </div>
 
         {error && (
-          <div className="p-4 bg-red-50 text-red-600 border-b border-red-200">
+          <div className="bg-red-50 text-red-600 border-b border-red-200">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-2 space-y-6">
           {/* Job Title */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 ">
               Job Title *
             </label>
             <input
@@ -144,14 +143,14 @@ export default function CreateJob() {
               required
               value={formData.title}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="e.g., Senior Backend Developer"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 ">
               Job Description *
             </label>
             <textarea
@@ -161,7 +160,7 @@ export default function CreateJob() {
               rows={5}
               value={formData.description}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Describe the job responsibilities, requirements, and what you're looking for in a candidate..."
             />
           </div>
@@ -169,7 +168,7 @@ export default function CreateJob() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Education */}
             <div>
-              <label htmlFor="education" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="education" className="block text-sm font-medium text-gray-700  ">
                 Education Requirements *
               </label>
               <input
@@ -179,14 +178,14 @@ export default function CreateJob() {
                 required
                 value={formData.education}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="e.g., Bachelor of Computer Science"
               />
             </div>
 
             {/* Required Experience */}
             <div>
-              <label htmlFor="requiredExperience" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="requiredExperience" className="block text-sm font-medium text-gray-700 ">
                 Required Experience *
               </label>
               <input
@@ -196,7 +195,7 @@ export default function CreateJob() {
                 required
                 value={formData.requiredExperience}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="e.g., 3+ years in backend development"
               />
             </div>
@@ -205,7 +204,7 @@ export default function CreateJob() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Category */}
             <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 ">
                 Job Category *
               </label>
               <select
@@ -214,7 +213,7 @@ export default function CreateJob() {
                 required
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select a category</option>
                 {categories.map(category => (
@@ -227,7 +226,7 @@ export default function CreateJob() {
 
             {/* Expiry Date */}
             <div>
-              <label htmlFor="expiry" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="expiry" className="block text-sm font-medium text-gray-700 ">
                 Application Deadline *
               </label>
               <input
@@ -238,19 +237,19 @@ export default function CreateJob() {
                 value={formData.expiry}
                 onChange={handleChange}
                 min={getMinDate()}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
 
           {/* Skills */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-gray-700 ">
               Required Skills
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {skills.map(skill => (
-                <label key={skill._id} className="flex items-center space-x-2 p-2 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
+                <label key={skill._id} className="flex items-center space-x-2 p-1 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.skills.includes(skill._id)}
@@ -269,18 +268,18 @@ export default function CreateJob() {
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-100">
+          <div className="flex justify-end space-x-3 border-t border-gray-100">
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-6 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-1 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center">
