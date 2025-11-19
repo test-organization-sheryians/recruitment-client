@@ -11,6 +11,7 @@ const navItems = [
   { name: 'Dashboard', href: '/admin' },
   { name: 'Jobs', href: '/admin/jobs' },
   { name: 'Clients', href: '/admin/clients' },
+  {name:"Categories", href:"/admin/categories"},
 ];
 
 export default function Sidebar() {
