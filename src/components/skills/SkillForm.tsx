@@ -27,7 +27,7 @@ export default function SkillForm({ onSubmit }) {
           focus:outline-none focus:ring-2 focus:ring-[#3668FF] 
           focus:border-transparent transition duration-150
         "
-        placeholder="Enter new skill" // Changed placeholder slightly
+        placeholder="Enter new skill" 
         value={name}
         onChange={(e) => setName(e.target.value)}
         autoFocus

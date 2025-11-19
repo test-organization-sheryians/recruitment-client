@@ -4,7 +4,9 @@
 import React, { useState } from 'react';
 import SkillForm from "@/components/skills/SkillForm";
 import SkillList from "@/components/skills/SkillList";
-import { FiPlus, FiX } from 'react-icons/fi'; // <-- Import icons for button/modal
+import Sidebar from "../../features/admin/Sidebar"
+import Navbar from "../../features/admin/Navbar"
+import { FiPlus, FiX } from 'react-icons/fi'; 
 import {
   useGetAllSkills,
   useCreateSkill,
@@ -13,7 +15,7 @@ import {
 } from "@/features/skills/hooks/useSkillApi";
 
 export default function SkillPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false); // State for the modal
+  const [isModalOpen, setIsModalOpen] = useState(false); 
   
   const { data, isLoading, refetch } = useGetAllSkills();
   const createSkill = useCreateSkill();
@@ -24,7 +26,7 @@ export default function SkillPage() {
     await createSkill.mutateAsync(skill, {
       onSuccess: () => {
         refetch();
-        setIsModalOpen(false); // Close modal on success
+        setIsModalOpen(false); 
       },
     });
   };
@@ -40,25 +42,44 @@ export default function SkillPage() {
       onSuccess: () => refetch(),
     });
   };
+  
+
+  const skillCount = data?.data?.length || 0;
 
   return (
-    <div className="min-h-screen p-8 bg-[#18253B] font-sans">
-      <div className="max-w-4xl mx-auto bg-[#FFFFFF] shadow-2xl rounded-xl p-10 border border-[#446699]/30">
-
-        {/* --- Main Content Area (Now single column) --- */}
-        <div className="p-6 bg-[#F8FAFF] rounded-xl border border-[#DDE6F5] shadow-inner">
+    <div className="min-h-screen flex  mt-[100px] p-8 bg-white font-sans">
+         <div><Sidebar active='Skills' /></div>
+      <div className="max-w-6xl mr-[10px] mx-auto bg-[#FFFFFF] shadow-2xl rounded-xl p-10 border border-[#446699]/30">
+         
+<div><Navbar/></div>
+       
+        <div className="p-6 bg-white rounded-xl border border-[#DDE6F5] shadow-inner">
+               
             
-            {/* Header and Add Button Section */}
-            <div className="flex justify-between items-center mb-5 border-b pb-3 border-[#DDE6F5]">
+        
+            <div className="flex justify-between  items-center mb-5 border-b pb-3 border-[#DDE6F5]">
+              
                 
-                {/* Heading */}
-                <h2 className="text-2xl font-bold text-[#18253B]">
+              
+                <h2 className="text-2xl font-semibold text-[#18253B]">
                     Manage Skills
+                    
+               
+                    <span 
+                      className="
+                        ml-3 px-3 py-1 text-sm font-semibold 
+                        bg-[#EBF1FF] text-[#3668FF] 
+                        rounded-full 
+                        align-middle
+                      "
+                    >
+                      {isLoading ? '...' : skillCount}
+                    </span>
                 </h2>
                 
-                {/* Button moved here, next to the title */}
+         
                 <button
-                    onClick={() => setIsModalOpen(true)} // <-- Open the modal
+                    onClick={() => setIsModalOpen(true)}
                     className="
                       py-2 px-4
                       bg-[#3668FF] text-white 
@@ -71,7 +92,7 @@ export default function SkillPage() {
                 </button>
             </div>
             
-            {/* Skill List */}
+     
             <SkillList
                 skills={data?.data || []}
                 loading={isLoading}
@@ -82,7 +103,7 @@ export default function SkillPage() {
 
       </div>
       
-      {/* --- Full-Screen Modal Component --- */}
+     
       {isModalOpen && (
         <div
           className="
@@ -105,7 +126,7 @@ export default function SkillPage() {
             "
             onClick={(e) => e.stopPropagation()} 
           >
-            <h3 className="text-3xl font-bold text-gray-800 mb-6 border-b pb-3">
+            <h3 className="text-3xl font-light text-gray-800 mb-6 border-b pb-3">
               Add New Skill
             </h3>
             
