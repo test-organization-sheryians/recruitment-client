@@ -151,31 +151,25 @@ export default function CandidateProfile() {
           </div>
         </div>
 
-        {/* SKILLS */}
+     {/* Skills */}
         <div className="bg-white rounded-xl border shadow-sm p-6 space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="font-semibold text-lg text-gray-700">Skills</h3>
+
             <EditSection
               title="Skills"
-              fields={skills.map((s, i) => ({ key: String(i), label: `Skill ${i+1}`, value: s }))}
-              allowAddMore
-              onSave={(updated) => {
-                const arr = Object.values(updated).filter((s) => s.trim() !== "");
-                patchProfile.mutate(
-                  { userId, data: { skills: arr } },
-                  {
-                    onSuccess: () => {
-                      setSkills(arr);
-                      queryClient.setQueryData(["profile", userId], (oldData: any) => ({
-                        ...oldData,
-                        data: { ...oldData.data, skills: arr },
-                      }));
-                    },
-                  }
-                );
-              }}
+              fields={skills.map((s, i) => ({ key: String(i), label: Skill ${i + 1}, value: s }))}
+              onSave={handleSkillsSave}
+              allowAddMore={true}
             />
           </div>
+
+          <div className="flex flex-wrap gap-2">
+            {skills.map((s, i) => (
+              <div key={i} className="px-3 py-1 bg-gray-100 border rounded-lg text-sm">{s}</div>
+            ))}
+          </div>
+        </div>
 
           <div className="flex flex-wrap gap-2 mt-2">
             {skills.map((s, i) => (
