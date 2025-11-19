@@ -45,7 +45,7 @@ const StatusCard: React.FC<StatusCardProps> = ({
               style={{ backgroundColor: changeBgColor }}
             >
               <h1>{change}</h1>
-              <img src={changeIconSrc} alt="change icon" />
+              <Image src={changeIconSrc} alt="change icon" width={16} height={16} />
             </div>
           )}
         </div>

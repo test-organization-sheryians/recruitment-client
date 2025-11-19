@@ -24,7 +24,7 @@ const PasswordReset = () => {
         Please enter your email address to receive password reset instructions.
       </p>
 
-      <form className="mt-8 space-y-5">
+      <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
         {/* Email or Phone */}
         <LabelInput
           label="Email or phone"

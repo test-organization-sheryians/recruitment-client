@@ -1,7 +1,6 @@
 'use client'
 import AdminDashboard from "@/features/admin/Dashboard";
-import { getCurrentUser } from "@/lib/auth";
-import React, { useEffect } from "react";
+import React from "react";
 
 const AdminHome = () => {
  
