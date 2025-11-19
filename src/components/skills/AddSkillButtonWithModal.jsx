@@ -2,7 +2,7 @@
 "use client";
 import { useState } from "react";
 import { FiPlus, FiX } from "react-icons/fi";
-import SkillForm from "./SkillForm";
+import SkillForm from "./SkillForm"; // Assuming SkillForm.jsx is available
 
 export default function AddSkillButtonWithModal({ onNewSkillSubmit }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,14 +35,14 @@ export default function AddSkillButtonWithModal({ onNewSkillSubmit }) {
         <FiPlus size={20} /> Add New Skill
       </button>
 
-      {/* Modal */}
+      {/* Modal structure with blur */}
       {isModalOpen && (
         <div
           className="
             fixed inset-0 
             bg-black/50 backdrop-blur-sm 
             flex justify-center items-center 
-            z-[100] // High Z-index to ensure it is always on top
+            z-[100] 
             p-4
           "
           onClick={handleCloseModal}
@@ -61,6 +61,7 @@ export default function AddSkillButtonWithModal({ onNewSkillSubmit }) {
             <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">
               Add New Skill
             </h3>
+            {/* The SkillForm component is rendered here */}
             <SkillForm onSubmit={handleFormSubmit} />
             <button
               onClick={handleCloseModal}

@@ -25,6 +25,7 @@ export default function SkillsManagement() {
 
   const handleAddSkill = ({ name }) => {
     const newSkill = { _id: String(Date.now()), name };
+    // Add new skill to the front of the list
     setSkills((prevSkills) => [newSkill, ...prevSkills]); 
   };
 
@@ -44,7 +45,9 @@ export default function SkillsManagement() {
       
       {/* Header and Add Button Section */}
       <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-        <h2 className="text-2xl font-bold text-gray-800">Manage Skills</h2>
+        {/* Title matching the image */}
+        <h2 className="text-2xl font-bold text-gray-800">Manage Skills</h2> 
+        {/* Button that opens the Add Skill Modal */}
         <AddSkillButtonWithModal onNewSkillSubmit={handleAddSkill} />
       </div>
 
