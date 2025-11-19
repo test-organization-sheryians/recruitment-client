@@ -6,11 +6,17 @@ import LabelInput from "./LabelInput";
 import { useForm } from "react-hook-form";
 import axios from "@/config/axios";
 
+interface SignupFormData {
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
 const SignupForm = () => {
 
-  const { register, handleSubmit } = useForm()
+  const { register, handleSubmit } = useForm<SignupFormData>()
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: SignupFormData) => {
     axios.post(`/api/auth/register`, {
       email: data.email,
       password: data.password,

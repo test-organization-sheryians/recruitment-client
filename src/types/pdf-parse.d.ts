@@ -1,13 +1,17 @@
+interface PDFInfo {
+  [key: string]: unknown;
+}
+
+interface PDFMetadata {
+  [key: string]: unknown;
+}
+
 declare module 'pdf-parse' {
   interface ParsedPDF {
     numpages: number;
     numrender: number;
-    info: {
-      [key: string]: any;
-    };
-    metadata: {
-      [key: string]: any;
-    };
+    info: PDFInfo;
+    metadata: PDFMetadata;
     text: string;
     version: string;
   }
@@ -15,7 +19,7 @@ declare module 'pdf-parse' {
   interface ParseOptions {
     max?: number;
     version?: string;
-    pagerender?: (pageData: any) => string;
+    pagerender?: (pageData: unknown) => string;
   }
 
   function PDFParse(

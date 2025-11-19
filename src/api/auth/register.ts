@@ -1,7 +1,13 @@
+interface RegisterRequest {
+  email: string;
+  password: string;
+  confirmPassword?: string;
+}
+
 import api from "@/config/axios";
 import { isAxiosError } from "axios";
 
-export const register = async (data: any) => {
+export const register = async (data: RegisterRequest): Promise<unknown> => {
   try {
     const response = await api.post("/api/v1/auth/register", data);
     return response.data;
@@ -14,4 +20,4 @@ export const register = async (data: any) => {
     }
     throw new Error("An unexpected error occurred");
   }
-} 
+}

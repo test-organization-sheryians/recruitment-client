@@ -1,7 +1,12 @@
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
 import api from "@/config/axios";
 import { isAxiosError } from "axios";
 
-export const login = async (data: any) => {
+export const login = async (data: LoginRequest): Promise<unknown> => {
   try {
     const response = await api.post("/api/v1/auth/login", data);
     return response.data;
@@ -14,4 +19,4 @@ export const login = async (data: any) => {
     }
     throw new Error("An unexpected error occurred");
   }
-} 
+}

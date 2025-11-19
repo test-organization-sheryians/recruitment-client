@@ -25,16 +25,16 @@ const FileUpload = ({ onFileChange }: { onFileChange: (file: File) => void }) =>
   return (
     <div className="mt-2">
       <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-100 w-fit">
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="h-5 w-5 text-blue-500" 
-          viewBox="0 0 20 20" 
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5 text-blue-500"
+          viewBox="0 0 20 20"
           fill="currentColor"
         >
-          <path 
-            fillRule="evenodd" 
-            d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" 
-            clipRule="evenodd" 
+          <path
+            fillRule="evenodd"
+            d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z"
+            clipRule="evenodd"
           />
         </svg>
         <div>
@@ -72,14 +72,12 @@ export default function ResumeChat() {
       sender: 'ai',
     },
   ]);
-  
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
-  
+
   const handleFileUpload = (file: File) => {
-    setResumeFile(file);
     // Here you would typically handle the file upload to your server
     console.log('File uploaded:', file.name);
   };
+
   const [inputValue, setInputValue] = useState('');
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState('');
@@ -93,16 +91,16 @@ export default function ResumeChat() {
 
   const handleSendMessage = () => {
     if (inputValue.trim() === '') return;
-    
+
     const newMessage: Message = {
       id: Date.now().toString(),
       text: inputValue,
       sender: 'user',
     };
-    
+
     setMessages([...messages, newMessage]);
     setInputValue('');
-    
+
     // Simulate AI response
     setTimeout(() => {
       const aiResponse: Message = {
@@ -154,7 +152,7 @@ export default function ResumeChat() {
                   <div className="text-gray-800 max-w-[80%]">
                     <p className="font-medium">{message.text}</p>
                   </div>
-                  
+
                   {message.id === '2' && (
                     <div className="mt-4 space-y-3 flex flex-col items-start w-[50%]">
                       {questions.map((question, index) => (

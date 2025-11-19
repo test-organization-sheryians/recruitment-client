@@ -9,11 +9,16 @@ import Cookies from "js-cookie";
 import { useDispatch } from "react-redux";
 import { setUser } from "../slice";
 
+interface LoginFormData {
+  email: string;
+  password: string;
+}
+
 const SigninForm = () => {
   const dispatch = useDispatch();
-  const { register, handleSubmit } = useForm()
+  const { register, handleSubmit } = useForm<LoginFormData>()
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: LoginFormData) => {
     axios.post(`/api/auth/login`, {
       email: data.email,
       password: data.password
