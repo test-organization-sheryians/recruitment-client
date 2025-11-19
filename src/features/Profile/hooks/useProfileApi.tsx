@@ -8,14 +8,12 @@ import * as api from "../../../api";
 
 export const useGetProfile = (
   userId: string,
-  options?: Omit<UseQueryOptions<any, Error, any, [string, string]>, 'queryKey' | 'queryFn'>
 ) => {
   return useQuery({
     queryKey: ["profile", userId],
     queryFn: () => api.getProfile(userId),
     enabled: !!userId,
-    retry: 0,
-    ...options, // merge extra options safely
+    retry: 0
   });
 };
 

@@ -39,7 +39,12 @@ export default function EditSection({
   useEffect(() => {
     if (open) {
       const initial: Record<string, any> = {};
-      fields.forEach((f) => (initial[f.key] = f.value));
+      fields.forEach((f) => {
+        // Keep strings as strings and objects as objects
+        initial[f.key] = typeof f.value === "object"
+          ? { ...f.value }
+          : f.value;
+      });
       setFormValues(initial);
     }
   }, [open, fields]);
@@ -50,15 +55,23 @@ export default function EditSection({
 
   const handleAddField = () => {
     const newKey = String(Object.keys(formValues).length);
+
+    // Detect type from FIRST field
+    const first = fields[0]?.value;
+
+    const isExperience = typeof first === "object";
+
     setFormValues((p) => ({
       ...p,
-      [newKey]: {
-        title: "",
-        company: "",
-        start: "",
-        end: "",
-        description: "",
-      },
+      [newKey]: isExperience
+        ? {
+            title: "",
+            company: "",
+            start: "",
+            end: "",
+            description: "",
+          }
+        : "",
     }));
   };
 
@@ -80,10 +93,12 @@ export default function EditSection({
           {Object.entries(formValues).map(([key, value], index) => {
             const fieldMeta = fields[index];
 
-            // Experience object rendering
-            if (typeof value === "object" && "title" in value) {
+            const isExperience = typeof value === "object" && value !== null && "title" in value;
+
+            // EXPERIENCE UI
+            if (isExperience) {
               return (
-                <div key={key} className="p-2 border rounded space-y-2">
+                <div key={key} className="p-2 border rounded space-y-2 bg-gray-50">
                   <p className="text-xs text-gray-500 mb-1">
                     {fieldMeta?.label || `Item ${index + 1}`}
                   </p>
@@ -130,7 +145,7 @@ export default function EditSection({
               );
             }
 
-            // Simple string fields
+            // SIMPLE TEXT FIELD
             return (
               <div key={key}>
                 <p className="text-xs text-gray-500 mb-1">

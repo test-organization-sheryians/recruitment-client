@@ -1,18 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EditSection from "./EditSection";
+import { getCurrentUser } from "@/lib/auth";
+import { PiCornersOutLight } from "react-icons/pi";
+import { useGetProfile } from "../hooks/useProfileApi";
 
-export default function CandidateProfile() {
+export default   function CandidateProfile() {
   // Personal info
   const [firstName, setFirstName] = useState("Candidate");
   const [lastName, setLastName] = useState("Name");
   const [phone, setPhone] = useState("867643885");
   const [email] = useState("xyz@mail.com"); // email not editable
-
+  const [currentUser , setCurrentUser ] = useState(null);
   // Skills
   const [skills, setSkills] = useState(["React", "Node.js"]);
-
+  const {data:profileData , isLoading:loadingProfileData , error:errorProfileData} = useGetProfile(currentUser?.id); 
+  
+    console.log("profileData" , profileData) ; 
+   useEffect(()=> {
+       getCurrentUser().then((data)=>{
+        setCurrentUser(data)
+    }).catch((e)=>{
+    })
+   } , [])
+  
+   console.log(currentUser, "this is user")
   // Experience
   const [experience, setExperience] = useState([
     {
@@ -67,27 +80,29 @@ export default function CandidateProfile() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+         {
+           currentUser &&  <div className="grid grid-cols-2 gap-6">
             <div className="flex flex-col">
               <span className="text-sm text-gray-500">First Name</span>
-              <span className="text-m font-medium">{firstName}</span>
+              <span className="text-m font-medium">{currentUser.firstName}</span>
             </div>
 
             <div className="flex flex-col">
               <span className="text-sm text-gray-500">Last Name</span>
-              <span className="text-m font-medium">{lastName}</span>
+              <span className="text-m font-medium">{currentUser.lastName}</span>
             </div>
 
             <div className="flex flex-col">
               <span className="text-sm text-gray-500">Phone</span>
-              <span className="text-m font-medium">{phone}</span>
+              <span className="text-m font-medium">{currentUser.phone}</span>
             </div>
 
             <div className="flex flex-col">
               <span className="text-sm text-gray-500">Email</span>
-              <span className="text-m font-medium">{email}</span>
+              <span className="text-m font-medium">{currentUser.email}</span>
             </div>
           </div>
+         }
         </div>
 
         {/* SKILLS */}
