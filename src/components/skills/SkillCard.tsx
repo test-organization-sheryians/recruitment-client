@@ -1,14 +1,18 @@
-
+// components/SkillCard.jsx
 "use client";
 import { useState } from "react";
 import { ImBin } from "react-icons/im"; 
 import { FiEdit, FiSave, FiX } from "react-icons/fi";
 
-export default function SkillCard({ skill , onDelete, onUpdate }) {
+export default function SkillCard({ skill, onDelete, onUpdate } : {
+  skill: { _id: string; name: string };
+  onDelete: (id: string) => void;
+  onUpdate: (data: { id: string; name: string }) => void;
+})   {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState(skill.name);
 
-
+  // --- Modal Handlers ---
 
   const handleEditClick = () => {
     setName(skill.name); 
@@ -28,7 +32,7 @@ export default function SkillCard({ skill , onDelete, onUpdate }) {
 
   return (
     <>
-   
+      {/* --- Skill Card Display --- */}
       <div
         className="
           p-3 
@@ -46,7 +50,7 @@ export default function SkillCard({ skill , onDelete, onUpdate }) {
             {skill.name}
           </h3>
           
-          
+          {/* Action Buttons (Edit and Delete) */}
           <div className="flex gap-1.5 ml-2 flex-shrink-0">
             <button
               className="p-0.5 text-[#3668FF] rounded-full hover:bg-[#3668FF]/10 transition"
@@ -57,7 +61,7 @@ export default function SkillCard({ skill , onDelete, onUpdate }) {
             </button>
             <button
               className="p-0.5 text-red-500 rounded-full hover:bg-red-500/10 transition" 
-              onClick={() => onDelete({ id: skill._id })}
+            onClick={() => onDelete(skill._id )}
               aria-label={`Delete ${skill.name}`}
             >
               <ImBin size={14} />
@@ -66,7 +70,7 @@ export default function SkillCard({ skill , onDelete, onUpdate }) {
         </div>
       </div>
 
-
+      {/* --- Edit Modal (The Pop-up on edit click) --- */}
       {isModalOpen && (
         <div
           className="
@@ -95,7 +99,7 @@ export default function SkillCard({ skill , onDelete, onUpdate }) {
               <input
                 type="text"
                 value={name}
-   
+                // --- MODIFIED CLASS HERE: Changed text-gray-800 to text-gray-600 ---
                 className="w-full px-3 py-2 text-gray-600 border border-[#3668FF] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3668FF]/50"
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleUpdate(); }}
