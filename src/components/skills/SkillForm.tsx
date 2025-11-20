@@ -1,55 +1,70 @@
-
 "use client";
+
+import { useState } from "react";
+import { FiPlus, FiLoader } from "react-icons/fi";
+
 interface SkillFormProps {
   onSubmit: (data: { name: string }) => void;
+  isSubmitting?: boolean;        
+  submitText?: string;           
 }
-import { useState } from "react";
-import { FiPlus } from "react-icons/fi";
 
-export default function SkillForm({ onSubmit }: SkillFormProps ) {
+export default function SkillForm({
+  onSubmit,
+  isSubmitting = false,
+  submitText = "Add Skill",
+}: SkillFormProps) {
   const [name, setName] = useState("");
 
-  const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    onSubmit({ name });
-    setName("");
+    const trimmed = name.trim();
+    if (!trimmed) return;
+
+    onSubmit({ name: trimmed });
+    setName(""); 
   };
 
   return (
-
-    <form onSubmit={handleAdd} className="flex flex-col gap-3"> 
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <input
         type="text"
-        className="
-          w-full 
-          px-3 py-2 
-          text-gray-800 
-          border border-[#BBCFFF] 
-          rounded-lg shadow-sm
-          focus:outline-none focus:ring-2 focus:ring-[#3668FF] 
-          focus:border-transparent transition duration-150
-        "
-        placeholder="Enter new skill" 
         value={name}
         onChange={(e) => setName(e.target.value)}
+        placeholder="e.g. React, TypeScript, Leadership..."
         autoFocus
+        disabled={isSubmitting}
+        className="
+          w-full px-4 py-3 text-gray-800 text-base
+          border border-[#BBCFFF] rounded-xl shadow-sm
+          focus:outline-none focus:ring-2 focus:ring-[#3668FF] focus:border-transparent
+          disabled:bg-gray-100 disabled:cursor-not-allowed
+          transition-all duration-200
+        "
       />
+
       <button
         type="submit"
+        disabled={isSubmitting || !name.trim()}
         className="
-          w-full
-          bg-[#3668FF] 
-          text-white 
-          font-semibold 
-          px-5 py-2 
-          rounded-lg shadow-md 
-          hover:bg-[#254BAA] 
-          transition duration-200 
-          flex items-center justify-center gap-1
+          w-full py-3.5 bg-[#3668FF] text-white font-semibold rounded-xl shadow-lg
+          hover:bg-[#254BAA] active:scale-[0.98]
+          disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-[#3668FF]
+          flex items-center justify-center gap-2
+          transition-all duration-200
         "
       >
-        <FiPlus size={18} /> Add Skill
+        {isSubmitting ? (
+          <>
+            <FiLoader className="animate-spin" size={20} />
+            Adding...
+          </>
+        ) : (
+          <>
+            <FiPlus size={20} />
+            {submitText}
+          </>
+        )}
       </button>
     </form>
   );

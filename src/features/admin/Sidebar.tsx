@@ -15,10 +15,10 @@ const navItems = [
   { name: "Dashboard", href: "/admin" },
   { name: "Jobs", href: "/admin/jobs" },
   { name: "Clients", href: "/admin/clients" },
-  { name: "Skill", href: "/skills" },
+  { name: "Skill", href: "/admin/skills" },
 ];
 
-const Sidebar: React.FC<SidebarProps> = ({ active }) => {
+const Sidebar: React.FC<SidebarProps> = () => {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -31,8 +31,6 @@ const Sidebar: React.FC<SidebarProps> = ({ active }) => {
   return (
     <div className="h-screen rounded-2xl bg-white p-6 border border-gray-200 flex flex-col">
       <div className="text-3xl font-bold text-[#1270B0] mb-10">Require.</div>
-
-    
 
       <nav className="space-y-1 flex-1">
         {navItems.map((item) => (
