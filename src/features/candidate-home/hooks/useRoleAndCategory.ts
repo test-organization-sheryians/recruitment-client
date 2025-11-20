@@ -1,10 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as api from "@/api";
 
+// JOB ROLES ------------------------------
+
 export const useCreateJobRole = () => {
   return useMutation({
     mutationKey: ["createJobRole"],
-    mutationFn: (data:FormData) => api.createJobRole(data),
+    mutationFn: (data: FormData) => api.createJobRole(data),
     retry: 0,
   });
 };
@@ -17,7 +19,7 @@ export const useGetAllJobRoles = () => {
   });
 };
 
-export const useGetJobRoleById = (id:string) => {
+export const useGetJobRoleById = (id: string) => {
   return useQuery({
     queryKey: ["getJobRoleById", id],
     queryFn: () => api.getJobRoleById(id),
@@ -29,7 +31,8 @@ export const useGetJobRoleById = (id:string) => {
 export const useUpdateJobRole = () => {
   return useMutation({
     mutationKey: ["updateJobRole"],
-    mutationFn: ({ id , data }) => api.updateJobRole(id, data),
+    mutationFn: ({ id, data }: { id: string; data: FormData }) =>
+      api.updateJobRole(id, data),
     retry: 0,
   });
 };
@@ -37,12 +40,12 @@ export const useUpdateJobRole = () => {
 export const useDeleteJobRole = () => {
   return useMutation({
     mutationKey: ["deleteJobRole"],
-    mutationFn: (id:string) => api.deleteJobRole(id),
+    mutationFn: (id: string) => api.deleteJobRole(id),
     retry: 0,
   });
 };
 
-export const useJobRolesByClient = (clientId:string) => {
+export const useJobRolesByClient = (clientId: string) => {
   return useQuery({
     queryKey: ["jobRolesByClient", clientId],
     queryFn: () => api.getJobRolesByClient(clientId),
@@ -51,7 +54,7 @@ export const useJobRolesByClient = (clientId:string) => {
   });
 };
 
-export const useJobRolesByCategory = (categoryId:string) => {
+export const useJobRolesByCategory = (categoryId: string) => {
   return useQuery({
     queryKey: ["jobRolesByCategory", categoryId],
     queryFn: () => api.getJobRolesByCategory(categoryId),
@@ -76,10 +79,12 @@ export const useExpiredJobRoles = () => {
   });
 };
 
+// JOB CATEGORY ------------------------------
+
 export const useCreateJobCategory = () => {
   return useMutation({
     mutationKey: ["createJobCategory"],
-    mutationFn: (data) => api.createJobCategory(data),
+    mutationFn: (data: FormData) => api.createJobCategory(data),
     retry: 0,
   });
 };
@@ -92,7 +97,7 @@ export const useGetAllJobCategories = () => {
   });
 };
 
-export const useGetJobCategoryById = (id:string) => {
+export const useGetJobCategoryById = (id: string) => {
   return useQuery({
     queryKey: ["getJobCategoryById", id],
     queryFn: () => api.getJobCategoryById(id),
@@ -104,7 +109,8 @@ export const useGetJobCategoryById = (id:string) => {
 export const useUpdateJobCategory = () => {
   return useMutation({
     mutationKey: ["updateJobCategory"],
-    mutationFn: ({ id, data}) => api.updateJobCategory(id, data),
+    mutationFn: ({ id, data }: { id: string; data: FormData }) =>
+      api.updateJobCategory(id, data),
     retry: 0,
   });
 };
@@ -112,23 +118,7 @@ export const useUpdateJobCategory = () => {
 export const useDeleteJobCategory = () => {
   return useMutation({
     mutationKey: ["deleteJobCategory"],
-    mutationFn: (id:string) => api.deleteJobCategory(id),
+    mutationFn: (id: string) => api.deleteJobCategory(id),
     retry: 0,
   });
-};
-export default {
-  useCreateJobRole,
-  useGetAllJobRoles,
-  useGetJobRoleById,
-  useUpdateJobRole,
-  useDeleteJobRole,
-  useJobRolesByClient,
-  useJobRolesByCategory,
-  useActiveJobRoles,
-  useExpiredJobRoles,
-  useCreateJobCategory,
-  useGetAllJobCategories,
-  useGetJobCategoryById,
-  useUpdateJobCategory,
-  useDeleteJobCategory,
 };
