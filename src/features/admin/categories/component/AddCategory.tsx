@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAddJobCategory } from "../hooks/useJobCategoryApi";
+import { CategoryError } from "../types";
 
 type AddCategoryProps = {
   close: () => void;
@@ -25,7 +26,7 @@ const AddCategory: React.FC<AddCategoryProps> = ({ close }) => {
           setName("");
           close();
         },
-        onError: (err: any) => {
+        onError: (err: CategoryError) => {
           const message = err?.response?.data?.message || "Error adding category";
           alert(message);
         },
@@ -40,7 +41,7 @@ const AddCategory: React.FC<AddCategoryProps> = ({ close }) => {
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
-            {(error as any)?.response?.data?.message || "Error adding category"}
+            {(error as CategoryError)?.response?.data?.message || "Error adding category"}
           </div>
         )}
 

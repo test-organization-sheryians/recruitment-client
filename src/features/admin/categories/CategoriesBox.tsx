@@ -8,6 +8,7 @@ import {
   useDeleteJobCategory,
   useUpdateJobCategory
 } from './hooks/useJobCategoryApi';
+import { JobCategory, CategoryError } from './types';
 
 const CategoriesBox = () => {
   const [open, setOpen] = useState(false);
@@ -17,10 +18,10 @@ const CategoriesBox = () => {
 
   const { mutate: deleteCategory } = useDeleteJobCategory();
 
-  
+
   const { mutate: updateCategory } = useUpdateJobCategory();
 
-  const handleEdit = async (cat: any) => {
+  const handleEdit = async (cat: JobCategory) => {
     if (!cat?._id) return alert("Category id missing");
 
     const newName = prompt("Enter new category name", cat.name);
@@ -32,14 +33,14 @@ const CategoriesBox = () => {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["jobCategories"] });
         },
-        onError: (err: any) => {
+        onError: (err: CategoryError) => {
           alert(err?.response?.data?.message || "Error updating category");
         },
       }
     );
   };
 
-  const handleDelete = (cat: any) => {
+  const handleDelete = (cat: JobCategory) => {
     if (!cat?._id) return alert("Category id missing");
 
     const confirmDelete = confirm(`Delete category "${cat.name}"?`);
@@ -49,7 +50,7 @@ const CategoriesBox = () => {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["jobCategories"] });
       },
-      onError: (err: any) => {
+      onError: (err: CategoryError) => {
         alert(err?.response?.data?.message || "Error deleting category");
       },
     });
@@ -68,7 +69,7 @@ const CategoriesBox = () => {
           </button>
         </div>
 
-        
+
         {isLoading && (
           <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-2'>
             {Array.from({ length: 8 }).map((_, i) => (
@@ -80,27 +81,27 @@ const CategoriesBox = () => {
 
         {isError && (
           <div className='p-4 text-sm text-red-600 bg-red-50 rounded-md'>
-            Failed to load categories: {(error as any)?.message || 'Unknown error'}
+            Failed to load categories: {(error as CategoryError)?.message || 'Unknown error'}
           </div>
         )}
 
-       
+
         {!isLoading && !isError && (
           <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-2'>
             {categories.length === 0 && (
               <div className='col-span-full text-sm text-gray-500'>No categories found.</div>
             )}
 
-            {categories.map((cat: any) => (
+            {categories.map((cat: JobCategory) => (
               <div
                 key={cat._id || cat.name}
                 className='flex items-center justify-between bg-gray-50 border rounded-md p-3 hover:shadow-sm transition-shadow'
               >
-                <div className='text-sm font-medium'>{cat.name || cat}</div>
+                <div className='text-sm font-medium'>{cat.name}</div>
                 <div className='flex items-center gap-2'>
                   <button
-                    title={`Edit ${cat.name || cat}`}
-                    aria-label={`Edit ${cat.name || cat}`}
+                    title={`Edit ${cat.name}`}
+                    aria-label={`Edit ${cat.name}`}
                     className='p-1 rounded text-gray-600 hover:text-blue-600 transition-colors'
                     onClick={() => handleEdit(cat)}
                   >
@@ -108,8 +109,8 @@ const CategoriesBox = () => {
                   </button>
 
                   <button
-                    title={`Delete ${cat.name || cat}`}
-                    aria-label={`Delete ${cat.name || cat}`}
+                    title={`Delete ${cat.name}`}
+                    aria-label={`Delete ${cat.name}`}
                     className='p-1 rounded text-gray-600 hover:text-red-600 transition-colors'
                     onClick={() => handleDelete(cat)}
                   >
