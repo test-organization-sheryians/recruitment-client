@@ -1,4 +1,8 @@
 import axios from "axios";
+interface UpdateSkillData {
+  id: string;
+  name: string;
+}
 
 const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
 
@@ -20,7 +24,7 @@ export const createSkill = async (data : string ) => {
   });
 };
 
-export const updateSkill = async ({ id   , name }) => {
+export const updateSkill = async ({ id, name }: UpdateSkillData) => {
   return axios.put(`/skills/${id}`, { name }, {
     headers: { Authorization: `Bearer ${token}` },
   });

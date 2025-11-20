@@ -32,7 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({ active }) => {
     <div className="h-screen rounded-2xl bg-white p-6 border border-gray-200 flex flex-col">
       <div className="text-3xl font-bold text-[#1270B0] mb-10">Require.</div>
 
-      <p>Active: {active}</p>
+    
 
       <nav className="space-y-1 flex-1">
         {navItems.map((item) => (

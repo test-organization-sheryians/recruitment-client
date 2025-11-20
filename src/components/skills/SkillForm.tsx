@@ -1,12 +1,15 @@
 
 "use client";
+interface SkillFormProps {
+  onSubmit: (data: { name: string }) => void;
+}
 import { useState } from "react";
 import { FiPlus } from "react-icons/fi";
 
-export default function SkillForm({ onSubmit }) {
+export default function SkillForm({ onSubmit }: SkillFormProps ) {
   const [name, setName] = useState("");
 
-  const handleAdd = (e) => {
+  const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!name.trim()) return;
     onSubmit({ name });

@@ -1,6 +1,18 @@
 
 "use client";
 
+// interface listSkill {
+
+//   _id: string; 
+//   name: string;
+// }
+
+// // Define the shape of the successful API response data
+// interface SkillResponseData {
+//   data: listSkill[];
+//   // Include other root-level properties if your API returns them
+// }
+
 import React, { useState } from 'react';
 import SkillForm from "@/components/skills/SkillForm";
 import SkillList from "@/components/skills/SkillList";
@@ -14,11 +26,13 @@ import {
   useDeleteSkill,
   useUpdateSkill,
 } from "@/features/skills/hooks/useSkillApi";
+import { datalist } from 'framer-motion/m';
 
 export default function SkillPage() {
   const [isModalOpen, setIsModalOpen] = useState(false); 
   
   const { data, isLoading, refetch } = useGetAllSkills();
+  console.log(data)
   const createSkill = useCreateSkill();
   const deleteSkill = useDeleteSkill();
   const updateSkill = useUpdateSkill();
@@ -31,6 +45,8 @@ export default function SkillPage() {
       },
     });
   };
+
+  console.log(data)
 
   const handleDelete = async (id: string) => {
     await deleteSkill.mutateAsync(id, {
@@ -103,7 +119,7 @@ export default function SkillPage() {
                 </div>
           
                 <SkillList
-                    skills={data?.data || []}
+                    skills={data || []}
                     loading={isLoading}
                     onDelete={handleDelete}
                     onUpdate={handleUpdate}
