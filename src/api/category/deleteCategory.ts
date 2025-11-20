@@ -1,6 +1,6 @@
 import api from '@/config/axios';
 
-export const deleteCategory = async () => {
-    const response = await api.post("/api/job-categories/");
-    return response.data; 
+export const deleteCategory = async (id: string) => {
+    const response = await api.delete(`/api/job-categories/${id}`);
+    return response.data;
 };
