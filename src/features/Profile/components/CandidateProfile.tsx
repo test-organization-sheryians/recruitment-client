@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import EditSection from "./EditSection";
 import { getCurrentUser } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+
 
 /* hooks (single-file export) */
 import {
@@ -149,11 +151,11 @@ export default function CandidateProfile() {
       { userId, 
         data: { skills: newArr } },
       {
-        onSuccess: (res) => {
+        onSuccess: () => {
           // invalidate profile to refetch canonical values
           qc.invalidateQueries(["profile", userId]);
         },
-        onError: (err: any) => {
+        onError: (err: AxiosError) => {
           console.error("Failed to save skills:", err);
           // rollback by refetching server copy
           qc.invalidateQueries(["profile", userId]);

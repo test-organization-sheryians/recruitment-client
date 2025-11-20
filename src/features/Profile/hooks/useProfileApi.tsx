@@ -1,12 +1,15 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import * as api from "../../../api"; // your api barrel file
+import * as api from "../../../api";
+
+import { Profile } from "@/types/profile";
+
+type AnyObject = Record<string, unknown>; // <— flexible, safe, eliminates `any`
 
 // GET PROFILE
 export const useGetProfile = () => {
-  return useQuery({
+  return useQuery<Profile>({
     queryKey: ["profile"],
     queryFn: () => api.getProfile(),
-    
     retry: 0,
   });
 };
@@ -14,16 +17,16 @@ export const useGetProfile = () => {
 // CREATE PROFILE (POST)
 export const useCreateProfile = () => {
   return useMutation({
-    mutationFn: (data: any) => api.createProfile(data),
+    mutationFn: (data: AnyObject) => api.createProfile(data),
     retry: 0,
   });
 };
 
-// UPDATE PROFILE (PUT) - replace entire profile
+// UPDATE PROFILE (PUT) — replace entire profile
 export const useUpdateProfile = () => {
   return useMutation({
-    mutationFn: ({  data }: { data: any }) =>
-      api.updateProfile(data),
+    mutationFn: ({ data }: { data: AnyObject }) =>
+      api.updateProfile("", data), // keeping call signature stable
     retry: 0,
   });
 };
@@ -31,8 +34,8 @@ export const useUpdateProfile = () => {
 // PATCH PROFILE (partial update)
 export const usePatchProfile = () => {
   return useMutation({
-    mutationFn: ({ userId, data }) =>
-      api.patchProfile(userId, data),
+    mutationFn: (args: { userId: string; data: AnyObject }) =>
+      api.patchProfile(args.userId, args.data),
     retry: 0,
   });
 };
@@ -49,7 +52,7 @@ export const useDeleteProfile = () => {
 export const useAddSkills = () => {
   return useMutation({
     mutationFn: (data: { userId: string; skills: string[] }) =>
-      api.addSkills(data.userId, data.skills),  // FIX: send userId
+      api.addSkills(data.userId, data.skills),
     retry: 0,
   });
 };
@@ -62,4 +65,3 @@ export const useRemoveSkill = () => {
     retry: 0,
   });
 };
-

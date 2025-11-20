@@ -13,17 +13,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+type UnknownRecord = Record<string, unknown>;
+
 interface Field {
   key: string;
   label: string;
-  value: any; // string OR object
+  value: string | UnknownRecord; // remove any
   disabled?: boolean;
 }
 
 interface EditSectionProps {
   title: string;
   fields: Field[];
-  onSave: (updatedValues: Record<string, any>) => void;
+  onSave: (updatedValues: Record<string, unknown>) => void;
   allowAddMore?: boolean;
 }
 
@@ -33,10 +35,9 @@ export default function EditSection({
   onSave,
   allowAddMore = false,
 }: EditSectionProps) {
-  const [formValues, setFormValues] = useState<Record<string, any>>({});
+  const [formValues, setFormValues] = useState<Record<string, unknown>>({});
   const [open, setOpen] = useState(false);
 
-  // Detect SKILLS section
   const isSkillsSection =
     title.toLowerCase().includes("skill") &&
     fields.length > 0 &&
@@ -44,16 +45,16 @@ export default function EditSection({
 
   useEffect(() => {
     if (open) {
-      const initial: Record<string, any> = {};
+      const initial: Record<string, unknown> = {};
       fields.forEach((f) => {
         initial[f.key] =
-          typeof f.value === "object" ? { ...f.value } : f.value;
+          typeof f.value === "object" ? { ...(f.value as UnknownRecord) } : f.value;
       });
       setFormValues(initial);
     }
   }, [open, fields]);
 
-  const handleChange = (key: string, value: any) => {
+  const handleChange = (key: string, value: unknown) => {
     setFormValues((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -97,9 +98,11 @@ export default function EditSection({
             const isExperience =
               typeof value === "object" &&
               value !== null &&
-              "title" in value;
+              "title" in (value as UnknownRecord);
 
             if (isExperience) {
+              const v = value as UnknownRecord;
+
               return (
                 <div
                   key={key}
@@ -111,38 +114,38 @@ export default function EditSection({
 
                   <Input
                     placeholder="Title"
-                    value={value.title}
+                    value={(v.title as string) || ""}
                     onChange={(e) =>
-                      handleChange(key, { ...value, title: e.target.value })
+                      handleChange(key, { ...v, title: e.target.value })
                     }
                   />
                   <Input
                     placeholder="Company"
-                    value={value.company}
+                    value={(v.company as string) || ""}
                     onChange={(e) =>
-                      handleChange(key, { ...value, company: e.target.value })
+                      handleChange(key, { ...v, company: e.target.value })
                     }
                   />
                   <Input
                     placeholder="Start Date"
-                    value={value.start}
+                    value={(v.start as string) || ""}
                     onChange={(e) =>
-                      handleChange(key, { ...value, start: e.target.value })
+                      handleChange(key, { ...v, start: e.target.value })
                     }
                   />
                   <Input
                     placeholder="End Date"
-                    value={value.end}
+                    value={(v.end as string) || ""}
                     onChange={(e) =>
-                      handleChange(key, { ...value, end: e.target.value })
+                      handleChange(key, { ...v, end: e.target.value })
                     }
                   />
                   <Input
                     placeholder="Description"
-                    value={value.description}
+                    value={(v.description as string) || ""}
                     onChange={(e) =>
                       handleChange(key, {
-                        ...value,
+                        ...v,
                         description: e.target.value,
                       })
                     }
@@ -157,7 +160,7 @@ export default function EditSection({
                   {fieldMeta?.label || `Item ${index + 1}`}
                 </p>
                 <Input
-                  value={value}
+                  value={(value as string) || ""}
                   disabled={fieldMeta?.disabled}
                   onChange={(e) => handleChange(key, e.target.value)}
                 />
@@ -195,3 +198,4 @@ export default function EditSection({
     </Dialog>
   );
 }
+
