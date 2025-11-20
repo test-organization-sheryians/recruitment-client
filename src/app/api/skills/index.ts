@@ -1,5 +1,8 @@
-import API from "./axiosInstance";
+import API from "@/config/axios";
+//import { ZlibReset } from "zlib";
 
 export const getAllSkills = () => API.get("/skills");
-export const createSkill = (data) => API.post("/skills", data);
-export const deleteSkill = (id) => API.delete(`/skills/${id}`);
+export const createSkill = (data  : string) => {
+  return API.post("/skills", data);
+};
+export const deleteSkill = (id : string) => API.delete(`/skills/${id}`);

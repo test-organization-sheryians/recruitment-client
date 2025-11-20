@@ -1,4 +1,4 @@
-// components/SkillForm.jsx
+
 "use client";
 import { useState } from "react";
 import { FiPlus } from "react-icons/fi";
@@ -14,7 +14,7 @@ export default function SkillForm({ onSubmit }) {
   };
 
   return (
-    // Changed layout from flex-row to flex-col for better vertical stacking in the small column
+
     <form onSubmit={handleAdd} className="flex flex-col gap-3"> 
       <input
         type="text"

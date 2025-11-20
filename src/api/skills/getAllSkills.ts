@@ -1,8 +1,7 @@
 import api from "@/config/axios";
+import { Skill } from "../../types/skilll";
 
-export const getAllSkills = async (data: any) => {
-    const response = await api.get("api/skills");
-    console.log(response.data);
-    return response.data
-}
-
+export const getAllSkills = async (): Promise<Skill[]> => {
+  const res = await api.get("/api/skills");
+  return res.data;
+};
