@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { ImBin } from "react-icons/im";
 import { FiEdit, FiSave } from "react-icons/fi";
-import Modal from "../ui/Modal";
+import Modal from "../../../../components/ui/Modal";
 
 export default function SkillCard({
   skill,

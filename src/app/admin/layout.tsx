@@ -1,6 +1,6 @@
 // app/admin/layout.tsx
 import Navbar from "@/components/Navbar";
-import Sidebar from "@/features/admin/Sidebar";
+import Sidebar from "@/features/admin/static_pages/Sidebar";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 

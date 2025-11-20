@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import SkillForm from "@/components/skills/SkillForm";
-import SkillList from "@/components/skills/SkillList";
+import SkillForm from "@/features/admin/skills/components/SkillForm";
+import SkillList from "@/features/admin/skills/components/SkillList";
 import { FiPlus, FiX } from "react-icons/fi";
 import {
   useGetAllSkills,
   useCreateSkill,
   useDeleteSkill,
   useUpdateSkill,
-} from "@/features/skills/hooks/useSkillApi";
+} from "@/features/admin/skills/hooks/useSkillApi";
 
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
