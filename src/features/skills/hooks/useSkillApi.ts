@@ -59,19 +59,19 @@ export const useUpdateSkill = () => {
 // };
 
 
-// export const useDeleteSkill = () => {
-//   const queryClient = useQueryClient();
+export const useDeleteSkill = () => {
+  const queryClient = useQueryClient();
 
-//   return useMutation({
-//       mutationKey: ["deleteSkill"],
-// mutationFn: (id: string | {id: string}) => {  api.deleteSkill(id),
-//      console.log(id)  },
+  return useMutation({
+      mutationKey: ["deleteSkill"],
+mutationFn: (id: string | {id: string}) => {  api.deleteSkill(id),
+     console.log(id)  },
 
-//     onSuccess: () => {
-//       queryClient.invalidateQueries(["skills"]);
-//     },
-//   });
-// };
+    onSuccess: () => {
+      queryClient.invalidateQueries(["skills"]);
+    },
+  });
+};
 
 
 
