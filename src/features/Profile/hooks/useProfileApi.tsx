@@ -3,10 +3,11 @@ import * as api from "../../../api";
 
 import { Profile } from "@/types/profile";
 
-type AnyObject = Record<string, unknown>; // <— flexible, safe, eliminates `any`
+type AnyObject = Record<string, unknown>;
+type ProfilePayload = AnyObject | FormData;
 
 // GET PROFILE
-export const useGetProfile = () => {
+export const useGetProfile = (userId?: string) => {
   return useQuery<Profile>({
     queryKey: ["profile"],
     queryFn: () => api.getProfile(),
@@ -34,7 +35,7 @@ export const useUpdateProfile = () => {
 // PATCH PROFILE (partial update)
 export const usePatchProfile = () => {
   return useMutation({
-    mutationFn: (args: { userId: string; data: AnyObject }) =>
+    mutationFn: (args: { userId: string; data: ProfilePayload  }) =>
       api.patchProfile(args.userId, args.data),
     retry: 0,
   });
