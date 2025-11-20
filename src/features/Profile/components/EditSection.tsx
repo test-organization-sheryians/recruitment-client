@@ -36,14 +36,18 @@ export default function EditSection({
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [open, setOpen] = useState(false);
 
+  // Detect SKILLS section
+  const isSkillsSection =
+    title.toLowerCase().includes("skill") &&
+    fields.length > 0 &&
+    typeof fields[0].value === "string";
+
   useEffect(() => {
     if (open) {
       const initial: Record<string, any> = {};
       fields.forEach((f) => {
-        // Keep strings as strings and objects as objects
-        initial[f.key] = typeof f.value === "object"
-          ? { ...f.value }
-          : f.value;
+        initial[f.key] =
+          typeof f.value === "object" ? { ...f.value } : f.value;
       });
       setFormValues(initial);
     }
@@ -56,9 +60,7 @@ export default function EditSection({
   const handleAddField = () => {
     const newKey = String(Object.keys(formValues).length);
 
-    // Detect type from FIRST field
     const first = fields[0]?.value;
-
     const isExperience = typeof first === "object";
 
     setFormValues((p) => ({
@@ -78,27 +80,31 @@ export default function EditSection({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">Edit</Button>
+        <Button variant="outline" size="sm">
+          Edit
+        </Button>
       </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit {title}</DialogTitle>
-          <DialogDescription>
-            Update values and click save.
-          </DialogDescription>
+          <DialogDescription>Update values and click save.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
           {Object.entries(formValues).map(([key, value], index) => {
             const fieldMeta = fields[index];
+            const isExperience =
+              typeof value === "object" &&
+              value !== null &&
+              "title" in value;
 
-            const isExperience = typeof value === "object" && value !== null && "title" in value;
-
-            // EXPERIENCE UI
             if (isExperience) {
               return (
-                <div key={key} className="p-2 border rounded space-y-2 bg-gray-50">
+                <div
+                  key={key}
+                  className="p-2 border rounded space-y-2 bg-gray-50"
+                >
                   <p className="text-xs text-gray-500 mb-1">
                     {fieldMeta?.label || `Item ${index + 1}`}
                   </p>
@@ -145,7 +151,6 @@ export default function EditSection({
               );
             }
 
-            // SIMPLE TEXT FIELD
             return (
               <div key={key}>
                 <p className="text-xs text-gray-500 mb-1">
@@ -174,7 +179,12 @@ export default function EditSection({
 
           <Button
             onClick={() => {
-              onSave(formValues);
+              const cleaned =
+                isSkillsSection
+                  ? Object.values(formValues).map((v) => String(v).trim())
+                  : formValues;
+
+              onSave(cleaned);
               setOpen(false);
             }}
           >

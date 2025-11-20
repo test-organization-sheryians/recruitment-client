@@ -1,89 +1,65 @@
-import { useQuery, useMutation ,UseQueryOptions} from "@tanstack/react-query";
-import * as api from "../../../api";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import * as api from "../../../api"; // your api barrel file
 
-
-// --------------------------------------
-// GET PROFILE (Query)
-// --------------------------------------
-
-export const useGetProfile = (
-  userId: string,
-) => {
+// GET PROFILE
+export const useGetProfile = () => {
   return useQuery({
-    queryKey: ["profile", userId],
-    queryFn: () => api.getProfile(userId),
-    enabled: !!userId,
-    retry: 0
+    queryKey: ["profile"],
+    queryFn: () => api.getProfile(),
+    
+    retry: 0,
   });
 };
 
-// --------------------------------------
-// CREATE PROFILE
-// --------------------------------------
+// CREATE PROFILE (POST)
 export const useCreateProfile = () => {
   return useMutation({
-    mutationKey: ["createProfile"],
     mutationFn: (data: any) => api.createProfile(data),
     retry: 0,
   });
 };
 
-// --------------------------------------
-// UPDATE PROFILE (PUT)
-// --------------------------------------
+// UPDATE PROFILE (PUT) - replace entire profile
 export const useUpdateProfile = () => {
   return useMutation({
-    mutationKey: ["updateProfile"],
-    mutationFn: ({ userId, data }: { userId: string; data: any }) =>
-      api.patchProfile(userId, data),
+    mutationFn: ({  data }: { data: any }) =>
+      api.updateProfile(data),
     retry: 0,
   });
 };
 
-// --------------------------------------
 // PATCH PROFILE (partial update)
-// --------------------------------------
 export const usePatchProfile = () => {
   return useMutation({
-    mutationKey: ["patchProfile"],
-    mutationFn: ({ userId, data }: { userId: string; data: any }) =>
+    mutationFn: ({ userId, data }) =>
       api.patchProfile(userId, data),
     retry: 0,
   });
 };
 
-// --------------------------------------
 // DELETE PROFILE
-// --------------------------------------
 export const useDeleteProfile = () => {
   return useMutation({
-    mutationKey: ["deleteProfile"],
     mutationFn: (userId: string) => api.deleteProfile(userId),
     retry: 0,
   });
 };
 
-// --------------------------------------
 // ADD SKILLS
-// --------------------------------------
 export const useAddSkills = () => {
   return useMutation({
-    mutationKey: ["addSkills"],
     mutationFn: (data: { userId: string; skills: string[] }) =>
-      api.addSkills(data.userId, data.skills),
+      api.addSkills(data.userId, data.skills),  // FIX: send userId
     retry: 0,
   });
 };
 
-// --------------------------------------
-// REMOVE SKILL
-// --------------------------------------
+// REMOVE SINGLE SKILL
 export const useRemoveSkill = () => {
   return useMutation({
-    mutationKey: ["removeSkill"],
-    mutationFn: (data: { userId: string; skill: string }) =>
-      api.removeSkill(data.userId, data.skill),
+    mutationFn: (data: { skill: string }) =>
+      api.removeSkill(data.skill),
     retry: 0,
   });
 };
- 
+
