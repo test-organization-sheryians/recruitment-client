@@ -34,7 +34,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/app/loading"
-  ],
+, "src/api/candidateHome/jobCategoryApi.js"  ],
   "exclude": [
     "node_modules"
   ]

@@ -26,13 +26,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-           <Wrapper>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* Inline script: remove extension-injected attributes that cause hydration mismatches. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{document.documentElement.removeAttribute('cz-shortcut-listen');document.body.removeAttribute('cz-shortcut-listen');}catch(e){};`,
+          }}
+        />
+        <Wrapper>
+          <AuthProvider>
+            <div suppressHydrationWarning>{children}</div>
+          </AuthProvider>
         </Wrapper>
       </body>
     </html>

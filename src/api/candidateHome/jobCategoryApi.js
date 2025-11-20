@@ -1,0 +1,18 @@
+import axios from "axios";
+
+const API = axios.create({
+  baseURL: "http://localhost:3000/api",
+});
+
+// Add token
+API.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export const jobCategoryApi = {
+  list: () => API.get("/job-categories"),
+};
