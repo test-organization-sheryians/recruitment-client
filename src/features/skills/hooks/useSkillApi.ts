@@ -43,6 +43,58 @@ export const useUpdateSkill = () => {
   });
 };
 
+
+// export const useDeleteSkill = () => {
+//   const queryClient = useQueryClient();
+
+//   return useMutation({
+//     mutationKey: ["deleteSkill"],
+//     mutationFn: (id: string) => {
+//       console.log("Mutation Received ID:", id);
+//       return api.deleteSkill(id);
+//     },
+//     onSuccess: () => {
+//       queryClient.invalidateQueries(["skills"]);
+//     },
+//   });
+// };
+
+export const useDeleteSkill = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["deleteSkill"],
+    mutationFn: (id: string) => {
+      console.log("MUTATION RECEIVED ID:", id);
+      return api.deleteSkill(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["skills"] });
+    },
+  });
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // export const useDeleteSkill = () => {
 //   const queryClient = useQueryClient();
 
@@ -59,19 +111,35 @@ export const useUpdateSkill = () => {
 // };
 
 
-export const useDeleteSkill = () => {
-  const queryClient = useQueryClient();
+// export const useDeleteSkill = () => {
+//   const queryClient = useQueryClient();
 
-  return useMutation({
-      mutationKey: ["deleteSkill"],
-mutationFn: (id: string | {id: string}) => {  api.deleteSkill(id),
-     console.log(id)  },
+//   return useMutation({
+//       mutationKey: ["deleteSkill"],
+// mutationFn: (id: string | {id: string}) => {  api.deleteSkill(id),
+//      console.log(id)  },
 
-    onSuccess: () => {
-      queryClient.invalidateQueries(["skills"]);
-    },
-  });
-};
+//     onSuccess: () => {
+//       queryClient.invalidateQueries(["skills"]);
+//     },
+//   });
+// };
+
+
+
+
+// export const useDeleteSkill = () => {
+//   const queryClient = useQueryClient();
+
+//   return useMutation({
+//     mutationKey: ["deleteSkill"],
+//     mutationFn: ({id}) => api.deleteSkill(id),
+
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({ queryKey: ["skills"] });
+//     },
+//   });
+// };
 
 
 

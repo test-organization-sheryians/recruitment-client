@@ -4,7 +4,11 @@ import { useState } from "react";
 import { ImBin } from "react-icons/im"; 
 import { FiEdit, FiSave, FiX } from "react-icons/fi";
 
-export default function SkillCard({ skill, onDelete, onUpdate }) {
+export default function SkillCard({ skill, onDelete, onUpdate } : {
+  skill: { _id: string; name: string };
+  onDelete: (id: string) => void;
+  onUpdate: (data: { id: string; name: string }) => void;
+})   {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState(skill.name);
 
@@ -57,7 +61,7 @@ export default function SkillCard({ skill, onDelete, onUpdate }) {
             </button>
             <button
               className="p-0.5 text-red-500 rounded-full hover:bg-red-500/10 transition" 
-              onClick={() => onDelete({ id: skill._id })}
+            onClick={() => onDelete(skill._id )}
               aria-label={`Delete ${skill.name}`}
             >
               <ImBin size={14} />
