@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { getJobs } from '@/api/jobs';
-import { useRouter } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +12,8 @@ import {
 import CreateJob from './CreateJob';
 import DeleteJob from './DeleteJob';
 import UpdateJob from './UpdateJob';
+ 
+
 
 interface Job {
   _id: string;
@@ -32,16 +33,27 @@ interface Job {
   };
 }
 
+
+
 interface ApiResponse {
   success: boolean;
   data: Job | Job[];
 }
 
-export default function Jobs() {
+  export default function Jobs({
+    onJobCreated,
+    onJobUpdated,
+    onJobDeleted
+  }: {
+  onJobCreated?: () => void;
+  onJobUpdated?: () => void;
+  onJobDeleted?: () => void;
+}) {
+  
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  
 
   useEffect(() => {
     const loadJobs = async () => {

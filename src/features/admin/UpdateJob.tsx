@@ -1,8 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { updateJob, getJobs } from '@/api/jobs';
+
+interface Category {
+  _id: string;
+  name: string;
+}
+
+interface Skill {
+  _id: string;
+  name: string;
+}
 
 interface UpdateJobProps {
   jobId: string;
@@ -10,69 +20,80 @@ interface UpdateJobProps {
 }
 
 export default function UpdateJobPage({ jobId, onJobUpdated }: UpdateJobProps) {
-  const data = useParams();
-  console.log("aao data",data);
-  const params = useParams<{ _id: string }>();
-  console.log("params.id",params._id);
   const router = useRouter();
-  // Get the job ID from params
-  
+
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [skills, setSkills] = useState<Skill[]>([]);
+
   const [formData, setFormData] = useState({
     title: '',
-    description: '',
-    education: '',
     requiredExperience: '',
-    skills: '',
-    expiry: '',
     category: '',
+    education: '',
+    description: '',
+    skills: [''],
+    expiry: '',
     clientId: ''
   });
 
-  // Fetch job data on component mount
+  // Load static dropdowns (same as create)
   useEffect(() => {
-    if (jobId) {
-      fetchJobData();
-    }
+    setCategories([{ _id: '6915f00858c60a88896fbee5', name: 'Technology' }]);
+    setSkills([{ _id: '691dd57f2f2aefeb50de1704', name: 'JavaScript' }]);
+  }, []);
+
+  // Fetch job details using jobId from props
+  useEffect(() => {
+    if (jobId) fetchJobData();
   }, [jobId]);
 
   const fetchJobData = async () => {
-    setFetching(true);
-    setError('');
     try {
       const response = await getJobs(jobId);
-      console.log("Job data:", response);
-      
-      if (response.success && response.data) {
-        const job = response.data;
-        setFormData({
-          title: job.title || '',
-          description: job.description || '',
-          education: job.education || '',
-          requiredExperience: job.requiredExperience || '',
-          skills: Array.isArray(job.skills) ? job.skills.join(', ') : job.skills || '',
-          expiry: job.expiry ? new Date(job.expiry).toISOString().split('T')[0] : '',
-          category: job.category || '',
-          clientId: job.clientId || ''
-        });
-      } else {
+
+      if (!response.success || !response.data) {
         setError('Failed to load job data');
+        setFetching(false);
+        return;
       }
+
+      const job = response.data;
+
+      setFormData({
+        title: job.title || '',
+        description: job.description || '',
+        education: job.education || '',
+        requiredExperience: job.requiredExperience || '',
+        skills: Array.isArray(job.skills) ? job.skills : [''],
+        expiry: job.expiry ? new Date(job.expiry).toISOString().split('T')[0] : '',
+        category: job.category || '',
+        clientId: job.clientId || ''
+      });
+
     } catch (err) {
-      console.error('Error fetching job:', err);
-      setError('Failed to load job data. Please try again.');
-    } finally {
-      setFetching(false);
+      console.error(err);
+      setError('Failed to load job data.');
     }
+
+    setFetching(false);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSkillChange = (skillId: string) => {
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      skills: prev.skills[0] === skillId ? [''] : [skillId]
     }));
   };
 
@@ -81,47 +102,54 @@ export default function UpdateJobPage({ jobId, onJobUpdated }: UpdateJobProps) {
     setLoading(true);
     setError('');
 
+    if (
+      !formData.title ||
+      !formData.description ||
+      !formData.education ||
+      !formData.requiredExperience ||
+      !formData.category ||
+      !formData.expiry
+    ) {
+      setError('Please fill in all required fields');
+      setLoading(false);
+      return;
+    }
+
+    const jobData = {
+      title: formData.title,
+      requiredExperience: formData.requiredExperience,
+      category: formData.category,
+      education: formData.education,
+      description: formData.description,
+      skills: formData.skills[0] ? formData.skills : [''],
+      expiry: new Date(formData.expiry).toISOString(),
+      clientId: formData.clientId
+    };
+
     try {
-      // Validate required fields
-      if (!formData.title || !formData.description || !formData.education || 
-          !formData.requiredExperience || !formData.expiry) {
-        setError('Please fill in all required fields');
-        setLoading(false);
-        return;
-      }
-
-      // Prepare data for API - convert skills string to array
-      const jobData = {
-        title: formData.title,
-        description: formData.description,
-        education: formData.education,
-        requiredExperience: formData.requiredExperience,
-        skills: formData.skills ? formData.skills.split(',').map(skill => skill.trim()).filter(skill => skill) : [],
-        expiry: new Date(formData.expiry).toISOString(),
-        category: formData.category,
-        clientId: formData.clientId
-      };
-
-      console.log("Updating job with data:", jobData);
-
       const response = await updateJob(jobId, jobData);
-      console.log("Update response:", response);
-      
+
       if (response.success) {
-        router.push('/admin/jobs');
-        router.refresh();
+        setIsSuccess(true);
+
+        // 🔥 notify parent if callback exists
+        onJobUpdated?.();
+
+        setTimeout(() => {
+          router.push('/admin/jobs');
+          router.refresh();
+        }, 1500);
       } else {
         setError(response.message || 'Failed to update job');
       }
     } catch (err) {
-      console.error('Error updating job:', err);
-      setError('Failed to update job. Please try again.');
-    } finally {
-      setLoading(false);
+      console.error(err);
+      setError('Failed to update job');
     }
+
+    setLoading(false);
   };
 
-  // Calculate minimum date for expiry (today)
   const getMinDate = () => {
     return new Date().toISOString().split('T')[0];
   };
@@ -136,196 +164,162 @@ export default function UpdateJobPage({ jobId, onJobUpdated }: UpdateJobProps) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="w-full h-[90vh]">
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-800">Update Job</h1>
-              <p className="text-gray-600 mt-1">Edit the job details</p>
-            </div>
-            <button
-              onClick={() => router.back()}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50"
-            >
-              Back to Jobs
-            </button>
-          </div>
+        <div className="p-2 border-b border-gray-100">
+          <p className="text-gray-600 mt-1">
+            {isSuccess ? 'Job updated successfully!' : 'Edit job details'}
+          </p>
         </div>
 
-        {error && (
-          <div className="p-4 bg-red-50 text-red-600 border-b border-red-200">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Job Title */}
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-              Job Title *
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              required
-              value={formData.title}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., Senior Backend Developer"
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-              Job Description *
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              required
-              rows={5}
-              value={formData.description}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Describe the job responsibilities and requirements..."
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Education */}
-            <div>
-              <label htmlFor="education" className="block text-sm font-medium text-gray-700 mb-1">
-                Education Requirements *
-              </label>
-              <input
-                type="text"
-                id="education"
-                name="education"
-                required
-                value={formData.education}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="e.g., Bachelor of Computer Science"
-              />
+        {isSuccess ? (
+          <div className="p-6 text-center">
+            <div className="text-green-500 mb-4">
+              <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-
-            {/* Required Experience */}
-            <div>
-              <label htmlFor="requiredExperience" className="block text-sm font-medium text-gray-700 mb-1">
-                Required Experience *
-              </label>
-              <input
-                type="text"
-                id="requiredExperience"
-                name="requiredExperience"
-                required
-                value={formData.requiredExperience}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="e.g., 3+ years in backend development"
-              />
-            </div>
+            <p className="text-gray-700">The job has been updated successfully!</p>
           </div>
+        ) : (
+          <>
+            {error && (
+              <div className="bg-red-50 text-red-600 border-b border-red-200 p-2">
+                {error}
+              </div>
+            )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Skills */}
-            <div>
-              <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-1">
-                Required Skills
-              </label>
-              <input
-                type="text"
-                id="skills"
-                name="skills"
-                value={formData.skills}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="e.g., JavaScript, React, Node.js"
-              />
-              <p className="text-xs text-gray-500 mt-1">Separate skills with commas</p>
-            </div>
+            <form onSubmit={handleSubmit} className="p-3 space-y-6">
 
-            {/* Expiry Date */}
-            <div>
-              <label htmlFor="expiry" className="block text-sm font-medium text-gray-700 mb-1">
-                Application Deadline *
-              </label>
-              <input
-                type="date"
-                id="expiry"
-                name="expiry"
-                required
-                value={formData.expiry}
-                onChange={handleChange}
-                min={getMinDate()}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
+              {/* --- FORM FIELDS --- */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Job Title *</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-1 border rounded-md"
+                />
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Category */}
-            <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                Category
-              </label>
-              <input
-                type="text"
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Job category"
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description *</label>
+                <textarea
+                  name="description"
+                  rows={5}
+                  value={formData.description}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-1 border rounded-md"
+                />
+              </div>
 
-            {/* Client ID */}
-            <div>
-              <label htmlFor="clientId" className="block text-sm font-medium text-gray-700 mb-1">
-                Client ID
-              </label>
-              <input
-                type="text"
-                id="clientId"
-                name="clientId"
-                value={formData.clientId}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Client identifier"
-              />
-            </div>
-          </div>
-
-          {/* Form Actions */}
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              disabled={loading}
-              className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              {loading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                  Updating Job...
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Education *</label>
+                  <input
+                    type="text"
+                    name="education"
+                    value={formData.education}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-1 border rounded-md"
+                  />
                 </div>
-              ) : (
-                'Update Job'
-              )}
-            </button>
-          </div>
-        </form>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Required Experience *
+                  </label>
+                  <input
+                    type="text"
+                    name="requiredExperience"
+                    value={formData.requiredExperience}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-1 border rounded-md"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Category *</label>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-1 border rounded-md"
+                  >
+                    <option value="">Select category</option>
+                    {categories.map(c => (
+                      <option key={c._id} value={c._id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Deadline *</label>
+                  <input
+                    type="date"
+                    name="expiry"
+                    min={getMinDate()}
+                    value={formData.expiry}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-1 border rounded-md"
+                  />
+                </div>
+              </div>
+
+              {/* --- SKILLS --- */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Required Skills</label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {skills.map(skill => (
+                    <label
+                      key={skill._id}
+                      className="flex items-center p-1 border rounded-md cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.skills.includes(skill._id)}
+                        onChange={() => handleSkillChange(skill._id)}
+                        className="mr-2"
+                      />
+                      {skill.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* --- ACTIONS --- */}
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => router.back()}
+                  className="px-6 py-1 bg-white border rounded-md"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-6 py-1 bg-blue-600 text-white rounded-md disabled:opacity-50"
+                >
+                  {loading ? 'Updating...' : 'Update Job'}
+                </button>
+              </div>
+
+            </form>
+          </>
+        )}
       </div>
     </div>
   );

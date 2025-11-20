@@ -1,26 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { deleteJob } from '@/api/jobs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 
 interface DeleteJobProps {
   jobId: string;
-  jobTitle:string;
+  jobTitle: string;
   onJobDeleted?: () => void;
 }
 
-export default function DeleteJob({jobId,onJobDeleted}:DeleteJobProps) {
+export default function DeleteJob({jobId,jobTitle,onJobDeleted}:DeleteJobProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [job, setJob] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // You might want to fetch the job details here if you want to show them in the confirmation
-    // For now, we'll just use the jobId from the URL
+    onJobDeleted?.();
   }, [jobId]);
 
   const handleDelete = async () => {
@@ -31,11 +30,13 @@ export default function DeleteJob({jobId,onJobDeleted}:DeleteJobProps) {
     
     try {
       const response = await deleteJob(jobId);
-      if (response.success) {
+      if (response) {
+        setIsOpen(false); // Close the dialog
+        onJobDeleted?.(); // Notify parent if needed
         router.push('/admin/jobs');
         router.refresh();
       } else {
-        setError(response.message || 'Failed to delete job');
+        setError(response?.message || 'Failed to delete job');
       }
     } catch (err) {
       console.error('Error deleting job:', err);
@@ -60,9 +61,19 @@ export default function DeleteJob({jobId,onJobDeleted}:DeleteJobProps) {
   }
 
   return (
-    <div className="max-w-md mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Delete Job</h2>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <button
+          onClick={() => router.push('/admin/jobs')}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+        >
+          Delete {jobTitle}
+        </button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Delete Job</DialogTitle>
+        </DialogHeader>
         
         {error && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
@@ -71,12 +82,12 @@ export default function DeleteJob({jobId,onJobDeleted}:DeleteJobProps) {
         )}
         
         <p className="text-gray-600 mb-6">
-          Are you sure you want to delete this job? This action cannot be undone.
+          Are you sure you want to delete {jobTitle}. This action cannot be undone.
         </p>
         
         <div className="flex justify-end space-x-3">
           <button
-            onClick={() => router.push('/admin/jobs')}
+            onClick={() => setIsOpen(false)}
             disabled={loading}
             className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
           >
@@ -87,10 +98,11 @@ export default function DeleteJob({jobId,onJobDeleted}:DeleteJobProps) {
             disabled={loading}
             className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
           >
-            {loading ? 'Deleting...' : 'Delete Job'}
+            {loading ? 'Deleting...': 'Delete Job'}
           </button>
         </div>
-      </div>
-    </div>
+        
+      </DialogContent>
+    </Dialog>
   );
 }
