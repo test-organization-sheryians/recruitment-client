@@ -23,23 +23,14 @@ export default function SkillPage() {
   const deleteSkill = useDeleteSkill();
   const updateSkill = useUpdateSkill();
 
-//   const handleAdd = async (skill: { name: string }) => {
-//     await createSkill.mutateAsync(skill, {
-//       onSuccess: () => {
-//         refetch();
-//         setIsModalOpen(false); 
-//       },
-//     });
-//   };
-
   const handleAdd = async (skill: { name: string }) => {
-  await createSkill.mutateAsync(skill, {
-    onSuccess: () => {
-      refetch();
-      setIsModalOpen(false);
-    },
-  });
-};
+    await createSkill.mutateAsync(skill, {
+      onSuccess: () => {
+        refetch();
+        setIsModalOpen(false); 
+      },
+    });
+  };
 
   const handleDelete = async (id: string) => {
     await deleteSkill.mutateAsync(id, {
@@ -112,7 +103,7 @@ export default function SkillPage() {
                 </div>
           
                 <SkillList
-                    skills={data || []}
+                    skills={data?.data || []}
                     loading={isLoading}
                     onDelete={handleDelete}
                     onUpdate={handleUpdate}
