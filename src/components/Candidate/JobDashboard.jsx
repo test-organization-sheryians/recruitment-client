@@ -11,15 +11,14 @@ export default function JobDashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* NAVBAR — FULL WIDTH */}
+     
       <div className="w-full">
         <Navbar />
       </div>
 
-      {/* MAIN CONTENT — SIDE BY SIDE */}
+    
       <div className="mt-8 max-w-7xl mx-auto grid grid-cols-12 gap-6 px-6">
 
-        {/* LEFT — JOB CATEGORY */}
         <div className="col-span-4">
           <Sidebar
             selected={selectedCategory}
@@ -27,7 +26,7 @@ export default function JobDashboardPage() {
           />
         </div>
 
-        {/* RIGHT — RECOMMENDED JOBS */}
+       
         <div className="col-span-8">
           <h1 className="text-2xl font-bold">Recommended Jobs</h1>
 

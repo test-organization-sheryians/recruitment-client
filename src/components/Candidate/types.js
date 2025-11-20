@@ -1,4 +1,3 @@
-// Sample job data and categories used by JobDashboard during development
 export const SAMPLE_JOBS = [
   {
     id: "1",

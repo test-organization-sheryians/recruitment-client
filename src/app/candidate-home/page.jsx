@@ -16,6 +16,9 @@ export default function CandidateHomePage() {
     "Customer Manager",
     "Finance Executive",
     "Software Developer",
+    "Video Editing",
+    "Animation",
+    
   ];
 
   const filteredJobs = SAMPLE_JOBS.filter((job) => {
@@ -57,7 +60,7 @@ export default function CandidateHomePage() {
                       : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  <span className="text-lg">🔍</span>
+                  {/* <span className="text-lg">🔍</span> */}
                   {cat}
                 </button>
               ))}
@@ -85,7 +88,7 @@ export default function CandidateHomePage() {
           </div>
 
           {/* JOB CARDS */}
-          <div className="space-y-1.5 max-h-[calc(100vh-260px)] overflow-y-auto pr-2">
+          <div className="space-y-1.5 max-h-[calc(100vh-260px)] overflow-y-auto pr-2 hide-scrollbar">
             {filteredJobs.length > 0 ? (
               filteredJobs.map((job) => <JobCard key={job.id} job={job} />)
             ) : (
