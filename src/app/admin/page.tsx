@@ -1,12 +1,12 @@
 'use client'
-import AdminDashboard from "@/features/admin/Dashboard";
+import DashboardPage from "@/features/admin/static_pages/Dashboard";
 import React from "react";
 
 const AdminHome = () => {
  
   return (
     <div>
-      <AdminDashboard />
+      <DashboardPage />
     </div>
   );
 };

@@ -5,7 +5,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
-import LogoutButton from './Logout';
+import LogoutButton from './static_pages/Logout';
 
 const navItems = [
   { name: 'Dashboard', href: '/admin' },

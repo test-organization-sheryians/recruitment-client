@@ -1,8 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAddJobCategory } from "../hooks/useJobCategoryApi";
-import { CategoryError } from "../types";
+import { CategoryError } from "../../../../types/JobCategeory";
+import { useToast } from "../../../../components/ui/Toast";
 
 type AddCategoryProps = {
   close: () => void;
@@ -11,8 +12,16 @@ type AddCategoryProps = {
 const AddCategory: React.FC<AddCategoryProps> = ({ close }) => {
   const [name, setName] = useState("");
   const queryClient = useQueryClient();
+  const { success, error: showError } = useToast();
 
   const { mutate: addCategory, isPending, error } = useAddJobCategory();
+
+  // Show error toast when mutation fails
+  useEffect(() => {
+    if (error) {
+      showError((error as CategoryError)?.response?.data?.message || "Failed to add category");
+    }
+  }, [error, showError]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,13 +31,9 @@ const AddCategory: React.FC<AddCategoryProps> = ({ close }) => {
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["jobCategories"] });
-          alert("Category added successfully!");
+          success("Category added successfully!");
           setName("");
           close();
-        },
-        onError: (err: CategoryError) => {
-          const message = err?.response?.data?.message || "Error adding category";
-          alert(message);
         },
       }
     );

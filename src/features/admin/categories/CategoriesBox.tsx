@@ -1,57 +1,62 @@
 "use client";
-import React, { useState } from 'react';
-import { FiEdit, FiTrash2 } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import AddCategory from './component/AddCategory';
+import AddCategory from './components/AddCategory';
+import CategoryCard from './components/CategoryCard';
 import {
   useGetJobCategories,
   useDeleteJobCategory,
   useUpdateJobCategory
 } from './hooks/useJobCategoryApi';
-import { JobCategory, CategoryError } from './types';
+import { JobCategory, CategoryError } from '../../../types/JobCategeory';
+import { useToast } from '../../../components/ui/Toast';
 
 const CategoriesBox = () => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { success, error: showError } = useToast();
 
   const { data: categories = [], isLoading, isError, error } = useGetJobCategories();
 
-  const { mutate: deleteCategory } = useDeleteJobCategory();
+  const {
+    mutate: deleteCategory,
+    isPending: isDeleting,
+    error: deleteError
+  } = useDeleteJobCategory();
 
+  const {
+    mutate: updateCategory,
+    isPending: isUpdating,
+    error: updateError
+  } = useUpdateJobCategory();
 
-  const { mutate: updateCategory } = useUpdateJobCategory();
+  // Show error toasts when mutations fail
+  useEffect(() => {
+    if (deleteError) {
+      showError((deleteError as CategoryError)?.response?.data?.message || "Failed to delete category");
+    }
+    if (updateError) {
+      showError((updateError as CategoryError)?.response?.data?.message || "Failed to update category");
+    }
+  }, [deleteError, updateError, showError]);
 
-  const handleEdit = async (cat: JobCategory) => {
-    if (!cat?._id) return alert("Category id missing");
-
-    const newName = prompt("Enter new category name", cat.name);
-    if (!newName || newName.trim() === "") return;
-
+  const handleUpdate = (data: { id: string; name: string }) => {
     updateCategory(
-      { id: cat._id, name: newName.trim() },
+      data,
       {
         onSuccess: () => {
+          success("Category updated successfully!");
           queryClient.invalidateQueries({ queryKey: ["jobCategories"] });
-        },
-        onError: (err: CategoryError) => {
-          alert(err?.response?.data?.message || "Error updating category");
         },
       }
     );
   };
 
-  const handleDelete = (cat: JobCategory) => {
-    if (!cat?._id) return alert("Category id missing");
-
-    const confirmDelete = confirm(`Delete category "${cat.name}"?`);
-    if (!confirmDelete) return;
-
-    deleteCategory(cat._id, {
+  const handleDelete = (id: string) => {
+    deleteCategory(id, {
       onSuccess: () => {
+        success("Category deleted successfully!");
         queryClient.invalidateQueries({ queryKey: ["jobCategories"] });
-      },
-      onError: (err: CategoryError) => {
-        alert(err?.response?.data?.message || "Error deleting category");
       },
     });
   };
@@ -69,7 +74,6 @@ const CategoriesBox = () => {
           </button>
         </div>
 
-
         {isLoading && (
           <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-2'>
             {Array.from({ length: 8 }).map((_, i) => (
@@ -78,13 +82,11 @@ const CategoriesBox = () => {
           </div>
         )}
 
-
         {isError && (
           <div className='p-4 text-sm text-red-600 bg-red-50 rounded-md'>
             Failed to load categories: {(error as CategoryError)?.message || 'Unknown error'}
           </div>
         )}
-
 
         {!isLoading && !isError && (
           <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-2'>
@@ -93,31 +95,13 @@ const CategoriesBox = () => {
             )}
 
             {categories.map((cat: JobCategory) => (
-              <div
+              <CategoryCard
                 key={cat._id || cat.name}
-                className='flex items-center justify-between bg-gray-50 border rounded-md p-3 hover:shadow-sm transition-shadow'
-              >
-                <div className='text-sm font-medium'>{cat.name}</div>
-                <div className='flex items-center gap-2'>
-                  <button
-                    title={`Edit ${cat.name}`}
-                    aria-label={`Edit ${cat.name}`}
-                    className='p-1 rounded text-gray-600 hover:text-blue-600 transition-colors'
-                    onClick={() => handleEdit(cat)}
-                  >
-                    <FiEdit className='w-4 h-4' />
-                  </button>
-
-                  <button
-                    title={`Delete ${cat.name}`}
-                    aria-label={`Delete ${cat.name}`}
-                    className='p-1 rounded text-gray-600 hover:text-red-600 transition-colors'
-                    onClick={() => handleDelete(cat)}
-                  >
-                    <FiTrash2 className='w-4 h-4' />
-                  </button>
-                </div>
-              </div>
+                category={cat}
+                onDelete={handleDelete}
+                onUpdate={handleUpdate}
+                isDeleting={isDeleting}
+              />
             ))}
           </div>
         )}
