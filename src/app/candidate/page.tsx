@@ -1,3 +1,4 @@
+import UnderConstruction from '@/features/admin/UnderConstruction'
 import CandidateProfile from '@/features/Profile/components/CandidateProfile'
 import React from 'react'
 

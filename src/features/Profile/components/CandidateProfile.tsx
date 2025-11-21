@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import EditSection from "./EditSection";
 import { getCurrentUser } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { AxiosError } from "axios";
+
 
 
 /* hooks (single-file export) */
@@ -151,19 +151,18 @@ export default function CandidateProfile() {
       { userId, 
         data: { skills: newArr } },
       {
-        onSuccess: () => {
+        onSuccess: (res) => {
           // invalidate profile to refetch canonical values
-          qc.invalidateQueries({
-          queryKey: ["profile", userId],
-        });
-
+          qc.invalidateQueries(["profile", userId]);
         },
-        onError: (error) => {
-  console.error("Failed to save skills:", error);
-  qc.invalidateQueries({ queryKey: ["profile", userId] });
-  alert("Failed to save skills. See console for details.");
-},
-
+        onError: (err: any) => {
+          console.error("Failed to save skills:", err);
+          // rollback by refetching server copy
+          qc.invalidateQueries(["profile", userId]);
+          // optional: show user-visible error (alert or toast)
+          alert("Failed to save skills. See console for details.");
+        },
+      }
     );
   };
 
@@ -175,54 +174,40 @@ const handleDeleteSkill = (skillItem: any) => {
 
   if (!userId) return;
 
- if (id) {
-  setSkills((prev) => prev.filter((s) => skillIdFor(s) !== id));
+  if (id) {
+    // Optimistic UI update using _id (fix)
+    setSkills((prev) => prev.filter((s) => skillIdFor(s) !== id));
 
-  removeSkill.mutate(
-    { skill: id },
+    removeSkill.mutate(
+      { skill: id },
+      {
+        onSuccess: () => qc.invalidateQueries(["profile", userId]),
+        onError: (err: any) => {
+          console.error("Failed to remove skill:", err);
+          qc.invalidateQueries(["profile", userId]);
+          alert("Failed to remove skill. See console.");
+        },
+      }
+    );
+    return;
+  }
+
+  // Fallback (unchanged)
+  const newSkills = skills.filter((s) => skillDisplay(s) !== skillDisplay(skillItem));
+  setSkills(newSkills);
+
+  patchProfile.mutate(
+    { userId, data: { skills: newSkills } },
     {
-      onSuccess: () => {
-        qc.invalidateQueries({
-          queryKey: ["profile", userId],
-        });
-      },
-      onError: (err) => {
-        console.error("Failed to remove skill:", err);
-        qc.invalidateQueries({
-          queryKey: ["profile", userId],
-        });
+      onSuccess: () => qc.invalidateQueries(["profile", userId]),
+      onError: (err: any) => {
+        console.error("Failed to remove skill (fallback):", err);
+        qc.invalidateQueries(["profile", userId]);
         alert("Failed to remove skill. See console.");
       },
     }
   );
-  return;
-}
-
-
-// Fallback (fixed)
-const newSkills = skills.filter(
-  (s) => skillDisplay(s) !== skillDisplay(skillItem)
-);
-setSkills(newSkills);
-
-patchProfile.mutate(
-  { userId, data: { skills: newSkills } },
-  {
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["profile", userId],
-      });
-    },
-    onError: (err: unknown) => {
-      console.error("Failed to remove skill (fallback):", err);
-      qc.invalidateQueries({
-        queryKey: ["profile", userId],
-      });
-      alert("Failed to remove skill. See console.");
-    },
-  }
-);
-
+};
 
 
   // -------------------------
@@ -239,26 +224,19 @@ patchProfile.mutate(
     if (payload.lastName) setLastName(payload.lastName);
     if (payload.phone) setPhone(payload.phone);
 
-   if (!userId) return;
-
-patchProfile.mutate(
-  { userId, data: payload },
-  {
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["profile", userId],
-      });
-    },
-    onError: (err: unknown) => {
-      console.error("Failed to save personal info:", err);
-      qc.invalidateQueries({
-        queryKey: ["profile", userId],
-      });
-      alert("Failed to save personal info. See console.");
-    },
-  }
-);
-
+    if (!userId) return;
+    patchProfile.mutate(
+      { userId, data: payload },
+      {
+        onSuccess: () => qc.invalidateQueries(["profile", userId]),
+        onError: (err) => {
+          console.error("Failed to save personal info:", err);
+          qc.invalidateQueries(["profile", userId]);
+          alert("Failed to save personal info. See console.");
+        },
+      }
+    );
+  };
 
   // -------------------------
   // Experience save handler
@@ -282,25 +260,18 @@ patchProfile.mutate(
     setExperience(newExperience);
 
     if (!userId) return;
-
-patchProfile.mutate(
-  { userId, data: { experience: newExperience } },
-  {
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["profile", userId],
-      });
-    },
-    onError: (err: unknown) => {
-      console.error("Failed to save experience:", err);
-      qc.invalidateQueries({
-        queryKey: ["profile", userId],
-      });
-      alert("Failed to save experience. See console.");
-    },
-  }
-);
-
+    patchProfile.mutate(
+      { userId, data: { experience: newExperience } },
+      {
+        onSuccess: () => qc.invalidateQueries(["profile", userId]),
+        onError: (err) => {
+          console.error("Failed to save experience:", err);
+          qc.invalidateQueries(["profile", userId]);
+          alert("Failed to save experience. See console.");
+        },
+      }
+    );
+  };
 
   // -------------------------
   // Socials save handler
@@ -313,54 +284,39 @@ patchProfile.mutate(
     if (payload.linkedin) setLinkedin(payload.linkedin);
     if (payload.github) setGithub(payload.github);
 
-   if (!userId) return;
+    if (!userId) return;
+    patchProfile.mutate(
+      { userId, data: payload },
+      {
+        onSuccess: () => qc.invalidateQueries(["profile", userId]),
+        onError: (err) => {
+          console.error("Failed to save socials:", err);
+          qc.invalidateQueries(["profile", userId]);
+          alert("Failed to save socials. See console.");
+        },
+      }
+    );
+  };
 
-patchProfile.mutate(
-  { userId, data: payload },
-  {
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["profile", userId],
-      });
-    },
-    onError: (err: unknown) => {
-      console.error("Failed to save socials:", err);
-      qc.invalidateQueries({
-        queryKey: ["profile", userId],
-      });
-      alert("Failed to save socials. See console.");
-    },
-  }
-);
+  // resume upload
+  const handleResumeUpload = (file: File | null) => {
+    setResume(file);
+    if (!file || !userId) return;
 
-
-// resume upload
-const handleResumeUpload = (file: File | null) => {
-  setResume(file);
-  if (!file || !userId) return;
-
-  const fd = new FormData();
-  fd.append("resume", file);
-
-  patchProfile.mutate(
-    { userId, data: fd },
-    {
-      onSuccess: () => {
-        qc.invalidateQueries({
-          queryKey: ["profile", userId],
-        });
-      },
-      onError: (err: unknown) => {
-        console.error("Resume upload failed:", err);
-        qc.invalidateQueries({
-          queryKey: ["profile", userId],
-        });
-        alert("Resume upload failed. See console.");
-      },
-    }
-  );
-};
-
+    const fd = new FormData();
+    fd.append("resume", file);
+    patchProfile.mutate(
+      { userId, data: fd },
+      {
+        onSuccess: () => qc.invalidateQueries(["profile", userId]),
+        onError: (err) => {
+          console.error("Resume upload failed:", err);
+          qc.invalidateQueries(["profile", userId]);
+          alert("Resume upload failed. See console.");
+        },
+      }
+    );
+  };
 
   // Loading & error states
   if (!currentUser || isLoading) {
