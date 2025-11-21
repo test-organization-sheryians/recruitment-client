@@ -26,4 +26,3 @@ export interface UpdateProfilePayload {
   userId: string;
   updateData: Partial<Profile>;
 }
-
