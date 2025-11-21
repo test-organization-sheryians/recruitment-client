@@ -3,8 +3,9 @@
 
 import { useEffect, useState } from "react";
 import EditSection from "./EditSection";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, User } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
+import { Profile, Experience } from "@/types/profile";
 
 
 
@@ -12,99 +13,107 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetProfile,
   usePatchProfile,
-  useAddSkills,
   useRemoveSkill,
 } from "@/features/Profile/hooks/useProfileApi";
+import { AxiosError } from "axios";
 
 export default function CandidateProfile() {
   // load current user (from your server-side JWT util)
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  useEffect(() => {
-    getCurrentUser()
-      .then((u) => setCurrentUser(u))
-      .catch(() => setCurrentUser(null));
-  }, []);
+const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+useEffect(() => {
+  let isMounted = true;
+
+  getCurrentUser()
+    .then((u) => {
+      if (isMounted) setCurrentUser(u);
+    })
+    .catch(() => {
+      if (isMounted) setCurrentUser(null);
+    });
+
+  return () => {
+    isMounted = false;
+  };
+}, []);
+
 
   // Derive userId when possible (defensive)
   // backend responses you've shown include user._id or userId
   const qc = useQueryClient();
 
   // Fetch profile only when we have a user id (useGetProfile has enabled: !!userId)
-  const derivedUserId =
-    currentUser?.id ?? // getCurrentUser server util may return `id`
-    currentUser?._id ?? // or `_id`
-    undefined;
+// STEP 1 — from auth
+const derivedUserId = currentUser?.id || null;
 
-  const {
-    data: rawProfile,
-    isLoading,
-    error: profileError,
-  } = useGetProfile(derivedUserId);
+// STEP 2 — get profile (no params)
+const {
+  data: rawProfile,
+  isLoading,
+  error: profileError,
+} = useGetProfile();
 
-  // Normalize profile shape:
-  // Example shapes you provided: { data: {..., user: {...}, skills: []}, success: true }
-  // or maybe the hook returns the inner object directly. We'll handle both.
-  const profile = rawProfile?.data ?? rawProfile ?? null;
-  const profileUser = profile?.user ?? null;
-  const userIdFromProfile = profile?.userId ?? profileUser?._id ?? profileUser?.id;
+// STEP 3 — normalize profile
+const profile: Profile | null = rawProfile && "data" in rawProfile ? rawProfile.data : rawProfile ?? null;
 
-  const userId = derivedUserId ?? userIdFromProfile;
+// STEP 4 — extract userId
+const userIdFromProfile = profile?._id ?? null;
 
-  // Local state (controlled by server values once loaded)
-  const [firstName, setFirstName] = useState<string>("Candidate");
-  const [lastName, setLastName] = useState<string>("Name");
-  const [phone, setPhone] = useState<string>("867643885");
-  const [email, setEmail] = useState<string>("xyz@mail.com"); // readonly
-  const [skills, setSkills] = useState<any[]>(["React", "Node.js"]); // elements may be string or object
-  const [experience, setExperience] = useState<any[]>(
-    [
-      {
-        title: "Frontend Intern",
-        company: "Tech Corp",
-        description: "Worked on UI components and dashboards.",
-        start: "Jan 2023",
-        end: "Jun 2023",
-      },
-    ]
-  );
-  const [linkedin, setLinkedin] = useState<string>("");
-  const [github, setGithub] = useState<string>("");
-  const [resume, setResume] = useState<File | null>(null);
+// STEP 5 — final userId
+const userId = derivedUserId ?? userIdFromProfile;
 
-  // Mutations
-  const patchProfile = usePatchProfile();
-  const addSkills = useAddSkills();
-  const removeSkill = useRemoveSkill();
 
-  // When profile loads, populate local state from server (one-time sync)
-  useEffect(() => {
-    if (!profile) return;
+// Local state (controlled by server values once loaded)
+const [firstName, setFirstName] = useState<string>("");
+const [lastName, setLastName] = useState<string>("");
+const [phone, setPhone] = useState<string>("");
+const [email, setEmail] = useState<string>(""); // readonly
+const [skills, setSkills] = useState<string[]>([]); // elements may be string or object
+const [experience, setExperience] = useState<Experience[]>([]);
+const [linkedin, setLinkedin] = useState<string>("");
+const [github, setGithub] = useState<string>("");
+const [resume, setResume] = useState<File | null>(null);
 
-    // defensive extraction
-    const p = profile;
-    const userObj = p.user ?? {};
-    setFirstName(p.firstName ?? userObj.firstName ?? firstName);
-    setLastName(p.lastName ?? userObj.lastName ?? lastName);
-    setPhone(p.phone ?? userObj.phone ?? phone);
-    setEmail(userObj.email ?? p.email ?? email);
+// Mutations
+const patchProfile = usePatchProfile();
+const removeSkill = useRemoveSkill();
 
-    // skills may be strings, ids, or objects with { _id, name }
-    setSkills(Array.isArray(p.skills) ? p.skills : []);
-    setExperience(Array.isArray(p.experience) ? p.experience : []);
-    setLinkedin(p.linkedin ?? "");
-    setGithub(p.github ?? "");
-  }, [profile]);
+// When profile loads, populate local state from server (one-time sync)
+useEffect(() => {
+  if (!profile) return;
+
+  // profile is typed as Profile
+  const p = profile;
+  const userObj = profile.user as Partial<Profile> ?? {}; 
+
+  setFirstName(p.firstName ?? userObj.firstName ?? "");
+  setLastName(p.lastName ?? userObj.lastName ?? "");
+  setPhone(p.phone ?? userObj.phone ?? "");
+  setEmail(userObj.email ?? p.email ?? "");
+
+  setSkills(Array.isArray(p.skills) ? p.skills : []);
+  setExperience(Array.isArray(p.experience) ? p.experience : []);
+
+  //setLinkedin(p.linkedin ?? "");
+  //setGithub(p.github ?? "");
+}, [profile]);
+
+
 
   // Helpers to get display name for skill items (handles strings or objects)
-  const skillDisplay = (s: any) => {
-    if (!s) return "";
-    if (typeof s === "string") return s;
-    if (typeof s === "object") return s.name ?? s.label ?? String(s._id ?? s.id ?? "");
-    return String(s);
-  };
+const skillDisplay = (s: string | Record<string, unknown>): string => {
+  if (!s) return "";
+  if (typeof s === "string") return s;
+  if (typeof s === "object" && s !== null) {
+    // safely access possible string properties
+    return (s.name ?? s.label ?? s._id ?? s.id ?? "") as string;
+  }
+  return "";
+};
+
 
   // Helper to get an id for deletion (if skill is object with _id or id)
-  const skillIdFor = (s: any) => {
+  const skillIdFor =(s: string | Record<string, object>) => {
     if (!s) return null;
     if (typeof s === "string") return s; // may be an id already or a name — backend expects id usually
     if (typeof s === "object") return s._id ?? s.id ?? null;
@@ -114,7 +123,7 @@ export default function CandidateProfile() {
   // -------------------------
   // Skills: Save handler (called by EditSection onSave)
   // -------------------------
-  const handleSkillsSave = (updated: Record<string, any>) => {
+  const handleSkillsSave = (updated: Record<string, object>) => {
     // Updated is an object { "0": "React", "1": "Node" ... } or numeric keys with JSON strings
     const arrRaw = Object.values(updated);
     const newArr = arrRaw
@@ -125,7 +134,7 @@ export default function CandidateProfile() {
             const parsed = JSON.parse(v);
             return parsed;
           } catch {
-            return v.trim();
+            return (v as string).trim();
           }
         }
         return v;
@@ -151,16 +160,17 @@ export default function CandidateProfile() {
       { userId, 
         data: { skills: newArr } },
       {
-        onSuccess: (res) => {
+        onSuccess: () => {
           // invalidate profile to refetch canonical values
-          qc.invalidateQueries(["profile", userId]);
+          qc.invalidateQueries({ queryKey: ["profile", userId] })
         },
-        onError: (err: any) => {
-          console.error("Failed to save skills:", err);
-          // rollback by refetching server copy
-          qc.invalidateQueries(["profile", userId]);
-          // optional: show user-visible error (alert or toast)
-          alert("Failed to save skills. See console for details.");
+        onError: (err: unknown) => {
+    const error = err as AxiosError; // cast to AxiosError for safety
+      console.error("Failed to save skills:", error);
+      // rollback by refetching server copy
+      qc.invalidateQueries({ queryKey: ["profile", userId] });
+      // optional: show user-visible error
+      alert("Failed to save skills. See console for details.");
         },
       }
     );
@@ -169,22 +179,22 @@ export default function CandidateProfile() {
   // -------------------------
   // Delete single skill (uses removeSkill hook)
   // -------------------------
-const handleDeleteSkill = (skillItem: any) => {
+const handleDeleteSkill = (skillItem: string) => {
   const id = skillIdFor(skillItem); // should return _id now
 
   if (!userId) return;
-
+  if (!id) return;    // exit if skill id is null
   if (id) {
     // Optimistic UI update using _id (fix)
     setSkills((prev) => prev.filter((s) => skillIdFor(s) !== id));
 
     removeSkill.mutate(
-      { skill: id },
+     { skill: id as string }, 
       {
-        onSuccess: () => qc.invalidateQueries(["profile", userId]),
-        onError: (err: any) => {
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["profile", userId] }),
+        onError: (err: unknown) => {
           console.error("Failed to remove skill:", err);
-          qc.invalidateQueries(["profile", userId]);
+          qc.invalidateQueries({ queryKey: ["profile", userId] });
           alert("Failed to remove skill. See console.");
         },
       }
@@ -199,10 +209,10 @@ const handleDeleteSkill = (skillItem: any) => {
   patchProfile.mutate(
     { userId, data: { skills: newSkills } },
     {
-      onSuccess: () => qc.invalidateQueries(["profile", userId]),
-      onError: (err: any) => {
+      onSuccess: () => qc.invalidateQueries({ queryKey: ["profile", userId] }),
+      onError: (err: unknown) => {
         console.error("Failed to remove skill (fallback):", err);
-        qc.invalidateQueries(["profile", userId]);
+        qc.invalidateQueries({ queryKey: ["profile", userId] });
         alert("Failed to remove skill. See console.");
       },
     }
@@ -213,25 +223,26 @@ const handleDeleteSkill = (skillItem: any) => {
   // -------------------------
   // Personal info save handler (patched)
   // -------------------------
-  const handlePersonalSave = (updated: Record<string, any>) => {
-    const payload: Record<string, any> = {};
-    if (updated.firstName !== undefined) payload.firstName = updated.firstName;
-    if (updated.lastName !== undefined) payload.lastName = updated.lastName;
-    if (updated.phone !== undefined) payload.phone = updated.phone;
+  const handlePersonalSave = (updated: Record<string, object>) => {
+const payload: Partial<Pick<Profile, "firstName" | "lastName" | "phone">> = {};
 
-    // update UI
-    if (payload.firstName) setFirstName(payload.firstName);
-    if (payload.lastName) setLastName(payload.lastName);
-    if (payload.phone) setPhone(payload.phone);
+if (typeof updated.firstName === "string") payload.firstName = updated.firstName;
+if (typeof updated.lastName === "string") payload.lastName = updated.lastName;
+if (typeof updated.phone === "string") payload.phone = updated.phone;
+
+// update UI
+if (payload.firstName !== undefined) setFirstName(payload.firstName);
+if (payload.lastName !== undefined) setLastName(payload.lastName);
+if (payload.phone !== undefined) setPhone(payload.phone);
 
     if (!userId) return;
     patchProfile.mutate(
       { userId, data: payload },
       {
-        onSuccess: () => qc.invalidateQueries(["profile", userId]),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["profile", userId] }),
         onError: (err) => {
           console.error("Failed to save personal info:", err);
-          qc.invalidateQueries(["profile", userId]);
+          qc.invalidateQueries({ queryKey: ["profile", userId] });
           alert("Failed to save personal info. See console.");
         },
       }
@@ -241,7 +252,7 @@ const handleDeleteSkill = (skillItem: any) => {
   // -------------------------
   // Experience save handler
   // -------------------------
-  const handleExperienceSave = (updated: Record<string, any>) => {
+  const handleExperienceSave = (updated: Record<string, object>) => {
     // try parse same way as skills: accept JSON strings or objects
     const arrRaw = Object.values(updated);
     const newExperience = arrRaw
@@ -263,10 +274,10 @@ const handleDeleteSkill = (skillItem: any) => {
     patchProfile.mutate(
       { userId, data: { experience: newExperience } },
       {
-        onSuccess: () => qc.invalidateQueries(["profile", userId]),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["profile", userId] }),
         onError: (err) => {
           console.error("Failed to save experience:", err);
-          qc.invalidateQueries(["profile", userId]);
+          qc.invalidateQueries({ queryKey: ["profile", userId] });
           alert("Failed to save experience. See console.");
         },
       }
@@ -276,27 +287,34 @@ const handleDeleteSkill = (skillItem: any) => {
   // -------------------------
   // Socials save handler
   // -------------------------
-  const handleSocialsSave = (updated: Record<string, any>) => {
-    const payload: Record<string, any> = {};
-    if (updated.linkedin !== undefined) payload.linkedin = updated.linkedin;
-    if (updated.github !== undefined) payload.github = updated.github;
+  const handleSocialsSave = (updated: Record<string, object>) => {
+  const payload: Partial<Pick<Profile, "linkedin" | "github">> = {};
 
-    if (payload.linkedin) setLinkedin(payload.linkedin);
-    if (payload.github) setGithub(payload.github);
+ if (typeof updated.linkedin === "string") {
+  payload.linkedin = updated.linkedin;
+  setLinkedin(payload.linkedin);
+}
+
+if (typeof updated.github === "string") {
+  payload.github = updated.github;
+  setGithub(payload.github);
+}
+
 
     if (!userId) return;
     patchProfile.mutate(
       { userId, data: payload },
       {
-        onSuccess: () => qc.invalidateQueries(["profile", userId]),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["profile", userId] }),
         onError: (err) => {
           console.error("Failed to save socials:", err);
-          qc.invalidateQueries(["profile", userId]);
+          qc.invalidateQueries({ queryKey: ["profile", userId] });
           alert("Failed to save socials. See console.");
         },
       }
     );
   };
+
 
   // resume upload
   const handleResumeUpload = (file: File | null) => {
@@ -308,10 +326,10 @@ const handleDeleteSkill = (skillItem: any) => {
     patchProfile.mutate(
       { userId, data: fd },
       {
-        onSuccess: () => qc.invalidateQueries(["profile", userId]),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["profile", userId] }),
         onError: (err) => {
           console.error("Resume upload failed:", err);
-          qc.invalidateQueries(["profile", userId]);
+          qc.invalidateQueries({ queryKey: ["profile", userId] });
           alert("Resume upload failed. See console.");
         },
       }
@@ -410,14 +428,14 @@ const handleDeleteSkill = (skillItem: any) => {
 
             <EditSection
               title="Experience"
-              fields={(experience || []).map((exp: any, i: number) => ({ key: String(i), label: `Experience ${i+1}`, value: JSON.stringify(exp) }))}
+              fields={(experience || []).map((exp: object, i: number) => ({ key: String(i), label: `Experience ${i+1}`, value: JSON.stringify(exp) }))}
               allowAddMore={true}
               onSave={handleExperienceSave}
             />
           </div>
 
           <div className="space-y-4">
-            {(experience || []).map((exp: any, i: number) => (
+            {(experience || []).map((exp: Experience, i: number) => (
               <div key={i} className="p-4 border rounded-md bg-gray-50">
                 <h4 className="font-semibold">{exp.title}</h4>
                 <p className="text-sm">{exp.company}</p>
@@ -438,7 +456,7 @@ const handleDeleteSkill = (skillItem: any) => {
           </label>
         </div>
 
-        {/* Socials */}
+       {/* Socials */}
         <div className="bg-white rounded-xl border shadow-sm p-6 space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="font-semibold text-lg text-gray-700">Socials</h3>
@@ -456,6 +474,7 @@ const handleDeleteSkill = (skillItem: any) => {
           <p>LinkedIn: {linkedin}</p>
           <p>GitHub: {github}</p>
         </div>
+        
       </div>
     </div>
   );

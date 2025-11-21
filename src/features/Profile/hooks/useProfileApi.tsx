@@ -1,13 +1,17 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import * as api from "../../../api";
-
+import { updateProfile } from "../../../api";
 import { Profile } from "@/types/profile";
 
-type AnyObject = Record<string, unknown>; // <— flexible, safe, eliminates `any`
+
+type ProfileResponse = {
+  success: boolean;
+  data: Profile;
+};
 
 // GET PROFILE
 export const useGetProfile = () => {
-  return useQuery<Profile>({
+  return useQuery<ProfileResponse>({
     queryKey: ["profile"],
     queryFn: () => api.getProfile(),
     
@@ -18,7 +22,7 @@ export const useGetProfile = () => {
 // CREATE PROFILE (POST)
 export const useCreateProfile = () => {
   return useMutation({
-    mutationFn: (data: any) => api.createProfile(data),
+    mutationFn: (data: string) => api.createProfile(data),
     retry: 0,
   });
 };
@@ -26,20 +30,26 @@ export const useCreateProfile = () => {
 // UPDATE PROFILE (PUT) - replace entire profile
 export const useUpdateProfile = () => {
   return useMutation({
-    mutationFn: ({  data }: { data: any }) =>
-      api.updateProfile(data),
+    mutationFn: (data: Partial<Profile>) => updateProfile(data),
     retry: 0,
   });
 };
 
+
 // PATCH PROFILE (partial update)
+// hooks/useProfileApi.tsx
+type PatchProfileArgs = {
+  userId: string;
+  data: Record<string, unknown> | FormData; // allow FormData now
+};
+
 export const usePatchProfile = () => {
   return useMutation({
-    mutationFn: (args: { userId: string; data: AnyObject }) =>
-      api.patchProfile(args.userId, args.data),
+    mutationFn: (args: PatchProfileArgs) => api.patchProfile(args.userId, args.data),
     retry: 0,
   });
 };
+
 
 // DELETE PROFILE
 export const useDeleteProfile = () => {

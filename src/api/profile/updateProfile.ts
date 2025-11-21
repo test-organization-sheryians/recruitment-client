@@ -1,5 +1,8 @@
+// src/features/Profile/api/profileApi.ts
 import api from "@/config/axios";
-export const updateProfile = async (userId: string, data: any) => {
-  const res = await api.put(`/api/candidate-profile/update-profile`, data);
-  return res.data;
+import { Profile } from "@/types/profile";
+
+export const updateProfile = async (data: Partial<Profile>) => {
+  const res = await api.put("/api/candidate-profile/update-profile", data);
+  return res.data; // your backend response
 };

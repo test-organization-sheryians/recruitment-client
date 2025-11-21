@@ -16,14 +16,14 @@ import { Button } from "@/components/ui/button";
 interface Field {
   key: string;
   label: string;
-  value: any; // string OR object
+  value: string; // string OR object
   disabled?: boolean;
 }
 
 interface EditSectionProps {
   title: string;
   fields: Field[];
-  onSave: (updatedValues: Record<string, any>) => void;
+  onSave: (updatedValues: Record<string, object>) => void;
   allowAddMore?: boolean;
 }
 
@@ -33,7 +33,7 @@ export default function EditSection({
   onSave,
   allowAddMore = false,
 }: EditSectionProps) {
-  const [formValues, setFormValues] = useState<Record<string, any>>({});
+  const [formValues, setFormValues] = useState<Record<string, object>>({});
   const [open, setOpen] = useState(false);
 
   // Detect SKILLS section
@@ -44,7 +44,7 @@ export default function EditSection({
 
   useEffect(() => {
     if (open) {
-      const initial: Record<string, any> = {};
+      const initial: Record<string, unknown> = {};
       fields.forEach((f) => {
         initial[f.key] =
           typeof f.value === "object" ? { ...f.value } : f.value;
@@ -53,7 +53,7 @@ export default function EditSection({
     }
   }, [open, fields]);
 
-  const handleChange = (key: string, value: any) => {
+  const handleChange = (key: string, value: string) => {
     setFormValues((prev) => ({ ...prev, [key]: value }));
   };
 
