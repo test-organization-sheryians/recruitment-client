@@ -72,11 +72,8 @@ export default function ResumeChat() {
       sender: 'ai',
     },
   ]);
-  
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
-  
+
   const handleFileUpload = (file: File) => {
-    setResumeFile(file);
     // Here you would typically handle the file upload to your server
     console.log('File uploaded:', file.name);
   };
