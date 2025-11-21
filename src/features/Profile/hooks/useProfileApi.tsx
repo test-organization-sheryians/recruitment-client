@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery,UseMutationOptions,useQueryClient } from "@tanstack/react-query";
 import * as api from "@/api";
 import { CandidateProfile,AddSkillsPayload  } from "@/types/profile";
 
@@ -7,7 +7,8 @@ export const useGetProfile = () =>
   useQuery<CandidateProfile>({
     queryKey: ["candidateProfile"],
     queryFn: api.getProfile,
-    retry: 0,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
 // CREATE
@@ -25,12 +26,32 @@ export const useUpdateProfile = () =>
   });
 
 // ADD SKILLS
-export const useAddSkills = () =>
-  useMutation({
+export const useAddSkills = (options?: any) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
     mutationKey: ["addSkills"],
     mutationFn: (data: AddSkillsPayload) => api.addSkills(data),
+
+    onSuccess: (response, variables) => {
+  queryClient.setQueryData(["candidateProfile"], (old: any) => {
+    if (!old) return old;
+
+    return {
+      ...old,
+      skills: [...(old.skills || []), ...variables.skills],
+    };
   });
 
+  options?.onSuccess?.(response);
+},
+
+
+    onError: (...args) => {
+      options?.onError?.(...args);
+    },
+  });
+};
 // REMOVE SKILL
 export const useRemoveSkill = () =>
   useMutation({

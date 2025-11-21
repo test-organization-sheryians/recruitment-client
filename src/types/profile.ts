@@ -25,7 +25,6 @@ export interface Experience {
 }
 
 export interface AddSkillsPayload {
-  userId: string;
   skills: string[];
 }
 

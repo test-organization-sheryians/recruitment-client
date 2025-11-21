@@ -3,23 +3,33 @@ import { useAddSkills } from "../hooks/useProfileApi";
 
 interface Props {
   skills: string[];
-  userId: string;
+  
 }
 
-export default function SkillsSection({ skills, userId }: Props) {
+export default function SkillsSection({ skills }: Props) {
   const [newSkill, setNewSkill] = useState("");
-  const { mutate, isPending } = useAddSkills();
+  const { mutate, isPending } = useAddSkills({
+  onSuccess: (data) => {
+    console.log("✅ Skill added response:", data);
+  },
+  onError: (error) => {
+    console.error("❌ Error adding skill:", error);
+  },
+});
 
-  const handleAddSkill = () => {
-    if (!newSkill.trim()) return;
 
-    mutate({
-      userId,
-      skills: [newSkill],
-    });
+ const handleAddSkill = () => {
+  if (!newSkill.trim()) return;
 
-    setNewSkill("");
-  };
+  if (skills.map(s => s.toLowerCase()).includes(newSkill.toLowerCase())) {
+    alert("Skill already added");
+    return;
+  }
+
+  mutate({ skills: [newSkill] });
+  setNewSkill("");
+};
+
 
   return (
     <div className="border p-4 rounded space-y-3">
