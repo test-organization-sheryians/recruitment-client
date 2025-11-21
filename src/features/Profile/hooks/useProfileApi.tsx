@@ -1,76 +1,61 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as api from "@/api";
+import { CandidateProfile,AddSkillsPayload  } from "@/types/profile";
 
-// ---------------- GET PROFILE ----------------
-export const useGetProfile = () => {
-  return useQuery({
+// GET
+export const useGetProfile = () =>
+  useQuery<CandidateProfile>({
     queryKey: ["candidateProfile"],
     queryFn: api.getProfile,
     retry: 0,
   });
-};
 
-// ---------------- CREATE PROFILE ----------------
-export const useCreateProfile = () => {
-  return useMutation({
+// CREATE
+export const useCreateProfile = () =>
+  useMutation({
     mutationKey: ["createProfile"],
     mutationFn: (data: { userId: string }) => api.createProfile(data),
-    retry: 0,
   });
-};
 
-
-// ---------------- UPDATE PROFILE ----------------
-export const useUpdateProfile = () => {
-  return useMutation({
+// UPDATE
+export const useUpdateProfile = () =>
+  useMutation({
     mutationKey: ["updateProfile"],
-    mutationFn: (data: any) => api.updateProfile(data),
-    retry: 0,
+    mutationFn: (data: Partial<CandidateProfile>) => api.updateProfile(data),
   });
-};
 
-// ---------------- ADD SKILLS ----------------
-export const useAddSkills = () => {
-  return useMutation({
+// ADD SKILLS
+export const useAddSkills = () =>
+  useMutation({
     mutationKey: ["addSkills"],
-    mutationFn: (skills: string[]) => api.addSkills(skills),
-    retry: 0,
+    mutationFn: (data: AddSkillsPayload) => api.addSkills(data),
   });
-};
 
-// ---------------- REMOVE SKILL ----------------
-export const useRemoveSkill = () => {
-  return useMutation({
+// REMOVE SKILL
+export const useRemoveSkill = () =>
+  useMutation({
     mutationKey: ["removeSkill"],
     mutationFn: (skillName: string) => api.removeSkill(skillName),
-    retry: 0,
   });
-};
 
-// ---------------- UPLOAD RESUME ----------------
-export const useUploadResume = () => {
-  return useMutation({
+// UPLOAD RESUME
+export const useUploadResume = () =>
+  useMutation({
     mutationKey: ["uploadResume"],
     mutationFn: (data: FormData) => api.uploadResume(data),
-    retry: 0,
   });
-};
 
-// ---------------- DELETE RESUME ----------------
-export const useDeleteResume = () => {
-  return useMutation({
+// DELETE RESUME
+export const useDeleteResume = () =>
+  useMutation({
     mutationKey: ["deleteResume"],
-    mutationFn: () => api.deleteResume(),
-    retry: 0,
+    mutationFn: api.deleteResume,
   });
-};
 
-// ---------------- UPDATE AVAILABILITY ----------------
-export const useUpdateAvailability = () => {
-  return useMutation({
-    mutationKey: ["updateAvailability"],
-    mutationFn: (availability: string) =>
-      api.updateAvailability(availability),
-    retry: 0,
-  });
-};
+// UPDATE AVAILABILITY
+// export const useUpdateAvailability = () =>
+//   useMutation({
+//     mutationKey: ["updateAvailability"],
+//     mutationFn: (availability: CandidateProfile["availability"]) =>
+//       api.updateAvailability({ availability }),
+//   });

@@ -20,13 +20,13 @@ export default function CandidateProfile() {
   const createProfileMutation = useCreateProfile();
 
   useEffect(() => {
-    if (isError && user) {
+    if (isError && user?.id) {
       createProfileMutation.mutate(
         { userId: user.id },
         { onSuccess: () => refetch() }
       );
     }
-  }, [isError, user]);
+  }, [isError, user?.id, refetch, createProfileMutation]);
 
   if (isLoading) return <p className="text-center mt-10">Loading profile...</p>;
   if (!user) return <p className="text-center mt-10 text-red-500">User not found</p>;
@@ -39,11 +39,12 @@ export default function CandidateProfile() {
         firstName={user.firstName}
         lastName={user.lastName}
         email={user.email}
+        phone={profile?.phone}
       />
 
-      <SkillsSection skills={profile?.skills || []} />
-      <ExperienceSection experience={profile?.experience || []} />
-      <ResumeSection resume={profile?.resume} />
+      <SkillsSection skills={profile?.skills ?? []} />
+      <ExperienceSection experience={profile?.experience ?? []} />
+      <ResumeSection resumeUrl={profile?.resumeUrl} />
       <SocialLinksSection linkedin={profile?.linkedin} github={profile?.github} />
       <AvailabilitySection availability={profile?.availability} />
     </div>

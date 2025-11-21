@@ -2,12 +2,14 @@ type Props = {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string;
 };
 
 export default function PersonalInfoSection({
   firstName,
   lastName,
   email,
+  phone,
 }: Props) {
   return (
     <div className="bg-white p-4 rounded-lg shadow">
@@ -27,6 +29,11 @@ export default function PersonalInfoSection({
         <div>
           <label className="text-sm text-gray-500">Email</label>
           <p className="font-medium">{email}</p>
+        </div>
+
+        <div>
+          <label className="text-sm text-gray-500">Phone</label>
+          <p className="font-medium">{phone || "-"}</p>
         </div>
       </div>
     </div>
