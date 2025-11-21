@@ -5,45 +5,24 @@ import { useEffect, useState } from "react";
 import EditSection from "./EditSection";
 import { getCurrentUser } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { Experience as ProfileExperience } from "@/types/profile";
+import { AxiosError } from "axios";
 
-interface Skill {
-  _id?: string;
-  id?: string;
-  name: string;
-}
-// Types
-type Experience = Omit<ProfileExperience, '_id' | 'startDate' | 'endDate' | 'role'> & {
-  title: string;
-  start: string;
-  end: string;
-};
 
-interface User {
-  _id?: string;
-  id?: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-}
-
-// Hooks
+/* hooks (single-file export) */
 import {
   useGetProfile,
   usePatchProfile,
+  useAddSkills,
   useRemoveSkill,
 } from "@/features/Profile/hooks/useProfileApi";
 
-const handlePersonalSave=() => {console.log("Personal Save")}
-
 export default function CandidateProfile() {
   // load current user (from your server-side JWT util)
-  const [currentUser, setCurrentUser] = useState<User>();
+  const [currentUser, setCurrentUser] = useState<any>(null);
   useEffect(() => {
     getCurrentUser()
-      .then((u) => setCurrentUser(u || undefined))
-      .catch(() => setCurrentUser(undefined));
+      .then((u) => setCurrentUser(u))
+      .catch(() => setCurrentUser(null));
   }, []);
 
   // Derive userId when possible (defensive)
@@ -57,12 +36,15 @@ export default function CandidateProfile() {
     undefined;
 
   const {
-    data: profile,
+    data: rawProfile,
     isLoading,
     error: profileError,
-  } = useGetProfile();
+  } = useGetProfile(derivedUserId);
 
-  // Extract user data from profile
+  // Normalize profile shape:
+  // Example shapes you provided: { data: {..., user: {...}, skills: []}, success: true }
+  // or maybe the hook returns the inner object directly. We'll handle both.
+  const profile = rawProfile?.data ?? rawProfile ?? null;
   const profileUser = profile?.user ?? null;
   const userIdFromProfile = profile?.userId ?? profileUser?._id ?? profileUser?.id;
 
@@ -73,8 +55,8 @@ export default function CandidateProfile() {
   const [lastName, setLastName] = useState<string>("Name");
   const [phone, setPhone] = useState<string>("867643885");
   const [email, setEmail] = useState<string>("xyz@mail.com"); // readonly
-  const [skills, setSkills] = useState<string[]>(["React", "Node.js"]); // elements may be string or object
-  const [experience, setExperience] = useState<Experience[]>(
+  const [skills, setSkills] = useState<any[]>(["React", "Node.js"]); // elements may be string or object
+  const [experience, setExperience] = useState<any[]>(
     [
       {
         title: "Frontend Intern",
@@ -91,6 +73,7 @@ export default function CandidateProfile() {
 
   // Mutations
   const patchProfile = usePatchProfile();
+  const addSkills = useAddSkills();
   const removeSkill = useRemoveSkill();
 
   // When profile loads, populate local state from server (one-time sync)
@@ -99,14 +82,7 @@ export default function CandidateProfile() {
 
     // defensive extraction
     const p = profile;
-    const userObj = p.user ?? {
-      email: '',
-      firstName: "",
-      lastName: "",
-      phone: "",
-      _id: "",
-      id: ""
-    };
+    const userObj = p.user ?? {};
     setFirstName(p.firstName ?? userObj.firstName ?? firstName);
     setLastName(p.lastName ?? userObj.lastName ?? lastName);
     setPhone(p.phone ?? userObj.phone ?? phone);
@@ -119,17 +95,16 @@ export default function CandidateProfile() {
     setGithub(p.github ?? "");
   }, [profile]);
 
-  // Helpers to get display name for skill items (handles strings or Skill objects)
-  const skillDisplay = (s: string | Skill | User) => {
+  // Helpers to get display name for skill items (handles strings or objects)
+  const skillDisplay = (s: any) => {
     if (!s) return "";
     if (typeof s === "string") return s;
-    if ('name' in s) return s.name;  // For Skill objects
-    if (typeof s === "object") return s.firstName ?? s.lastName ?? String(s._id ?? s.id ?? "");
+    if (typeof s === "object") return s.name ?? s.label ?? String(s._id ?? s.id ?? "");
     return String(s);
   };
 
   // Helper to get an id for deletion (if skill is object with _id or id)
-  const skillIdFor = (s: Skill) => {
+  const skillIdFor = (s: any) => {
     if (!s) return null;
     if (typeof s === "string") return s; // may be an id already or a name — backend expects id usually
     if (typeof s === "object") return s._id ?? s.id ?? null;
@@ -139,261 +114,253 @@ export default function CandidateProfile() {
   // -------------------------
   // Skills: Save handler (called by EditSection onSave)
   // -------------------------
-  const handleSkillsSave = (updated: Record<string, unknown>) => {
-    // Convert updated values to an array of skill names
-    const skillNames = Object.values(updated)
-      .filter((skill): skill is string => {
-        return typeof skill === 'string' && skill.trim().length > 0;
+  const handleSkillsSave = (updated: Record<string, any>) => {
+    // Updated is an object { "0": "React", "1": "Node" ... } or numeric keys with JSON strings
+    const arrRaw = Object.values(updated);
+    const newArr = arrRaw
+      .map((v) => {
+        // if it's a JSON string for complex object, try parse
+        if (typeof v === "string") {
+          try {
+            const parsed = JSON.parse(v);
+            return parsed;
+          } catch {
+            return v.trim();
+          }
+        }
+        return v;
       })
-      .map(skill => skill.trim());
+      .filter((v) => {
+        if (typeof v === "string") return v.trim().length > 0;
+        return v != null;
+      });
 
     // Update local UI first (non-optimistic server assumption)
-    setSkills(skillNames);
+    setSkills(newArr);
+  
 
     if (!userId) {
       console.error("No userId available — cannot save skills to server.");
       return;
     }
 
-    // Convert skills array to FormData
-    const formData = new FormData();
-    skillNames.forEach((skillName, index) => {
-      formData.append(`skills[${index}][name]`, skillName);
-      // Add other skill properties if needed
-      // formData.append(`skills[${index}][level]`, '');
-    });
-
+    // Prefer specialized addSkills API if you want to POST new skills endpoint,
+    // but many backends accept patch profile with skills array.
+    // We'll use PATCH profile to update whole skills array (safer).
     patchProfile.mutate(
-      { userId, data: formData },
+      { userId, 
+        data: { skills: newArr } },
       {
         onSuccess: () => {
+          // invalidate profile to refetch canonical values
           qc.invalidateQueries({
-            queryKey: ["profile", userId],
-          });
+          queryKey: ["profile", userId],
+        });
+
         },
         onError: (error) => {
-          console.error("Failed to save skills:", error);
-          qc.invalidateQueries({ queryKey: ["profile", userId] });
-          alert("Failed to save skills. See console for details.");
-        },
-      }
+  console.error("Failed to save skills:", error);
+  qc.invalidateQueries({ queryKey: ["profile", userId] });
+  alert("Failed to save skills. See console for details.");
+},
+
     );
   };
 
   // -------------------------
   // Delete single skill (uses removeSkill hook)
   // -------------------------
-  const handleDeleteSkill = (skillItem: string | Skill) => {
-    const skillName = typeof skillItem === 'string' ? skillItem : skillItem.name;
-    const id = typeof skillItem === 'object' ? (skillItem._id || skillItem.id) : undefined;
+const handleDeleteSkill = (skillItem: any) => {
+  const id = skillIdFor(skillItem); // should return _id now
+
+  if (!userId) return;
+
+ if (id) {
+  setSkills((prev) => prev.filter((s) => skillIdFor(s) !== id));
+
+  removeSkill.mutate(
+    { skill: id },
+    {
+      onSuccess: () => {
+        qc.invalidateQueries({
+          queryKey: ["profile", userId],
+        });
+      },
+      onError: (err) => {
+        console.error("Failed to remove skill:", err);
+        qc.invalidateQueries({
+          queryKey: ["profile", userId],
+        });
+        alert("Failed to remove skill. See console.");
+      },
+    }
+  );
+  return;
+}
+
+
+// Fallback (fixed)
+const newSkills = skills.filter(
+  (s) => skillDisplay(s) !== skillDisplay(skillItem)
+);
+setSkills(newSkills);
+
+patchProfile.mutate(
+  { userId, data: { skills: newSkills } },
+  {
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ["profile", userId],
+      });
+    },
+    onError: (err: unknown) => {
+      console.error("Failed to remove skill (fallback):", err);
+      qc.invalidateQueries({
+        queryKey: ["profile", userId],
+      });
+      alert("Failed to remove skill. See console.");
+    },
+  }
+);
+
+
+
+  // -------------------------
+  // Personal info save handler (patched)
+  // -------------------------
+  const handlePersonalSave = (updated: Record<string, any>) => {
+    const payload: Record<string, any> = {};
+    if (updated.firstName !== undefined) payload.firstName = updated.firstName;
+    if (updated.lastName !== undefined) payload.lastName = updated.lastName;
+    if (updated.phone !== undefined) payload.phone = updated.phone;
+
+    // update UI
+    if (payload.firstName) setFirstName(payload.firstName);
+    if (payload.lastName) setLastName(payload.lastName);
+    if (payload.phone) setPhone(payload.phone);
+
+   if (!userId) return;
+
+patchProfile.mutate(
+  { userId, data: payload },
+  {
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ["profile", userId],
+      });
+    },
+    onError: (err: unknown) => {
+      console.error("Failed to save personal info:", err);
+      qc.invalidateQueries({
+        queryKey: ["profile", userId],
+      });
+      alert("Failed to save personal info. See console.");
+    },
+  }
+);
+
+
+  // -------------------------
+  // Experience save handler
+  // -------------------------
+  const handleExperienceSave = (updated: Record<string, any>) => {
+    // try parse same way as skills: accept JSON strings or objects
+    const arrRaw = Object.values(updated);
+    const newExperience = arrRaw
+      .map((v) => {
+        if (typeof v === "string") {
+          try {
+            return JSON.parse(v);
+          } catch {
+            return v;
+          }
+        }
+        return v;
+      })
+      .filter(Boolean);
+
+    setExperience(newExperience);
 
     if (!userId) return;
 
-    setSkills((prev) => prev.filter(s => s !== skillName));
+patchProfile.mutate(
+  { userId, data: { experience: newExperience } },
+  {
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ["profile", userId],
+      });
+    },
+    onError: (err: unknown) => {
+      console.error("Failed to save experience:", err);
+      qc.invalidateQueries({
+        queryKey: ["profile", userId],
+      });
+      alert("Failed to save experience. See console.");
+    },
+  }
+);
 
-    if (id) {
-      removeSkill.mutate(
-        { skill: id },
-        {
-          onSuccess: () => {
-            qc.invalidateQueries({
-              queryKey: ["profile", userId],
-            });
-          },
-          onError: (err) => {
-            console.error("Failed to remove skill:", err);
-            qc.invalidateQueries({
-              queryKey: ["profile", userId],
-            });
-            alert("Failed to remove skill. See console.");
-          },
-        }
-      );
-      return; // Exit early if we're using the removeSkill mutation
-    }
 
-    // Fallback (fixed)
-    const newSkills = skills.filter(
-      (s) => skillDisplay(s) !== skillDisplay(skillItem)
-    );
-    setSkills(newSkills);
-
-    const formData = new FormData();
-    formData.append('skills', JSON.stringify(newSkills));
-    
-    patchProfile.mutate(
-      {
-        userId: userId,
-        data: formData
-      },
-      {
-        onSuccess: () => {
-          qc.invalidateQueries({
-            queryKey: ["profile", userId],
-          });
-        },
-        onError: (error) => {
-          console.error("Error updating skills:", error);
-          qc.invalidateQueries({ 
-            queryKey: ["profile", userId],
-          });
-          alert("Failed to update skills. Please try again.");
-        },
-      }
-    );
-  };
-
+  // -------------------------
   // Socials save handler
-  const handleSocialsSave = (updated: { linkedin?: string; github?: string }) => {
-    const payload: { linkedin?: string; github?: string } = {};
+  // -------------------------
+  const handleSocialsSave = (updated: Record<string, any>) => {
+    const payload: Record<string, any> = {};
+    if (updated.linkedin !== undefined) payload.linkedin = updated.linkedin;
+    if (updated.github !== undefined) payload.github = updated.github;
 
-    if (updated.linkedin !== undefined) {
-      const linkedinValue = updated.linkedin.trim();
-      payload.linkedin = linkedinValue;
-      setLinkedin(linkedinValue);
+    if (payload.linkedin) setLinkedin(payload.linkedin);
+    if (payload.github) setGithub(payload.github);
+
+   if (!userId) return;
+
+patchProfile.mutate(
+  { userId, data: payload },
+  {
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ["profile", userId],
+      });
+    },
+    onError: (err: unknown) => {
+      console.error("Failed to save socials:", err);
+      qc.invalidateQueries({
+        queryKey: ["profile", userId],
+      });
+      alert("Failed to save socials. See console.");
+    },
+  }
+);
+
+
+// resume upload
+const handleResumeUpload = (file: File | null) => {
+  setResume(file);
+  if (!file || !userId) return;
+
+  const fd = new FormData();
+  fd.append("resume", file);
+
+  patchProfile.mutate(
+    { userId, data: fd },
+    {
+      onSuccess: () => {
+        qc.invalidateQueries({
+          queryKey: ["profile", userId],
+        });
+      },
+      onError: (err: unknown) => {
+        console.error("Resume upload failed:", err);
+        qc.invalidateQueries({
+          queryKey: ["profile", userId],
+        });
+        alert("Resume upload failed. See console.");
+      },
     }
+  );
+};
 
-    if (updated.github !== undefined) {
-      const githubValue = updated.github.trim();
-      payload.github = githubValue;
-      setGithub(githubValue);
-    }
-
-    if (!userId || Object.keys(payload).length === 0) return;
-
-    const formData = new FormData();
-    formData.append('linkedin', payload.linkedin || '');
-    formData.append('github', payload.github || '');
-    
-    patchProfile.mutate(
-      { userId, data: formData },
-      {
-        onSuccess: () => {
-          qc.invalidateQueries({
-            queryKey: ["profile", userId],
-          });
-        },
-        onError: (err: unknown) => {
-          console.error("Failed to save socials:", err);
-          qc.invalidateQueries({
-            queryKey: ["profile", userId],
-          });
-          alert("Failed to save socials. See console.");
-        },
-      }
-    );
-  };
-
-  // Experience save handler
-  const handleExperienceSave = (updatedValues: Record<string, unknown>) => {
-    // Convert the unknown values to Experience objects
-    const updated = Object.entries(updatedValues).reduce<Record<string, Experience>>((acc, [key, value]) => {
-      if (value && typeof value === 'object') {
-        acc[key] = value as Experience;
-      } else if (typeof value === 'string') {
-        try {
-          const parsed = JSON.parse(value);
-          if (parsed && typeof parsed === 'object') {
-            acc[key] = parsed as Experience;
-          }
-        } catch (e) {
-          console.warn(`Could not parse experience value for key ${key}`, value);
-        }
-      }
-      return acc;
-    }, {});
-    try {
-      const arrRaw = Object.values(updated);
-      const newExperience = arrRaw
-        .map((v): Experience | null => {
-          if (!v) return null;
-
-          let exp: Experience;
-          if (typeof v === "string") {
-            try {
-              exp = JSON.parse(v);
-            } catch {
-              return null;
-            }
-          } else {
-            exp = v;
-          }
-
-          return {
-            title: exp.title || "",
-            company: exp.company || "",
-            description: exp.description || "",
-            start: exp.start || "",
-            end: exp.end || "",
-          };
-        })
-        .filter((exp): exp is Experience => exp !== null);
-
-      setExperience(newExperience);
-
-      if (!userId) return;
-
-      // Convert to the format expected by the API
-      const apiExperience = newExperience.map((exp) => ({
-        company: exp.company,
-        title: exp.title,
-        description: exp.description,
-        startDate: exp.start,
-        endDate: exp.end || undefined,
-      }));
-
-      const formData = new FormData();
-      formData.append('experience', JSON.stringify(apiExperience));
-      
-      patchProfile.mutate(
-        { userId, data: formData },
-        {
-          onSuccess: () => {
-            qc.invalidateQueries({
-              queryKey: ["profile", userId],
-            });
-          },
-          onError: (err: unknown) => {
-            console.error("Failed to save experience:", err);
-            qc.invalidateQueries({
-              queryKey: ["profile", userId],
-            });
-            alert("Failed to save experience. See console.");
-          },
-        }
-      );
-    } catch (error) {
-      console.error("Error in handleExperienceSave:", error);
-      alert("An error occurred while saving experience. See console for details.");
-    }
-  };
-
-  // Resume upload handler
-  const handleResumeUpload = (file: File | null) => {
-    if (!file || !userId) return;
-
-    setResume(file);
-    const fd = new FormData();
-    fd.append("resume", file);
-
-    patchProfile.mutate(
-      { userId, data: fd },
-      {
-        onSuccess: () => {
-          qc.invalidateQueries({
-            queryKey: ["profile", userId],
-          });
-        },
-        onError: (err: unknown) => {
-          console.error("Resume upload failed:", err);
-          qc.invalidateQueries({
-            queryKey: ["profile", userId],
-          });
-          alert("Resume upload failed. See console.");
-        },
-      }
-    );
-  };
 
   // Loading & error states
   if (!currentUser || isLoading) {
@@ -487,14 +454,14 @@ export default function CandidateProfile() {
 
             <EditSection
               title="Experience"
-              fields={(experience || []).map((exp: Experience, i: number) => ({ key: String(i), label: `Experience ${i+1}`, value: JSON.stringify(exp) }))}
+              fields={(experience || []).map((exp: any, i: number) => ({ key: String(i), label: `Experience ${i+1}`, value: JSON.stringify(exp) }))}
               allowAddMore={true}
               onSave={handleExperienceSave}
             />
           </div>
 
           <div className="space-y-4">
-            {(experience || []).map((exp: Experience, i: number) => (
+            {(experience || []).map((exp: any, i: number) => (
               <div key={i} className="p-4 border rounded-md bg-gray-50">
                 <h4 className="font-semibold">{exp.title}</h4>
                 <p className="text-sm">{exp.company}</p>

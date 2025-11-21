@@ -32,10 +32,16 @@ interface EditSectionProps {
 export default function EditSection({
   title,
   fields,
+  onSave,
   allowAddMore = false,
 }: EditSectionProps) {
   const [formValues, setFormValues] = useState<Record<string, unknown>>({});
   const [open, setOpen] = useState(false);
+
+  const isSkillsSection =
+    title.toLowerCase().includes("skill") &&
+    fields.length > 0 &&
+    typeof fields[0].value === "string";
 
   useEffect(() => {
     if (open) {
@@ -176,6 +182,12 @@ export default function EditSection({
 
           <Button
             onClick={() => {
+              const cleaned =
+                isSkillsSection
+                  ? Object.values(formValues).map((v) => String(v).trim())
+                  : formValues;
+
+              onSave(cleaned);
               setOpen(false);
             }}
           >

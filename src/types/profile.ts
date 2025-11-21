@@ -1,24 +1,11 @@
-export interface User {
-  _id?: string;
-  id?: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-}
-
 export interface Profile {
   _id: string;
-  userId?: string;
   firstName: string;
   lastName: string;
   phone: string;
   email: string;
   skills: string[];
   experience: Experience[];
-  linkedin?: string;
-  github?: string;
-  user?: User;
 }
 
 export interface Experience {
