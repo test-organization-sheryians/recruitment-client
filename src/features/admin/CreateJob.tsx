@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { createJob } from '@/api/jobs';
 import { useRouter } from 'next/navigation';
+import { useGetAllSkills } from '@/features/admin/skills/hooks/useSkillApi';
+import { useGetJobCategories } from './categories/hooks/useJobCategoryApi';
 
 interface Category {
   _id: string;
@@ -32,14 +34,15 @@ interface FormData {
 export default function CreateJob({ onJobCreated }: CreateJobProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [skills, setSkills] = useState<Skill[]>([]);
+  const { data: categories = [], isLoading: isLoadingCategories } = useGetJobCategories();
+  const { data: skillsResponse, isLoading: isLoadingSkills } = useGetAllSkills();
+  const skills = skillsResponse || [];
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     title: '',
     requiredExperience: '',
-    category: '6915f00858c60a88896fbee5',
+    category: '',
     education: '',
     description: '',
     skills: [''],
@@ -47,23 +50,15 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
     clientId: '6915b90df6594de75060410b' // Pre-fill with the provided clientId
   });
 
-  // Fetch categories and skills on component mount
+  // Set default category if available
   useEffect(() => {
-    const fetchDropdownData = async () => {
-      try {setCategories([
-          { _id: '6915f00858c60a88896fbee5', name: 'Technology' }
-        ]);
-        
-        setSkills([
-          { _id: '691dd57f2f2aefeb50de1704', name: 'JavaScript' }
-        ]);
-      } catch (err) {
-        console.error('Error fetching dropdown data:', err);
-      }
-    };
-
-    fetchDropdownData();
-  }, []);
+    if (categories.length > 0 && !formData.category) {
+      setFormData(prev => ({
+        ...prev,
+        category: categories[0]._id
+      }));
+    }
+  }, [categories]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -74,10 +69,21 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
   };
 
   const handleSkillChange = (skillId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      skills: prev.skills[0] === skillId ? [''] : [skillId] // Allow only one skill to be selected at a time
-    }));
+    setFormData(prev => {
+      const currentSkills = prev.skills.filter(skill => skill !== ''); // Remove empty strings
+      const skillIndex = currentSkills.indexOf(skillId);
+      
+      if (skillIndex === -1) {
+        // Add skill if not already selected
+        return { ...prev, skills: [...currentSkills, skillId] };
+      } else {
+        // Remove skill if already selected
+        return { 
+          ...prev, 
+          skills: [...currentSkills.slice(0, skillIndex), ...currentSkills.slice(skillIndex + 1)] 
+        };
+      }
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,7 +107,7 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
         category: formData.category,
         education: formData.education,
         description: formData.description,
-        skills: formData.skills[0] ? formData.skills : [''], // Ensure skills is an array with at least one empty string
+        skills: formData.skills.filter(skill => skill !== ''), // Ensure skills is an array with at least one empty string
         expiry: formData.expiry ? new Date(formData.expiry).toISOString() : '',
         clientId: formData.clientId
       };
@@ -233,24 +239,32 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Category */}
                 <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 ">
+                  <label htmlFor="category" className="block text-sm font-medium text-gray-700">
                     Job Category *
                   </label>
-                  <select
-                    id="category"
-                    name="category"
-                    required
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map(category => (
-                      <option key={category._id} value={category._id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
+                  {isLoadingCategories ? (
+                    <div className="animate-pulse h-10 bg-gray-200 rounded-md"></div>
+                  ) : (
+                    <select
+                      id="category"
+                      name="category"
+                      required
+                      value={formData.category}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      disabled={isLoadingCategories}
+                    >
+                      <option value="">Select a category</option>
+                      {categories.map((category: Category) => (
+                        <option key={category._id} value={category._id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {isLoadingCategories && (
+                    <p className="mt-1 text-xs text-gray-500">Loading categories...</p>
+                  )}
                 </div>
 
                 {/* Expiry Date */}
@@ -272,28 +286,37 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
               </div>
 
               {/* Skills */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 ">
-                  Required Skills
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {skills.map(skill => (
-                    <label key={skill._id} className="flex items-center space-x-2 p-1 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-gray-700 text-sm font-bold" htmlFor="skills">
+                    Required Skills {isLoadingSkills && '(Loading...)'}
+                  </label>
+                  {formData.skills.filter(skill => skill !== '').length > 0 && (
+                    <span className="text-xs text-gray-500">
+                      {formData.skills.filter(skill => skill !== '').length} selected
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {skills?.map((skill: Skill) => (
+                    <div key={skill._id} className="flex items-center">
                       <input
                         type="checkbox"
+                        id={`skill-${skill._id}`}
+                        name="skills"
                         checked={formData.skills.includes(skill._id)}
                         onChange={() => handleSkillChange(skill._id)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="form-checkbox h-4 w-4 text-blue-600 rounded"
                       />
-                      <span className="text-sm text-gray-700">{skill.name}</span>
-                    </label>
+                      <label htmlFor={`skill-${skill._id}`} className="ml-2">
+                        {skill.name}
+                      </label>
+                    </div>
                   ))}
+                  {!isLoadingSkills && (!skills || skills.length === 0) && (
+                    <p className="text-gray-500 text-sm">No skills available. Please add skills first.</p>
+                  )}
                 </div>
-                {formData.skills.length > 0 && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    Selected skills: {formData.skills.length}
-                  </p>
-                )}
               </div>
 
               {/* Form Actions */}

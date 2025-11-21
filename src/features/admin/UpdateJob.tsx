@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateJob, getJobs } from '@/api/jobs';
+import { useGetAllSkills } from '@/features/admin/skills/hooks/useSkillApi';
+import { useGetJobCategories } from './categories/hooks/useJobCategoryApi';
 
 interface Category {
   _id: string;
@@ -27,9 +29,9 @@ export default function UpdateJobPage({ jobId, onJobUpdated }: UpdateJobProps) {
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [skills, setSkills] = useState<Skill[]>([]);
-
+  const { data: categories = [], isLoading: isLoadingCategories } = useGetJobCategories();
+  const { data: skillsResponse, isLoading: isLoadingSkills } = useGetAllSkills();
+  const skills = skillsResponse || [];
   const [formData, setFormData] = useState({
     title: '',
     requiredExperience: '',
@@ -41,11 +43,6 @@ export default function UpdateJobPage({ jobId, onJobUpdated }: UpdateJobProps) {
     clientId: ''
   });
 
-  // Load static dropdowns (same as create)
-  useEffect(() => {
-    setCategories([{ _id: '6915f00858c60a88896fbee5', name: 'Technology' }]);
-    setSkills([{ _id: '691dd57f2f2aefeb50de1704', name: 'JavaScript' }]);
-  }, []);
 
   // Fetch job details using jobId from props
   useEffect(() => {
@@ -91,10 +88,21 @@ export default function UpdateJobPage({ jobId, onJobUpdated }: UpdateJobProps) {
   };
 
   const handleSkillChange = (skillId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      skills: prev.skills[0] === skillId ? [''] : [skillId]
-    }));
+    setFormData(prev => {
+      const currentSkills = prev.skills.filter(skill => skill !== ''); // Remove empty strings
+      const skillIndex = currentSkills.indexOf(skillId);
+      
+      if (skillIndex === -1) {
+        // Add skill if not already selected
+        return { ...prev, skills: [...currentSkills, skillId] };
+      } else {
+        // Remove skill if already selected
+        return { 
+          ...prev, 
+          skills: [...currentSkills.slice(0, skillIndex), ...currentSkills.slice(skillIndex + 1)] 
+        };
+      }
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,39 +110,40 @@ export default function UpdateJobPage({ jobId, onJobUpdated }: UpdateJobProps) {
     setLoading(true);
     setError('');
 
-    if (
-      !formData.title ||
-      !formData.description ||
-      !formData.education ||
-      !formData.requiredExperience ||
-      !formData.category ||
-      !formData.expiry
-    ) {
-      setError('Please fill in all required fields');
-      setLoading(false);
-      return;
-    }
-
-    const jobData = {
-      title: formData.title,
-      requiredExperience: formData.requiredExperience,
-      category: formData.category,
-      education: formData.education,
-      description: formData.description,
-      skills: formData.skills[0] ? formData.skills : [''],
-      expiry: new Date(formData.expiry).toISOString(),
-      clientId: formData.clientId
-    };
-
     try {
+      // Validate required fields
+      if (!formData.title || !formData.description || !formData.education || 
+          !formData.requiredExperience || !formData.category || !formData.expiry) {
+        setError('Please fill in all required fields');
+        setLoading(false);
+        return;
+      }
+
+      // Clean up skills array - remove empty strings and ensure all are strings
+      const cleanedSkills = formData.skills
+        .filter(skill => skill && typeof skill === 'string' && skill.trim() !== '')
+        .map(skill => skill.trim());
+
+      // If no valid skills, set to empty array
+      const finalSkills = cleanedSkills.length > 0 ? cleanedSkills : [];
+
+      const jobData = {
+        title: formData.title,
+        requiredExperience: formData.requiredExperience,
+        category: formData.category,
+        education: formData.education,
+        description: formData.description,
+        skills: finalSkills,
+        expiry: new Date(formData.expiry).toISOString(),
+        clientId: formData.clientId
+      };
+
       const response = await updateJob(jobId, jobData);
 
       if (response.success) {
         setIsSuccess(true);
-
-        // 🔥 notify parent if callback exists
         onJobUpdated?.();
-
+        
         setTimeout(() => {
           router.push('/admin/jobs');
           router.refresh();
@@ -143,11 +152,11 @@ export default function UpdateJobPage({ jobId, onJobUpdated }: UpdateJobProps) {
         setError(response.message || 'Failed to update job');
       }
     } catch (err) {
-      console.error(err);
-      setError('Failed to update job');
+      console.error('Error updating job:', err);
+      setError('Failed to update job. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const getMinDate = () => {
@@ -246,21 +255,32 @@ export default function UpdateJobPage({ jobId, onJobUpdated }: UpdateJobProps) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Category *</label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-1 border rounded-md"
-                  >
-                    <option value="">Select category</option>
-                    {categories.map(c => (
-                      <option key={c._id} value={c._id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+                  <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+                    Category *
+                  </label>
+                  {isLoadingCategories ? (
+                    <div className="animate-pulse h-10 bg-gray-200 rounded-md"></div>
+                  ) : (
+                    <select
+                      id="category"
+                      name="category"
+                      required
+                      value={formData.category}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      disabled={isLoadingCategories}
+                    >
+                      <option value="">Select a category</option>
+                      {categories.map((category: Category) => (
+                        <option key={category._id} value={category._id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {isLoadingCategories && (
+                    <p className="mt-1 text-xs text-gray-500">Loading categories...</p>
+                  )}
                 </div>
 
                 <div>
@@ -278,23 +298,35 @@ export default function UpdateJobPage({ jobId, onJobUpdated }: UpdateJobProps) {
               </div>
 
               {/* --- SKILLS --- */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Required Skills</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {skills.map(skill => (
-                    <label
-                      key={skill._id}
-                      className="flex items-center p-1 border rounded-md cursor-pointer"
-                    >
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-gray-700 text-sm font-bold">
+                    Required Skills {isLoadingSkills && '(Loading...)'}
+                  </label>
+                  {formData.skills.filter(skill => skill !== '').length > 0 && (
+                    <span className="text-xs text-gray-500">
+                      {formData.skills.filter(skill => skill !== '').length} selected
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {skills?.map((skill: Skill) => (
+                    <div key={skill._id} className="flex items-center">
                       <input
                         type="checkbox"
+                        id={`skill-${skill._id}`}
                         checked={formData.skills.includes(skill._id)}
                         onChange={() => handleSkillChange(skill._id)}
-                        className="mr-2"
+                        className="form-checkbox h-4 w-4 text-blue-600 rounded"
                       />
-                      {skill.name}
-                    </label>
+                      <label htmlFor={`skill-${skill._id}`} className="ml-2">
+                        {skill.name}
+                      </label>
+                    </div>
                   ))}
+                  {!isLoadingSkills && (!skills || skills.length === 0) && (
+                    <p className="text-gray-500 text-sm">No skills available. Please add skills first.</p>
+                  )}
                 </div>
               </div>
 

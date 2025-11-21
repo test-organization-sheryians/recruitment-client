@@ -14,6 +14,7 @@ import CreateJob from './CreateJob';
 import DeleteJob from './DeleteJob';
 import UpdateJob from './UpdateJob';
 import { useRouter } from 'next/navigation'; 
+import { PlusIcon } from 'lucide-react';
 
 
 interface Job {
@@ -22,12 +23,9 @@ interface Job {
   description: string;
   education: string;
   requiredExperience?: string;
-  skills?: string[];
+  skills?: Array<{ _id: string; name: string }>;
   expiry?: string;
-  category?: {
-    _id: string;
-    name: string;
-  };
+  category?: { _id: string; name: string } | Array<{ _id: string; name: string }>;
   client?: {
     _id: string;
     email?: string;
@@ -70,7 +68,6 @@ interface Job {
       dialog.setAttribute('aria-hidden', 'true');
     });
     
-    // Call the onJobDeleted callback
     onJobCreated();
     
     // Refresh the job list
@@ -146,6 +143,7 @@ interface Job {
   }
 
   return (
+    
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
       <div className="p-6 border-b border-gray-100">
         <div className="flex justify-between items-center">
@@ -156,8 +154,8 @@ interface Job {
             </span>
             <div>
               <Dialog>
-                <DialogTrigger className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
-                  Create job
+                <DialogTrigger className="px-2 py-2  text-black rounded-md hover:bg-blue-600 text-sm">
+                  <PlusIcon className="w-7 h-7" />
                 </DialogTrigger>
                 <DialogContent className="w-full h-[96vh] mt-2 p-6">
                   <DialogHeader>
@@ -194,12 +192,14 @@ interface Job {
                     )}
                     {job.skills && job.skills.length > 0 && (
                       <span className="flex items-center">
-                        🛠️ {job.skills.join(', ')}
+                        🛠️ {job.skills.map((skill) => skill.name).join(', ')}
                       </span>
                     )}
                     {job.category && (
                       <span className="flex items-center">
-                        📁 {job.category.name}
+                        📁 {Array.isArray(job.category) 
+                          ? job.category.map((category) => category.name).join(', ')
+                          : job.category.name}
                       </span>
                     )}
                   </div>
