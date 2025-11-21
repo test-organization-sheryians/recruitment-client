@@ -1,47 +1,81 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import * as api from "../../../api";
-
 import { Profile } from "@/types/profile";
 
-type AnyObject = Record<string, unknown>;
-type ProfilePayload = AnyObject | FormData;
+// Type for creating a new profile
+type CreateProfileInput = {
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  skills?: string[];
+  experience?: Array<{
+    _id?: string;
+    company: string;
+    role: string;
+    startDate: string;
+    endDate?: string;
+    description?: string;
+  }>;
+  linkedin?: string;
+  github?: string;
+};
 
-// GET PROFILE
-export const useGetProfile = (userId?: string) => {
-  return useQuery<Profile>({
+// Type for updating a profile
+type UpdateProfileInput = Partial<CreateProfileInput>;
+
+export const useGetProfile = () => {
+  return useQuery({
     queryKey: ["profile"],
     queryFn: () => api.getProfile(),
     retry: 0,
   });
 };
 
-// CREATE PROFILE (POST)
 export const useCreateProfile = () => {
   return useMutation({
-    mutationFn: (data: AnyObject) => api.createProfile(data),
+    mutationFn: (data: CreateProfileInput) => {
+      const profileData: Profile = {
+        ...data,
+        _id: '', // Will be set by the server
+        user: {
+          _id: data.userId,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phone,
+        },
+        skills: data.skills || [],
+        experience: (data.experience || []).map(exp => ({
+          ...exp,
+          _id: exp._id || `temp-${Math.random().toString(36).substr(2, 9)}`,
+          description: exp.description || ''
+        }))
+      };
+      return api.createProfile(profileData);
+    },
     retry: 0,
   });
 };
 
-// UPDATE PROFILE (PUT) — replace entire profile
 export const useUpdateProfile = () => {
   return useMutation({
-    mutationFn: ({ data }: { data: AnyObject }) =>
-      api.updateProfile("", data), // keeping call signature stable
+    mutationFn: ({ userId, data }: { userId: string; data: UpdateProfileInput }) => {
+      return api.updateProfile(userId, data);
+    },
     retry: 0,
   });
 };
 
-// PATCH PROFILE (partial update)
 export const usePatchProfile = () => {
   return useMutation({
-    mutationFn: (args: { userId: string; data: ProfilePayload  }) =>
-      api.patchProfile(args.userId, args.data),
+    mutationFn: ({ userId, data }: { userId: string; data: FormData }) =>
+      api.patchProfile(userId, data),
     retry: 0,
   });
 };
 
-// DELETE PROFILE
 export const useDeleteProfile = () => {
   return useMutation({
     mutationFn: (userId: string) => api.deleteProfile(userId),
@@ -49,20 +83,17 @@ export const useDeleteProfile = () => {
   });
 };
 
-// ADD SKILLS
 export const useAddSkills = () => {
   return useMutation({
-    mutationFn: (data: { userId: string; skills: string[] }) =>
-      api.addSkills(data.userId, data.skills),
+    mutationFn: ({ userId, skills }: { userId: string; skills: string[] }) =>
+      api.addSkills(userId, skills),
     retry: 0,
   });
 };
 
-// REMOVE SINGLE SKILL
 export const useRemoveSkill = () => {
   return useMutation({
-    mutationFn: (data: { skill: string }) =>
-      api.removeSkill(data.skill),
+    mutationFn: ({ skill }: { skill: string }) => api.removeSkill(skill),
     retry: 0,
   });
 };
