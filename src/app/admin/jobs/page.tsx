@@ -1,4 +1,4 @@
-import UnderConstruction from '@/features/admin/UnderConstruction'
+import UnderConstruction from '@/features/admin/static_pages/UnderConstruction'
 import React from 'react'
 
 const page = () => {
@@ -8,5 +8,4 @@ const page = () => {
     </div>
   )
 }
-
 export default page
