@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getJobs } from '@/api/jobs';
+import { useGetJobs } from '@/features/auth/hooks/useJobApi';
+
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,7 @@ import {
 import CreateJob from './CreateJob';
 import DeleteJob from './DeleteJob';
 import UpdateJob from './UpdateJob';
- 
+import { useRouter } from 'next/navigation'; 
 
 
 interface Job {
@@ -33,112 +34,101 @@ interface Job {
   };
 }
 
-
-
-interface ApiResponse {
-  success: boolean;
-  data: Job | Job[];
-}
-
   export default function Jobs({
-    onJobCreated,
-    onJobUpdated,
-    onJobDeleted
+    onJobCreated = () => {},
+    onJobUpdated = () => {},
+    onJobDeleted = () => {}
   }: {
-  onJobCreated?: () => void;
-  onJobUpdated?: () => void;
-  onJobDeleted?: () => void;
-}) {
-  
+    onJobCreated?: () => void;
+    onJobUpdated?: () => void;
+    onJobDeleted?: () => void;
+  }) {
+
+  const { data, isLoading, error: queryError, refetch } = useGetJobs();
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-
+  const router = useRouter();
   useEffect(() => {
-    const loadJobs = async () => {
-      try {
-        const response: ApiResponse = await getJobs();
-        console.log("API Response:", response);
-        
-        if (response.success && response.data) {
-          if (Array.isArray(response.data)) {
-            setJobs(response.data);
-          } else {
-            setJobs([response.data]);
-          }
-        } else {
-          setJobs([]);
-        }
-      } catch (err) {
-        console.error('Error fetching jobs:', err);
-        setError('Failed to load jobs. Please try again later.');
-      } finally {
-        setLoading(false);
+    if (data) {
+      if (data.success && data.data) {
+        setJobs(Array.isArray(data.data) ? data.data : [data.data]);
+      } else {
+        setJobs([]);
+        setError('No jobs found');
       }
-    };
-
-    loadJobs();
-  }, []);
+    }
+    if (queryError) {
+      console.error('Error fetching jobs:', queryError);
+      setError('Failed to load jobs. Please try again later.');
+    }
+  }, [data, queryError]);
 
   const handleJobCreated = () => {
-    // Refresh the jobs list after creating a new job
-    const loadJobs = async () => {
-      try {
-        const response: ApiResponse = await getJobs();
-        if (response.success && response.data) {
-          if (Array.isArray(response.data)) {
-            setJobs(response.data);
-          } else {
-            setJobs([response.data]);
-          }
-        }
-      } catch (err) {
-        console.error('Error refreshing jobs:', err);
+    const dialogs = document.querySelectorAll('[role="dialog"]');
+    dialogs.forEach(dialog => {
+      dialog.removeAttribute('open');
+      dialog.setAttribute('aria-hidden', 'true');
+    });
+    
+    // Call the onJobDeleted callback
+    onJobCreated();
+    
+    // Refresh the job list
+    refetch().then(({ data }) => {
+      if (data?.success && data.data) {
+        setJobs(Array.isArray(data.data) ? data.data : [data.data]);
       }
-    };
-    loadJobs();
+    }).catch((err: Error) => {
+      console.error('Error refreshing jobs:', err);
+    });
+    router.refresh();
+    
   };
 
   const handleJobUpdated = () => {
-    // Refresh the jobs list after updating a job
-    const loadJobs = async () => {
-      try {
-        const response: ApiResponse = await getJobs();
-        if (response.success && response.data) {
-          if (Array.isArray(response.data)) {
-            setJobs(response.data);
-          } else {
-            setJobs([response.data]);
-          }
-        }
-      } catch (err) {
-        console.error('Error refreshing jobs:', err);
+     const dialogs = document.querySelectorAll('[role="dialog"]');
+    dialogs.forEach(dialog => {
+      dialog.removeAttribute('open');
+      dialog.setAttribute('aria-hidden', 'true');
+    });
+    
+    // Call the onJobDeleted callback
+    onJobUpdated();
+    
+    // Refresh the job list
+    refetch().then(({ data }) => {
+      if (data?.success && data.data) {
+        setJobs(Array.isArray(data.data) ? data.data : [data.data]);
       }
-    };
-    loadJobs();
+    }).catch((err: Error) => {
+      console.error('Error refreshing jobs:', err);
+    });
+    router.refresh();
   };
 
   const handleJobDeleted = () => {
-    // Refresh the jobs list after deleting a job
-    const loadJobs = async () => {
-      try {
-        const response: ApiResponse = await getJobs();
-        if (response.success && response.data) {
-          if (Array.isArray(response.data)) {
-            setJobs(response.data);
-          } else {
-            setJobs([response.data]);
-          }
-        }
-      } catch (err) {
-        console.error('Error refreshing jobs:', err);
+    // Close any open dialogs
+    const dialogs = document.querySelectorAll('[role="dialog"]');
+    dialogs.forEach(dialog => {
+      dialog.removeAttribute('open');
+      dialog.setAttribute('aria-hidden', 'true');
+    });
+    
+    // Call the onJobDeleted callback
+    onJobDeleted();
+    
+    // Refresh the job list
+    refetch().then(({ data }) => {
+      if (data?.success && data.data) {
+        setJobs(Array.isArray(data.data) ? data.data : [data.data]);
       }
-    };
-    loadJobs();
+    }).catch((err: Error) => {
+      console.error('Error refreshing jobs:', err);
+    });
+    router.refresh();
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full"></div>
