@@ -14,10 +14,11 @@ export const useGetProfile = () => {
 export const useCreateProfile = () => {
   return useMutation({
     mutationKey: ["createProfile"],
-    mutationFn: (data: any) => api.createProfile(data),
+    mutationFn: (data: { userId: string }) => api.createProfile(data),
     retry: 0,
   });
 };
+
 
 // ---------------- UPDATE PROFILE ----------------
 export const useUpdateProfile = () => {

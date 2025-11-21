@@ -1,8 +1,10 @@
 "use client";
 
-import {
-  useGetProfile,
-} from "../hooks/useProfileApi";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/config/store";
+
+import { useGetProfile, useCreateProfile } from "../hooks/useProfileApi";
 
 import PersonalInfoSection from "./PersonalInfoSection";
 import SkillsSection from "./SkillsSection";
@@ -12,34 +14,38 @@ import SocialLinksSection from "./SocialLinksSection";
 import AvailabilitySection from "./AvailabilitySection";
 
 export default function CandidateProfile() {
-  const { data, isLoading, isError } = useGetProfile();
+  const user = useSelector((state: RootState) => state.auth.user);
 
-  if (isLoading) {
-    return <p className="text-center mt-10">Loading profile...</p>;
-  }
+  const { data: profile, isLoading, isError, refetch } = useGetProfile();
+  const createProfileMutation = useCreateProfile();
 
-  if (isError) {
-    return <p className="text-center mt-10 text-red-500">Failed to load profile</p>;
-  }
+  useEffect(() => {
+    if (isError && user) {
+      createProfileMutation.mutate(
+        { userId: user.id },
+        { onSuccess: () => refetch() }
+      );
+    }
+  }, [isError, user]);
+
+  if (isLoading) return <p className="text-center mt-10">Loading profile...</p>;
+  if (!user) return <p className="text-center mt-10 text-red-500">User not found</p>;
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8">
       <h1 className="text-2xl font-semibold">Candidate Profile</h1>
 
-      <PersonalInfoSection profile={data} />
-
-      <SkillsSection skills={data?.skills || []} />
-
-      <ExperienceSection experience={data?.experience || []} />
-
-      <ResumeSection resume={data?.resume} />
-
-      <SocialLinksSection
-        linkedin={data?.linkedin}
-        github={data?.github}
+      <PersonalInfoSection
+        firstName={user.firstName}
+        lastName={user.lastName}
+        email={user.email}
       />
 
-      <AvailabilitySection availability={data?.availability} />
+      <SkillsSection skills={profile?.skills || []} />
+      <ExperienceSection experience={profile?.experience || []} />
+      <ResumeSection resume={profile?.resume} />
+      <SocialLinksSection linkedin={profile?.linkedin} github={profile?.github} />
+      <AvailabilitySection availability={profile?.availability} />
     </div>
   );
 }
