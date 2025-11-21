@@ -1,40 +1,47 @@
 import { useState } from "react";
-import { useAddSkills } from "../hooks/useProfileApi";
+import { useAddSkills, useRemoveSkill } from "../hooks/useProfileApi";
 
 interface Props {
   skills: string[];
-  
+  refetchProfile?: () => void; // optional but recommended
 }
 
-export default function SkillsSection({ skills }: Props) {
+export default function SkillsSection({ skills, refetchProfile }: Props) {
   const [newSkill, setNewSkill] = useState("");
-  const { mutate, isPending } = useAddSkills({
-  onSuccess: (data) => {
-    console.log("✅ Skill added response:", data);
-  },
-  onError: (error) => {
-    console.error("❌ Error adding skill:", error);
-  },
-});
 
+  const { mutate: addSkill, isPending } = useAddSkills({
+    onSuccess: () => {
+      refetchProfile?.();
+    },
+  });
 
- const handleAddSkill = () => {
-  if (!newSkill.trim()) return;
+  const { mutate: removeSkill } = useRemoveSkill({
+    onSuccess: () => {
+      refetchProfile?.();
+    },
+  });
 
-  if (skills.map(s => s.toLowerCase()).includes(newSkill.toLowerCase())) {
-    alert("Skill already added");
-    return;
-  }
+  const handleAddSkill = () => {
+    if (!newSkill.trim()) return;
 
-  mutate({ skills: [newSkill] });
-  setNewSkill("");
-};
+    if (skills.map(s => s.toLowerCase()).includes(newSkill.toLowerCase())) {
+      alert("Skill already added");
+      return;
+    }
 
+    addSkill({ skills: [newSkill] });
+    setNewSkill("");
+  };
+
+  const handleRemoveSkill = (skill: string) => {
+    removeSkill(skill);
+  };
 
   return (
     <div className="border p-4 rounded space-y-3">
       <h2 className="font-semibold">Skills</h2>
 
+      {/* ADD SKILL */}
       <div className="flex gap-2">
         <input
           type="text"
@@ -52,6 +59,7 @@ export default function SkillsSection({ skills }: Props) {
         </button>
       </div>
 
+      {/* DISPLAY SKILLS */}
       {skills.length === 0 ? (
         <p className="text-gray-500">No skills added</p>
       ) : (
@@ -59,9 +67,15 @@ export default function SkillsSection({ skills }: Props) {
           {skills.map((skill, index) => (
             <span
               key={index}
-              className="px-3 py-1 bg-gray-200 rounded-full text-sm"
+              className="flex items-center gap-2 px-3 py-1 bg-gray-200 rounded-full text-sm"
             >
               {skill}
+              <button
+                onClick={() => handleRemoveSkill(skill)}
+                className="text-red-500 hover:text-red-700 font-bold"
+              >
+                ✕
+              </button>
             </span>
           ))}
         </div>

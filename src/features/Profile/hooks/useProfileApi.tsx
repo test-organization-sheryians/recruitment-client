@@ -53,11 +53,24 @@ export const useAddSkills = (options?: any) => {
   });
 };
 // REMOVE SKILL
-export const useRemoveSkill = () =>
-  useMutation({
+export const useRemoveSkill = (options?: any) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
     mutationKey: ["removeSkill"],
     mutationFn: (skillName: string) => api.removeSkill(skillName),
+
+    onSuccess: (...args) => {
+      queryClient.invalidateQueries({ queryKey: ["candidateProfile"] });
+      options?.onSuccess?.(...args);
+    },
+
+    onError: (...args) => {
+      options?.onError?.(...args);
+    },
   });
+};
+
 
 // UPLOAD RESUME
 export const useUploadResume = () =>
