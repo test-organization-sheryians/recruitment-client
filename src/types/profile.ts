@@ -10,10 +10,11 @@ export interface CandidateProfile {
 
   resumeUrl?: string;
 
-  linkedin?: string;
-  github?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  portfolioUrl?: string;
 
-  availability: "full-time" | "part-time" | "freelance";
+  availability: "immediate" | "1_week" | "2_weeks" | "1_month" | "not_looking";
 }
 
 export interface Experience {

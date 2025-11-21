@@ -45,7 +45,12 @@ export default function CandidateProfile() {
       <SkillsSection skills={profile?.skills ?? []} />
       <ExperienceSection experience={profile?.experience ?? []} />
       <ResumeSection resumeUrl={profile?.resumeUrl} />
-      <SocialLinksSection linkedin={profile?.linkedin} github={profile?.github} />
+      <SocialLinksSection
+        linkedin={profile?.linkedinUrl}
+        github={profile?.githubUrl}
+        portfolioUrl={profile?.portfolioUrl}
+        onUpdate={refetch}
+/>
       <AvailabilitySection availability={profile?.availability} />
     </div>
   );

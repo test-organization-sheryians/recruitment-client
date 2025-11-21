@@ -73,23 +73,35 @@ export const useRemoveSkill = (options?: any) => {
 
 
 // UPLOAD RESUME
-export const useUploadResume = () =>
-  useMutation({
+export const useUploadResume = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
     mutationKey: ["uploadResume"],
     mutationFn: (data: FormData) => api.uploadResume(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["candidateProfile"] });
+    },
   });
+};
 
 // DELETE RESUME
-export const useDeleteResume = () =>
-  useMutation({
+export const useDeleteResume = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
     mutationKey: ["deleteResume"],
-    mutationFn: api.deleteResume,
+    mutationFn: () => api.deleteResume(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["candidateProfile"] });
+    },
   });
+};
 
 // UPDATE AVAILABILITY
-// export const useUpdateAvailability = () =>
-//   useMutation({
-//     mutationKey: ["updateAvailability"],
-//     mutationFn: (availability: CandidateProfile["availability"]) =>
-//       api.updateAvailability({ availability }),
-//   });
+export const useUpdateAvailability = () =>
+  useMutation({
+    mutationKey: ["updateAvailability"],
+    mutationFn: (availability: CandidateProfile["availability"]) =>
+      api.updateAvailability(availability ),
+  });
