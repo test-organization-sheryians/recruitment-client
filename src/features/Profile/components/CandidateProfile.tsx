@@ -36,11 +36,11 @@ export default function CandidateProfile() {
       <h1 className="text-2xl font-semibold">Candidate Profile</h1>
 
       <PersonalInfoSection
-        firstName={user.firstName}
-        lastName={user.lastName}
-        email={user.email}
-        phone={profile?.phone}
-      />
+    firstName={user.firstName || ""}
+    lastName={user.lastName || ""}
+    email={user.email || ""}
+    phone={profile?.phone || ""}
+/>
 
       <SkillsSection skills={profile?.skills ?? []} />
       <ExperienceSection experience={profile?.experience ?? []} />
