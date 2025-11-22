@@ -81,7 +81,7 @@ export default function JobForm({
           className="flex transition-transform duration-500"
           style={{
             width: "200%",
-            transform: step === 1 ? "translateX(0%)" : "translateX(-50%)",
+            transform: step === 1 ? "translateX(2%)" : "translateX(-52%)",
           }}
         >
           <div className="w-1/2 pr-6 space-y-6">
