@@ -8,7 +8,7 @@
   --radius-base: 8px;
 }
 
-/* fonts */
+
 
 @font-face {
   font-family: 'satoshi';
@@ -126,7 +126,24 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
+  html, body {
+    @apply bg-background text-foreground overflow-x-hidden;
   }
+
+  html::-webkit-scrollbar, body::-webkit-scrollbar {
+    display: none;
+  }
+  html, body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }

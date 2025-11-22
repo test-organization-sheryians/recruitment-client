@@ -1,23 +1,38 @@
 'use client';
 
 import { setUser } from '@/features/auth/slice';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    // Only fetch auth data on client side after mount
     fetch('/api/auth/me', { credentials: 'include' })
-      .then(res => res.json())
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        }
+        throw new Error('Not authenticated');
+      })
       .then(data => {
-        console.log(data , "this is from the authProvider")
-        dispatch(setUser(data.user || null));
+        if (data.user) {
+          dispatch(setUser(data.user));
+        }
       })
       .catch(() => {
+        // User is not authenticated, set to null
         dispatch(setUser(null));
       });
   }, [dispatch]);
+
+  // Return children only after hydration is complete
+  if (!mounted) {
+    return <>{children}</>;
+  }
 
   return <>{children}</>;
 }
