@@ -14,7 +14,13 @@ import { useRegister } from "../hooks/useAuthApi";
 const SignupForm = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit } = useForm<{
+    firstName: string;
+    lastName?: string;
+    phoneNumber?: string;
+    email: string;
+    password: string;
+  }>();
 
   // This is the clean, modern way
   const {
@@ -27,32 +33,50 @@ const SignupForm = () => {
 
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: {
+    firstName: string;
+    lastName?: string;
+    phoneNumber?: string;
+    email: string;
+    password: string;
+  }) => {
     setServerError(null);
 
     const formData = new FormData();
     formData.append("firstName", data.firstName);
-    formData.append("lastName", data.lastName);
-    formData.append("phoneNumber", data.phoneNumber);
+    if (data.lastName) formData.append("lastName", data.lastName);
+    if (data.phoneNumber) formData.append("phoneNumber", data.phoneNumber);
     formData.append("email", data.email);
     formData.append("password", data.password);
 
     registerUser(formData, {
-      onSuccess: (res: any) => {
+      onSuccess: (res: {
+        data: {
+          token: string;
+          user: {
+            _id: string;
+            email?: string;
+            firstName: string;
+            lastName?: string;
+            role?: { name: string };
+          };
+        };
+      }) => {
         Cookies.set("access", res.data.token);
 
         dispatch(
           setUser({
             id: res.data.user._id,
-            email: res.data.user.email,
             firstName: res.data.user.firstName,
-            lastName: res.data.user.lastName,
             role: res.data.user?.role?.name || "user",
           })
         );
-        router.push("/resume");
+        router.push("/candidate/resume");
       },
-      onError: (err: any) => {
+      onError: (err: {
+        response?: { data?: { message: string } };
+        message: string;
+      }) => {
         const message =
           err?.response?.data?.message ||
           err?.message ||
@@ -69,15 +93,40 @@ const SignupForm = () => {
       </h1>
 
       <form className="mt-5 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-        <LabelInput label="First Name" placeholder="your first name" type="text" {...register("firstName", { required: true })} />
-        <LabelInput label="Last Name" placeholder="your last name" type="text" {...register("lastName")} />
-        <LabelInput label="Phone Number" placeholder="your phone number" type="text" {...register("phoneNumber")} />
-        <LabelInput label="Email" placeholder="your email" type="email" {...register("email", { required: true })} />
-        <LabelInput label="Password" placeholder="8+ characters" type="password" {...register("password", { required: true })} />
+        <LabelInput
+          label="First Name"
+          placeholder="your first name"
+          type="text"
+          {...register("firstName", { required: true })}
+        />
+        <LabelInput
+          label="Last Name"
+          placeholder="your last name"
+          type="text"
+          {...register("lastName")}
+        />
+        <LabelInput
+          label="Phone Number"
+          placeholder="your phone number"
+          type="text"
+          {...register("phoneNumber")}
+        />
+        <LabelInput
+          label="Email"
+          placeholder="your email"
+          type="email"
+          {...register("email", { required: true })}
+        />
+        <LabelInput
+          label="Password"
+          placeholder="8+ characters"
+          type="password"
+          {...register("password", { required: true })}
+        />
 
         {(isError || serverError) && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-            {serverError || (error as any)?.message || "Something went wrong"}
+            {serverError || error?.message || "Something went wrong"}
           </div>
         )}
 
@@ -119,7 +168,10 @@ const SignupForm = () => {
 
       <p className="text-center text-gray-600 text-sm mt-8">
         Already a user?{" "}
-        <a href="/login" className="text-[#4C62ED] underline font-medium hover:text-[#3A4CD1]">
+        <a
+          href="/login"
+          className="text-[#4C62ED] underline font-medium hover:text-[#3A4CD1]"
+        >
           Sign In
         </a>
       </p>

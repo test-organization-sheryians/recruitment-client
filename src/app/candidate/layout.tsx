@@ -3,6 +3,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import React from "react";
 
+export const dynamic = 'force-dynamic';
+
 const CandidateLayout = async ({ children }: { children: React.ReactNode }) => {
   const user = await getCurrentUser();
 

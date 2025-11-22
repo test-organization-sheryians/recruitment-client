@@ -20,29 +20,30 @@ if (!JWT_SECRET) {
 export async function getCurrentUser(): Promise<User | null> {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('access')?.value;
+    const token = cookieStore.get("access")?.value;
     if (!token) {
-      console.log('No token found');
+      console.log("No token found");
       return null;
     }
     const payload = jwt.verify(token, JWT_SECRET, {
       ignoreExpiration: false,
     }) as User;
     return payload;
-  } catch (error: any) {
-    if (error.name === 'TokenExpiredError') {
-      console.log('Token expired at:', error.expiredAt);
+  } catch (error: unknown) {
+    const err = error as { name?: string; expiredAt?: Date }; // JWT errors
+    if (err?.name === "TokenExpiredError") {
+      console.log("Token expired at:", err?.expiredAt);
       try {
         const cookieStore = await cookies();
-        cookieStore.delete('access');
+        cookieStore.delete("access");
       } catch {}
       return null;
     }
-    if (error.name === 'JsonWebTokenError') {
-      console.log('Invalid token');
+    if (err?.name === "JsonWebTokenError") {
+      console.log("Invalid token");
       return null;
     }
-    console.error('Unexpected error in getCurrentUser:', error);
+    console.error("Unexpected error in getCurrentUser:", error);
     return null;
   }
 }

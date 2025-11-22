@@ -1,7 +1,17 @@
 import React from "react";
 import VacancyCard from "./VacancyCard";
 
-const VACANCIES: any = [
+interface Vacancy {
+  id: string;
+  company: string;
+  role: string;
+  tags: string[];
+  salary: string;
+  location: string;
+  applicants: number;
+}
+
+const VACANCIES: Vacancy[] = [
   {
     id: "v1",
     company: "Sheryians Coding School",

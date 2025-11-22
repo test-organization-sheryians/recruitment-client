@@ -17,15 +17,11 @@ const SigninForm = () => {
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState("");
 
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit } = useForm<{ email: string; password: string }>();
 
-  const {
-    mutate: loginUser,
-    isPending: isLoggingIn,
-    error,
-  } = useLogin();
+  const { mutate: loginUser, isPending: isLoggingIn, error } = useLogin();
 
-  const onSubmit = (formData: any) => {
+  const onSubmit = (formData: { email: string; password: string }) => {
     setErrorMsg("");
 
     const sendData = new FormData();
@@ -33,7 +29,7 @@ const SigninForm = () => {
     sendData.append("password", formData.password);
 
     loginUser(sendData, {
-      onSuccess: (res: any) => {
+      onSuccess: (res: { data: { token: string; user: { _id: string; email: string; firstName: string; lastName: string; role?: { name: string } } } }) => {
         Cookies.set("access", res.data.token);
 
         dispatch(
@@ -45,10 +41,13 @@ const SigninForm = () => {
             role: res.data.user?.role?.name || "user",
           })
         );
-
-        router.push("/resume");
+        if (res.data.user?.role?.name && res.data.user?.role?.name === "admin") {
+          router.push("/admin");
+        } else {
+          router.push("/candidate/resume");
+        }
       },
-      onError: (err: any) => {
+      onError: (err: { response?: { data?: { message: string } }; message: string }) => {
         const message =
           err?.response?.data?.message ||
           err?.message ||
@@ -129,7 +128,10 @@ const SigninForm = () => {
 
       <p className="text-center text-gray-600 text-sm mt-8">
         Don’t have an account?{" "}
-        <a href="/register" className="text-[#4C62ED] underline font-medium hover:text-[#3a4cd1]">
+        <a
+          href="/register"
+          className="text-[#4C62ED] underline font-medium hover:text-[#3a4cd1]"
+        >
           Register
         </a>
       </p>

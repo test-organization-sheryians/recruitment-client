@@ -43,7 +43,7 @@ api.interceptors.response.use(
       }
     }
 
-    const isPublicRoute = publicRoutes.includes(currentPath as any);
+    const isPublicRoute = currentPath ? publicRoutes.includes(currentPath as typeof publicRoutes[number]) : false;
 
     if (
       !isPublicRoute &&
