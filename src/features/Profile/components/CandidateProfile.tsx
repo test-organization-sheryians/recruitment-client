@@ -21,9 +21,8 @@ export default function CandidateProfile() {
 
   useEffect(() => {
     if (isError && user?.id) {
-      // Pass user.id directly as string instead of an object
-      createProfileMutation.mutate(user.id, { 
-        onSuccess: () => refetch() 
+      createProfileMutation.mutate(user.id, {
+        onSuccess: () => refetch(),
       });
     }
   }, [isError, user?.id, refetch, createProfileMutation]);
@@ -43,14 +42,19 @@ export default function CandidateProfile() {
       />
 
       <SkillsSection skills={profile?.skills ?? []} />
+
+      {/* Fixed safe props */}
       <ExperienceSection experience={profile?.experience ?? []} />
+
       <ResumeSection resumeUrl={profile?.resumeUrl} />
+
       <SocialLinksSection
         linkedin={profile?.linkedinUrl}
         github={profile?.githubUrl}
         portfolioUrl={profile?.portfolioUrl}
         onUpdate={refetch}
       />
+
       <AvailabilitySection availability={profile?.availability} />
     </div>
   );
