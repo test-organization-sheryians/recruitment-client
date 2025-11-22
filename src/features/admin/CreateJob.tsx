@@ -17,7 +17,7 @@ interface Skill {
 }
 
 interface CreateJobProps {
-  onJobCreated?: () => void;  // Make it optional with ?
+  onJobCreated?: () => void;
 }
 
 interface FormData {
@@ -25,9 +25,9 @@ interface FormData {
   description: string;
   education: string;
   requiredExperience: string;
-  skills: string[]; // Array of skill IDs
+  skills: string[];
   expiry: string;
-  category: string; // Category ID
+  category: string;
   clientId: string;
 }
 
@@ -45,20 +45,20 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
     category: '',
     education: '',
     description: '',
-    skills: [''],
+    skills: [],
     expiry: '',
-    clientId: '6915b90df6594de75060410b' // Pre-fill with the provided clientId
+    clientId: '6915b90df6594de75060410b'
   });
 
   // Set default category if available
   useEffect(() => {
-    if (categories.length > 0 ) {
+    if (categories.length > 0 && !formData.category) {
       setFormData(prev => ({
         ...prev,
         category: categories[0]._id
       }));
     }
-  }, [categories]);
+  }, [categories, formData.category]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -66,24 +66,6 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
       ...prev,
       [name]: value
     }));
-  };
-
-  const handleSkillChange = (skillId: string) => {
-    setFormData(prev => {
-      const currentSkills = prev.skills.filter(skill => skill !== ''); // Remove empty strings
-      const skillIndex = currentSkills.indexOf(skillId);
-      
-      if (skillIndex === -1) {
-        // Add skill if not already selected
-        return { ...prev, skills: [...currentSkills, skillId] };
-      } else {
-        // Remove skill if already selected
-        return { 
-          ...prev, 
-          skills: [...currentSkills.slice(0, skillIndex), ...currentSkills.slice(skillIndex + 1)] 
-        };
-      }
-    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -111,11 +93,9 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
       formDataObj.append('description', formData.description);
       
       // Append each skill individually
-      formData.skills
-        .filter(skill => skill !== '')
-        .forEach((skill, index) => {
-          formDataObj.append(`skills[${index}]`, skill);
-        });
+      formData.skills.forEach((skill, index) => {
+        formDataObj.append(`skills[${index}]`, skill);
+      });
       
       if (formData.expiry) {
         formDataObj.append('expiry', new Date(formData.expiry).toISOString());
@@ -152,12 +132,12 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
   };
 
   return (
-    <div className="w-full h-[90vh] ">
+    <div className="w-full h-[90vh]">
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-1 border-b border-gray-100">
-          <p className="text-gray-600 mt-1">
-            {isSuccess ? 'Job created successfully!' : 'Fill in the details to create a new job listing'}
-          </p>
+        <div className="p-4 border-b border-gray-100">
+          <h2 className="text-lg font-medium text-gray-900">
+            {isSuccess ? 'Job created successfully!' : 'Create New Job Listing'}
+          </h2>
         </div>
 
         {isSuccess ? (
@@ -172,14 +152,14 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
         ) : (
           <>
             {error && (
-              <div className="bg-red-50 text-red-600 border-b border-red-200 p-2">
+              <div className="bg-red-50 text-red-600 border-b border-red-200 p-4">
                 {error}
               </div>
             )}
-            <form onSubmit={handleSubmit} className="p-2 space-y-6">
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* Job Title */}
               <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 ">
+                <label htmlFor="title" className="block text-sm font-medium text-gray-700">
                   Job Title *
                 </label>
                 <input
@@ -189,14 +169,14 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
                   required
                   value={formData.title}
                   onChange={handleChange}
-                  className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="e.g., Senior Backend Developer"
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 ">
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
                   Job Description *
                 </label>
                 <textarea
@@ -206,7 +186,7 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
                   rows={5}
                   value={formData.description}
                   onChange={handleChange}
-                  className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Describe the job responsibilities, requirements, and what you're looking for in a candidate..."
                 />
               </div>
@@ -214,7 +194,7 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Education */}
                 <div>
-                  <label htmlFor="education" className="block text-sm font-medium text-gray-700  ">
+                  <label htmlFor="education" className="block text-sm font-medium text-gray-700">
                     Education Requirements *
                   </label>
                   <input
@@ -224,14 +204,14 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
                     required
                     value={formData.education}
                     onChange={handleChange}
-                    className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     placeholder="e.g., Bachelor of Computer Science"
                   />
                 </div>
 
                 {/* Required Experience */}
                 <div>
-                  <label htmlFor="requiredExperience" className="block text-sm font-medium text-gray-700 ">
+                  <label htmlFor="requiredExperience" className="block text-sm font-medium text-gray-700">
                     Required Experience *
                   </label>
                   <input
@@ -241,7 +221,7 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
                     required
                     value={formData.requiredExperience}
                     onChange={handleChange}
-                    className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     placeholder="e.g., 3+ years in backend development"
                   />
                 </div>
@@ -254,7 +234,7 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
                     Job Category *
                   </label>
                   {isLoadingCategories ? (
-                    <div className="animate-pulse h-10 bg-gray-200 rounded-md"></div>
+                    <div className="mt-1 animate-pulse h-10 bg-gray-200 rounded-md"></div>
                   ) : (
                     <select
                       id="category"
@@ -262,7 +242,7 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
                       required
                       value={formData.category}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
                       disabled={isLoadingCategories}
                     >
                       <option value="">Select a category</option>
@@ -280,7 +260,7 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
 
                 {/* Expiry Date */}
                 <div>
-                  <label htmlFor="expiry" className="block text-sm font-medium text-gray-700 ">
+                  <label htmlFor="expiry" className="block text-sm font-medium text-gray-700">
                     Application Deadline *
                   </label>
                   <input
@@ -291,7 +271,7 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
                     value={formData.expiry}
                     onChange={handleChange}
                     min={getMinDate()}
-                    className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -299,43 +279,59 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
               {/* Skills */}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-gray-700 text-sm font-bold" htmlFor="skills">
+                  <label htmlFor="skills-select" className="block text-sm font-medium text-gray-700">
                     Required Skills {isLoadingSkills && '(Loading...)'}
                   </label>
-                  {formData.skills.filter(skill => skill !== '').length > 0 && (
+                  {formData.skills.length > 0 && (
                     <span className="text-xs text-gray-500">
-                      {formData.skills.filter(skill => skill !== '').length} selected
+                      {formData.skills.length} selected
                     </span>
                   )}
                 </div>
-                <div className="space-y-2">
-                  {skills?.map((skill: Skill) => (
-                    <div key={skill._id} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={`skill-${skill._id}`}
-                        name="skills"
-                        checked={formData.skills.includes(skill._id)}
-                        onChange={() => handleSkillChange(skill._id)}
-                        className="form-checkbox h-4 w-4 text-blue-600 rounded"
-                      />
-                      <label htmlFor={`skill-${skill._id}`} className="ml-2">
+                <div className="relative">
+                  <select
+                    id="skills-select"
+                    multiple
+                    value={formData.skills}
+                    onChange={(e) => {
+                      const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+                      setFormData(prev => ({
+                        ...prev,
+                        skills: selectedOptions
+                      }));
+                    }}
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md min-h-[100px]"
+                  >
+                    {skills?.map((skill: Skill) => (
+                      <option 
+                        key={skill._id} 
+                        value={skill._id}
+                        className="p-2 hover:bg-blue-50"
+                      >
                         {skill.name}
-                      </label>
-                    </div>
-                  ))}
-                  {!isLoadingSkills && (!skills || skills.length === 0) && (
-                    <p className="text-gray-500 text-sm">No skills available. Please add skills first.</p>
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  {!isLoadingSkills && skills.length === 0 && (
+                    <p className="mt-1 text-sm text-gray-500">No skills available. Please add skills first.</p>
                   )}
                 </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Hold Ctrl (or Cmd on Mac) to select multiple skills
+                </p>
               </div>
 
               {/* Form Actions */}
-              <div className="flex justify-end space-x-3 border-t border-gray-100">
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={() => router.back()}
-                  className="px-6 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   Cancel
                 </button>

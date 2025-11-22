@@ -302,7 +302,7 @@ export default function UpdateJobPage({ jobId, onJobUpdated }: UpdateJobProps) {
               {/* --- SKILLS --- */}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-gray-700 text-sm font-bold">
+                  <label htmlFor="skills-select" className="block text-gray-700 text-sm font-bold">
                     Required Skills {isLoadingSkills && '(Loading...)'}
                   </label>
                   {formData.skills.filter(skill => skill !== '').length > 0 && (
@@ -311,23 +311,37 @@ export default function UpdateJobPage({ jobId, onJobUpdated }: UpdateJobProps) {
                     </span>
                   )}
                 </div>
-                <div className="space-y-2">
-                  {skills?.map((skill: Skill) => (
-                    <div key={skill._id} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={`skill-${skill._id}`}
-                        checked={formData.skills.includes(skill._id)}
-                        onChange={() => handleSkillChange(skill._id)}
-                        className="form-checkbox h-4 w-4 text-blue-600 rounded"
-                      />
-                      <label htmlFor={`skill-${skill._id}`} className="ml-2">
+                <div className="relative">
+                  <select
+                    id="skills-select"
+                    multiple
+                    value={formData.skills}
+                    onChange={(e) => {
+                      const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+                      setFormData(prev => ({
+                        ...prev,
+                        skills: selectedOptions
+                      }));
+                    }}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 min-h-[100px]"
+                  >
+                    {skills?.map((skill: Skill) => (
+                      <option 
+                        key={skill._id} 
+                        value={skill._id}
+                        className="p-2 hover:bg-blue-50"
+                      >
                         {skill.name}
-                      </label>
-                    </div>
-                  ))}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                   {!isLoadingSkills && (!skills || skills.length === 0) && (
-                    <p className="text-gray-500 text-sm">No skills available. Please add skills first.</p>
+                    <p className="text-gray-500 text-sm mt-1">No skills available. Please add skills first.</p>
                   )}
                 </div>
               </div>
