@@ -144,14 +144,8 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
   };
 
   return (
-    <div className="w-full h-[90vh]">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        {/* <div className="p-4 border-b border-gray-100">
-          <h2 className="text-lg font-medium text-gray-900">
-            {isSuccess ? 'Job created successfully!' : 'Create New Job Listing'}
-          </h2>
-        </div> */}
-
+    <div className="w-full h-full flex justify-center items-start">
+      <div className="w-full h-full  bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         {isSuccess ? (
           <div className="p-6 text-center">
             <div className="text-green-500 mb-4">
@@ -182,125 +176,121 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
             )}
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* Job Title */}
-              <div>
-                <label
-                  htmlFor="title"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Job Title *
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  required
-                  value={formData.title}
-                  onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., Senior Backend Developer"
-                />
-              </div>
-              {/* Description */}
-              <div>
-                <label
-                  htmlFor="description"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Job Description *
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  required
-                  rows={5}
-                  value={formData.description}
-                  onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Describe the job responsibilities, requirements, and what you're looking for in a candidate..."
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-                {/* Education */}
-                <div>
-                  <label
-                    htmlFor="education"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Education Requirements *
-                  </label>
-                  <input
-                    type="text"
-                    id="education"
-                    name="education"
-                    required
-                    value={formData.education}
-                    onChange={handleChange}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="e.g., Bachelor of Computer Science"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Expiry Date */}
-                <div>
-                  <label
-                    htmlFor="expiry"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Application Deadline *
-                  </label>
-                  <input
-                    type="date"
-                    id="expiry"
-                    name="expiry"
-                    required
-                    value={formData.expiry}
-                    onChange={handleChange}
-                    min={getMinDate()}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md 
-      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
-      text-sm transition"
-                  />
+              <div className="flex flex-col md:flex-row gap-6">
+                {/* LEFT SIDE FORM FIELDS */}
+                <div className="flex-1 space-y-6">
+                  {/* Job Title */}
+                  <div>
+                    <label
+                      htmlFor="title"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Job Title *
+                    </label>
+                    <input
+                      type="text"
+                      id="title"
+                      name="title"
+                      required
+                      value={formData.title}
+                      onChange={handleChange}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="e.g., Senior Backend Developer"
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label
+                      htmlFor="description"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Job Description *
+                    </label>
+                    <textarea
+                      id="description"
+                      name="description"
+                      required
+                      rows={5}
+                      value={formData.description}
+                      onChange={handleChange}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Describe the job responsibilities..."
+                    />
+                  </div>
+
+                  {/* Education */}
+                  <div>
+                    <label
+                      htmlFor="education"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Education Requirements *
+                    </label>
+                    <input
+                      type="text"
+                      id="education"
+                      name="education"
+                      required
+                      value={formData.education}
+                      onChange={handleChange}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="e.g., Bachelor of Computer Science"
+                    />
+                  </div>
+
+                  {/* Expiry + Experience */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label
+                        htmlFor="expiry"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        Application Deadline *
+                      </label>
+                      <input
+                        type="date"
+                        id="expiry"
+                        name="expiry"
+                        required
+                        value={formData.expiry}
+                        onChange={handleChange}
+                        min={getMinDate()}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md 
+          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+          text-sm transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="requiredExperience"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        Required Experience *
+                      </label>
+                      <input
+                        type="text"
+                        id="requiredExperience"
+                        name="requiredExperience"
+                        required
+                        value={formData.requiredExperience}
+                        onChange={handleChange}
+                        placeholder="e.g., 3+ years"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md 
+          shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 
+          focus:border-blue-500 text-sm transition"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                {/* Required Experience */}
-                <div>
-                  <label
-                    htmlFor="requiredExperience"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Required Experience *
-                  </label>
-                  <input
-                    type="text"
-                    id="requiredExperience"
-                    name="requiredExperience"
-                    required
-                    value={formData.requiredExperience}
-                    onChange={handleChange}
-                    placeholder="e.g., 3+ years in backend development"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md 
-      shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 
-      focus:border-blue-500 text-sm transition"
-                  />
-                </div>
-              </div>
-              {/* Skills */}
-              {/* <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <label
-                    htmlFor="skills-select"
-                    className="block text-sm font-medium text-gray-700"
-                  >
+                {/* RIGHT SIDE SKILLS SECTION */}
+                <div className="w-full md:w-1/3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Required Skills {isLoadingSkills && "(Loading...)"}
                   </label>
-                  {formData.skills.length > 0 && (
-                    <span className="text-xs text-gray-500">
-                      {formData.skills.length} selected
-                    </span>
-                  )}
-                </div>
-                <div className="relative">
+
                   <select
                     id="skills-select"
                     multiple
@@ -315,42 +305,36 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
                         skills: selectedOptions,
                       }));
                     }}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md min-h-[100px]"
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300
+      focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md min-h-[200px]"
                   >
                     {skills?.map((skill: Skill) => (
-                      <option
-                        key={skill._id}
-                        value={skill._id}
-                        className="p-2 hover:bg-blue-50"
-                      >
+                      <option key={skill._id} value={skill._id} className="p-2">
                         {skill.name}
                       </option>
                     ))}
                   </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg
-                      className="h-5 w-5 text-gray-400"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
+
                   {!isLoadingSkills && skills.length === 0 && (
                     <p className="mt-1 text-sm text-gray-500">
                       No skills available. Please add skills first.
                     </p>
                   )}
+
+                  {formData.skills.length > 0 && (
+                    <p className="mt-1 text-xs text-blue-600 font-medium">
+                      {formData.skills.length} selected
+                    </p>
+                  )}
+
+                  <p className="mt-1 text-xs text-gray-500">
+                    Hold Ctrl (or Cmd on Mac) to select multiple skills
+                  </p>
                 </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  Hold Ctrl (or Cmd on Mac) to select multiple skills
-                </p>
-              </div> */}
+              </div>
+
+              {/* yaha change huaa hai */}
+
               {/* Form Actions */}
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                 <button
