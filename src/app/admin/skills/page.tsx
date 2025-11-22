@@ -42,14 +42,11 @@ export default function SkillPage() {
   } = useUpdateSkill();
 
   useEffect(() => {
-    if (createError)
-      error(createError.message || "Failed to create skill");
-    if (deleteError)
-      error(deleteError.message || "Failed to delete skill");
-    if (updateError)
-      error(updateError.message || "Failed to update skill");
+    if (createError) error(createError.message || "Failed to create skill");
+    if (deleteError) error(deleteError.message || "Failed to delete skill");
+    if (updateError) error(updateError.message || "Failed to update skill");
     if (fetchError) error("Failed to load skills");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [createError, deleteError, updateError, fetchError]);
 
   const handleAdd = (skill: { name: string }) => {
@@ -58,8 +55,7 @@ export default function SkillPage() {
         success("Skill added successfully!");
         setIsModalOpen(false);
       },
-      onError: () => {
-      },
+      onError: () => {},
     });
   };
 
@@ -83,7 +79,6 @@ export default function SkillPage() {
 
   return (
     <>
-
       <div className="min-h-screen flex bg-gray-100">
         <div className="flex-grow flex flex-col p-4 space-y-4">
           <div className="flex-grow p-4 bg-gray-50 rounded-xl">
