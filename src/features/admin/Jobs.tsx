@@ -41,6 +41,9 @@ export default function Jobs() {
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [editingJobId, setEditingJobId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!data) return;
@@ -58,22 +61,18 @@ export default function Jobs() {
     }
   }, [data, fetchError]);
 
-  const closeAllDialogs = () => {
-    document
-      .querySelectorAll("[role='dialog']")
-      .forEach((d) => d.setAttribute("aria-hidden", "true"));
-  };
-
   const handleRefresh = useCallback(async () => {
-    closeAllDialogs();
-
     const response = await refetch();
     if (response.data?.success && Array.isArray(response.data.data)) {
       setJobs(response.data.data);
       setError(null);
     }
-
     router.refresh();
+    
+    // Close dialogs after successful operation
+    setIsCreateDialogOpen(false);
+    setIsUpdateDialogOpen(false);
+    setEditingJobId(null);
   }, [refetch, router]);
 
   const renderedJobs = useMemo(() => jobs, [jobs]);
@@ -98,8 +97,10 @@ export default function Jobs() {
           </p>
         </div>
 
-        <Dialog>
-          <DialogTrigger className="px-2 py-2  text-gray-600 rounded-md hover:bg-gray-200 hover:text-white text-sm">
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger 
+            className="px-2 py-2 text-gray-600 rounded-md hover:bg-gray-200 hover:text-white text-sm"
+            onClick={() => setIsCreateDialogOpen(true)}>
             <PlusIcon className="w-7 h-7 text-primary cursor-pointer" />
           </DialogTrigger>
           <DialogContent className="w-full h-[85vh] mt-2 p-6">
@@ -151,8 +152,19 @@ export default function Jobs() {
               </div>
 
               <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Dialog>
-                  <DialogTrigger className="p-4 text-blue-600 bg-blue-50 hover:bg-blue-200 rounded-full transition-colors">
+                <Dialog open={isUpdateDialogOpen && editingJobId === job._id} onOpenChange={(open) => {
+                    if (!open) {
+                      setIsUpdateDialogOpen(false);
+                      setEditingJobId(null);
+                    }
+                  }}>
+                  <DialogTrigger 
+                    className="p-4 text-blue-600 bg-blue-50 hover:bg-blue-200 rounded-full transition-colors"
+                    onClick={() => {
+                      setIsUpdateDialogOpen(true);
+                      setEditingJobId(job._id);
+                    }}
+                  >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                     </svg>

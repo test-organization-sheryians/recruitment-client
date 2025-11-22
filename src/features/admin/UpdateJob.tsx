@@ -5,7 +5,7 @@ import { updateJob, getJobs } from "@/api/jobs";
 import JobForm from "../admin/categories/components/JobForm";
 import { useRouter } from "next/navigation";
 
-export default function UpdateJob({ jobId, onJobUpdated }: any) {
+export default function UpdateJob({ jobId, onJobUpdated }: { jobId: string; onJobUpdated?: () => void }) {
   const router = useRouter();
   const [job, setJob] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,7 @@ export default function UpdateJob({ jobId, onJobUpdated }: any) {
     Object.entries(data).forEach(([key, value]) => {
       if (key === "skills") {
         (value as string[]).forEach((id: string) =>
-          formDataObj.append("skills", id)
+          formDataObj.append("skills[]", id)
         );
       } else {
         formDataObj.append(key, value as string);

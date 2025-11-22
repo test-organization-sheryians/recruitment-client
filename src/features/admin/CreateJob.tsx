@@ -20,7 +20,7 @@ export default function CreateJob({
     Object.entries(data).forEach(([key, value]) => {
       if (key === "skills") {
         (value as string[]).forEach((id: string) =>
-          formDataObj.append("skills", id)
+          formDataObj.append("skills[]", id)
         );
       } else {
         formDataObj.append(key, value as string);
