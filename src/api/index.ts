@@ -12,3 +12,10 @@ export * from "./skills/deleteSkill"
 export * from "./skills/getAllSkills"
 export * from "./skills/getSkill"
 export * from "./skills/updateSkill"
+export * from "./experience/createExperience"
+export * from "./experience/deleteExperience"
+export * from "./experience/getCandidateExperience"
+export * from "./experience/getSingleExperience"
+export * from "./experience/updateExperience"
+
+
