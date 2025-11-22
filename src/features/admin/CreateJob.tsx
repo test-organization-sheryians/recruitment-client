@@ -100,19 +100,30 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
         return;
       }
 
-      // Prepare data for API with exact structure
-      const jobData = {
-        title: formData.title,
-        requiredExperience: formData.requiredExperience,
-        category: formData.category,
-        education: formData.education,
-        description: formData.description,
-        skills: formData.skills.filter(skill => skill !== ''), // Ensure skills is an array with at least one empty string
-        expiry: formData.expiry ? new Date(formData.expiry).toISOString() : '',
-        clientId: formData.clientId
-      };
+      // Create FormData object
+      const formDataObj = new FormData();
+      
+      // Append each field to FormData
+      formDataObj.append('title', formData.title);
+      formDataObj.append('requiredExperience', formData.requiredExperience);
+      formDataObj.append('category', formData.category);
+      formDataObj.append('education', formData.education);
+      formDataObj.append('description', formData.description);
+      
+      // Append each skill individually
+      formData.skills
+        .filter(skill => skill !== '')
+        .forEach((skill, index) => {
+          formDataObj.append(`skills[${index}]`, skill);
+        });
+      
+      if (formData.expiry) {
+        formDataObj.append('expiry', new Date(formData.expiry).toISOString());
+      }
+      
+      formDataObj.append('clientId', formData.clientId);
 
-      const response = await createJob(jobData);
+      const response = await createJob(formDataObj);
       
       if (response.success) {
         setIsSuccess(true);
