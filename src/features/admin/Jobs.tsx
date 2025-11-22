@@ -99,7 +99,7 @@ export default function Jobs() {
         </div>
 
         <Dialog>
-          <DialogTrigger className="p-2 hover:bg-gray-100 rounded-md">
+          <DialogTrigger className="px-2 py-2  text-gray-600 rounded-md hover:bg-gray-200 hover:text-white text-sm">
             <PlusIcon className="w-7 h-7 text-primary cursor-pointer" />
           </DialogTrigger>
           <DialogContent className="w-full h-[85vh] mt-2 p-6">
@@ -114,11 +114,11 @@ export default function Jobs() {
 
       {/* Jobs section */}
       {renderedJobs.length > 0 ? (
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y p-6 divide-gray-100">
           {renderedJobs.map((job) => (
             <div
               key={job._id}
-              className="p-6 flex justify-between hover:bg-gray-50"
+              className="group relative p-6 bg-gray-200 border-gray-200 border-2 mb-6 rounded-4xl hover:bg-gray-50 transition-colors"
             >
               <div className="flex-1 pe-4">
                 <h3 className="text-lg font-medium">{job.title}</h3>
@@ -128,60 +128,43 @@ export default function Jobs() {
                 </p>
 
                 <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-500">
-                  {job.education && <>🎓 {job.education}</>}
-                  {job.requiredExperience && <>💼 {job.requiredExperience}</>}
+                  {job.education && <span><b>Education:</b> {job.education}</span>}
+                  {job.requiredExperience && <span><b>Experience:</b> {job.requiredExperience}</span>}
                   {job.skills && job.skills.length > 0 && (
-                    <>🛠️ {job.skills.map((s) => s.name).join(", ")}</>
+                    <span><b>Skills:</b> {job.skills.map((s) => s.name).join(", ")}</span>
                   )}
 
                   {job.category && (
-                    <>
-                      📁{" "}
-                      {Array.isArray(job.category)
+                    <span>
+                      <b>Category:</b> {Array.isArray(job.category)
                         ? job.category.map((c) => c.name).join(", ")
                         : job.category.name}
-                    </>
+                    </span>
                   )}
                 </div>
 
                 {job.expiry && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    Expires: {new Date(job.expiry).toLocaleDateString()}
+                  <p className="text-xs text-gray-500 mt-1">
+                    <b>Expires on:</b> {new Date(job.expiry).toLocaleDateString()}
                   </p>
                 )}
               </div>
 
-              <div className="flex items-start gap-2">
-                {/* Edit jobs */}
+              <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Dialog>
-                  <DialogTrigger className="px-3 py-1 bg-blue-500 text-white rounded-md text-sm cursor-pointer">
-                    Edit
+                  <DialogTrigger className="p-4 text-blue-600 bg-blue-50 hover:bg-blue-200 rounded-full transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
                   </DialogTrigger>
-                  <DialogContent className="w-full h-[96vh] mt-2 p-6">
+                  <DialogContent className="w-full h-[85vh] mt-2 p-6">
                     <DialogHeader>
-                      <DialogTitle>Edit Job: {job.title}</DialogTitle>
+                      <DialogTitle>Update Job</DialogTitle>
+                      <UpdateJob jobId={job._id} onJobUpdated={handleRefresh} />
                     </DialogHeader>
-                    <UpdateJob jobId={job._id} onJobUpdated={handleRefresh} />
                   </DialogContent>
                 </Dialog>
-
-                {/* Delete jobs */}
-                <Dialog>
-                  <DialogTrigger className="px-3 py-1 bg-red-500 text-white rounded-md text-sm cursor-pointer">
-                    Delete
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Confirm Delete</DialogTitle>
-                    </DialogHeader>
-
-                    <DeleteJob
-                      jobId={job._id}
-                      jobTitle={job.title}
-                      onJobDeleted={handleRefresh}
-                    />
-                  </DialogContent>
-                </Dialog>
+                <DeleteJob jobId={job._id} onJobDeleted={handleRefresh} />
               </div>
             </div>
           ))}

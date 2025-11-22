@@ -76,7 +76,7 @@ export default function JobForm({
     <form onSubmit={handleSubmit} className="p-6 space-y-6">
       {error && <p className="bg-red-50 text-red-600 p-2 rounded">{error}</p>}
 
-      <div className="relative overflow-hidden">
+      <div className="relative border rounded-md p-6 overflow-hidden">
         <div
           className="flex transition-transform duration-500"
           style={{
