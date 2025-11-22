@@ -11,10 +11,10 @@ export const useGetJobs = () => {
   });
 };
 
-export const useCreateJob = (data: FormData) => {
+export const useCreateJob = () => {
   return useMutation({
     mutationKey: ["createJob"],
-    mutationFn: (data: any) => api.createJob(data),
+    mutationFn: (data: FormData) => api.createJob(data),
     retry: 0,
   });
 };

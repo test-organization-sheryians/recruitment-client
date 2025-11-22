@@ -127,18 +127,20 @@ export default function UpdateJobPage({ jobId, onJobUpdated }: UpdateJobProps) {
       // If no valid skills, set to empty array
       const finalSkills = cleanedSkills.length > 0 ? cleanedSkills : [];
 
-      const jobData = {
-        title: formData.title,
-        requiredExperience: formData.requiredExperience,
-        category: formData.category,
-        education: formData.education,
-        description: formData.description,
-        skills: finalSkills,
-        expiry: new Date(formData.expiry).toISOString(),
-        clientId: formData.clientId
-      };
+      const formDataObj = new FormData();
+      formDataObj.append('title', formData.title);
+      formDataObj.append('requiredExperience', formData.requiredExperience);
+      formDataObj.append('category', formData.category);
+      formDataObj.append('education', formData.education);
+      formDataObj.append('description', formData.description);
+      formDataObj.append('expiry', new Date(formData.expiry).toISOString());
+      formDataObj.append('clientId', formData.clientId);
+      // Append each skill individually
+      finalSkills.forEach(skill => {
+        formDataObj.append('skills', skill);
+      });
 
-      const response = await updateJob(jobId, jobData);
+      const response = await updateJob(jobId, formDataObj);
 
       if (response.success) {
         setIsSuccess(true);

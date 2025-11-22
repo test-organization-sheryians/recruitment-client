@@ -52,7 +52,7 @@ export default function CreateJob({ onJobCreated }: CreateJobProps) {
 
   // Set default category if available
   useEffect(() => {
-    if (categories.length > 0 && !formData.category) {
+    if (categories.length > 0 ) {
       setFormData(prev => ({
         ...prev,
         category: categories[0]._id

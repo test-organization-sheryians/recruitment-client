@@ -18,9 +18,6 @@ export default function DeleteJob({jobId,jobTitle,onJobDeleted}:DeleteJobProps) 
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    onJobDeleted?.();
-  }, [jobId]);
 
   const handleDelete = async () => {
     if (!jobId) return;
