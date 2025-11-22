@@ -17,19 +17,32 @@ export default function SocialLinksSection({ linkedin, github, portfolioUrl, onU
   const updateProfileMutation = useUpdateProfile();
 
   const handleSave = () => {
+    // Stringify the object to match the expected string parameter
+    const profileData = JSON.stringify({
+      linkedinUrl: linkedinValue,
+      githubUrl: githubValue,
+      portfolioUrl: portfolioValue,
+    });
+
     updateProfileMutation.mutate(
-      {
-        linkedinUrl: linkedinValue,
-        githubUrl: githubValue,
-        portfolioUrl: portfolioValue,
-      },
+      profileData,
       {
         onSuccess: () => {
           alert("Social links updated successfully");
           onUpdate?.();
         },
-        onError: (err: any) => {
-          alert(err?.response?.data?.message || "Failed to update socials");
+        onError: (err: unknown) => {
+          let errorMessage = "Failed to update socials";
+          
+          if (err instanceof Error) {
+            errorMessage = err.message;
+          } else if (typeof err === 'object' && err !== null && 'response' in err) {
+            // For Axios-like errors
+            const errorObj = err as { response?: { data?: { message?: string } } };
+            errorMessage = errorObj.response?.data?.message || errorMessage;
+          }
+          
+          alert(errorMessage);
         },
       }
     );
@@ -76,8 +89,9 @@ export default function SocialLinksSection({ linkedin, github, portfolioUrl, onU
         <button
           onClick={handleSave}
           className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+          disabled={updateProfileMutation.isPending}
         >
-          Save
+          {updateProfileMutation.isPending ? "Saving..." : "Save"}
         </button>
       </div>
     </div>

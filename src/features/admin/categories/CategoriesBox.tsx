@@ -26,7 +26,6 @@ const CategoriesBox = () => {
 
   const {
     mutate: updateCategory,
-    isPending: isUpdating,
     error: updateError
   } = useUpdateJobCategory();
 

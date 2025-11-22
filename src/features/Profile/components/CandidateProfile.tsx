@@ -21,10 +21,10 @@ export default function CandidateProfile() {
 
   useEffect(() => {
     if (isError && user?.id) {
-      createProfileMutation.mutate(
-        { userId: user.id },
-        { onSuccess: () => refetch() }
-      );
+      // Pass user.id directly as string instead of an object
+      createProfileMutation.mutate(user.id, { 
+        onSuccess: () => refetch() 
+      });
     }
   }, [isError, user?.id, refetch, createProfileMutation]);
 
@@ -36,11 +36,11 @@ export default function CandidateProfile() {
       <h1 className="text-2xl font-semibold">Candidate Profile</h1>
 
       <PersonalInfoSection
-    firstName={user.firstName || ""}
-    lastName={user.lastName || ""}
-    email={user.email || ""}
-    phone={profile?.phone || ""}
-/>
+        firstName={user.firstName || ""}
+        lastName={user.lastName || ""}
+        email={user.email || ""}
+        phone={profile?.phone || ""}
+      />
 
       <SkillsSection skills={profile?.skills ?? []} />
       <ExperienceSection experience={profile?.experience ?? []} />
@@ -50,7 +50,7 @@ export default function CandidateProfile() {
         github={profile?.githubUrl}
         portfolioUrl={profile?.portfolioUrl}
         onUpdate={refetch}
-/>
+      />
       <AvailabilitySection availability={profile?.availability} />
     </div>
   );

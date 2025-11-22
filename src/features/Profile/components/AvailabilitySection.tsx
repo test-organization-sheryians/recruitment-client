@@ -1,20 +1,28 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUpdateAvailability } from "../hooks/useProfileApi";
 
 type AvailabilityOption = "immediate" | "1_week" | "2_weeks" | "1_month" | "not_looking";
 
 interface Props {
   availability?: AvailabilityOption;
-  onUpdate?: () => void; // optional callback to refetch profile
+  onUpdate?: () => void;
 }
 
-const AVAILABILITY_OPTIONS: AvailabilityOption[] = [
-  "immediate",
-  "1_week",
-  "2_weeks",
-  "1_month",
-  "not_looking",
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
+const AVAILABILITY_OPTIONS: { value: AvailabilityOption; label: string }[] = [
+  { value: "immediate", label: "Immediate" },
+  { value: "1_week", label: "1 Week" },
+  { value: "2_weeks", label: "2 Weeks" },
+  { value: "1_month", label: "1 Month" },
+  { value: "not_looking", label: "Not Looking" },
 ];
 
 export default function AvailabilitySection({ availability, onUpdate }: Props) {
@@ -24,20 +32,29 @@ export default function AvailabilitySection({ availability, onUpdate }: Props) {
 
   const updateAvailabilityMutation = useUpdateAvailability();
 
+  useEffect(() => {
+    if (availability) {
+      setSelectedAvailability(availability);
+    }
+  }, [availability]);
+
   const handleSave = () => {
     updateAvailabilityMutation.mutate(selectedAvailability, {
       onSuccess: () => {
         alert("Availability updated successfully");
-        onUpdate?.(); // refetch profile if needed
+        onUpdate?.();
       },
-      onError: (err: any) => {
-        alert(err?.response?.data?.message || "Failed to update availability");
+      onError: (error: Error) => {
+        const apiError = error as ApiError;
+        const message = apiError.response?.data?.message || error.message || "Failed to update availability";
+        alert(message);
       },
     });
   };
 
   const handleChange = (value: string) => {
-    if (AVAILABILITY_OPTIONS.includes(value as AvailabilityOption)) {
+    const validOptions = AVAILABILITY_OPTIONS.map(opt => opt.value);
+    if (validOptions.includes(value as AvailabilityOption)) {
       setSelectedAvailability(value as AvailabilityOption);
     }
   };
@@ -49,28 +66,23 @@ export default function AvailabilitySection({ availability, onUpdate }: Props) {
       <select
         value={selectedAvailability}
         onChange={(e) => handleChange(e.target.value)}
-        className="border rounded p-1 w-full max-w-xs"
+        className="border rounded p-2 w-full max-w-xs"
+        disabled={updateAvailabilityMutation.isPending}
+        aria-label="Select availability status"
       >
         {AVAILABILITY_OPTIONS.map((option) => (
-          <option key={option} value={option}>
-            {option === "immediate"
-              ? "Immediate"
-              : option === "1_week"
-              ? "1 Week"
-              : option === "2_weeks"
-              ? "2 Weeks"
-              : option === "1_month"
-              ? "1 Month"
-              : "Not Looking"}
+          <option key={option.value} value={option.value}>
+            {option.label}
           </option>
         ))}
       </select>
 
       <button
         onClick={handleSave}
-        className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+        disabled={updateAvailabilityMutation.isPending || selectedAvailability === availability}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
-        Save
+        {updateAvailabilityMutation.isPending ? "Saving..." : "Save"}
       </button>
     </div>
   );

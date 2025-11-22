@@ -1,5 +1,10 @@
+interface ExperienceItem {
+  company: string;
+  title: string;
+}
+
 interface Props {
-  experience: any[];
+  experience: ExperienceItem[];
 }
 
 export default function ExperienceSection({ experience }: Props) {
