@@ -106,7 +106,6 @@ export default function Jobs() {
             <DialogHeader>
               <DialogTitle>Create a Job</DialogTitle>
             </DialogHeader>
-
             <CreateJob onJobCreated={handleRefresh} />
           </DialogContent>
         </Dialog>
