@@ -94,7 +94,7 @@ export default function JobForm({
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className="w-full border rounded-md p-2"
+                className="w-full border rounded-md p-2 focus:ring-0 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 required
               />
             </div>
@@ -109,7 +109,7 @@ export default function JobForm({
                 rows={4}
                 value={formData.description}
                 onChange={handleChange}
-                className="w-full border rounded-md p-2"
+                className="w-full border rounded-md p-2 focus:ring-0 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 required
               />
             </div>
@@ -123,7 +123,7 @@ export default function JobForm({
                 name="education"
                 value={formData.education}
                 onChange={handleChange}
-                className="w-full border rounded-md p-2"
+                className="w-full border rounded-md p-2 focus:ring-0 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 required
               />
             </div>
@@ -139,7 +139,7 @@ export default function JobForm({
                   min={getMinDate()}
                   value={formData.expiry}
                   onChange={handleChange}
-                  className="w-full border rounded-md p-2"
+                  className="w-full border rounded-md p-2 focus:ring-0 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   required
                 />
               </div>
@@ -153,7 +153,7 @@ export default function JobForm({
                   name="requiredExperience"
                   value={formData.requiredExperience}
                   onChange={handleChange}
-                  className="w-full border rounded-md p-2"
+                  className="w-full border rounded-md p-2 focus:ring-0 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   required
                 />
               </div>
@@ -162,7 +162,7 @@ export default function JobForm({
             <div className="flex justify-end">
               <button
                 type="button"
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer"
                 onClick={() => setStep(2)}
               >
                 Next →
@@ -179,7 +179,7 @@ export default function JobForm({
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full border p-2 rounded-md"
+                className="w-full border rounded-md p-2 focus:ring-0 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 required
               >
                 {categories.map((cat: any) => (
@@ -221,7 +221,7 @@ export default function JobForm({
             <div className="flex justify-between pt-4">
               <button
                 type="button"
-                className="px-6 py-2 bg-gray-300 rounded-md"
+                className="px-6 py-2 bg-gray-300 rounded-md cursor-pointer"
                 onClick={() => setStep(1)}
               >
                 ← Back
@@ -230,7 +230,7 @@ export default function JobForm({
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-40"
+                className="px-6 py-2 bg-green-600 cursor-pointer text-white rounded-md hover:bg-green-700 disabled:opacity-40"
               >
                 {loading
                   ? "Saving..."
