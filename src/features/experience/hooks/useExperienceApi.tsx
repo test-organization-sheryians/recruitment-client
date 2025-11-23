@@ -1,18 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as api from "@/api";
-
+import { CreateExperiencePayload } from "@/api";
 
 // --------------------------------------
 // GET ALL EXPERIENCES
 // --------------------------------------
-export const useGetCandidateExperience = (candidateId: string) =>
+export const useGetCandidateExperience = (candidateId?: string) =>
   useQuery({
     queryKey: ["candidateExperience", candidateId],
-    queryFn: () => api.getCandidateExperience(candidateId),
-    enabled: !!candidateId,
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    queryFn: () => api.getCandidateExperience(candidateId as string),
+    enabled: !!candidateId,   // ✅ THIS STOPS UNDEFINED CALLS
   });
+
 
 // --------------------------------------
 // GET SINGLE EXPERIENCE
@@ -29,26 +28,27 @@ export const useGetSingleExperience = (id: string) =>
 // --------------------------------------
 // CREATE EXPERIENCE
 // --------------------------------------
-export const useCreateExperience = (options?: any) => {
-  
+export const useCreateExperience = (options?: {
+  onSuccess?: (data: any) => void;
+  onError?: (error: any) => void;
+}) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationKey: ["createExperience"],
-    mutationFn: (data: any) => api.createExperience(data),
-    
+    mutationFn: (data: CreateExperiencePayload) =>
+      api.createExperience(data),
 
-    onSuccess: (response, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["candidateExperience", variables.candidateId] });
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ["candidateExperience"] });
       options?.onSuccess?.(response);
     },
 
-    onError: (...args) => {
-      options?.onError?.(...args);
+    onError: (error) => {
+      options?.onError?.(error);
     },
   });
 };
-
 // --------------------------------------
 // UPDATE EXPERIENCE
 // --------------------------------------

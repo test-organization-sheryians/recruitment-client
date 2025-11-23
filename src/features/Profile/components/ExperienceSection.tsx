@@ -1,29 +1,57 @@
 "use client";
 import { useState } from "react";
 import { ExperienceItem } from "@/types/ExperienceItem ";
-import { useCreateExperience } from "@/features/experience/hooks/useExperienceApi";
+import { useCreateExperience, useGetCandidateExperience } from "@/features/experience/hooks/useExperienceApi";
 
 interface Props {
-  experience?: ExperienceItem[];
   candidateId?: string;
 }
 
+export default function ExperienceSection({ candidateId }: Props) {
 
-export default function ExperienceSection({
-  experience = [],
-  candidateId,
-}: Props) {
-  const [form, setForm] = useState({
-    company: "",
-    title: "",
-    location: "",
-    startDate: "",
-    endDate: "",
-    isCurrent: false,
-    description: "",
-  });
+  const [form, setForm] = useState<{
+  company: string;
+  title: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  isCurrent: boolean;
+  description: string;
+}>({
+  company: "",
+  title: "",
+  location: "",
+  startDate: "",
+  endDate: "",
+  isCurrent: false,
+  description: "",
+});
 
-  const createExperience = useCreateExperience();
+
+  const createExperience = useCreateExperience({
+  onSuccess: () => {
+    setForm({
+      company: "",
+      title: "",
+      location: "",
+      startDate: "",
+      endDate: "",
+      isCurrent: false,
+      description: "",
+    });
+  },
+});
+
+if (!candidateId) {
+  return <p className="text-gray-500">Loading candidate...</p>;
+}
+
+const { data, isLoading } = useGetCandidateExperience(candidateId);
+
+
+
+const experiences: ExperienceItem[] = data?.data || [];
+
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -41,22 +69,28 @@ export default function ExperienceSection({
   };
 
   const handleSubmit = () => {
-  if (!form.company || !form.title || !candidateId) {
-    console.error("Missing required fields", { form, candidateId });
+  if (!form.company || !form.title) {
+    console.error("Missing required fields");
     return;
   }
 
-  createExperience.mutate({
-    candidateId,
-    company: form.company,
-    title: form.title,
-    location: form.location,
-    startDate: form.startDate,
-    endDate: form.isCurrent ? undefined : form.endDate,
-    isCurrent: form.isCurrent,
-    description: form.description,
-  });
-};
+if (!candidateId) {
+  console.error("Candidate ID not available yet");
+  return;
+}
+
+createExperience.mutate({
+  candidateId,  // ✅ REQUIRED
+  company: form.company,
+  title: form.title,
+  location: form.location,
+  startDate: form.startDate,
+  endDate: form.isCurrent ? undefined : form.endDate,
+  isCurrent: form.isCurrent,
+  description: form.description,
+});
+
+
 
 
   return (
@@ -145,13 +179,17 @@ export default function ExperienceSection({
       <div className="mt-6">
         <h3 className="text-md font-semibold mb-3">Your Experience</h3>
 
-        {experience.length === 0 ? (
+        {isLoading ? (
+  <p className="text-gray-500 text-sm italic">Loading...</p>
+) : experiences.length === 0 ? (
+
           <p className="text-gray-500 text-sm italic">
             No experience added yet.
           </p>
         ) : (
           <ul className="space-y-4">
-            {experience.map((exp) => (
+            {experiences.map((exp) => (
+
               <li
                 key={exp._id}
                 className="p-4 border rounded-lg bg-gray-50 shadow-sm"
@@ -186,4 +224,4 @@ export default function ExperienceSection({
       </div>
     </div>
   );
-}
+}}

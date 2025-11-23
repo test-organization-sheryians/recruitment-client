@@ -44,11 +44,7 @@ export default function CandidateProfile() {
       <SkillsSection skills={profile?.skills ?? []} />
 
       {/* Fixed safe props */}
-      <ExperienceSection
-      experience={profile?.experience ?? []}
-      candidateId={profile?._id}
-        />
-
+      <ExperienceSection candidateId={profile?._id} />
 
       <ResumeSection resumeUrl={profile?.resumeUrl} />
 
