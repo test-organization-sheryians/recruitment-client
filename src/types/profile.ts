@@ -1,12 +1,15 @@
+import { ExperienceItem } from "./ExperienceItem ";
 export interface CandidateProfile {
+
+  _id: string;
+
   firstName: string;
   lastName: string;
   phone: string;
   email: string;
 
   skills: string[];
-
-  experience: Experience[];
+experience: ExperienceItem[];
 
   resumeUrl?: string;
 
@@ -15,14 +18,6 @@ export interface CandidateProfile {
   portfolioUrl?: string;
 
   availability: "immediate" | "1_week" | "2_weeks" | "1_month" | "not_looking";
-}
-
-export interface Experience {
-  company: string;
-  title: string;
-  startDate: string;
-  endDate?: string;
-  description?: string;
 }
 
 export interface AddSkillsPayload {

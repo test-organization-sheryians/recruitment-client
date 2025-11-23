@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, UseQueryResult } from "@tanstack
 import * as api from "@/api";
 import { CandidateProfile, AddSkillsPayload } from "@/types/profile";
 
+
 // GET
 export const useGetProfile = (): UseQueryResult<CandidateProfile, Error> =>
   useQuery<CandidateProfile, Error>({
