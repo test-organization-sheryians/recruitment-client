@@ -39,9 +39,11 @@ export default function ExperienceSection({ candidateId }: Props) {
 });
 
 
-  const { data, isLoading } = useGetCandidateExperience(candidateId);
+const { data, isLoading } = useGetCandidateExperience(candidateId);
+  console.log("Experience API Raw:", data);
+  console.log("Parsed Experiences:", data?.data);
+const experiences: ExperienceItem[] = data?.data ?? [];
 
-  const experiences: ExperienceItem[] = data?.data || [];
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -80,6 +82,11 @@ export default function ExperienceSection({ candidateId }: Props) {
       description: form.description,
     });
   }; // ✅ THIS WAS MISSING
+
+  if (!candidateId) {
+  return <p className="text-gray-500">Loading profile...</p>;
+}
+
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
