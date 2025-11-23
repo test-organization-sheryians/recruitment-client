@@ -4,6 +4,7 @@ import { ExperienceItem } from "@/types/ExperienceItem ";
 import {
   useCreateExperience,
   useGetCandidateExperience,
+  useDeleteExperience
 } from "@/features/experience/hooks/useExperienceApi";
 
 interface Props {
@@ -37,6 +38,12 @@ export default function ExperienceSection({ candidateId }: Props) {
     console.error("Failed to create experience:", error);
   }
 });
+const deleteExperience = useDeleteExperience({
+  onError: (error: any) => {
+    console.error("Failed to delete experience:", error);
+  }
+});
+
 
 
 const { data, isLoading } = useGetCandidateExperience(candidateId);
@@ -136,21 +143,40 @@ const experiences: ExperienceItem[] = data?.data ?? [];
           <ul className="space-y-4">
             {experiences.map((exp) => (
               <li key={exp._id} className="p-4 border rounded-lg bg-gray-50 shadow-sm">
-                <div className="flex justify-between">
-                  <p className="font-semibold">{exp.company}</p>
-                  <span className="text-xs text-gray-500">
-                    {exp.startDate && new Date(exp.startDate).toLocaleDateString()} -{" "}
-                    {exp.isCurrent ? "Present" : exp.endDate && new Date(exp.endDate).toLocaleDateString()}
-                  </span>
-                </div>
+  <div className="flex justify-between items-start">
+    <div>
+      <p className="font-semibold">{exp.company}</p>
+      <p className="text-sm">{exp.title}</p>
+      <p className="text-xs text-gray-600">{exp.location}</p>
+    </div>
 
-                <p className="text-sm">{exp.title}</p>
-                <p className="text-xs text-gray-600">{exp.location}</p>
+    <button
+  onClick={() => {
+    if (!exp._id || !candidateId) return;
 
-                {exp.description && (
-                  <p className="text-xs text-gray-700 mt-2">{exp.description}</p>
-                )}
-              </li>
+    deleteExperience.mutate({
+      id: exp._id,
+      candidateId: candidateId,
+    });
+  }}
+  disabled={deleteExperience.isPending}
+  className="text-red-600 hover:text-red-800 text-sm font-medium"
+>
+  Delete
+</button>
+
+  </div>
+
+  <span className="text-xs text-gray-500 block mt-1">
+    {exp.startDate && new Date(exp.startDate).toLocaleDateString()} -{" "}
+    {exp.isCurrent ? "Present" : exp.endDate && new Date(exp.endDate).toLocaleDateString()}
+  </span>
+
+  {exp.description && (
+    <p className="text-xs text-gray-700 mt-2">{exp.description}</p>
+  )}
+</li>
+
             ))}
           </ul>
         )}
