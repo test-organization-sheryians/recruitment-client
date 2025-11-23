@@ -8,9 +8,10 @@ import { CreateExperiencePayload } from "@/api";
 export const useGetCandidateExperience = (candidateId?: string) =>
   useQuery({
     queryKey: ["candidateExperience", candidateId],
-    queryFn: () => api.getCandidateExperience(candidateId as string),
-    enabled: !!candidateId,   // ✅ THIS STOPS UNDEFINED CALLS
+    queryFn: () => api.getCandidateExperience(candidateId!),
+    enabled: !!candidateId,
   });
+
 
 
 // --------------------------------------

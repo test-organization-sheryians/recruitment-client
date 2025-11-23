@@ -22,18 +22,22 @@ export default function ExperienceSection({ candidateId }: Props) {
   });
 
   const createExperience = useCreateExperience({
-    onSuccess: () => {
-      setForm({
-        company: "",
-        title: "",
-        location: "",
-        startDate: "",
-        endDate: "",
-        isCurrent: false,
-        description: "",
-      });
-    },
-  });
+  onSuccess: () => {
+    setForm({
+      company: "",
+      title: "",
+      location: "",
+      startDate: "",
+      endDate: "",
+      isCurrent: false,
+      description: "",
+    });
+  },
+  onError: (error) => {
+    console.error("Failed to create experience:", error);
+  }
+});
+
 
   const { data, isLoading } = useGetCandidateExperience(candidateId);
 
@@ -66,7 +70,7 @@ export default function ExperienceSection({ candidateId }: Props) {
     }
 
     createExperience.mutate({
-      candidateId,
+      
       company: form.company,
       title: form.title,
       location: form.location,

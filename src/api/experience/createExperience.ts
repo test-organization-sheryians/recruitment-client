@@ -2,7 +2,7 @@ import api from "@/config/axios";
 import { ExperienceItem } from "@/types/ExperienceItem ";
 
 export interface CreateExperiencePayload {
-  candidateId: string;   // ✅ ADD THIS
+ 
   company: string;
   title: string;
   location?: string;
