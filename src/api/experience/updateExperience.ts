@@ -2,6 +2,7 @@
 
 
 export const updateExperience = async (data: any) => {
-  const response = await api.patch(`/api/experience/${data.id}`, data);
+  const { id, ...payload } = data; // remove id from body
+  const response = await api.patch(`/api/experience/${id}`, payload); // send only the actual fields
   return response.data;
 };

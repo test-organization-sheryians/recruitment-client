@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as api from "@/api";
 import { CreateExperiencePayload } from "@/api";
+import { ExperienceItem } from "@/types/ExperienceItem ";
+import { getSingleExperience } from "@/api/experience/getSingleExperience";
 
 // --------------------------------------
 // GET ALL EXPERIENCES
@@ -15,12 +17,11 @@ export const useGetCandidateExperience = (candidateId?: string) =>
 
 
 // --------------------------------------
-// GET SINGLE EXPERIENCE
-// --------------------------------------
+
 export const useGetSingleExperience = (id: string) =>
-  useQuery({
+  useQuery<ExperienceItem>({
     queryKey: ["singleExperience", id],
-    queryFn: () => api.getSingleExperience(id),
+    queryFn: () => getSingleExperience({ id }),
     enabled: !!id,
     staleTime: 0,
     refetchOnWindowFocus: true,

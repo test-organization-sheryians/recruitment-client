@@ -1,6 +1,10 @@
- import api from "@/config/axios";
+import api from "@/config/axios";
 
-export const getSingleExperience = async (data: any) => {
-  const response = await api.get(`/api/experience/${data.id}`, data);
+interface GetSingleExperienceParams {
+  id: string;
+}
+
+export const getSingleExperience = async ({ id }: GetSingleExperienceParams) => {
+  const response = await api.get(`/api/experience/${id}`);
   return response.data;
 };

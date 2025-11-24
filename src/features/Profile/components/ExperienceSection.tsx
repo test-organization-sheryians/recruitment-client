@@ -4,8 +4,10 @@ import { ExperienceItem } from "@/types/ExperienceItem ";
 import {
   useCreateExperience,
   useGetCandidateExperience,
-  useDeleteExperience
+  useDeleteExperience,
+  useUpdateExperience
 } from "@/features/experience/hooks/useExperienceApi";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Props {
   candidateId?: string;
@@ -21,6 +23,9 @@ export default function ExperienceSection({ candidateId }: Props) {
     isCurrent: false,
     description: "",
   });
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+
 
   const createExperience = useCreateExperience({
   onSuccess: () => {
@@ -42,6 +47,21 @@ const deleteExperience = useDeleteExperience({
   onError: (error: any) => {
     console.error("Failed to delete experience:", error);
   }
+});
+const updateExperience = useUpdateExperience({
+  onSuccess: () => {
+    setForm({
+      company: "",
+      title: "",
+      location: "",
+      startDate: "",
+      endDate: "",
+      isCurrent: false,
+      description: "",
+    });
+    setEditingId(null); // reset editing state
+  },
+  onError: (error:any) => console.error("Failed to update experience:", error),
 });
 
 
@@ -67,19 +87,16 @@ const experiences: ExperienceItem[] = data?.data ?? [];
     }));
   };
 
-  const handleSubmit = () => {
-    if (!form.company || !form.title) {
-      console.error("Missing required fields");
-      return;
-    }
+const handleSubmit = () => {
+  if (!form.company || !form.title) {
+    console.error("Missing required fields");
+    return;
+  }
 
-    if (!candidateId) {
-      console.error("Candidate ID not available yet");
-      return;
-    }
-
-    createExperience.mutate({
-      
+  if (editingId) {
+    // UPDATE existing experience
+    updateExperience.mutate({
+      id: editingId, // goes in URL
       company: form.company,
       title: form.title,
       location: form.location,
@@ -88,11 +105,21 @@ const experiences: ExperienceItem[] = data?.data ?? [];
       isCurrent: form.isCurrent,
       description: form.description,
     });
-  }; // ✅ THIS WAS MISSING
+  } else {
+    // CREATE new experience — remove candidateId
+    createExperience.mutate({
+      company: form.company,
+      title: form.title,
+      location: form.location,
+      startDate: form.startDate,
+      endDate: form.isCurrent ? undefined : form.endDate,
+      isCurrent: form.isCurrent,
+      description: form.description,
+    });
+  }
+};
 
-  if (!candidateId) {
-  return <p className="text-gray-500">Loading profile...</p>;
-}
+
 
 
   return (
@@ -164,6 +191,33 @@ const experiences: ExperienceItem[] = data?.data ?? [];
 >
   Delete
 </button>
+
+<button
+  onClick={() => {
+    if (!exp._id) return;
+
+    setEditingId(exp._id);
+    setForm({
+      company: exp.company,
+      title: exp.title,
+      location: exp.location || "",
+      startDate: exp.startDate instanceof Date
+        ? exp.startDate.toISOString().slice(0, 10)
+        : exp.startDate,
+      endDate: exp.endDate
+        ? exp.endDate instanceof Date
+          ? exp.endDate.toISOString().slice(0, 10)
+          : exp.endDate
+        : "",
+      isCurrent: exp.isCurrent || false,
+      description: exp.description || "",
+    });
+  }}
+  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+>
+  Edit
+</button>
+
 
   </div>
 
