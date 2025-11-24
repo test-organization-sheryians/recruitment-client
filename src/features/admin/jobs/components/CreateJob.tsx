@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { createJob } from "@/api/jobs";
-import JobForm from "../admin/categories/components/JobForm";
+import JobForm from "../../categories/components/JobForm";
 import { useState } from "react";
 
 export default function CreateJob({

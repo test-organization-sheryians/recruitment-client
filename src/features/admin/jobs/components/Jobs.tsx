@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useGetJobs } from "@/features/auth/hooks/useJobApi";
+import { useGetJobs } from "@/features/admin/jobs/hooks/useJobApi";
 import {
   Dialog,
   DialogContent,

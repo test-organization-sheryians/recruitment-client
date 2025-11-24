@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import * as api from "@/api/index"; 
+import * as api from "@/api"; 
 
 export const useRegister = () => {
   return useMutation({
