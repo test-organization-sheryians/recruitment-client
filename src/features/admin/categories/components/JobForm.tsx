@@ -83,9 +83,34 @@ export default function JobForm({
     e.preventDefault();
     setError("");
 
-    if (!formData.title || !formData.description) {
-      setError("Please fill all required fields");
-      return;
+    // Validate all required fields
+    const requiredFields = [
+      'title',
+      'description',
+      'education',
+      'requiredExperience',
+      'expiry',
+      'category',
+      'skills'
+    ];
+    
+    const missingFields = requiredFields.filter(field => {
+      const value = formData[field as keyof typeof formData];
+      return !value || (Array.isArray(value) && value.length === 0);
+    });
+    
+    if (missingFields.length > 0) {
+      setError(`Please fill all required fields: ${missingFields.join(', ')}`);
+      if (step === 1) {
+        const step1Fields = ['title', 'description', 'education', 'requiredExperience', 'expiry'];
+        const step1Missing = missingFields.filter(field => step1Fields.includes(field as string));
+        if (step1Missing.length > 0) {
+          setError(`Please fill all required fields: ${step1Missing.join(', ')}`);
+          return;
+        }
+      } else {
+        return;
+      }
     }
 
     await onSubmit(formData);
@@ -95,8 +120,8 @@ export default function JobForm({
     new Date(Date.now() + 86400000).toISOString().split("T")[0];
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 space-y-6">
-      {error && <p className="bg-red-50 text-red-600 p-2 rounded">{error}</p>}
+    <form onSubmit={handleSubmit} className="p-2 space-y-1">
+      {error && <p className="bg-red-50 text-red-600 p-2 rounded-lg">{error}</p>}
 
       <div className="relative border rounded-md p-6 overflow-hidden">
         <div
@@ -185,7 +210,25 @@ export default function JobForm({
               <button
                 type="button"
                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer"
-                onClick={() => setStep(2)}
+                onClick={() => {
+                  const requiredFields = [
+                    'title',
+                    'description',
+                    'education',
+                    'requiredExperience',
+                    'expiry'
+                  ];
+                  
+                  const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
+                  
+                  if (missingFields.length > 0) {
+                    setError(`Please fill all required fields: ${missingFields.join(', ')}`);
+                    return;
+                  }
+                  
+                  setError('');
+                  setStep(2);
+                }}
               >
                 Next →
               </button>

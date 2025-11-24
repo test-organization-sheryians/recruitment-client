@@ -118,7 +118,7 @@ export default function Jobs() {
           {renderedJobs.map((job) => (
             <div
               key={job._id}
-              className="group relative p-6 bg-gray-200 border-gray-200 border-2 mb-6 rounded-4xl hover:bg-gray-50 transition-colors"
+              className="group relative p-6 border-gray-200 border mb-6 rounded-4xl hover:bg-gray-100 shadow-lg transition-colors"
             >
               <div className="flex-1 pe-4">
                 <h3 className="text-lg font-medium">{job.title}</h3>
