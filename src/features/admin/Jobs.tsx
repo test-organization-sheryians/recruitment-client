@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useGetJobs } from "@/features/admin/jobs/hooks/useJobApi";
+import { useGetJobs } from "./jobs/hooks/useJobApi";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import CreateJob from "./CreateJob";
-import DeleteJob from "./DeleteJob";
-import UpdateJob from "./UpdateJob";
+} from "../../../src/components/ui/dialog";
+import CreateJob from "./jobs/components/CreateJob";
+import DeleteJob from "./jobs/components/DeleteJob";
+import UpdateJob from "./jobs/components/UpdateJob";
 import { useRouter } from "next/navigation";
 import { PlusIcon } from "lucide-react";
 
@@ -41,9 +41,6 @@ export default function Jobs() {
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  const [editingJobId, setEditingJobId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!data) return;
@@ -61,17 +58,22 @@ export default function Jobs() {
     }
   }, [data, fetchError]);
 
+  const closeAllDialogs = () => {
+    document
+      .querySelectorAll("[role='dialog']")
+      .forEach((d) => d.setAttribute("aria-hidden", "true"));
+  };
+
   const handleRefresh = useCallback(async () => {
+    closeAllDialogs();
+
     const response = await refetch();
     if (response.data?.success && Array.isArray(response.data.data)) {
       setJobs(response.data.data);
       setError(null);
     }
+
     router.refresh();
-    
-    setIsCreateDialogOpen(false);
-    setIsUpdateDialogOpen(false);
-    setEditingJobId(null);
   }, [refetch, router]);
 
   const renderedJobs = useMemo(() => jobs, [jobs]);
@@ -96,10 +98,8 @@ export default function Jobs() {
           </p>
         </div>
 
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger 
-            className="px-2 py-2 text-gray-600 rounded-md hover:bg-gray-200 hover:text-white text-sm"
-            onClick={() => setIsCreateDialogOpen(true)}>
+        <Dialog>
+          <DialogTrigger className="p-2 hover:bg-gray-100 rounded-md">
             <PlusIcon className="w-7 h-7 text-primary cursor-pointer" />
           </DialogTrigger>
           <DialogContent className="w-full h-[99vh]">
@@ -113,11 +113,11 @@ export default function Jobs() {
 
       {/* Jobs section */}
       {renderedJobs.length > 0 ? (
-        <div className="divide-y p-6 divide-gray-100">
+        <div className="divide-y divide-gray-100">
           {renderedJobs.map((job) => (
             <div
               key={job._id}
-              className="group relative p-6 border-gray-200 border mb-6 rounded-4xl hover:bg-gray-100 shadow-lg transition-colors"
+              className="p-6 flex justify-between hover:bg-gray-50"
             >
               <div className="flex-1 pe-4">
                 <h3 className="text-lg font-medium">{job.title}</h3>
@@ -127,54 +127,60 @@ export default function Jobs() {
                 </p>
 
                 <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-500">
-                  {job.education && <span><b>Education:</b> {job.education}</span>}
-                  {job.requiredExperience && <span><b>Experience:</b> {job.requiredExperience}</span>}
+                  {job.education && <>🎓 {job.education}</>}
+                  {job.requiredExperience && <>💼 {job.requiredExperience}</>}
                   {job.skills && job.skills.length > 0 && (
-                    <span><b>Skills:</b> {job.skills.map((s) => s.name).join(", ")}</span>
+                    <>🛠️ {job.skills.map((s) => s.name).join(", ")}</>
                   )}
 
                   {job.category && (
-                    <span>
-                      <b>Category:</b> {Array.isArray(job.category)
+                    <>
+                      📁{" "}
+                      {Array.isArray(job.category)
                         ? job.category.map((c) => c.name).join(", ")
                         : job.category.name}
-                    </span>
+                    </>
                   )}
                 </div>
 
                 {job.expiry && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    <b>Expires on:</b> {new Date(job.expiry).toLocaleDateString()}
+                  <p className="text-xs text-gray-400 mt-1">
+                    Expires: {new Date(job.expiry).toLocaleDateString()}
                   </p>
                 )}
               </div>
 
-              <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Dialog open={isUpdateDialogOpen && editingJobId === job._id} onOpenChange={(open) => {
-                    if (!open) {
-                      setIsUpdateDialogOpen(false);
-                      setEditingJobId(null);
-                    }
-                  }}>
-                  <DialogTrigger 
-                    className="p-4 text-blue-600 bg-blue-50 hover:bg-blue-200 rounded-full transition-colors"
-                    onClick={() => {
-                      setIsUpdateDialogOpen(true);
-                      setEditingJobId(job._id);
-                    }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                    </svg>
+              <div className="flex items-start gap-2">
+                {/* Edit jobs */}
+                <Dialog>
+                  <DialogTrigger className="px-3 py-1 bg-blue-500 text-white rounded-md text-sm cursor-pointer">
+                    Edit
                   </DialogTrigger>
-                  <DialogContent className="w-full h-[85vh] mt-2 p-6">
+                  <DialogContent className="w-full h-[96vh] mt-2 p-6">
                     <DialogHeader>
-                      <DialogTitle>Update Job</DialogTitle>
-                      <UpdateJob jobId={job._id} onJobUpdated={handleRefresh} />
+                      <DialogTitle>Edit Job: {job.title}</DialogTitle>
                     </DialogHeader>
+                    <UpdateJob jobId={job._id} onJobUpdated={handleRefresh} />
                   </DialogContent>
                 </Dialog>
-                <DeleteJob jobId={job._id} onJobDeleted={handleRefresh} />
+
+                {/* Delete jobs */}
+                <Dialog>
+                  <DialogTrigger className="px-3 py-1 bg-red-500 text-white rounded-md text-sm cursor-pointer">
+                    Delete
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Confirm Delete</DialogTitle>
+                    </DialogHeader>
+
+                    <DeleteJob
+                      jobId={job._id}
+                      jobTitle={job.title}
+                      onJobDeleted={handleRefresh}
+                    />
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           ))}
