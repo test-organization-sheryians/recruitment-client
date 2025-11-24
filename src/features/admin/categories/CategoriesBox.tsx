@@ -29,7 +29,10 @@ const CategoriesBox = () => {
     error: deleteError,
   } = useDeleteJobCategory();
 
-  const { mutate: updateCategory, error: updateError } = useUpdateJobCategory();
+  const {
+    mutate: updateCategory,
+    error: updateError
+  } = useUpdateJobCategory();
 
   // Show error toasts when mutations fail
   useEffect(() => {

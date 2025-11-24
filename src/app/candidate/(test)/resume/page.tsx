@@ -62,13 +62,21 @@ export default function ResumeUploader() {
       <h2 className="text-xl font-semibold text-center mb-4">Upload PDF Resume</h2>
 
       <div className="mb-4">
+        <label htmlFor="resume-upload" className="sr-only">
+          Upload PDF Resume
+        </label>
         <input
+          id="resume-upload"
           type="file"
           accept=".pdf"
           onChange={handleFile}
           className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
           disabled={loading}
+          aria-describedby="file-requirements"
         />
+        <div id="file-requirements" className="text-xs text-gray-500 mt-1">
+          Accepts PDF files only, maximum size 10MB
+        </div>
       </div>
 
       {loading && (
@@ -91,11 +99,16 @@ export default function ResumeUploader() {
             <button
               onClick={handleClear}
               className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded"
+              aria-label="Clear extracted text"
             >
               Clear
             </button>
           </div>
-          <pre className="p-4 bg-gray-100 rounded h-64 overflow-y-auto whitespace-pre-wrap text-sm border">
+          <pre 
+            className="p-4 bg-gray-100 rounded h-64 overflow-y-auto whitespace-pre-wrap text-sm border"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             {text}
           </pre>
         </div>
