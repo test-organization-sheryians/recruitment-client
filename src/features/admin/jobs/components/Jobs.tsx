@@ -167,7 +167,7 @@ export default function Jobs() {
                       <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                     </svg>
                   </DialogTrigger>
-                  <DialogContent className="w-full h-[85vh] mt-2 p-6">
+                  <DialogContent className="w-full h-[99vh] mt-2 p-6">
                     <DialogHeader>
                       <DialogTitle>Update Job</DialogTitle>
                       <UpdateJob jobId={job._id} onJobUpdated={handleRefresh} />

@@ -151,9 +151,9 @@ export default function JobForm({
     <div className="w-full h-full py-3 rounded-md mb-2">
       <div className="w-full mx-auto">
         {/* Form Card */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+        <div className="bg-white rounded-3xl shadow-xl p-2 border border-gray-100">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+            <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
               <p className="text-red-700 font-medium">{error}</p>
             </div>
           )}
