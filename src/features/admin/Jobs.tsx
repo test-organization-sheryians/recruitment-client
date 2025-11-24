@@ -102,8 +102,8 @@ export default function Jobs() {
           <DialogTrigger className="p-2 hover:bg-gray-100 rounded-md">
             <PlusIcon className="w-7 h-7 text-primary cursor-pointer" />
           </DialogTrigger>
-          <DialogContent className="w-full h-[85vh] mt-2 p-6">
-            <DialogHeader>
+          <DialogContent className="w-full h-[99vh]">
+            <DialogHeader className="w-full h-full">
               <DialogTitle>Create a Job</DialogTitle>
             </DialogHeader>
             <CreateJob onJobCreated={handleRefresh} />
