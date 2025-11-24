@@ -38,48 +38,52 @@ export default function SkillsSection({ skills, refetchProfile }: Props) {
   };
 
   return (
-    <div className="border p-4 rounded space-y-3">
-      <h2 className="font-semibold">Skills</h2>
+  <div className="space-y-4">
+    <h2 className="text-lg font-semibold text-gray-800">Skills</h2>
 
-      {/* ADD SKILL */}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={newSkill}
-          onChange={(e) => setNewSkill(e.target.value)}
-          placeholder="Add a skill"
-          className="border px-2 py-1 rounded w-full"
-        />
-        <button
-          onClick={handleAddSkill}
-          disabled={isPending}
-          className="bg-black text-white px-3 py-1 rounded"
-        >
-          Add
-        </button>
-      </div>
-
-      {/* DISPLAY SKILLS */}
-      {skills.length === 0 ? (
-        <p className="text-gray-500">No skills added</p>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          {skills.map((skill, index) => (
-            <span
-              key={index}
-              className="flex items-center gap-2 px-3 py-1 bg-gray-200 rounded-full text-sm"
-            >
-              {skill}
-              <button
-                onClick={() => handleRemoveSkill(skill)}
-                className="text-red-500 hover:text-red-700 font-bold"
-              >
-                ✕
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
+    {/* Add Skill Input */}
+    <div className="flex gap-3 items-center">
+      <input
+        type="text"
+        value={newSkill}
+        onChange={(e) => setNewSkill(e.target.value)}
+        placeholder="Add a new skill..."
+        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/60 transition"
+      />
+      <button
+        onClick={handleAddSkill}
+        disabled={isPending}
+        className="bg-blue-800 text-white px-5 py-2 rounded-lg hover:bg-blue-900 transition disabled:opacity-50"
+      >
+        Add
+      </button>
     </div>
-  );
+
+    {/* Skills Display */}
+    {skills.length === 0 ? (
+      <div className="text-sm text-gray-500 italic">
+        No skills added yet
+      </div>
+    ) : (<div    className="mt-2 max-h-34 overflow-y-auto pr-1">
+      <div className="flex flex-wrap gap-3 mt-2">
+        {skills.map((skill, index) => (
+          <div
+            key={index}
+            className="flex items-center gap-2 bg-gray-100 border border-gray-200 px-4 py-1.5 rounded-full text-sm shadow-sm"
+          >
+            <span className="text-gray-800">{skill}</span>
+            <button
+              onClick={() => handleRemoveSkill(skill)}
+              className="text-gray-400 hover:text-red-500 transition text-xs font-semibold"
+              title="Remove skill"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div></div>
+    )}
+  </div>
+);
+
 }

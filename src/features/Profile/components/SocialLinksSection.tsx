@@ -49,51 +49,64 @@ export default function SocialLinksSection({ linkedin, github, portfolioUrl, onU
   };
 
   return (
-    <div className="border p-4 rounded space-y-3">
-      <h2 className="font-semibold mb-2">Social Links</h2>
+  <div className="bg-white  rounded-2xl p-6  space-y-5">
+    <div className="flex justify-between items-center">
+      <h2 className="text-lg font-semibold text-gray-800">
+        Social Links
+      </h2>
+    </div>
 
-      <div className="flex flex-col gap-2">
-        <div>
-          <label className="block text-sm font-medium">LinkedIn URL</label>
-          <input
-            type="url"
-            value={linkedinValue}
-            onChange={(e) => setLinkedinValue(e.target.value)}
-            className="w-full border rounded p-1"
-            placeholder="https://linkedin.com/in/username"
-          />
-        </div>
+    <div className="grid grid-cols-1 gap-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-600 mb-1">
+          LinkedIn
+        </label>
+        <input
+          type="url"
+          value={linkedinValue}
+          onChange={(e) => setLinkedinValue(e.target.value)}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+          placeholder="https://linkedin.com/in/username"
+        />
+      </div>
 
-        <div>
-          <label className="block text-sm font-medium">GitHub URL</label>
-          <input
-            type="url"
-            value={githubValue}
-            onChange={(e) => setGithubValue(e.target.value)}
-            className="w-full border rounded p-1"
-            placeholder="https://github.com/username"
-          />
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-600 mb-1">
+          GitHub
+        </label>
+        <input
+          type="url"
+          value={githubValue}
+          onChange={(e) => setGithubValue(e.target.value)}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+          placeholder="https://github.com/username"
+        />
+      </div>
 
-        <div>
-          <label className="block text-sm font-medium">Portfolio URL</label>
-          <input
-            type="url"
-            value={portfolioValue}
-            onChange={(e) => setPortfolioValue(e.target.value)}
-            className="w-full border rounded p-1"
-            placeholder="https://myportfolio.com"
-          />
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-600 mb-1">
+          Portfolio
+        </label>
+        <input
+          type="url"
+          value={portfolioValue}
+          onChange={(e) => setPortfolioValue(e.target.value)}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+          placeholder="https://myportfolio.com"
+        />
+      </div>
 
+      <div className="pt-2">
         <button
           onClick={handleSave}
-          className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
           disabled={updateProfileMutation.isPending}
+          className="bg-blue-900 hover:bg-blue-800 text-white px-5 py-2 rounded-lg font-medium transition disabled:opacity-60"
         >
-          {updateProfileMutation.isPending ? "Saving..." : "Save"}
+          {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
         </button>
       </div>
     </div>
-  );
+  </div>
+);
+
 }

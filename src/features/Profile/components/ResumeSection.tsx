@@ -55,48 +55,70 @@ const isDeleting = deleteMutation.status === "pending";
     });
   };
 
-  return (
-    <div className="border p-4 rounded space-y-3">
-      <h2 className="font-semibold mb-2">Resume</h2>
+return (
+  <div className="space-y-4">
+    <h2 className="text-lg font-semibold text-gray-800">Resume</h2>
 
-      {resumeUrl ? (
-        <div className="flex flex-col gap-2">
-          <p className="text-green-600">Resume Uploaded</p>
-          <a
-            href={resumeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 underline"
-          >
-            View / Download
-          </a>
+    {resumeUrl ? (
+      <div className="flex flex-col gap-3 bg-gray-50 border border-gray-200 p-4 rounded-xl">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-green-600 font-medium">
+              ✅ Resume Uploaded
+            </p>
+            <a
+              href={resumeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:underline"
+            >
+              View Resume
+            </a>
+          </div>
+
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="bg-red-600 text-white px-3 py-1 rounded mt-1 w-fit"
+            className="px-4 py-2 text-sm rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition disabled:opacity-50"
           >
-            {isDeleting ? "Deleting..." : "Delete Resume"}
+            {isDeleting ? "Deleting..." : "Delete"}
           </button>
         </div>
-      ) : (
-        <p className="text-gray-500">No resume uploaded</p>
-      )}
+      </div>
+    ) : (
+      <div className="text-sm text-gray-500 italic">
+        No resume uploaded yet
+      </div>
+    )}
 
-      <div className="flex gap-2 items-center mt-2">
+    {/* Upload Section */}
+    <div className="flex flex-col gap-2">
+      <label className="text-sm font-medium text-gray-700">
+        Upload new resume
+      </label>
+
+      <div className="flex items-center gap-3">
         <input
           type="file"
           onChange={handleFileChange}
-          className="border px-2 py-1 rounded"
           accept=".pdf,.doc,.docx"
+          className="block w-full text-sm file:mr-4 file:py-2 file:px-4
+          file:rounded-lg file:border-0
+          file:bg-blue-200 file:text-blue-700
+          hover:file:bg-gray-200 transition"
         />
+
         <button
           onClick={handleUpload}
           disabled={!file || isUploading}
-          className="bg-black text-white px-3 py-1 rounded"
+          className="bg-blue-700 text-white px-5 py-2 rounded-lg hover:bg-blue-800 transition disabled:opacity-50"
         >
           {isUploading ? "Uploading..." : "Upload"}
         </button>
       </div>
     </div>
-  );
+  </div>
+);
+
+
 }

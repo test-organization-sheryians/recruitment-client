@@ -31,32 +31,68 @@ export default function CandidateProfile() {
   if (!user) return <p className="text-center mt-10 text-red-500">User not found</p>;
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-8">
-      <h1 className="text-2xl font-semibold">Candidate Profile</h1>
+<div className="min-h-screen bg-gray-50 px-3 py-2 sm:px-6 sm:py-6 md:p-8">
+      <div className="max-w-6xl mx-auto space-y-8">
 
-      <PersonalInfoSection
-        firstName={user.firstName || ""}
-        lastName={user.lastName || ""}
-        email={user.email || ""}
-        phone={profile?.phone || ""}
-      />
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Candidate Profile
+          </h1>
+        </div>
 
-      <SkillsSection skills={profile?.skills ?? []} />
+        {/* Profile Overview Card */}
+        <div className="bg-white rounded-2xl shadow-sm p-6">
+          <PersonalInfoSection
+            firstName={user.firstName || ""}
+            lastName={user.lastName || ""}
+            email={user.email || ""}
+            phone={profile?.phone || ""}
+          />
+        </div>
 
-      {/* Fixed safe props */}
-      <ExperienceSection candidateId={user?.id} />
+        {/* Grid Layout like Admin Dashboard */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
+          {/* Skills */}
+          <div className="bg-white rounded-2xl shadow-sm p-6">
+            {/* <h2 className="text-lg font-semibold mb-4">Skills</h2> */}
+            <SkillsSection skills={profile?.skills ?? []} />
+          </div>
 
-      <ResumeSection resumeUrl={profile?.resumeUrl} />
+          {/* Resume */}
+          <div className="bg-white rounded-2xl shadow-sm p-6">
+            {/* <h2 className="text-lg font-semibold mb-4">Resume</h2> */}
+            <ResumeSection resumeUrl={profile?.resumeUrl} />
+          </div>
+        </div>
 
-      <SocialLinksSection
-        linkedin={profile?.linkedinUrl}
-        github={profile?.githubUrl}
-        portfolioUrl={profile?.portfolioUrl}
-        onUpdate={refetch}
-      />
+        {/* Experience Full Width */}
+        <div className="bg-white rounded-2xl shadow-sm p-6">
+          {/* <h2 className="text-lg font-semibold mb-4">Experience</h2> */}
+          <ExperienceSection candidateId={user?.id} />
+        </div>
 
-      <AvailabilitySection availability={profile?.availability} />
+        {/* Social & Availability */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <div className="bg-white rounded-2xl shadow-sm p-6">
+            {/* <h2 className="text-lg font-semibold mb-4">Social Links</h2> */}
+            <SocialLinksSection
+              linkedin={profile?.linkedinUrl}
+              github={profile?.githubUrl}
+              portfolioUrl={profile?.portfolioUrl}
+              onUpdate={refetch}
+            />
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm p-6">
+            {/* <h2 className="text-lg font-semibold mb-4">Availability</h2> */}
+            <AvailabilitySection availability={profile?.availability} />
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 }
