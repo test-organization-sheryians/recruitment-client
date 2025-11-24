@@ -1,8 +1,11 @@
  import api from "@/config/axios";
+ import { ExperienceItem } from "@/types/ExperienceItem ";
+ import { UpdateExperienceVariables } from "@/features/experience/hooks/useExperienceApi";
 
-
-export const updateExperience = async (data: any) => {
-  const { id, ...payload } = data; // remove id from body
-  const response = await api.patch(`/api/experience/${id}`, payload); // send only the actual fields
+export const updateExperience = async (
+  data: UpdateExperienceVariables
+): Promise<ExperienceItem> => {
+  const { id, ...payload } = data;
+  const response = await api.patch(`/api/experience/${id}`, payload);
   return response.data;
 };

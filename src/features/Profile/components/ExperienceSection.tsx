@@ -8,6 +8,7 @@ import {
   useUpdateExperience
 } from "@/features/experience/hooks/useExperienceApi";
 import { useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 
 interface Props {
   candidateId?: string;
@@ -44,7 +45,7 @@ export default function ExperienceSection({ candidateId }: Props) {
   }
 });
 const deleteExperience = useDeleteExperience({
-  onError: (error: any) => {
+  onError: (error: unknown) => {
     console.error("Failed to delete experience:", error);
   }
 });
@@ -61,7 +62,7 @@ const updateExperience = useUpdateExperience({
     });
     setEditingId(null); // reset editing state
   },
-  onError: (error:any) => console.error("Failed to update experience:", error),
+  onError: (error:unknown) => console.error("Failed to update experience:", error),
 });
 
 
