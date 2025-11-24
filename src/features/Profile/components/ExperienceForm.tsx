@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { Experience } from "@/types/profile";
+import { Experience } from "@/types/Experience";
 
 interface ExperienceFormProps {
   onSubmit: (data: Omit<Experience, "id">) => Promise<void>;
@@ -21,7 +21,6 @@ export default function ExperienceForm({
     handleSubmit,
     formState: { errors },
     watch,
-    setValue,
   } = useForm<Omit<Experience, "id">>({
     defaultValues: {
       company: "",

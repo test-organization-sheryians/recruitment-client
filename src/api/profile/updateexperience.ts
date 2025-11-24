@@ -1,5 +1,5 @@
 import api from "@/config/axios";
-import { Experience } from "@/types/profile";
+import { Experience } from "@/types/Experience";
 
 export const updateExperience = async (experienceData: Omit<Experience, 'id'> & { id: string }) => {
   const { id, ...data } = experienceData;

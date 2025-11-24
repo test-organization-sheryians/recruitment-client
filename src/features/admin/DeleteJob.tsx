@@ -81,7 +81,7 @@ export default function DeleteJob({jobId,jobTitle,onJobDeleted}:DeleteJobProps) 
         )}
         
         <p className="text-gray-600 mb-6">
-          Are you sure you want to delete this job? This action cannot be undone.
+          Are you sure you want to delete {jobTitle} Job? This action cannot be undone.
         </p>
         
         <div className="flex justify-end space-x-3">

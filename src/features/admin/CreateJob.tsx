@@ -13,7 +13,7 @@ export default function CreateJob({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: { [key: string]: string | string[] }) => {
     setLoading(true);
 
     const formDataObj = new FormData();

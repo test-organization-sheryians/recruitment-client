@@ -1,6 +1,5 @@
-// src/api/profile/experience.ts
 import api from "@/config/axios";
-import { Experience } from "@/types/profile";
+import { Experience } from "@/types/Experience";
 
 interface ApiError extends Error {
   response?: {
@@ -9,10 +8,6 @@ interface ApiError extends Error {
     };
   };
 }
-
-/**
- * Get all experiences for the current user
- */
 export const getExperiences = async (id: string): Promise<Experience[]> => {
   try {
     const response = await api.get<Experience[]>(`/api/experience/candidate/${id}`);
@@ -22,10 +17,6 @@ export const getExperiences = async (id: string): Promise<Experience[]> => {
     throw new Error(apiError.response?.data?.message || 'Failed to fetch experiences');
   }
 };
-
-/**
- * Create a new experience
- */
 export const createExperience = async (data: Omit<Experience, 'id'>): Promise<Experience> => {
   try {
     const response = await api.post<Experience>("/api/experience", data);
@@ -36,27 +27,20 @@ export const createExperience = async (data: Omit<Experience, 'id'>): Promise<Ex
   }
 };
 
-/**
- * Update an existing experience
- */
 export const updateExperience = async (data: Experience): Promise<Experience> => {
-  if (!data.id) {
+  if (!data._id) {
     throw new Error("Experience ID is required for update");
   }
-  const { id, ...updateData } = data;
+  const { _id, ...updateData } = data;
   
   try {
-    const response = await api.put<Experience>(`/api/experience/${id}`, updateData);
+    const response = await api.put<Experience>(`/api/experience/${_id}`, updateData);
     return response.data;
   } catch (error) {
     const apiError = error as ApiError;
     throw new Error(apiError.response?.data?.message || 'Failed to update experience');
   }
 };
-
-/**
- * Delete an experience
- */
 export const deleteExperience = async (id: string): Promise<void> => {
   if (!id) {
     throw new Error("Experience ID is required for deletion");
@@ -70,7 +54,6 @@ export const deleteExperience = async (id: string): Promise<void> => {
   }
 };
 
-// Export all functions as a single object for easier imports
 export const experienceApi = {
   getExperiences,
   createExperience,

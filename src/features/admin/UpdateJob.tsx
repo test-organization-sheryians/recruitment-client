@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { updateJob, getJobs } from "@/api/jobs";
 import JobForm from "../admin/categories/components/JobForm";
 import { useRouter } from "next/navigation";
+import { Job } from "@/types/Job";
 
 export default function UpdateJob({ jobId, onJobUpdated }: { jobId: string; onJobUpdated?: () => void }) {
   const router = useRouter();
-  const [job, setJob] = useState<any>(null);
+  const [job, setJob] = useState<Job>();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -19,7 +20,7 @@ export default function UpdateJob({ jobId, onJobUpdated }: { jobId: string; onJo
     if (res.success) setJob(res.data);
   };
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: { [key: string]: string | string[] }) => {
     setLoading(true);
 
     const formDataObj = new FormData();
@@ -43,11 +44,31 @@ export default function UpdateJob({ jobId, onJobUpdated }: { jobId: string; onJo
   };
 
   if (!job) return <p className="p-4">Loading...</p>;
+interface Skill {
+  _id: string;
+  name: string;
+}
+
+interface Category {
+  _id: string;
+  name: string;
+}
+interface JobFormData {
+  _id?: string;
+  title: string;
+  description: string;
+  education: string;
+  requiredExperience: string;
+  category: Category;
+  skills: Skill[];
+  expiry: string;
+  clientId: string;
+}
 
   return (
     <JobForm
       mode="update"
-      initialData={job}
+      initialData={job as unknown as Partial<JobFormData>}
       onSubmit={handleSubmit}
       loading={loading}
     />

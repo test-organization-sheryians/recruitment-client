@@ -22,7 +22,8 @@ export const useCreateJob = () => {
 export const useUpdateJob = () => {
   return useMutation({
     mutationKey: ["updateJob"],
-    mutationFn: (id: string, data: any) => api.updateJob(id, data),
+    mutationFn: ({ id, formData }: { id: string; formData: FormData }) => 
+      api.updateJob(id, formData),
     retry: 0,
   });
 };

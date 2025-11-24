@@ -69,7 +69,6 @@ export default function Jobs() {
     }
     router.refresh();
     
-    // Close dialogs after successful operation
     setIsCreateDialogOpen(false);
     setIsUpdateDialogOpen(false);
     setEditingJobId(null);

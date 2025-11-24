@@ -4,10 +4,32 @@ import { useState, useEffect } from "react";
 import { useGetAllSkills } from "@/features/admin/skills/hooks/useSkillApi";
 import { useGetJobCategories } from "../hooks/useJobCategoryApi";
 
+interface Skill {
+  _id: string;
+  name: string;
+}
+
+interface Category {
+  _id: string;
+  name: string;
+}
+
+interface JobFormData {
+  _id?: string;
+  title: string;
+  description: string;
+  education: string;
+  requiredExperience: string;
+  category: Category;
+  skills: Skill[];
+  expiry: string;
+  clientId: string;
+}
+
 interface JobFormProps {
   mode: "create" | "update";
-  initialData?: any;
-  onSubmit: (data: any) => Promise<void>;
+  initialData?: Partial<JobFormData>;
+  onSubmit: (data: { [key: string]: string | string[] }) => Promise<void>;
   loading?: boolean;
 }
 
@@ -26,10 +48,10 @@ export default function JobForm({
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     requiredExperience: initialData?.requiredExperience || "",
-    category: initialData?.category?._id || "",
+    category: (initialData?.category as Category)?._id || "",
     education: initialData?.education || "",
     description: initialData?.description || "",
-    skills: initialData?.skills?.map((s: any) => s._id) || [],
+    skills: initialData?.skills?.map((s: { _id: string }) => s._id) || [],
     expiry: initialData?.expiry
       ? new Date(initialData.expiry).toISOString().split("T")[0]
       : "",
@@ -45,11 +67,11 @@ export default function JobForm({
     }
   }, [categories]);
 
-  const handleChange = (e: any) =>
+  const handleChange = (e: { target: { name: string; value: string } }) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSkillToggle = (skillId: string) => {
-    setFormData((prev: any) => ({
+    setFormData((prev) => ({
       ...prev,
       skills: prev.skills.includes(skillId)
         ? prev.skills.filter((id: string) => id !== skillId)
@@ -57,7 +79,7 @@ export default function JobForm({
     }));
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -182,7 +204,7 @@ export default function JobForm({
                 className="w-full border rounded-md p-2 focus:ring-0 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 required
               >
-                {categories.map((cat: any) => (
+                {categories.map((cat: { _id: string; name: string }) => (
                   <option key={cat._id} value={cat._id}>
                     {cat.name}
                   </option>
@@ -196,7 +218,7 @@ export default function JobForm({
               </label>
 
               <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto border p-3 rounded-md">
-                {skillsResponse.map((skill: any) => (
+                {skillsResponse.map((skill: { _id: string; name: string }) => (
                   <label
                     key={skill._id}
                     className="flex gap-2 cursor-pointer text-sm"
