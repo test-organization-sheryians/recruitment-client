@@ -1,7 +1,6 @@
 "use client";
 
 import Navbar from "@/components/Candidate/Navbar";
-import Sidebar from "@/components/Candidate/Sidebar";
 
 export default function CandidateLayout({ children }) {
   return (
@@ -11,7 +10,6 @@ export default function CandidateLayout({ children }) {
         <Navbar />
       </div>
 
-  
       <div className="flex-1 overflow-auto">
         {children}
       </div>
