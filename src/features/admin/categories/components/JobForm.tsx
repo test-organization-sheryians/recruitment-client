@@ -267,7 +267,7 @@ export default function JobForm({
                     onChange={handleChange}
                     className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
                   >
-                    {categories.map((cat: any) => (
+                    {categories.map((cat: { _id: string; name: string }) => (
                       <option key={cat._id} value={cat._id}>
                         {cat.name}
                       </option>
@@ -282,7 +282,7 @@ export default function JobForm({
                   </label>
 
                   <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
-                    {skillsResponse.map((skill: any) => (
+                    {skillsResponse.map((skill: { _id: string; name: string }) => (
                       <label
                         key={skill._id}
                         className="group flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-white transition-all border-2 border-transparent hover:border-blue-200"
