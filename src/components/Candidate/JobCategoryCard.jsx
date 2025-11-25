@@ -142,15 +142,17 @@ export default function JobCard({ job }) {
         </div>
 
         {/* RIGHT BUTTONS */}
-        <div className="absolute bottom-4 right-4 flex flex-col gap-3 items-end">
-          <button className="p-2 border border-gray-300 rounded-md hover:bg-gray-100 transition bg-white shadow-sm">
-            <Bookmark size={18} className="text-gray-600" />
-          </button>
+{/* RIGHT BUTTONS */}
+<div className="flex flex-col gap-3 items-end shrink-0">
+  <button className="p-2 border border-gray-300 rounded-md hover:bg-gray-100 transition bg-white shadow-sm">
+    <Bookmark size={18} className="text-gray-600" />
+  </button>
 
-          <button className="px-5 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 text-sm font-semibold shadow-sm">
-            Apply
-          </button>
-        </div>
+  <button className="px-5 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 text-sm font-semibold shadow-sm">
+    Apply
+  </button>
+</div>
+
 
       </div>
     </div>
