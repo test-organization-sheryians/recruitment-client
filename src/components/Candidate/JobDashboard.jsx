@@ -1,32 +1,55 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import JobCard from "./JobCategoryCard";
-import { SAMPLE_JOBS } from "@/components/Candidate/types";
 import HeroSection from "./HeroSection";
 import { Menu } from "lucide-react";
+import { getJobs } from "@/api/jobs"; // adjust this path if needed
 
 export default function JobDashboardPage() {
+  const [jobs, setJobs] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // FETCH JOBS FROM BACKEND
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const result = await getJobs();
+        setJobs(result.data || result); // depends on your API structure
+      } catch (err) {
+        console.error("Error fetching jobs:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // FILTER JOBS BY CATEGORY
+  const filteredJobs = selectedCategory
+    ? jobs.filter((job) => job.category === selectedCategory)
+    : jobs;
 
   return (
     <div className="min-h-screen bg-blue-50">
 
       <HeroSection />
 
-     {/* Mobile Header with Hamburger */}
-<div className="md:hidden flex items-center gap-3 px-4 py-3 sticky top-0 bg-blue-50 z-30">
-  <button
-    onClick={() => setIsSidebarOpen(true)}
-    className="p-2 rounded bg-white shadow border"
-  >
-    <Menu size={22} className="text-gray-700" />
-  </button>
+      {/* Mobile Header */}
+      <div className="md:hidden flex items-center gap-3 px-4 py-3 sticky top-0 bg-blue-50 z-30">
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 rounded bg-white shadow border"
+        >
+          <Menu size={22} className="text-gray-700" />
+        </button>
 
-  <h2 className="text-lg font-bold text-gray-800">Filters</h2>
-</div>
+        <h2 className="text-lg font-bold text-gray-800">Filters</h2>
+      </div>
 
       {/* Mobile Sidebar Drawer */}
       {isSidebarOpen && (
@@ -50,10 +73,10 @@ export default function JobDashboardPage() {
         </div>
       )}
 
-      {/* MAIN CONTENT */}
+      {/* Main Layout */}
       <div className="max-w-7xl mx-auto px-3 mt-[-20px] grid grid-cols-12 gap-6">
 
-        {/* Desktop Sidebar */}
+        {/* Sidebar */}
         <div className="hidden md:block md:col-span-4">
           <Sidebar
             selected={selectedCategory}
@@ -63,19 +86,33 @@ export default function JobDashboardPage() {
 
         {/* Job List */}
         <div className="col-span-12 md:col-span-8">
-          <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-5 shadow-sm">
+<div className="bg-white border border-gray-200 rounded-lg p-4 md:p-5 shadow-sm 
+                h-[75vh] overflow-y-auto scrollbar-hide">
+
             <h1 className="text-lg md:text-xl font-bold mb-4">Recommended Jobs</h1>
 
+            {/* Loading State */}
+            {loading && (
+              <p className="text-gray-500 text-sm">Loading jobs...</p>
+            )}
+
+            {/* Empty State */}
+            {!loading && filteredJobs.length === 0 && (
+              <p className="text-gray-500 text-sm">
+                No jobs found for this category.
+              </p>
+            )}
+
+            {/* Job Cards */}
             <div className="space-y-3 md:space-y-4">
-              {SAMPLE_JOBS.map((job) => (
-                <JobCard key={job.id} job={job} />
+              {filteredJobs.map((job) => (
+                <JobCard key={job._id} job={job} />
               ))}
             </div>
+
           </div>
         </div>
-
       </div>
-
     </div>
   );
 }
