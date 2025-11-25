@@ -13,21 +13,15 @@ export default function LogoutButton() {
     if (!confirmed) return;
 
     try {
-      // Replace with your actual logout API endpoint
       await fetch('/api/auth/logout', {
         method: 'POST',
-        credentials: 'include', // if using cookies
+        credentials: 'include', 
       });
 
-      // Clear any client-side auth state if needed
-      // e.g., remove token from localStorage, reset context, etc.
-
-      // Redirect to login page
       router.push('/login');
-      router.refresh(); // optional: force refresh
+      router.refresh(); 
     } catch (error) {
       console.error('Logout failed:', error);
-      // Still redirect even if API fails (security)
       router.push('/login');
     }
   };
