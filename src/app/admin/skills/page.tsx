@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import SkillForm from "@/features/admin/skills/components/SkillForm";
 import SkillList from "@/features/admin/skills/components/SkillList";
-import { FiPlus, FiX } from "react-icons/fi";
+import { FiPlus } from "react-icons/fi";
 import {
   useGetAllSkills,
   useCreateSkill,
