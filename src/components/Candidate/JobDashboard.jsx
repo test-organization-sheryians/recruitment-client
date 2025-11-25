@@ -6,27 +6,29 @@ import JobCard from "./JobCategoryCard";
 import { SAMPLE_JOBS } from "@/components/Candidate/types";
 import HeroSection from "./HeroSection";
 import { Menu } from "lucide-react";
+import { useGetJobCategories } from "@/features/admin/categories/hooks/useJobCategoryApi";
 
 export default function JobDashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const { data: categories, isLoading } = useGetJobCategories();
+
   return (
     <div className="min-h-screen bg-blue-50">
-
       <HeroSection />
 
-     {/* Mobile Header with Hamburger */}
-<div className="md:hidden flex items-center gap-3 px-4 py-3 sticky top-0 bg-blue-50 z-30">
-  <button
-    onClick={() => setIsSidebarOpen(true)}
-    className="p-2 rounded bg-white shadow border"
-  >
-    <Menu size={22} className="text-gray-700" />
-  </button>
+      {/* Mobile Header with Hamburger */}
+      <div className="md:hidden flex items-center gap-3 px-4 py-3 sticky top-0 bg-blue-50 z-30">
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 rounded bg-white shadow border"
+        >
+          <Menu size={22} className="text-gray-700" />
+        </button>
 
-  <h2 className="text-lg font-bold text-gray-800">Filters</h2>
-</div>
+        <h2 className="text-lg font-bold text-gray-800">Filters</h2>
+      </div>
 
       {/* Mobile Sidebar Drawer */}
       {isSidebarOpen && (
@@ -45,6 +47,8 @@ export default function JobDashboardPage() {
                 setSelectedCategory(c);
                 setIsSidebarOpen(false);
               }}
+              categories={categories || []}
+              isLoading={isLoading}
             />
           </div>
         </div>
@@ -52,12 +56,13 @@ export default function JobDashboardPage() {
 
       {/* MAIN CONTENT */}
       <div className="max-w-7xl mx-auto px-3 mt-[-20px] grid grid-cols-12 gap-6">
-
         {/* Desktop Sidebar */}
         <div className="hidden md:block md:col-span-4">
           <Sidebar
             selected={selectedCategory}
             onSelect={(c) => setSelectedCategory(c)}
+            categories={categories || []}
+            isLoading={isLoading}
           />
         </div>
 
@@ -75,7 +80,6 @@ export default function JobDashboardPage() {
         </div>
 
       </div>
-
     </div>
   );
 }
