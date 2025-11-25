@@ -1,25 +1,13 @@
-"use client";
-
 import React from "react";
 import AuthLayout from "../AuthLayout";
 
-const layout = async ({ children }: { children: React.ReactNode }) => {
+const layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="w-full">
-      {/* Hidden image on mobile */}
-      <div className="hidden md:block">
-        <AuthLayout imageUrl="/images/signimg1.webp">
-          {children}
-        </AuthLayout>
-      </div>
-
-      {/* Mobile view → only form */}
-      <div className="md:hidden p-4">
-        {children}
-      </div>
-    </div>
+    <AuthLayout imageUrl="/images/signimg1.webp">{children}</AuthLayout>
   );
 };
 
 export default layout;
+
+
 
