@@ -1,10 +1,10 @@
-import UnderConstruction from '@/features/admin/static_pages/UnderConstruction'
+import Jobs from '@/features/admin/jobs/components/Jobs'
 import React from 'react'
 
 const page = () => {
   return (
     <div>
-      <UnderConstruction/>
+      <Jobs/>
     </div>
   )
 }
