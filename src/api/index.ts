@@ -11,3 +11,7 @@ export * from "./skills/deleteSkill"
 export * from "./skills/getAllSkills"
 export * from "./skills/getSkill"
 export * from "./skills/updateSkill"
+export * from "./users/getAllUser"
+export * from "./users/updateUserRole"
+export * from "./users/deleteUser"
+

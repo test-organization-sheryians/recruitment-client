@@ -5,7 +5,7 @@ const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const publicRoutes = ["/login", "/register", "/"] as const;
 
-const api = axios.create({
+const   api = axios.create({
   baseURL,
   headers: {
     "Content-Type": "application/json",

@@ -1,4 +1,5 @@
-'use client'
+"use client";
+
 import DashboardPage from "@/features/admin/static_pages/Dashboard";
 import React from "react";
 

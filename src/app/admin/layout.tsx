@@ -1,39 +1,24 @@
-// app/admin/layout.tsx
-import Navbar from "@/components/Navbar";
 import Sidebar from "@/features/admin/static_pages/Sidebar";
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import Navbar from "@/components/Navbar";
+import Providers from "../providers";
 
-export const dynamic = 'force-dynamic';
-
-export default async function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const user = await getCurrentUser();
-
-  if (!user) redirect("/login");
-  if (user.role !== "admin") redirect("/unauthorized");
-
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen w-full bg-[#F0F2F5] font-[satoshi]">
-      <div className="flex">
-        <aside className="hidden md:block w-72 fixed inset-y-0 left-0 z-50">
-          <div className="h-full p-4">
-            <Sidebar /> 
-          </div>
-        </aside>
-
-        <div className="flex-1 md:ml-72">
-          <div className="p-4 md:p-6 max-w-[1400px] mx-auto">
-            <div className="mb-6">
-               <Navbar />
+    <html lang="en">
+      <body>
+        <Providers>
+          <div className="flex h-screen">
+            {/* Sidebar */}
+            <Sidebar />
+            
+            {/* Main content */}
+            <div className="flex-1 flex flex-col">
+              <Navbar />
+              <main className="p-4 overflow-auto">{children}</main>
             </div>
-            <main>{children}</main>
           </div>
-        </div>
-      </div>
-    </div>
+        </Providers>
+      </body>
+    </html>
   );
 }

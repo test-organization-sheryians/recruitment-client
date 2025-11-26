@@ -9,6 +9,7 @@ export const useGetAllSkills = () => {
   });
 };
 
+
 export const useGetSkill = (id?: string) => {
   return useQuery({
     queryKey: ["skill", id],

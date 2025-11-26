@@ -17,6 +17,7 @@ const navItems = [
   { name: "Clients", href: "/admin/clients" },
   { name: "Skill", href: "/admin/skills" },
   {name: "Categories", href:"/admin/categories"}, 
+  {name:"Users", href:"/admin/users"}
 ];
 
 const Sidebar: React.FC<SidebarProps> = () => {
