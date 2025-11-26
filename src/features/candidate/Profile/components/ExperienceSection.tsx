@@ -6,7 +6,7 @@ import {
   useGetCandidateExperience,
   useDeleteExperience,
   useUpdateExperience
-} from "@/features/experience/hooks/useExperienceApi";
+} from "@/features/candidate/experience/hooks/useExperienceApi";
 import { useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 
