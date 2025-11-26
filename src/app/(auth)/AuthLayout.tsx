@@ -1,25 +1,3 @@
-// import React from "react";
-
-// interface AuthLayoutProps {
-//   children: React.ReactNode;
-//   imageUrl: string;
-// }
-
-// const AuthLayout = ({ children, imageUrl }: AuthLayoutProps) => {
-//   return (
-//     <div className="h-screen w-full bg-[#DCDCDC] overflow-hidden flex gap-3.5 p-5 font-[satoshi]">
-//       <div className="bg-white w-1/3 rounded-base overflow-hidden">
-//         {children}
-//       </div>
-//       <div
-//         className="w-2/3 rounded-base bg-center bg-cover overflow-hidden"
-//         style={{ backgroundImage: `url(${imageUrl})` }}
-//       />
-//     </div>
-//   );
-// };
-
-// export default AuthLayout;
 import React from "react";
 
 interface AuthLayoutProps {
@@ -29,16 +7,12 @@ interface AuthLayoutProps {
 
 const AuthLayout = ({ children, imageUrl }: AuthLayoutProps) => {
   return (
-    <div className="h-screen w-full bg-[#DCDCDC] overflow-hidden flex gap-3.5 p-5 font-[satoshi] flex-col md:flex-row">
-      
-      {/* Form section */}
-      <div className="bg-white w-full md:w-1/3 rounded-base overflow-hidden">
+    <div className="h-screen w-full bg-[#DCDCDC] overflow-hidden flex gap-3.5 p-5 font-[satoshi]">
+      <div className="bg-white w-1/3 rounded-base overflow-hidden">
         {children}
       </div>
-
-      {/* Image section (hidden on mobile) */}
       <div
-        className="hidden md:block w-2/3 rounded-base bg-center bg-cover overflow-hidden"
+        className="w-2/3 rounded-base bg-center bg-cover overflow-hidden"
         style={{ backgroundImage: `url(${imageUrl})` }}
       />
     </div>

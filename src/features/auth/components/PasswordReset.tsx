@@ -8,7 +8,7 @@ const PasswordReset = () => {
 
   const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent)=>{
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     //backend
 
@@ -16,7 +16,7 @@ const PasswordReset = () => {
   }
 
   return (
-    <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-10 px-[20%] flex flex-col justify-center">
+    <div className="w-full h-full min-h-[80vh] md:min-h-0 font-[satoshi] bg-white rounded-2xl py-10 px-6 md:px-[20%] flex flex-col justify-center">
       <h1 className="text-3xl font-semibold text-center text-gray-800">
         Password Reset
       </h1>
@@ -24,7 +24,7 @@ const PasswordReset = () => {
         Please enter your email address to receive password reset instructions.
       </p>
 
-      <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+      <form className="mt-12 md:mt-8 space-y-5" onSubmit={handleSubmit}>
         {/* Email or Phone */}
         <LabelInput
           label="Email or phone"
