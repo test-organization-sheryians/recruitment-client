@@ -59,7 +59,7 @@ export default function ResumeUploader() {
 
   return (
     <div className="max-w-2xl mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-xl font-semibold text-center mb-4">Upload PDF Resume</h2>
+      <h2 className="text-xl font-semibold text-center mb-4">resume dalo</h2>
 
       <div className="mb-4">
         <label htmlFor="resume-upload" className="sr-only">
