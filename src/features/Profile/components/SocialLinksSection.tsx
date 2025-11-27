@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useUpdateProfile } from "../hooks/useProfileApi";
+import { FaPlus } from "react-icons/fa";
+import Modal from "@/components/ui/Modal";
 
 interface Props {
   linkedin?: string;
@@ -9,104 +11,129 @@ interface Props {
   onUpdate?: () => void;
 }
 
-export default function SocialLinksSection({ linkedin, github, portfolioUrl, onUpdate }: Props) {
+export default function SocialLinksSection({
+  linkedin,
+  github,
+  portfolioUrl,
+  onUpdate,
+}: Props) {
   const [linkedinValue, setLinkedinValue] = useState(linkedin || "");
   const [githubValue, setGithubValue] = useState(github || "");
   const [portfolioValue, setPortfolioValue] = useState(portfolioUrl || "");
+  const [isOpen, setIsOpen] = useState(false);
 
   const updateProfileMutation = useUpdateProfile();
 
+  const toggleModal = () => setIsOpen(!isOpen);
+
   const handleSave = () => {
-    // Stringify the object to match the expected string parameter
     const profileData = JSON.stringify({
       linkedinUrl: linkedinValue,
       githubUrl: githubValue,
       portfolioUrl: portfolioValue,
     });
 
-    updateProfileMutation.mutate(
-      profileData,
-      {
-        onSuccess: () => {
-          alert("Social links updated successfully");
-          onUpdate?.();
-        },
-        onError: (err: unknown) => {
-          let errorMessage = "Failed to update socials";
-          
-          if (err instanceof Error) {
-            errorMessage = err.message;
-          } else if (typeof err === 'object' && err !== null && 'response' in err) {
-            // For Axios-like errors
-            const errorObj = err as { response?: { data?: { message?: string } } };
-            errorMessage = errorObj.response?.data?.message || errorMessage;
-          }
-          
-          alert(errorMessage);
-        },
-      }
-    );
+    updateProfileMutation.mutate(profileData, {
+      onSuccess: () => {
+        setIsOpen(false);
+        onUpdate?.();
+      },
+    });
   };
 
   return (
-  <div className="bg-white  rounded-2xl p-6  space-y-5">
-    <div className="flex justify-between items-center">
-      <h2 className="text-lg font-semibold text-gray-800">
-        Social Links
-      </h2>
-    </div>
+    <div className="space-y-4">
+      {/* Header like Skills */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-gray-800">Social Links</h2>
 
-    <div className="grid grid-cols-1 gap-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-600 mb-1">
-          LinkedIn
-        </label>
-        <input
-          type="url"
-          value={linkedinValue}
-          onChange={(e) => setLinkedinValue(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-          placeholder="https://linkedin.com/in/username"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-600 mb-1">
-          GitHub
-        </label>
-        <input
-          type="url"
-          value={githubValue}
-          onChange={(e) => setGithubValue(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-          placeholder="https://github.com/username"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-600 mb-1">
-          Portfolio
-        </label>
-        <input
-          type="url"
-          value={portfolioValue}
-          onChange={(e) => setPortfolioValue(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-          placeholder="https://myportfolio.com"
-        />
-      </div>
-
-      <div className="pt-2">
-        <button
-          onClick={handleSave}
-          disabled={updateProfileMutation.isPending}
-          className="bg-blue-900 hover:bg-blue-800 text-white px-5 py-2 rounded-lg font-medium transition disabled:opacity-60"
-        >
-          {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+        <button onClick={toggleModal}>
+          <FaPlus />
         </button>
       </div>
-    </div>
-  </div>
-);
 
+      {/* Display Section */}
+      {linkedin || github || portfolioUrl ? (
+        <div className="space-y-2 text-sm">
+          {linkedin && (
+            <a
+              href={linkedin}
+              target="_blank"
+              className="block text-blue-600 hover:underline"
+            >
+              LinkedIn
+            </a>
+          )}
+          {github && (
+            <a
+              href={github}
+              target="_blank"
+              className="block text-blue-600 hover:underline"
+            >
+              GitHub
+            </a>
+          )}
+          {portfolioUrl && (
+            <a
+              href={portfolioUrl}
+              target="_blank"
+              className="block text-blue-600 hover:underline"
+            >
+              Portfolio
+            </a>
+          )}
+        </div>
+      ) : (
+        <div className="text-sm text-gray-500 italic">
+          No social links added yet
+        </div>
+      )}
+
+      {/* Modal */}
+      <Modal isOpen={isOpen} onClose={toggleModal} title="Edit Social Links">
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium text-gray-600">LinkedIn</label>
+            <input
+              type="url"
+              value={linkedinValue}
+              onChange={(e) => setLinkedinValue(e.target.value)}
+              placeholder="https://linkedin.com/in/username"
+              className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/60 transition"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-600">GitHub</label>
+            <input
+              type="url"
+              value={githubValue}
+              onChange={(e) => setGithubValue(e.target.value)}
+              placeholder="https://github.com/username"
+              className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/60 transition"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-600">Portfolio</label>
+            <input
+              type="url"
+              value={portfolioValue}
+              onChange={(e) => setPortfolioValue(e.target.value)}
+              placeholder="https://myportfolio.com"
+              className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/60 transition"
+            />
+          </div>
+
+          <button
+            onClick={handleSave}
+            disabled={updateProfileMutation.isPending}
+            className="bg-blue-800 text-white px-5 py-2 rounded-lg hover:bg-blue-900 transition disabled:opacity-50"
+          >
+            {updateProfileMutation.isPending ? "Saving..." : "Save Links"}
+          </button>
+        </div>
+      </Modal>
+    </div>
+  );
 }
