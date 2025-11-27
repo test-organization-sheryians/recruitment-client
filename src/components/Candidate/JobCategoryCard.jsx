@@ -1,10 +1,16 @@
-import { Bookmark } from "lucide-react";
-import { getAllSkills } from "@/api/skills/getAllSkills";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getAllSkills } from "../../api/skills/getAllSkills";
 
 export default function JobCard({ job }) {
   const [skillNames, setSkillNames] = useState([]);
   const [showAllSkills, setShowAllSkills] = useState(false);
+  const router = useRouter();
+
+  const handleCardClick = () => {
+    if (!job?._id) return;
+    router.push(`/candidate-home/job-details?id=${job._id}`);
+  };
 
   // Convert category safely
   const categoryText = (() => {
@@ -44,13 +50,13 @@ export default function JobCard({ job }) {
   }, [job.skills]);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
-
+    <div
+      onClick={handleCardClick}
+      className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer relative"
+    >
       <div className="flex justify-between items-start gap-4 relative">
-
         {/* LEFT CONTENT */}
         <div className="flex-1">
-
           {/* TAGS */}
           <div className="flex flex-wrap items-center gap-2 mb-2 text-[10px] sm:text-xs font-medium">
             {categoryText && (
@@ -79,9 +85,7 @@ export default function JobCard({ job }) {
           </div>
 
           {/* JOB TITLE */}
-          <h2 className="text-base sm:text-lg font-bold mb-1">
-            {job.title}
-          </h2>
+          <h2 className="text-base sm:text-lg font-bold mb-1">{job.title}</h2>
 
           {/* SALARY + DEPARTMENT */}
           <div className="mb-2">
@@ -96,26 +100,20 @@ export default function JobCard({ job }) {
             )}
           </div>
 
-          {/* DESCRIPTION */}
-          {job.description && (
-            <p className="text-gray-600 text-xs sm:text-sm leading-relaxed line-clamp-2 mb-2">
-              {job.description}
-            </p>
-          )}
-
           {/* SKILLS */}
           {skillNames.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
-
               {/* Show first 4 or full list */}
-              {(showAllSkills ? skillNames : skillNames.slice(0, 4)).map((skill, i) => (
-                <span
-                  key={i}
-                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-[10px] sm:text-xs"
-                >
-                  {skill}
-                </span>
-              ))}
+              {(showAllSkills ? skillNames : skillNames.slice(0, 4)).map(
+                (skill, i) => (
+                  <span
+                    key={i}
+                    className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-[10px] sm:text-xs"
+                  >
+                    {skill}
+                  </span>
+                )
+              )}
 
               {/* "+X more" */}
               {skillNames.length > 4 && !showAllSkills && (
@@ -138,22 +136,14 @@ export default function JobCard({ job }) {
               )}
             </div>
           )}
-
         </div>
 
         {/* RIGHT BUTTONS */}
-{/* RIGHT BUTTONS */}
-<div className="flex flex-col gap-3 items-end shrink-0">
-  <button className="p-2 border border-gray-300 rounded-md hover:bg-gray-100 transition bg-white shadow-sm">
-    <Bookmark size={18} className="text-gray-600" />
-  </button>
-
-  <button className="px-5 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 text-sm font-semibold shadow-sm">
-    Apply
-  </button>
-</div>
-
-
+        <div className="flex flex-col gap-3 items-end shrink-0">
+          <button className="px-5 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 text-sm font-semibold shadow-sm">
+            Apply
+          </button>
+        </div>
       </div>
     </div>
   );

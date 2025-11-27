@@ -7,6 +7,15 @@ export * from "./category/getCategories"
 export * from "./category/addCategory"
 export * from "./category/deleteCategory"
 export * from "./category/updateCategory"
+  
+export * from "./jobs/getjobs";
+export * from "./jobs/createJob";
+export * from "./jobs/updateJob";
+export * from "./jobs/deleteJob";
+export * from "./jobs/jobCategory";
+
+
+ 
 export * from "./skills/createSkill"
 export * from "./skills/deleteSkill"
 export * from "./skills/getAllSkills"
