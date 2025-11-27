@@ -62,7 +62,7 @@ export default function JobDashboardPage() {
       {/* Mobile Sidebar Drawer */}
       {isSidebarOpen && (
         <div className="fixed inset-0 bg-black/40 z-40 md:hidden">
-          <div className="absolute left-0 h-full w-64 bg-white shadow-xl p-4">
+<div className="absolute left-0 top-[80px] h-[calc(100%-60px)] w-64 bg-white shadow-xl p-4 rounded-tr-lg">
             <button
               className="mb-4 text-sm font-medium text-gray-700 underline"
               onClick={() => setIsSidebarOpen(false)}
@@ -94,7 +94,7 @@ export default function JobDashboardPage() {
 
         {/* Job List */}
         <div className="col-span-12 md:col-span-8">
-          <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-5 shadow-sm max-h-[75vh] overflow-y-auto scrollbar-hide">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-5 shadow-sm  overflow-y scrollbar-hide">
             <h1 className="text-lg md:text-xl font-bold mb-4">Recommended Jobs</h1>
 
             {/* Loading State */}
