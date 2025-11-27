@@ -20,3 +20,4 @@ const AuthLayout = ({ children, imageUrl }: AuthLayoutProps) => {
 };
 
 export default AuthLayout;
+

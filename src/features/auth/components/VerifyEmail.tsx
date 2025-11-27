@@ -22,7 +22,7 @@ const VerifyEmail = () => {
   };
 
   return (
-    <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-10 px-[20%] flex flex-col justify-center">
+    <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-10 px-6 md:px-[20%] flex flex-col justify-center">
       <h1 className="text-3xl font-semibold text-center text-gray-800">
         Verify Your Email
       </h1>
@@ -32,7 +32,7 @@ const VerifyEmail = () => {
       </p>
 
       {/* OTP Inputs */}
-      <div className="flex justify-center gap-3 mt-8">
+      <div className="flex justify-center gap-3 mt-12 md:mt-8">
         {[0, 1, 2, 3].map((i) => (
           <input
             key={i}
