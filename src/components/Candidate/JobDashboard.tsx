@@ -1,53 +1,48 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Sidebar from "./Sidebar";
 import JobCard from "./JobCategoryCard";
 import HeroSection from "./HeroSection";
 import { Menu } from "lucide-react";
-import { getJobs } from "@/api"; // adjust this path if needed
 import { useGetJobCategories } from "@/features/admin/categories/hooks/useJobCategoryApi";
-import { getJobsByCategory } from "../../api/jobs/jobCategory";
+import { useGetJobs, useGetJobsByCategory } from "@/features/admin/jobs/hooks/useJobApi";
+
+// Define types
+interface Category {
+  _id: string;
+  name: string;
+}
+
+interface Job {
+  _id: string;
+  title: string;
+  category?: Category | string;
+  requiredExperience?: string;
+  education?: string;
+  salary?: string;
+  department?: string;
+  expiry?: string | Date;
+  skills?: Array<{ _id: string; name: string } | string>;
+  description?: string;
+}
 
 export default function JobDashboardPage() {
-  const [jobs, setJobs] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  const { data: categories, isLoading } = useGetJobCategories();
+  // Fetch categories
+  const { data: categories, isLoading: categoriesLoading } = useGetJobCategories();
 
-  // Fetch jobs whenever selectedCategory changes
-  useEffect(() => {
-    const fetchJobsByCategory = async () => {
-      setLoading(true);
-      try {
-        let result;
+  // Fetch jobs based on selected category
+  const { data: jobsData, isLoading: jobsLoading } = selectedCategory
+    ? useGetJobsByCategory(selectedCategory)
+    : useGetJobs();
 
-        if (selectedCategory) {
-          result = await getJobsByCategory(selectedCategory);
-        } else {
-          result = await getJobs();
-        }
+  const jobs: Job[] = Array.isArray(jobsData) ? jobsData : [];
 
-        // Ensure jobs is always an array
-        const jobsArray = Array.isArray(result?.data)
-          ? result.data
-          : Array.isArray(result)
-          ? result
-          : [];
-
-        setJobs(jobsArray);
-      } catch (err) {
-        console.error("Error fetching jobs:", err);
-        setJobs([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchJobsByCategory();
-  }, [selectedCategory]);
+  console.log("Selected category ID:", selectedCategory);
+  console.log("Jobs returned:", jobs);
 
   return (
     <div className="min-h-screen bg-blue-50">
@@ -74,14 +69,12 @@ export default function JobDashboardPage() {
             >
               Close
             </button>
+
             <Sidebar
               selected={selectedCategory}
-              onSelect={(c) => {
-                setSelectedCategory(c);
-                setIsSidebarOpen(false);
-              }}
+              onSelect={(id: string) => setSelectedCategory(id)}
               categories={categories || []}
-              isLoading={isLoading}
+              isLoading={categoriesLoading}
             />
           </div>
         </div>
@@ -93,33 +86,30 @@ export default function JobDashboardPage() {
         <div className="hidden md:block md:col-span-4">
           <Sidebar
             selected={selectedCategory}
-            onSelect={(c) => setSelectedCategory(c)}
+            onSelect={(id: string) => setSelectedCategory(id)}
             categories={categories || []}
-            isLoading={isLoading}
+            isLoading={categoriesLoading}
           />
         </div>
 
         {/* Job List */}
         <div className="col-span-12 md:col-span-8">
-          <div
-            className="bg-white border border-gray-200 rounded-lg p-4 md:p-5 shadow-sm 
-                       max-h-[75vh] overflow-y-auto scrollbar-hide"
-          >
+          <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-5 shadow-sm max-h-[75vh] overflow-y-auto scrollbar-hide">
             <h1 className="text-lg md:text-xl font-bold mb-4">Recommended Jobs</h1>
 
             {/* Loading State */}
-            {loading && <p className="text-gray-500 text-sm">Loading jobs...</p>}
+            {jobsLoading && <p className="text-gray-500 text-sm">Loading jobs...</p>}
 
             {/* Empty State */}
-            {!loading && jobs.length === 0 && (
-              <p className="text-gray-500 text-sm">
-                No jobs found for this category.
-              </p>
+            {!jobsLoading && jobs.length === 0 && (
+              <p className="text-gray-500 text-sm">No jobs found for this category.</p>
             )}
 
+            {/* Jobs List */}
             <div className="space-y-3 md:space-y-4">
-              {Array.isArray(jobs) &&
-                jobs.map((job) => <JobCard key={job._id} job={job} />)}
+              {jobs.map((job) => (
+                <JobCard key={job._id} job={job} />
+              ))}
             </div>
           </div>
         </div>

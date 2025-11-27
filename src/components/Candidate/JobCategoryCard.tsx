@@ -1,43 +1,67 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getAllSkills } from "../../api/skills/getAllSkills";
 
-export default function JobCard({ job }) {
-  const [skillNames, setSkillNames] = useState([]);
+// Types
+interface Skill {
+  _id: string;
+  name: string;
+}
+
+interface Category {
+  _id: string;
+  name: string;
+}
+
+interface Job {
+  _id: string;
+  title: string;
+  category?: Category | string;
+  requiredExperience?: string;
+  education?: string;
+  expiry?: string | Date;
+  salary?: string;
+  department?: string;
+  skills?: (Skill | string)[];
+}
+
+interface JobCardProps {
+  job: Job;
+}
+
+export default function JobCard({ job }: JobCardProps) {
+  const [skillNames, setSkillNames] = useState<string[]>([]);
   const [showAllSkills, setShowAllSkills] = useState(false);
   const router = useRouter();
 
   const handleCardClick = () => {
-    if (!job?._id) return;
+    if (!job._id) return;
     router.push(`/candidate-home/job-details?id=${job._id}`);
   };
 
   // Convert category safely
   const categoryText = (() => {
-    if (!job?.category) return "";
+    if (!job.category) return "";
     if (typeof job.category === "string") return job.category;
-    if (job.category.name) return job.category.name;
-    return "";
+    return job.category.name || "";
   })();
 
   // Load skills & map IDs → names
   useEffect(() => {
     const loadSkills = async () => {
       try {
-        const allSkills = await getAllSkills();
+        const allSkills: Skill[] = await getAllSkills();
 
-        // Map skill ID to name
-        const map = {};
+        const map: Record<string, string> = {};
         allSkills.forEach((s) => {
           map[s._id] = s.name;
         });
 
-        // Convert job skills to readable names
         const names = (job.skills || []).map((skill) => {
-          if (typeof skill === "object" && skill.name) {
-            return skill.name;
-          }
-          return map[skill] || "Unknown";
+          if (typeof skill === "object" && skill.name) return skill.name;
+          return typeof skill === "string" ? map[skill] || "Unknown" : "Unknown";
         });
 
         setSkillNames(names);
@@ -90,32 +114,23 @@ export default function JobCard({ job }) {
           {/* SALARY + DEPARTMENT */}
           <div className="mb-2">
             {job.salary && (
-              <p className="text-gray-700 text-sm font-semibold">
-                {job.salary}
-              </p>
+              <p className="text-gray-700 text-sm font-semibold">{job.salary}</p>
             )}
-
-            {job.department && (
-              <p className="text-gray-600 text-sm">{job.department}</p>
-            )}
+            {job.department && <p className="text-gray-600 text-sm">{job.department}</p>}
           </div>
 
           {/* SKILLS */}
           {skillNames.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
-              {/* Show first 4 or full list */}
-              {(showAllSkills ? skillNames : skillNames.slice(0, 4)).map(
-                (skill, i) => (
-                  <span
-                    key={i}
-                    className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-[10px] sm:text-xs"
-                  >
-                    {skill}
-                  </span>
-                )
-              )}
+              {(showAllSkills ? skillNames : skillNames.slice(0, 4)).map((skill, i) => (
+                <span
+                  key={i}
+                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-[10px] sm:text-xs"
+                >
+                  {skill}
+                </span>
+              ))}
 
-              {/* "+X more" */}
               {skillNames.length > 4 && !showAllSkills && (
                 <button
                   onClick={() => setShowAllSkills(true)}
@@ -125,7 +140,6 @@ export default function JobCard({ job }) {
                 </button>
               )}
 
-              {/* Show less */}
               {showAllSkills && (
                 <button
                   onClick={() => setShowAllSkills(false)}

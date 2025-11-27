@@ -1,28 +1,42 @@
-export default function Sidebar({
+import React from "react";
+
+
+interface Category {
+  _id: string;
+  name: string;
+}
+
+interface SidebarProps {
+  selected: string | null;
+  onSelect?: (id: string) => void;
+  categories?: Category[];
+  isLoading?: boolean;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({
   selected,
   onSelect,
   categories = [],
   isLoading = false,
-}) {
+}) => {
   return (
     <div className="bg-white p-3 md:p-5 w-full rounded-lg md:rounded-xl shadow-sm border">
       <h2 className="text-lg md:text-xl font-bold text-center">Job Category</h2>
 
       <div className="mt-3 md:mt-5 space-y-2 md:space-y-4">
-
-        {/* ✅ Loading State */}
+        {/* Loading State */}
         {isLoading && (
           <p className="text-center text-gray-500 text-sm">Loading...</p>
         )}
 
-        {/* ✅ Empty State */}
+        {/* Empty State */}
         {!isLoading && categories.length === 0 && (
           <p className="text-center text-gray-500 text-sm">
             No categories available
           </p>
         )}
 
-        {/* ✅ Render Real Categories */}
+        {/* Render Categories */}
         {!isLoading &&
           categories.map((cat) => (
             <button
@@ -42,4 +56,6 @@ export default function Sidebar({
       </div>
     </div>
   );
-}
+};
+
+export default Sidebar;

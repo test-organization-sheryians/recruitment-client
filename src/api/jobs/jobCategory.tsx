@@ -9,7 +9,7 @@ export const getJobCategories = async () => {
 
 
 export const getJobsByCategory = async (categoryId: string) => {
-  const res = await api.get(`api/jobs/category/${categoryId}`);
+const res = await api.get(`/api/jobs/category/${categoryId}`);
   console.log(res.data);
   return res.data.data;
 };
