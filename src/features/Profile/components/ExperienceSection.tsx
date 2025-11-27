@@ -148,7 +148,7 @@ export default function ExperienceSection({ candidateId }: Props) {
       </div>
 
       {/* FORM CARD */}
-    <Modal isOpen={experienceModal} onClose={isModal} >
+    <Modal isOpen={experienceModal} onClose={isModal}  title="Add Experiences" >
         <div className="bg-gray-50 rounded-xl p-5 border space-y-4">
           <h3 className="font-medium text-gray-700">
             {editingId ? "Update Experience" : "Add New Experience"}

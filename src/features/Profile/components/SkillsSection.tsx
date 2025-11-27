@@ -54,7 +54,7 @@ export default function SkillsSection({ skills, refetchProfile }: Props) {
     </div>
       {/* Add Skill Input */}
 
-      <Modal isOpen={isOpen} onClose={isModal} >
+      <Modal isOpen={isOpen} onClose={isModal} title="Add skills" >
         <div className="flex gap-3 items-center">
           <input
             type="text"
