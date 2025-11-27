@@ -2,19 +2,24 @@
 
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Pencil, Trash2 } from "lucide-react"; 
+import { Pencil, Trash2 } from "lucide-react";
 
 import { getAllUsers, deleteUser, updateUserRole } from "@/api";
 
 const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+
+  const [selectedUserForRole, setSelectedUserForRole] = useState<any>(null);
   const [tempRole, setTempRole] = useState<string | null>(null);
-  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+
+  const [selectedUserForDelete, setSelectedUserForDelete] = useState<any>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+
+  const [activeTab, setActiveTab] = useState("All");
 
   const currentUser = useSelector((state: any) => state?.auth?.user);
-
   const roleName =
     typeof currentUser?.role === "string"
       ? currentUser.role
@@ -42,15 +47,13 @@ const UsersPage: React.FC = () => {
     );
   }
 
+  // Filter users by active tab
+  const filteredUsers =
+    activeTab === "All"
+      ? users
+      : users.filter((u) => u.role?.name?.toLowerCase() === activeTab.toLowerCase());
+
   const handleInstantRoleUI = (userId: string, newRole: string) => {
-    const user = users.find((u) => u._id === userId);
-    if (!user) return;
-
-    setSelectedUser({
-      ...user,
-      role: { ...(user.role || {}), name: newRole },
-    });
-
     setUsers((prev) =>
       prev.map((u) =>
         u._id === userId ? { ...u, role: { ...(u.role || {}), name: newRole } } : u
@@ -58,67 +61,119 @@ const UsersPage: React.FC = () => {
     );
   };
 
-  const confirmDelete = async () => {
-    if (!deleteUserId) return;
+  const handleRoleUpdate = async (id: string, newRole: string) => {
     try {
-      await deleteUser(deleteUserId);
-      setUsers((prev) => prev.filter((u) => u._id !== deleteUserId));
+      setUpdatingUserId(id);
+      await updateUserRole(id, newRole);
+      handleInstantRoleUI(id, newRole);
+    } catch (err) {
+      console.error("Failed to update role", err);
+    } finally {
+      setUpdatingUserId(null);
+      setSelectedUserForRole(null);
+      setTempRole(null);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedUserForDelete) return;
+    try {
+      setDeletingUserId(selectedUserForDelete._id);
+      await deleteUser(selectedUserForDelete._id);
+      setUsers((prev) => prev.filter((u) => u._id !== selectedUserForDelete._id));
     } catch (error) {
       console.error("Failed to delete user:", error);
     } finally {
-      setDeleteUserId(null);
+      setDeletingUserId(null);
+      setSelectedUserForDelete(null);
     }
   };
+
+  const roleColor = (role: string) => {
+    switch (role.toLowerCase()) {
+      case "admin":
+        return "bg-red-500";
+      case "client":
+        return "bg-yellow-500";
+      case "candidate":
+        return "bg-green-500";
+      default:
+        return "bg-gray-300";
+    }
+  };
+
+  const tabs = ["All", "Admin", "Client", "Candidate"];
 
   return (
     <div className="p-6">
       <h2 className="text-2xl font-semibold mb-6">All Users</h2>
 
-      <div className="overflow-x-auto rounded-xl shadow">
-        <table className="min-w-full bg-white border border-gray-200">
+      {/* Tabs */}
+      <div className="flex gap-4 mb-4 border-b pb-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            className={`pb-1 font-medium ${
+              activeTab === tab
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-gray-600 hover:text-blue-600"
+            }`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* Table Card */}
+      <div className="overflow-x-auto rounded-xl shadow bg-white">
+        <table className="min-w-full border-collapse">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-6 py-3 border-b text-left">Name</th>
-              <th className="px-6 py-3 border-b text-left">Email</th>
-              <th className="px-6 py-3 border-b text-left">Phone</th>
-              <th className="px-6 py-3 border-b text-left">Role</th>
-              <th className="px-6 py-3 border-b text-left">Action</th>
+              <th className="px-6 py-3 text-left text-gray-700">Name</th>
+              <th className="px-6 py-3 text-left text-gray-700">Email</th>
+              <th className="px-6 py-3 text-left text-gray-700">Phone</th>
+              <th className="px-6 py-3 text-left text-gray-700">Role</th>
+              <th className="px-6 py-3 text-left text-gray-700">Actions</th>
             </tr>
           </thead>
-
           <tbody>
-            {users.map((user) => {
+            {filteredUsers.map((user) => {
               const canModify =
                 roleName === "admin" && currentUser?._id !== user._id;
               return (
-                <tr key={user._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-3 border-b">
-                    {user.firstName} {user.lastName}
-                  </td>
+                <tr
+                  key={user._id}
+                  className="hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <td className="px-6 py-3 border-b">{user.firstName} {user.lastName}</td>
                   <td className="px-6 py-3 border-b">{user.email}</td>
+                  <td className="px-6 py-3 border-b">{user.phoneNumber || "—"}</td>
                   <td className="px-6 py-3 border-b">
-                    {user.phoneNumber || "—"}
+                    <span
+                      className={`inline-flex items-center px-2 py-1 rounded-full text-white text-sm ${roleColor(
+                        user.role?.name || ""
+                      )}`}
+                    >
+                      {user.role?.name || "No Role"}
+                    </span>
                   </td>
-                  <td className="px-6 py-3 border-b capitalize">
-                    {user.role?.name || "No Role"}
-                  </td>
-                  <td className="px-6 py-3 border-b flex gap-3">
+                  <td className="px-6 py-3 border-b flex gap-2">
                     {canModify && (
                       <>
                         <button
-                          onClick={() => setSelectedUser(user)}
+                          onClick={() => setSelectedUserForRole(user)}
                           className="p-2 rounded hover:bg-gray-200"
-                          aria-label={`Edit role for ${user.firstName}`}
+                          disabled={updatingUserId === user._id || deletingUserId === user._id}
                         >
-                          <Pencil className="h-6 w-6 text-blue-600" />
+                          <Pencil className="h-5 w-5 text-blue-600" />
                         </button>
-
                         <button
-                          onClick={() => setDeleteUserId(user._id)}
+                          onClick={() => setSelectedUserForDelete(user)}
                           className="p-2 rounded hover:bg-red-100"
-                          aria-label={`Delete ${user.firstName}`}
+                          disabled={deletingUserId === user._id || updatingUserId === user._id}
                         >
-                          <Trash2 className="h-6 w-6 text-red-600" />
+                          <Trash2 className="h-5 w-5 text-red-600" />
                         </button>
                       </>
                     )}
@@ -130,12 +185,12 @@ const UsersPage: React.FC = () => {
         </table>
       </div>
 
-      {/* ROLE CHANGE MODAL */}
-      {selectedUser && roleName === "admin" && (
+      {/* Role Modal */}
+      {selectedUserForRole && (
         <div
           className="fixed inset-0 bg-black/40 flex justify-center items-center z-50"
           onClick={() => {
-            setSelectedUser(null);
+            setSelectedUserForRole(null);
             setTempRole(null);
           }}
         >
@@ -144,21 +199,19 @@ const UsersPage: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-lg font-semibold mb-3">
-              Change Role for {selectedUser.firstName}
+              Change Role for {selectedUserForRole.firstName}
             </h2>
 
             <div className="space-y-2">
               {["admin", "client", "candidate"].map((role) => {
                 const selected = tempRole
                   ? tempRole === role
-                  : selectedUser.role?.name === role;
+                  : selectedUserForRole.role?.name === role;
+
                 return (
                   <button
                     key={role}
-                    onClick={() => {
-                      setTempRole(role);
-                      handleInstantRoleUI(selectedUser._id, role);
-                    }}
+                    onClick={() => setTempRole(role)}
                     className={`w-full px-4 py-2 border rounded capitalize ${
                       selected ? "bg-blue-500 text-white" : "hover:bg-gray-100"
                     }`}
@@ -170,25 +223,16 @@ const UsersPage: React.FC = () => {
             </div>
 
             <button
-              onClick={async () => {
-                if (tempRole) {
-                  try {
-                    await updateUserRole(selectedUser._id, tempRole);
-                  } catch (error) {
-                    console.error("Failed to update role:", error);
-                  }
-                }
-                setSelectedUser(null);
-                setTempRole(null);
-              }}
-              className="mt-4 w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={() => handleRoleUpdate(selectedUserForRole._id, tempRole!)}
+              disabled={updatingUserId === selectedUserForRole._id}
+              className="mt-4 w-full py-2 bg-blue-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save
+              {updatingUserId === selectedUserForRole._id ? "Saving..." : "Save"}
             </button>
 
             <button
               onClick={() => {
-                setSelectedUser(null);
+                setSelectedUserForRole(null);
                 setTempRole(null);
               }}
               className="mt-2 w-full py-2 bg-gray-200 rounded hover:bg-gray-300"
@@ -199,11 +243,11 @@ const UsersPage: React.FC = () => {
         </div>
       )}
 
-      {/* DELETE CONFIRMATION MODAL */}
-      {deleteUserId && roleName === "admin" && (
+      {/* Delete Modal */}
+      {selectedUserForDelete && (
         <div
           className="fixed inset-0 bg-black/40 flex justify-center items-center z-50"
-          onClick={() => setDeleteUserId(null)}
+          onClick={() => setSelectedUserForDelete(null)}
         >
           <div
             className="bg-white p-6 rounded-xl shadow-lg w-72"
@@ -214,20 +258,20 @@ const UsersPage: React.FC = () => {
             </h2>
 
             <p className="text-gray-600 text-sm text-center">
-              Are you sure you want to delete this user? This action cannot be
-              undone.
+              Are you sure you want to delete this user? This action cannot be undone.
             </p>
 
             <div className="mt-5 flex gap-3">
               <button
                 onClick={confirmDelete}
-                className="flex-1 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                disabled={deletingUserId === selectedUserForDelete._id}
+                className="flex-1 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Delete
+                {deletingUserId === selectedUserForDelete._id ? "Deleting..." : "Delete"}
               </button>
 
               <button
-                onClick={() => setDeleteUserId(null)}
+                onClick={() => setSelectedUserForDelete(null)}
                 className="flex-1 py-2 bg-gray-200 rounded hover:bg-gray-300"
               >
                 Cancel
