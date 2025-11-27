@@ -10,7 +10,6 @@ export const updateUserRole = async (id: string, role: string) => {
   return res.data;
 };
 
-export const deleteUser = async (id: string) => {
-  const res = await axios.delete(`/api/users/${id}`);
-  return res.data;
+export const deleteUser = async (userId: string) => {
+  return axios.delete(`http://localhost:9000/api/users/${userId}`);
 };

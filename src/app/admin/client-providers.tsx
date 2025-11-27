@@ -1,5 +1,4 @@
-// src/app/admin/client-providers.tsx
-"use client"; // this is client component
+"use client"; 
 
 import { ReactNode } from "react";
 import Providers from "../providers";

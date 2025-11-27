@@ -2,6 +2,9 @@ import { ReactNode } from "react";
 import ReduxProvider from "./redux-provider";
 import Providers from "./providers";
 
+import './globals.css';
+
+
 interface RootLayoutProps {
   children: ReactNode;
 }

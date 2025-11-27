@@ -1,21 +1,25 @@
 "use client";
 
-import { getAllUsers, deleteUser, updateUserRole } from "@/api";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { Pencil, Trash2 } from "lucide-react"; 
 
-export default function UsersPage() {
+import { getAllUsers, deleteUser, updateUserRole } from "@/api";
+
+const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [tempRole, setTempRole] = useState<string | null>(null);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
 
-  // Use untyped selector for now to avoid RootState errors
   const currentUser = useSelector((state: any) => state?.auth?.user);
 
-  // Fetch users on mount
+  const roleName =
+    typeof currentUser?.role === "string"
+      ? currentUser.role
+      : currentUser?.role?.name;
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -27,7 +31,6 @@ export default function UsersPage() {
         setIsLoading(false);
       }
     };
-
     fetchUsers();
   }, []);
 
@@ -39,11 +42,14 @@ export default function UsersPage() {
     );
   }
 
-  // Update role instantly in UI
   const handleInstantRoleUI = (userId: string, newRole: string) => {
-    setSelectedUser((prev: any) =>
-      prev ? { ...prev, role: { ...prev.role, name: newRole } } : prev
-    );
+    const user = users.find((u) => u._id === userId);
+    if (!user) return;
+
+    setSelectedUser({
+      ...user,
+      role: { ...(user.role || {}), name: newRole },
+    });
 
     setUsers((prev) =>
       prev.map((u) =>
@@ -52,7 +58,6 @@ export default function UsersPage() {
     );
   };
 
-  // Safe delete handler used by modal button
   const confirmDelete = async () => {
     if (!deleteUserId) return;
     try {
@@ -82,18 +87,18 @@ export default function UsersPage() {
           </thead>
 
           <tbody>
-            {users.map((user: any) => {
-              // Admin can modify other users, but not themselves
+            {users.map((user) => {
               const canModify =
-                currentUser?.role === "admin" && currentUser?._id !== user._id;
-
+                roleName === "admin" && currentUser?._id !== user._id;
               return (
                 <tr key={user._id} className="hover:bg-gray-50">
                   <td className="px-6 py-3 border-b">
                     {user.firstName} {user.lastName}
                   </td>
                   <td className="px-6 py-3 border-b">{user.email}</td>
-                  <td className="px-6 py-3 border-b">{user.phoneNumber || "—"}</td>
+                  <td className="px-6 py-3 border-b">
+                    {user.phoneNumber || "—"}
+                  </td>
                   <td className="px-6 py-3 border-b capitalize">
                     {user.role?.name || "No Role"}
                   </td>
@@ -105,7 +110,7 @@ export default function UsersPage() {
                           className="p-2 rounded hover:bg-gray-200"
                           aria-label={`Edit role for ${user.firstName}`}
                         >
-                          <PencilSquareIcon className="h-6 w-6 text-blue-600" />
+                          <Pencil className="h-6 w-6 text-blue-600" />
                         </button>
 
                         <button
@@ -113,7 +118,7 @@ export default function UsersPage() {
                           className="p-2 rounded hover:bg-red-100"
                           aria-label={`Delete ${user.firstName}`}
                         >
-                          <TrashIcon className="h-6 w-6 text-red-600" />
+                          <Trash2 className="h-6 w-6 text-red-600" />
                         </button>
                       </>
                     )}
@@ -126,7 +131,7 @@ export default function UsersPage() {
       </div>
 
       {/* ROLE CHANGE MODAL */}
-      {selectedUser && currentUser?.role === "admin" && (
+      {selectedUser && roleName === "admin" && (
         <div
           className="fixed inset-0 bg-black/40 flex justify-center items-center z-50"
           onClick={() => {
@@ -143,10 +148,10 @@ export default function UsersPage() {
             </h2>
 
             <div className="space-y-2">
-              {["admin", "recruiter", "candidate"].map((role) => {
-                const selected =
-                  tempRole ? tempRole === role : selectedUser.role?.name === role;
-
+              {["admin", "client", "candidate"].map((role) => {
+                const selected = tempRole
+                  ? tempRole === role
+                  : selectedUser.role?.name === role;
                 return (
                   <button
                     key={role}
@@ -195,7 +200,7 @@ export default function UsersPage() {
       )}
 
       {/* DELETE CONFIRMATION MODAL */}
-      {deleteUserId && currentUser?.role === "admin" && (
+      {deleteUserId && roleName === "admin" && (
         <div
           className="fixed inset-0 bg-black/40 flex justify-center items-center z-50"
           onClick={() => setDeleteUserId(null)}
@@ -209,7 +214,8 @@ export default function UsersPage() {
             </h2>
 
             <p className="text-gray-600 text-sm text-center">
-              Are you sure you want to delete this user? This action cannot be undone.
+              Are you sure you want to delete this user? This action cannot be
+              undone.
             </p>
 
             <div className="mt-5 flex gap-3">
@@ -232,4 +238,6 @@ export default function UsersPage() {
       )}
     </div>
   );
-}
+};
+
+export default UsersPage;
