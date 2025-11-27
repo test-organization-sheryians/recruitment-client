@@ -1,18 +1,21 @@
 import { useEffect, useRef, useCallback } from "react";
 
-export default function useClientInfiniteScroll({
-  onLoadMore,
-  enabled = true,
-}: {
+interface InfiniteScrollProps {
   onLoadMore: () => void;
   enabled?: boolean;
-}) {
+  rootMargin?: string;
+}
+
+export default function useInfiniteScroll({
+  onLoadMore,
+  enabled = true,
+  rootMargin = "150px",
+}: InfiniteScrollProps) {
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const target = entries[0];
-
       if (target.isIntersecting && enabled) {
         onLoadMore();
       }
@@ -23,6 +26,7 @@ export default function useClientInfiniteScroll({
   useEffect(() => {
     const observer = new IntersectionObserver(handleObserver, {
       root: null,
+      rootMargin,
       threshold: 0,
     });
 
@@ -31,7 +35,7 @@ export default function useClientInfiniteScroll({
     return () => {
       if (loaderRef.current) observer.unobserve(loaderRef.current);
     };
-  }, [handleObserver]);
+  }, [handleObserver, rootMargin]);
 
   return loaderRef;
 }
