@@ -49,7 +49,7 @@ export default function JobDashboardPage() {
       <HeroSection />
 
       {/* Mobile Header */}
-      <div className="md:hidden flex items-center gap-3 px-4 py-3 sticky top-0 bg-blue-50 z-30">
+<div className="md:hidden flex items-center gap-3 px-4 py-3 sticky top-0 bg-blue-50 z-30 h-[56px]">
         <button
           onClick={() => setIsSidebarOpen(true)}
           className="p-2 rounded bg-white shadow border"
@@ -60,25 +60,29 @@ export default function JobDashboardPage() {
       </div>
 
       {/* Mobile Sidebar Drawer */}
-      {isSidebarOpen && (
-        <div className="fixed inset-0 bg-black/40 z-40 md:hidden">
-<div className="absolute left-0 top-[80px] h-[calc(100%-60px)] w-64 bg-white shadow-xl p-4 rounded-tr-lg">
-            <button
-              className="mb-4 text-sm font-medium text-gray-700 underline"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              Close
-            </button>
+    {isSidebarOpen && (
+  <div className="fixed inset-0 bg-black/40 z-40 md:hidden">
+<div className="absolute left-0 top-[200px] w-64 h-[calc(100%-160px)] bg-white shadow-xl p-4 rounded-tr-lg overflow-y-auto">
+      <button
+        className="mb-4 text-sm font-medium text-gray-700 underline"
+        onClick={() => setIsSidebarOpen(false)}
+      >
+        Close
+      </button>
 
-            <Sidebar
-              selected={selectedCategory}
-              onSelect={(id: string) => setSelectedCategory(id)}
-              categories={categories || []}
-              isLoading={categoriesLoading}
-            />
-          </div>
-        </div>
-      )}
+      <Sidebar
+        selected={selectedCategory}
+        onSelect={(id: string) => {
+          setSelectedCategory(id);
+          setIsSidebarOpen(false);
+        }}
+        categories={categories || []}
+        isLoading={categoriesLoading}
+      />
+    </div>
+  </div>
+)}
+
 
       {/* Main Layout */}
       <div className="max-w-7xl mx-auto px-3 mt-[-20px] pb-10 grid grid-cols-12 gap-6">
