@@ -1,43 +1,48 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Pencil, Trash2 } from "lucide-react";
+import { useUsers } from "@/features/admin/users/hooks/useUser";
 
-import { getAllUsers, deleteUser, updateUserRole } from "@/api";
+import UsersTable from "@/features/admin/users/components/UsersTable";
+import RoleModal from "@/features/admin/users/components/RoleModal";
+import DeleteModal from "@/features/admin/users/components/DeleteModal";
 
-const UsersPage: React.FC = () => {
-  const [users, setUsers] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const [selectedUserForRole, setSelectedUserForRole] = useState<any>(null);
-  const [tempRole, setTempRole] = useState<string | null>(null);
-  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
-
-  const [selectedUserForDelete, setSelectedUserForDelete] = useState<any>(null);
-  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
-
-  const [activeTab, setActiveTab] = useState("All");
-
-  const currentUser = useSelector((state: any) => state?.auth?.user);
-  const roleName =
-    typeof currentUser?.role === "string"
-      ? currentUser.role
-      : currentUser?.role?.name;
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await getAllUsers();
-        setUsers(res?.data || res || []);
-      } catch (error) {
-        console.error("Failed to fetch users:", error);
-      } finally {
-        setIsLoading(false);
-      }
+// Define a proper type for Redux state that matches your User type
+interface RootState {
+  auth: {
+    user: {
+      id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      role: string;
     };
-    fetchUsers();
-  }, []);
+  };
+}
+
+export default function UsersPage() {
+  const currentUser = useSelector((state: RootState) => state?.auth?.user);
+
+  const {
+    users,
+    isLoading,
+    activeTab,
+    selectedUserForRole,
+    tempRole,
+    updatingUserId,
+    selectedUserForDelete,
+    deletingUserId,
+
+    setActiveTab,
+    setTempRole,
+    setSelectedUserForRole,
+    setSelectedUserForDelete,
+
+    handleRoleUpdate,
+    confirmDelete,
+  } = useUsers();
+
+  const tabs = ["All", "Admin", "Client", "Candidate"];
 
   if (isLoading) {
     return (
@@ -46,63 +51,6 @@ const UsersPage: React.FC = () => {
       </div>
     );
   }
-
-  // Filter users by active tab
-  const filteredUsers =
-    activeTab === "All"
-      ? users
-      : users.filter((u) => u.role?.name?.toLowerCase() === activeTab.toLowerCase());
-
-  const handleInstantRoleUI = (userId: string, newRole: string) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u._id === userId ? { ...u, role: { ...(u.role || {}), name: newRole } } : u
-      )
-    );
-  };
-
-  const handleRoleUpdate = async (id: string, newRole: string) => {
-    try {
-      setUpdatingUserId(id);
-      await updateUserRole(id, newRole);
-      handleInstantRoleUI(id, newRole);
-    } catch (err) {
-      console.error("Failed to update role", err);
-    } finally {
-      setUpdatingUserId(null);
-      setSelectedUserForRole(null);
-      setTempRole(null);
-    }
-  };
-
-  const confirmDelete = async () => {
-    if (!selectedUserForDelete) return;
-    try {
-      setDeletingUserId(selectedUserForDelete._id);
-      await deleteUser(selectedUserForDelete._id);
-      setUsers((prev) => prev.filter((u) => u._id !== selectedUserForDelete._id));
-    } catch (error) {
-      console.error("Failed to delete user:", error);
-    } finally {
-      setDeletingUserId(null);
-      setSelectedUserForDelete(null);
-    }
-  };
-
-  const roleColor = (role: string) => {
-    switch (role.toLowerCase()) {
-      case "admin":
-        return "bg-red-500";
-      case "client":
-        return "bg-yellow-500";
-      case "candidate":
-        return "bg-green-500";
-      default:
-        return "bg-gray-300";
-    }
-  };
-
-  const tabs = ["All", "Admin", "Client", "Candidate"];
 
   return (
     <div className="p-6">
@@ -113,175 +61,45 @@ const UsersPage: React.FC = () => {
         {tabs.map((tab) => (
           <button
             key={tab}
+            onClick={() => setActiveTab(tab)}
             className={`pb-1 font-medium ${
               activeTab === tab
                 ? "border-b-2 border-blue-600 text-blue-600"
                 : "text-gray-600 hover:text-blue-600"
             }`}
-            onClick={() => setActiveTab(tab)}
           >
             {tab}
           </button>
         ))}
       </div>
 
-      {/* Table Card */}
-      <div className="overflow-x-auto rounded-xl shadow bg-white">
-        <table className="min-w-full border-collapse">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-6 py-3 text-left text-gray-700">Name</th>
-              <th className="px-6 py-3 text-left text-gray-700">Email</th>
-              <th className="px-6 py-3 text-left text-gray-700">Phone</th>
-              <th className="px-6 py-3 text-left text-gray-700">Role</th>
-              <th className="px-6 py-3 text-left text-gray-700">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.map((user) => {
-              const canModify =
-                roleName === "admin" && currentUser?._id !== user._id;
-              return (
-                <tr
-                  key={user._id}
-                  className="hover:bg-gray-50 transition-colors duration-150"
-                >
-                  <td className="px-6 py-3 border-b">{user.firstName} {user.lastName}</td>
-                  <td className="px-6 py-3 border-b">{user.email}</td>
-                  <td className="px-6 py-3 border-b">{user.phoneNumber || "—"}</td>
-                  <td className="px-6 py-3 border-b">
-                    <span
-                      className={`inline-flex items-center px-2 py-1 rounded-full text-white text-sm ${roleColor(
-                        user.role?.name || ""
-                      )}`}
-                    >
-                      {user.role?.name || "No Role"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 border-b flex gap-2">
-                    {canModify && (
-                      <>
-                        <button
-                          onClick={() => setSelectedUserForRole(user)}
-                          className="p-2 rounded hover:bg-gray-200"
-                          disabled={updatingUserId === user._id || deletingUserId === user._id}
-                        >
-                          <Pencil className="h-5 w-5 text-blue-600" />
-                        </button>
-                        <button
-                          onClick={() => setSelectedUserForDelete(user)}
-                          className="p-2 rounded hover:bg-red-100"
-                          disabled={deletingUserId === user._id || updatingUserId === user._id}
-                        >
-                          <Trash2 className="h-5 w-5 text-red-600" />
-                        </button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      {/* Table */}
+      <UsersTable
+        users={users}
+        activeTab={activeTab}
+        currentUser={currentUser}
+        setSelectedUserForRole={setSelectedUserForRole}
+        setSelectedUserForDelete={setSelectedUserForDelete}
+        updatingUserId={updatingUserId}
+        deletingUserId={deletingUserId}
+      />
 
-      {/* Role Modal */}
-      {selectedUserForRole && (
-        <div
-          className="fixed inset-0 bg-black/40 flex justify-center items-center z-50"
-          onClick={() => {
-            setSelectedUserForRole(null);
-            setTempRole(null);
-          }}
-        >
-          <div
-            className="bg-white p-6 rounded-xl shadow-lg w-64"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-lg font-semibold mb-3">
-              Change Role for {selectedUserForRole.firstName}
-            </h2>
+      {/* Modals */}
+      <RoleModal
+        selectedUserForRole={selectedUserForRole}
+        tempRole={tempRole}
+        setTempRole={setTempRole}
+        updatingUserId={updatingUserId}
+        handleRoleUpdate={handleRoleUpdate}
+        setSelectedUserForRole={setSelectedUserForRole}
+      />
 
-            <div className="space-y-2">
-              {["admin", "client", "candidate"].map((role) => {
-                const selected = tempRole
-                  ? tempRole === role
-                  : selectedUserForRole.role?.name === role;
-
-                return (
-                  <button
-                    key={role}
-                    onClick={() => setTempRole(role)}
-                    className={`w-full px-4 py-2 border rounded capitalize ${
-                      selected ? "bg-blue-500 text-white" : "hover:bg-gray-100"
-                    }`}
-                  >
-                    {role}
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              onClick={() => handleRoleUpdate(selectedUserForRole._id, tempRole!)}
-              disabled={updatingUserId === selectedUserForRole._id}
-              className="mt-4 w-full py-2 bg-blue-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {updatingUserId === selectedUserForRole._id ? "Saving..." : "Save"}
-            </button>
-
-            <button
-              onClick={() => {
-                setSelectedUserForRole(null);
-                setTempRole(null);
-              }}
-              className="mt-2 w-full py-2 bg-gray-200 rounded hover:bg-gray-300"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Modal */}
-      {selectedUserForDelete && (
-        <div
-          className="fixed inset-0 bg-black/40 flex justify-center items-center z-50"
-          onClick={() => setSelectedUserForDelete(null)}
-        >
-          <div
-            className="bg-white p-6 rounded-xl shadow-lg w-72"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-lg font-semibold mb-3 text-center">
-              Delete User?
-            </h2>
-
-            <p className="text-gray-600 text-sm text-center">
-              Are you sure you want to delete this user? This action cannot be undone.
-            </p>
-
-            <div className="mt-5 flex gap-3">
-              <button
-                onClick={confirmDelete}
-                disabled={deletingUserId === selectedUserForDelete._id}
-                className="flex-1 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {deletingUserId === selectedUserForDelete._id ? "Deleting..." : "Delete"}
-              </button>
-
-              <button
-                onClick={() => setSelectedUserForDelete(null)}
-                className="flex-1 py-2 bg-gray-200 rounded hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteModal
+        selectedUserForDelete={selectedUserForDelete}
+        deletingUserId={deletingUserId}
+        confirmDelete={confirmDelete}
+        setSelectedUserForDelete={setSelectedUserForDelete}
+      />
     </div>
   );
-};
-
-export default UsersPage;
+}
