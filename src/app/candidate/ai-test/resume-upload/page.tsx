@@ -3,7 +3,7 @@ import { useState } from "react";
 import { FileUp } from "lucide-react";
 import dynamic from 'next/dynamic';
 
-// Dynamically import the ResumeChat component with SSR disabled
+
 const ResumeChat = dynamic(
   () => import('../components/ResumeChat'),
   { ssr: false }

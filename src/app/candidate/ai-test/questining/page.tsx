@@ -1,32 +1,18 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from "react";
-import { useEvaluateAnswers } from "../features/hooks/aiTestApi";
 import { useRouter } from "next/navigation";
-import Editor from "@monaco-editor/react"; // ⭐ Added Monaco
+import { useEvaluateAnswers } from "../../../../features/AITest/hooks/aiTestApi";
 
-// Progress Indicator
-const ProgressDots: React.FC<{ total: number; current: number }> = ({
-  total,
-  current,
-}) => (
-  <div className="flex justify-center space-x-2 my-4">
-    {Array.from({ length: total }).map((_, index) => (
-      <div
-        key={index}
-        className={`w-3 h-3 rounded-full transition-colors ${
-          index <= current ? "bg-teal-500" : "bg-gray-300"
-        }`}
-      />
-    ))}
-  </div>
-);
+import { ProgressDots } from "../components/quepProgress";
+import { QuestionArea } from "../components/questionArea";
 
-// Question Model
 interface Question {
   id: string;
   question: string;
 }
+
+type AnswerContent = string | { text: string; code: string };
 
 export default function InterviewPage() {
   const router = useRouter();
@@ -35,20 +21,15 @@ export default function InterviewPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
 
-  // All answers combined
-  const [allAnswers, setAllAnswers] = useState<
-    (string | { text: string; code: string })[]
-  >([]);
+  const [allAnswers, setAllAnswers] = useState<AnswerContent[]>([]);
 
-  // Current input fields
   const [answerText, setAnswerText] = useState("");
   const [answerCode, setAnswerCode] = useState("");
 
-  // Load questions from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("interviewQuestions");
     if (!stored) {
-      alert("No interview questions found. Please upload your resume first.");
+      console.warn("No interview questions found. Redirecting to upload.");
       router.push("/candidate/resume-upload");
       return;
     }
@@ -63,13 +44,12 @@ export default function InterviewPage() {
     }
   }, [router]);
 
-  // Set inputs when step changes
   useEffect(() => {
     if (questions.length === 0) return;
 
     const storedAnswer = allAnswers[currentStep];
 
-    if (typeof storedAnswer === "object" && storedAnswer !== null) {
+    if (typeof storedAnswer === "object" && storedAnswer !== null && "text" in storedAnswer && "code" in storedAnswer) {
       setAnswerText(storedAnswer.text);
       setAnswerCode(storedAnswer.code);
     } else {
@@ -78,9 +58,31 @@ export default function InterviewPage() {
     }
   }, [currentStep, questions, allAnswers]);
 
-  // Save and go to next question / submit
+  const submitTest = async (finalAnswers: AnswerContent[]) => {
+    try {
+      const answersForBackend = finalAnswers.map((ans) => {
+        if (typeof ans === "object" && ans !== null && "text" in ans && "code" in ans) {
+          return `${ans.text}\n\n[CODE START]\n${ans.code}\n[CODE END]`;
+        }
+        return String(ans);
+      });
+
+      const payload = {
+        questions: questions.map((q) => q.question),
+        answers: answersForBackend,
+      };
+
+      const result = await evaluateAnswers.mutateAsync(payload);
+      localStorage.setItem("interviewResult", JSON.stringify(result));
+      router.push("/candidate/ai-test/result");
+
+    } catch (error) { 
+      console.error("Submission Error:", error);
+    }
+  };
+
   const handleNextQuestion = () => {
-    const currentAnswer =
+    const currentAnswer: AnswerContent =
       answerText.trim() || answerCode.trim()
         ? { text: answerText, code: answerCode }
         : "";
@@ -96,26 +98,9 @@ export default function InterviewPage() {
     }
   };
 
-  // Submit to backend
-  const submitTest = async (finalAnswers: typeof allAnswers) => {
-    try {
-      const answersForBackend = finalAnswers.map((ans) => {
-        if (typeof ans === "object" && ans !== null) {
-          return `${ans.text}\n\n[CODE START]\n${ans.code}\n[CODE END]`;
-        }
-        return String(ans);
-      });
-
-      const payload = {
-        questions: questions.map((q) => q.question),
-        answers: answersForBackend,
-      };
-
-      const result = await evaluateAnswers.mutateAsync(payload);
-      localStorage.setItem("interviewResult", JSON.stringify(result));
-      router.push("/candidate/ai-test/result");
-    } catch (err: any) {
-      alert(`Submission Error: ${err.message}`);
+  const handlePreviousQuestion = () => {
+    if (currentStep > 0) {
+      setCurrentStep((prev) => prev - 1);
     }
   };
 
@@ -136,51 +121,27 @@ export default function InterviewPage() {
 
       <ProgressDots total={questions.length} current={currentStep} />
 
-      {/* Question */}
-      <div className="bg-white p-6 rounded-t-xl border border-gray-200 mb-0 shadow-sm">
-        <p className="text-xl font-medium text-gray-700">
-          {currentQuestion.question}
-        </p>
-      </div>
+      <QuestionArea
+        questionText={currentQuestion.question}
+        isPending={evaluateAnswers.isPending}
+        answerText={answerText}
+        setAnswerText={setAnswerText}
+        answerCode={answerCode}
+        setAnswerCode={setAnswerCode}
+      />
 
-      {/* Answer Input */}
-      <div className="mb-8">
-        {/* Text Answer */}
-        <textarea
-          value={answerText}
-          onChange={(e) => setAnswerText(e.target.value)}
-          rows={4}
-          placeholder="Type your explanation or general answer here..."
-          disabled={evaluateAnswers.isPending}
-          className="w-full p-3 border-x border-t-0 border-b-0 border-gray-300 focus:outline-none resize-none"
-        />
-
-        {/* Monaco Code Editor */}
-        <div className="border border-gray-900 rounded-b-lg mt-0">
-          <Editor
-            height="220px"
-            defaultLanguage="javascript"
-            value={answerCode}
-            theme="vs-dark"
-            onChange={(value) => setAnswerCode(value || "")}
-            options={{
-              fontSize: 14,
-              minimap: { enabled: false },
-              autoClosingBrackets: "always",
-              automaticLayout: true,
-              scrollBeyondLastLine: false,
-              suggestOnTriggerCharacters: true,
-              tabSize: 2,
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Buttons */}
       <div className="flex justify-between items-center mt-6">
-        <p className="text-sm text-gray-500">
-          AI evaluates logic, efficiency, and security practices.
-        </p>
+        <button
+          onClick={handlePreviousQuestion}
+          disabled={currentStep === 0}
+          className={`px-6 py-3 text-lg font-semibold rounded-lg transition ${
+            currentStep === 0
+              ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+              : "bg-gray-500 text-white hover:bg-gray-600"
+          }`}
+        >
+          Back
+        </button>
 
         <button
           onClick={handleNextQuestion}

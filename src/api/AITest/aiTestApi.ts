@@ -1,10 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 
-//
-// 1️⃣ RAW API FUNCTIONS
-//
 
-// Parse PDF API
 export const parseResumeAPI = async (file: File) => {
   const res = await fetch("/api/parse-resume", {
     method: "POST",
@@ -14,10 +10,10 @@ export const parseResumeAPI = async (file: File) => {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "PDF parsing failed");
 
-  return data.text; // return extracted text
+  return data.text; 
 };
 
-// Generate Questions API
+// generate que
 export const generateQuestionsAPI = async (resumeText: string) => {
   const res = await fetch("http://localhost:9000/api/ai/questionset", {
     method: "POST",
@@ -34,7 +30,7 @@ export const generateQuestionsAPI = async (resumeText: string) => {
   return data.questions; // returns array of objects
 };
 
-// Evaluate Answers API
+// evalute ans
 export const evaluateAnswersAPI = async ({
   questions,
   answers,
@@ -57,23 +53,21 @@ export const evaluateAnswersAPI = async ({
   return data;
 };
 
-//
-// 2️⃣ TANSTACK QUERY HOOKS
-//
 
-// 🔵 Parse Resume Hook
+
+ //Parse Resume
 export const useParseResume = () =>
   useMutation({
     mutationFn: parseResumeAPI,
   });
 
-// 🟢 Generate Questions Hook
+// generate question
 export const useGenerateQuestions = () =>
   useMutation({
     mutationFn: generateQuestionsAPI,
   });
 
-// 🔴 Evaluate Answers Hook
+// evaluate answers
 export const useEvaluateAnswers = () =>
   useMutation({
     mutationFn: evaluateAnswersAPI,

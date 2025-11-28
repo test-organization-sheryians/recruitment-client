@@ -13,7 +13,7 @@ export default function UpdateJob({ jobId, onJobUpdated }: { jobId: string; onJo
 
   useEffect(() => {
     fetchJob();
-  }, []);
+  },);
 
   const fetchJob = async () => {
     const res = await getJobs(jobId);

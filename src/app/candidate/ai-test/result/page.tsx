@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 
+// Import Components
+import { ScoreCircle } from "../components/score" // Adjust path as necessary
+import { DetailedFeedbackCard } from "../components/feeedback"; // Adjust path as necessary
+
 // --- Data Structures ---
 interface QuestionEvaluation {
     score: number;
@@ -11,54 +15,8 @@ interface QuestionEvaluation {
 interface InterviewResult {
     success: boolean;
     evaluations: QuestionEvaluation[];
-    total: number;
+    total: number; // Total possible score/total number of questions evaluated
 }
-
-// --- Score Circle ---
-const ScoreCircle: React.FC<{ score: number; total: number }> = ({ score, total }) => {
-    const percentage = total ? Math.round((score / total) * 100) : 0;
-    const color =
-        percentage >= 80
-            ? "border-teal-500"
-            : percentage >= 50
-            ? "border-amber-500"
-            : "border-red-500";
-
-    return (
-        <div
-            className={`w-32 h-32 flex flex-col items-center justify-center rounded-full border-4 ${color} text-gray-800`}
-        >
-            <span className="text-3xl font-extrabold">{score}/{total}</span>
-            <span className="text-sm text-gray-500">{percentage}%</span>
-        </div>
-    );
-};
-
-// --- Collapsible Feedback Card ---
-const DetailedFeedbackCard: React.FC<{ evaluation: QuestionEvaluation; index: number }> = ({ evaluation, index }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const scoreColor = evaluation.score ? "text-green-600" : "text-red-600";
-
-    return (
-        <div className="border border-gray-200 rounded-lg bg-white shadow-sm transition-shadow hover:shadow-md">
-            <button
-                className="flex justify-between items-center w-full p-4 text-left font-semibold text-gray-800"
-                onClick={() => setIsOpen(!isOpen)}
-            >
-                <span>Question {index + 1}</span>
-                <span className={`text-lg font-bold ${scoreColor}`}>{evaluation.score}</span>
-                <span className="text-xl text-gray-500">{isOpen ? "▲" : "▼"}</span>
-            </button>
-
-            {isOpen && (
-                <div className="p-4 border-t border-gray-100 bg-gray-50">
-                    <h4 className="font-bold text-sm mb-1 text-red-500">AI Feedback:</h4>
-                    <p className="text-gray-700">{evaluation.feedback}</p>
-                </div>
-            )}
-        </div>
-    );
-};
 
 export default function ResultPage() {
     const [result, setResult] = useState<InterviewResult | null>(null);
@@ -78,8 +36,10 @@ export default function ResultPage() {
     if (!result)
         return <p className="p-8 text-center">Loading interview results...</p>;
 
+    // Calculate total score and total evaluation points
     const totalScore = result.evaluations.reduce((sum, q) => sum + q.score, 0);
-    const totalQuestions = result.total || result.evaluations.length;
+
+    const totalQuestions = result.total || result.evaluations.length; 
 
     return (
         <div className="max-w-3xl mx-auto my-10 p-8 bg-white rounded-xl shadow-2xl">
@@ -90,6 +50,7 @@ export default function ResultPage() {
 
             {/* Score Summary */}
             <div className="flex justify-center mb-8">
+                {/* ScoreCircle takes the calculated total score and the total number of items (totalQuestions) */}
                 <ScoreCircle score={totalScore} total={totalQuestions} />
             </div>
 
@@ -104,11 +65,7 @@ export default function ResultPage() {
                 ))}
             </div>
 
-            <div className="text-center mt-8">
-                <button className="py-3 px-8 bg-teal-600 text-white font-semibold rounded-lg shadow-md hover:bg-teal-700 transition">
-                    Download Full Report
-                </button>
-            </div>
+           
         </div>
     );
 }
