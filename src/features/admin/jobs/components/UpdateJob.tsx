@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { updateJob, getJobs } from "@/api/jobs";
+import { updateJob, getJobs } from "@/api/index";
 import JobForm from "../../categories/components/JobForm";
 import { useRouter } from "next/navigation";
 import { Job } from "@/types/Job";

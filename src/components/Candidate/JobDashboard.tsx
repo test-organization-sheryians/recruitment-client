@@ -35,11 +35,13 @@ export default function JobDashboardPage() {
   const { data: categories, isLoading: categoriesLoading } = useGetJobCategories();
 
   // Fetch jobs based on selected category
-  const { data: jobsData, isLoading: jobsLoading } = selectedCategory
-    ? useGetJobsByCategory(selectedCategory)
-    : useGetJobs();
+const jobsByCategory = useGetJobsByCategory(selectedCategory || "");
+const allJobs = useGetJobs();
 
-  const jobs: Job[] = Array.isArray(jobsData) ? jobsData : [];
+const jobsData = selectedCategory ? jobsByCategory.data : allJobs.data;
+const jobsLoading = selectedCategory ? jobsByCategory.isLoading : allJobs.isLoading;
+
+const jobs: Job[] = Array.isArray(jobsData) ? jobsData : [];
 
   console.log("Selected category ID:", selectedCategory);
   console.log("Jobs returned:", jobs);

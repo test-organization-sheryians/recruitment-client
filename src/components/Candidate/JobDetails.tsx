@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getJobs } from "@/api/jobs/getjobs";
 import { Bookmark, ArrowLeft } from "lucide-react";
 
+
 // Define TypeScript types
 interface Category {
   _id: string;
