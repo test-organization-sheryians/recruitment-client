@@ -10,12 +10,14 @@ interface SidebarProps {
   active?: string;
 }
 
+// Added "Users" here
 const navItems = [
   { name: "Dashboard", href: "/admin" },
   { name: "Jobs", href: "/admin/jobs" },
   { name: "Clients", href: "/admin/clients" },
   { name: "Skill", href: "/admin/skills" },
-  {name: "Categories", href:"/admin/categories"}, 
+  { name: "Categories", href: "/admin/categories" },
+  { name: "Users", href: "/admin/users" }, // ✅ New Users item
 ];
 
 const Sidebar: React.FC<SidebarProps> = () => {
