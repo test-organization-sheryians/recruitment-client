@@ -282,22 +282,24 @@ export default function JobForm({
                   </label>
 
                   <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
-                    {skillsResponse.map((skill: { _id: string; name: string }) => (
-                      <label
-                        key={skill._id}
-                        className="group flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-white transition-all border-2 border-transparent hover:border-blue-200"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.skills.includes(skill._id)}
-                          onChange={() => handleSkillToggle(skill._id)}
-                          className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                        />
-                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                          {skill.name}
-                        </span>
-                      </label>
-                    ))}
+                    {skillsResponse.map(
+                      (skill: { _id: string; name: string }) => (
+                        <label
+                          key={skill._id}
+                          className="group flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-white transition-all border-2 border-transparent hover:border-blue-200"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.skills.includes(skill._id)}
+                            onChange={() => handleSkillToggle(skill._id)}
+                            className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                          />
+                          <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
+                            {skill.name}
+                          </span>
+                        </label>
+                      )
+                    )}
                   </div>
 
                   {formData.skills.length > 0 && (
