@@ -42,11 +42,11 @@ export default function JobCard({ job }: JobCardProps) {
   };
 
   // Convert category safely
-  const categoryText = (() => {
-    if (!job.category) return "";
-    if (typeof job.category === "string") return job.category;
-    return job.category.name || "";
-  })();
+const categoryText =
+  job?.category && typeof job.category === "object" && job.category.name
+    ? job.category.name
+    : null;
+
 
   // Load skills & map IDs → names
   useEffect(() => {
