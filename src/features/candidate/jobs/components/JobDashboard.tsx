@@ -100,8 +100,10 @@ const jobs: Job[] = Array.isArray(jobsData) ? jobsData : [];
 
         {/* Job List */}
         <div className="col-span-12 md:col-span-8">
-          <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-5 shadow-sm  overflow-y scrollbar-hide">
-            <h1 className="text-lg md:text-xl font-bold mb-4">Recommended Jobs</h1>
+<div
+  className="bg-white border border-gray-200 rounded-lg p-4 md:p-5 shadow-sm 
+  overflow-y-auto max-h-[95vh] scrollbar-thin scrollbar-thumb-gray-300"
+>            <h1 className="text-lg md:text-xl font-bold mb-4">Recommended Jobs</h1>
 
             {/* Loading State */}
             {jobsLoading && <p className="text-gray-500 text-sm">Loading jobs...</p>}

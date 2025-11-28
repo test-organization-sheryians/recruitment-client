@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getAllSkills } from "../../api/skills/getAllSkills";
+import { getAllSkills } from "../../../../api/skills/getAllSkills";
 
 // Types
 interface Skill {
@@ -38,7 +38,7 @@ export default function JobCard({ job }: JobCardProps) {
 
   const handleCardClick = () => {
     if (!job._id) return;
-    router.push(`/candidate-home/job-details?id=${job._id}`);
+    router.push(`/candidate/jobs/job-details?id=${job._id}`);
   };
 
   // Convert category safely

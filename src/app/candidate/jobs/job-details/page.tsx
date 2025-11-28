@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import JobDetails from "@/components/Candidate/JobDetails";
+import JobDetails from "@/features/candidate/jobs/components/JobDetails";
 
 export default function JobDetailsPage() {
   return (
