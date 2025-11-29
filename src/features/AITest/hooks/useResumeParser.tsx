@@ -1,5 +1,4 @@
 "use client"
-import api from '@/config/axios';
 
 const useResumeParser = () => {
 

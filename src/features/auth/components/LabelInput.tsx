@@ -15,7 +15,8 @@ const LabelInput = React.forwardRef<HTMLInputElement, LabelInputProps>(({
   placeholder,
   ...rest
 }, ref) => {
-  const _id = id || React.useId()
+  const generatedId = React.useId();
+  const _id = id || generatedId;
 
   return (
     <div className="flex flex-col">
