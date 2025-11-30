@@ -6,9 +6,7 @@ import {
   useGetCandidateExperience,
   useDeleteExperience,
   useUpdateExperience
-} from "@/features/experience/hooks/useExperienceApi";
-import { useQueryClient } from "@tanstack/react-query";
-import { AxiosError } from "axios";
+} from "@/features/candidate/experience/hooks/useExperienceApi";
 
 interface Props {
   candidateId?: string;
