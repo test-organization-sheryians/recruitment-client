@@ -9,6 +9,7 @@ export type User = {
   name: string;
   email: string;
   role: Role;
+  isVerified:boolean
 };
 
 const JWT_SECRET = process.env.JWT_SECRET!;

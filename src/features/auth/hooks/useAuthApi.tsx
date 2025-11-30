@@ -24,3 +24,14 @@ export const useLogout = () => {
     retry: 0,
   });
 };
+
+export const useVerifyUser = () => {
+  return useMutation({
+    mutationKey: ["verify-user"],
+    mutationFn: (userId: string) => api.verifyUser(userId),
+    retry: 1,
+  });
+};
+
+
+

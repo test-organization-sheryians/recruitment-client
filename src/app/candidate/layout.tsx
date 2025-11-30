@@ -10,6 +10,10 @@ const CandidateLayout = async ({ children }: { children: React.ReactNode }) => {
 
   if (!user) {
     redirect("/login");
+  }else {
+     if (!user?.isVerified){
+        redirect("/un-verified")
+     }
   }
   return (
     <div>

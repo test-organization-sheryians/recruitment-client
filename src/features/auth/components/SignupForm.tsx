@@ -59,16 +59,19 @@ const SignupForm = () => {
             firstName: string;
             lastName?: string;
             role?: { name: string };
+            isVerified:boolean
           };
         };
       }) => {
         Cookies.set("access", res.data.token);
-
         dispatch(
           setUser({
-            id: res.data.user._id,
+           id: res.data.user._id,
+            email: res.data.user.email,
             firstName: res.data.user.firstName,
+            lastName: res.data.user.lastName,
             role: res.data.user?.role?.name || "user",
+            isVerified:res.data.user.isVerified
           })
         );
         router.push("/candidate/resume");
