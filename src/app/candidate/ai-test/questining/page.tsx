@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -22,25 +22,34 @@ export default function InterviewPage() {
   const [currentStep, setCurrentStep] = useState(0);
 
   const [allAnswers, setAllAnswers] = useState<AnswerContent[]>([]);
-
   const [answerText, setAnswerText] = useState("");
   const [answerCode, setAnswerCode] = useState("");
+  const [finished, setFinished] = useState(false);
+
+  const saveProgress = (data: any) => {
+    localStorage.setItem("interview_progress", JSON.stringify(data));
+  };
 
   useEffect(() => {
     const stored = localStorage.getItem("interviewQuestions");
     if (!stored) {
-      console.warn("No interview questions found. Redirecting to upload.");
       router.push("/candidate/resume-upload");
       return;
     }
 
-    try {
-      const parsed: Question[] = JSON.parse(stored);
-      setQuestions(parsed);
-      setAllAnswers(new Array(parsed.length).fill(""));
-    } catch (err) {
-      console.error("Failed to parse interview questions:", err);
-      router.push("/candidate/resume-upload");
+    const parsed: Question[] = JSON.parse(stored);
+    setQuestions(parsed);
+    setAllAnswers(new Array(parsed.length).fill(""));
+
+    const savedProgress = localStorage.getItem("interview_progress");
+    if (savedProgress) {
+      const p = JSON.parse(savedProgress);
+
+      setCurrentStep(p.currentStep || 0);
+      setAllAnswers(p.allAnswers || []);
+      setAnswerText(p.answerText || "");
+      setAnswerCode(p.answerCode || "");
+      setFinished(p.finished || false);
     }
   }, [router]);
 
@@ -49,7 +58,12 @@ export default function InterviewPage() {
 
     const storedAnswer = allAnswers[currentStep];
 
-    if (typeof storedAnswer === "object" && storedAnswer !== null && "text" in storedAnswer && "code" in storedAnswer) {
+    if (
+      typeof storedAnswer === "object" &&
+      storedAnswer !== null &&
+      "text" in storedAnswer &&
+      "code" in storedAnswer
+    ) {
       setAnswerText(storedAnswer.text);
       setAnswerCode(storedAnswer.code);
     } else {
@@ -57,6 +71,30 @@ export default function InterviewPage() {
       setAnswerCode("");
     }
   }, [currentStep, questions, allAnswers]);
+
+  const handleTextAnswer = (value: string) => {
+    setAnswerText(value);
+
+    saveProgress({
+      currentStep,
+      allAnswers,
+      answerText: value,
+      answerCode,
+      finished,
+    });
+  };
+
+  const handleCodeAnswer = (value: string) => {
+    setAnswerCode(value);
+
+    saveProgress({
+      currentStep,
+      allAnswers,
+      answerText,
+      answerCode: value,
+      finished,
+    });
+  };
 
   const submitTest = async (finalAnswers: AnswerContent[]) => {
     try {
@@ -74,9 +112,17 @@ export default function InterviewPage() {
 
       const result = await evaluateAnswers.mutateAsync(payload);
       localStorage.setItem("interviewResult", JSON.stringify(result));
-      router.push("/candidate/ai-test/result");
 
-    } catch (error) { 
+      saveProgress({
+        currentStep,
+        allAnswers,
+        answerText,
+        answerCode,
+        finished: true,
+      });
+
+      router.push("/candidate/ai-test/result");
+    } catch (error) {
       console.error("Submission Error:", error);
     }
   };
@@ -91,8 +137,20 @@ export default function InterviewPage() {
     updated[currentStep] = currentAnswer;
     setAllAnswers(updated);
 
+    const next = currentStep + 1;
+
+    saveProgress({
+      currentStep: next,
+      allAnswers: updated,
+      answerText: "",
+      answerCode: "",
+      finished,
+    });
+
     if (currentStep < questions.length - 1) {
-      setCurrentStep((prev) => prev + 1);
+      setCurrentStep(next);
+      setAnswerText("");
+      setAnswerCode("");
     } else {
       submitTest(updated);
     }
@@ -100,7 +158,17 @@ export default function InterviewPage() {
 
   const handlePreviousQuestion = () => {
     if (currentStep > 0) {
-      setCurrentStep((prev) => prev - 1);
+      const prev = currentStep - 1;
+
+      saveProgress({
+        currentStep: prev,
+        allAnswers,
+        answerText,
+        answerCode,
+        finished,
+      });
+
+      setCurrentStep(prev);
     }
   };
 
@@ -125,9 +193,9 @@ export default function InterviewPage() {
         questionText={currentQuestion.question}
         isPending={evaluateAnswers.isPending}
         answerText={answerText}
-        setAnswerText={setAnswerText}
+        setAnswerText={handleTextAnswer}
         answerCode={answerCode}
-        setAnswerCode={setAnswerCode}
+        setAnswerCode={handleCodeAnswer}
       />
 
       <div className="flex justify-between items-center mt-6">
