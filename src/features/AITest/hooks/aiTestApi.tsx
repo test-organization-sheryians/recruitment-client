@@ -17,37 +17,51 @@ export const parseResumeAPI = async (file: File) => {
 
 // generate que
 export const generateQuestionsAPI = async (resumeText: string) => {
+  const base = (process.env.NEXT_PUBLIC_API_BASE_URL as string) || "http://localhost:9000";
   const token = Cookies.get("access");
-  const res = await fetch("http://localhost:9000/api/ai/questionset", {
+
+  const url = `${base.replace(/\/$/, "")}/api/ai/questionset`;
+
+  // If there's no client-accessible token, use credentials include so the server-set httpOnly cookie is sent.
+  const useCredentials = !token;
+
+  if (token) console.debug("generateQuestionsAPI: using client token:", token);
+  else console.debug("generateQuestionsAPI: no client token, sending credentials to include httpOnly cookie");
+
+  const res = await fetch(url, {
     method: "POST",
+    credentials: useCredentials ? "include" : undefined,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: "Bearer " + token } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ resumeText }),
   });
 
-  let data;
+  let data: unknown;
   try {
     data = await res.json();
   } catch {
     throw new Error("Invalid server response");
   }
 
-  if (res.status === 401 || (data && (data.error === "Invalid or expired token." || data.message === "Invalid or expired token."))) {
-    // Optionally, you can clear the token here: localStorage.removeItem("token");
-    throw new Error("Invalid or expired token. Please login again.");
-  }
+  const body = (data as { message?: string; error?: string; questions?: unknown });
 
-  if (!res.ok || !data.success) {
-    throw new Error(data.error || data.message || "Failed to get questions");
-  }
+  if (!res.ok) {
+    // Log server details to help debug 401s
+    console.debug("generateQuestionsAPI: server responded", res.status, body);
 
-  if (!data.questions) {
+    if (res.status === 401) {
+      throw new Error(body?.message || body?.error || "Unauthorized (401). Token invalid or expired.");
+    }
+
+    throw new Error(body?.error || body?.message || `Failed to get questions (status ${res.status})`);
+  }
+  if (!body || !body.questions) {
     throw new Error("No questions returned from server.");
   }
 
-  return data.questions; // returns array of objects
+  return body.questions as unknown[]; // returns array of objects
 };
 
 // evalute ans
@@ -58,20 +72,42 @@ export const evaluateAnswersAPI = async ({
   questions: string[];
   answers: string[];
 }) => {
+  const base = (process.env.NEXT_PUBLIC_API_BASE_URL as string) || "http://localhost:9000";
   const token = Cookies.get("access");
-  const res = await fetch("http://localhost:9000/api/ai/evaluateset", {
+  const url = `${base.replace(/\/$/, "")}/api/ai/evaluateset`;
+  const useCredentials = !token;
+
+  if (token) console.debug("evaluateAnswersAPI: using client token:", token);
+  else console.debug("evaluateAnswersAPI: no client token, sending credentials to include httpOnly cookie");
+
+  const res = await fetch(url, {
     method: "POST",
+    credentials: useCredentials ? "include" : undefined,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: "Bearer " + token } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ questions, answers }),
   });
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Failed to evaluate answers");
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error("Invalid server response");
+  }
 
-  return data;
+  const body = data as { message?: string; error?: string; evaluations?: unknown; total?: unknown };
+
+  if (!res.ok) {
+    console.debug("evaluateAnswersAPI: server responded", res.status, body);
+    if (res.status === 401) {
+      throw new Error(body?.message || body?.error || "Unauthorized (401). Token invalid or expired.");
+    }
+    throw new Error(body?.error || body?.message || `Failed to evaluate answers (status ${res.status})`);
+  }
+
+  return body;
 };
 
 
