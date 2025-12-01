@@ -2,16 +2,31 @@
 'use client'
 
 import { Mail, RefreshCw } from "lucide-react";
+import { useResendVerification } from "@/features/resendMail/useResendMailApi";
+import { useGetProfile } from "@/features/Profile/hooks/useProfileApi";
 
 export default function ReVerifyEmailPage() {
   // Replace with real user email from your auth context
-  const userEmail = "john.doe@example.com";
 
-  const handleResend = async () => {
-    // TODO: Connect to your resend API
-    // await fetch("/api/auth/resend-verification", { method: "POST" });
-    alert("Verification email sent again!");
-  };
+// Get profile normally
+const { data: profile } = useGetProfile();
+
+// Safely extract email even though TS model does not include "user"
+const userEmail =
+  (profile as any)?.user?.email ||
+  (profile as any)?.email;
+
+
+const { mutateAsync} = useResendVerification();
+
+const handleResend = async () => {
+  try {
+    const res = await mutateAsync();
+    alert(res.message || "Verification email sent again!");
+  } catch (error: any) {
+    alert(error.response?.data?.message || error.message || "Something went wrong");
+  }
+};
 
   const handleRefresh = () => {
     window.location.reload();
