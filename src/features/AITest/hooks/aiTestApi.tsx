@@ -1,4 +1,6 @@
+
 import { useMutation } from "@tanstack/react-query";
+import Cookies from "js-cookie";
 
 
 export const parseResumeAPI = async (file: File) => {
@@ -15,17 +17,35 @@ export const parseResumeAPI = async (file: File) => {
 
 // generate que
 export const generateQuestionsAPI = async (resumeText: string) => {
+  const token = Cookies.get("access");
   const res = await fetch("http://localhost:9000/api/ai/questionset", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
+      ...(token ? { Authorization: "Bearer " + token } : {}),
     },
     body: JSON.stringify({ resumeText }),
   });
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Failed to get questions");
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error("Invalid server response");
+  }
+
+  if (res.status === 401 || (data && (data.error === "Invalid or expired token." || data.message === "Invalid or expired token."))) {
+    // Optionally, you can clear the token here: localStorage.removeItem("token");
+    throw new Error("Invalid or expired token. Please login again.");
+  }
+
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || data.message || "Failed to get questions");
+  }
+
+  if (!data.questions) {
+    throw new Error("No questions returned from server.");
+  }
 
   return data.questions; // returns array of objects
 };
@@ -38,11 +58,12 @@ export const evaluateAnswersAPI = async ({
   questions: string[];
   answers: string[];
 }) => {
+  const token = Cookies.get("access");
   const res = await fetch("http://localhost:9000/api/ai/evaluateset", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
+      ...(token ? { Authorization: "Bearer " + token } : {}),
     },
     body: JSON.stringify({ questions, answers }),
   });
