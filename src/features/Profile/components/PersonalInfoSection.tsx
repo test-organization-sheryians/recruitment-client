@@ -12,7 +12,7 @@ export default function PersonalInfoSection({
   phone,
 }: Props) {
   return (
-    <div className="bg-white p-4 rounded-lg shadow">
+    <div className="bg-white p-4 rounded-lg">
       <h2 className="text-lg font-medium mb-4">Personal Information</h2>
 
       <div className="grid grid-cols-2 gap-4">
