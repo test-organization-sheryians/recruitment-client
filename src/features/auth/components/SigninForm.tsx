@@ -17,7 +17,10 @@ const SigninForm = () => {
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState("");
 
-  const { register, handleSubmit } = useForm<{ email: string; password: string }>();
+  const { register, handleSubmit } = useForm<{
+    email: string;
+    password: string;
+  }>();
 
   const { mutate: loginUser, isPending: isLoggingIn, error } = useLogin();
 
@@ -29,7 +32,18 @@ const SigninForm = () => {
     sendData.append("password", formData.password);
 
     loginUser(sendData, {
-      onSuccess: (res: { data: { token: string; user: { _id: string; email: string; firstName: string; lastName: string; role?: { name: string } } } }) => {
+      onSuccess: (res: {
+        data: {
+          token: string;
+          user: {
+            _id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            role?: { name: string };
+          };
+        };
+      }) => {
         Cookies.set("access", res.data.token);
 
         dispatch(
@@ -41,13 +55,19 @@ const SigninForm = () => {
             role: res.data.user?.role?.name || "user",
           })
         );
-        if (res.data.user?.role?.name && res.data.user?.role?.name === "admin") {
+        if (
+          res.data.user?.role?.name &&
+          res.data.user?.role?.name === "admin"
+        ) {
           router.push("/admin");
         } else {
           router.push("/candidate/resume");
         }
       },
-      onError: (err: { response?: { data?: { message: string } }; message: string }) => {
+      onError: (err: {
+        response?: { data?: { message: string } };
+        message: string;
+      }) => {
         const message =
           err?.response?.data?.message ||
           err?.message ||

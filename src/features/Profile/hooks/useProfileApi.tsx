@@ -1,7 +1,11 @@
-import { useMutation, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  UseQueryResult,
+} from "@tanstack/react-query";
 import * as api from "@/api";
 import { CandidateProfile, AddSkillsPayload } from "@/types/profile";
-
 
 // GET
 export const useGetProfile = (): UseQueryResult<CandidateProfile, Error> =>
@@ -28,8 +32,16 @@ export const useUpdateProfile = () =>
 
 // ADD SKILLS
 interface AddSkillsOptions {
-  onSuccess?: (data: unknown, variables: AddSkillsPayload, context: unknown) => void;
-  onError?: (error: Error, variables: AddSkillsPayload, context: unknown) => void;
+  onSuccess?: (
+    data: unknown,
+    variables: AddSkillsPayload,
+    context: unknown
+  ) => void;
+  onError?: (
+    error: Error,
+    variables: AddSkillsPayload,
+    context: unknown
+  ) => void;
 }
 
 export const useAddSkills = (options?: AddSkillsOptions) => {
@@ -39,15 +51,22 @@ export const useAddSkills = (options?: AddSkillsOptions) => {
     mutationKey: ["addSkills"],
     mutationFn: (data: AddSkillsPayload) => api.addSkills(data),
 
-    onSuccess: (data: unknown, variables: AddSkillsPayload, context: unknown) => {
-      queryClient.setQueryData(["candidateProfile"], (old: CandidateProfile | undefined): CandidateProfile | undefined => {
-        if (!old) return old;
+    onSuccess: (
+      data: unknown,
+      variables: AddSkillsPayload,
+      context: unknown
+    ) => {
+      queryClient.setQueryData(
+        ["candidateProfile"],
+        (old: CandidateProfile | undefined): CandidateProfile | undefined => {
+          if (!old) return old;
 
-        return {
-          ...old,
-          skills: [...(old.skills || []), ...variables.skills],
-        };
-      });
+          return {
+            ...old,
+            skills: [...(old.skills || []), ...variables.skills],
+          };
+        }
+      );
 
       options?.onSuccess?.(data, variables, context);
     },
@@ -57,8 +76,6 @@ export const useAddSkills = (options?: AddSkillsOptions) => {
     },
   });
 };
-
-// REMOVE SKILL
 interface RemoveSkillOptions {
   onSuccess?: (data: unknown, variables: string, context: unknown) => void;
   onError?: (error: Error, variables: string, context: unknown) => void;
@@ -82,7 +99,6 @@ export const useRemoveSkill = (options?: RemoveSkillOptions) => {
   });
 };
 
-// UPLOAD RESUME
 export const useUploadResume = () => {
   const queryClient = useQueryClient();
 
@@ -95,7 +111,6 @@ export const useUploadResume = () => {
   });
 };
 
-// DELETE RESUME
 export const useDeleteResume = () => {
   const queryClient = useQueryClient();
 
@@ -108,7 +123,6 @@ export const useDeleteResume = () => {
   });
 };
 
-// UPDATE AVAILABILITY
 export const useUpdateAvailability = () =>
   useMutation({
     mutationKey: ["updateAvailability"],
