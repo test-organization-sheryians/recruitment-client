@@ -11,8 +11,7 @@ export const ResumeDownloadButtons = ({ result }: { result: any }) => {
                 variant="outline"
                 onClick={() =>
                     navigator.clipboard.writeText(JSON.stringify(result.data, null, 2))
-                }
-            >
+                }>     
                 Copy JSON
             </Button>
 
