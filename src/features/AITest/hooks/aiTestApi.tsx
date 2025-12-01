@@ -5,7 +5,7 @@ export const parseResumeAPI = async (file: File) => {
   const res = await fetch("/api/parse-resume", {
     method: "POST",
     body: file,
-  });
+  }); //ihihihhihihi
 
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "PDF parsing failed");
