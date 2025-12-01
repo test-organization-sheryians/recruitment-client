@@ -8,8 +8,8 @@ import {
   useGenerateQuestions,
 } from "../../../../features/AITest/hooks/aiTestApi";
 
-import { FileUploadArea } from "../components/fileUploadArea";
-import { PrimaryButton } from "../components/button";
+import { FileUploadArea } from "../../../../features/AITest/components/fileUploadArea";
+import { PrimaryButton } from "../../../../features/AITest/components/button";
 
 interface Question {
     question: string;

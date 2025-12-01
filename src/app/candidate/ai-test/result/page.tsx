@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 
 // Import Components
-import { ScoreCircle } from "../components/score" // Adjust path as necessary
-import { DetailedFeedbackCard } from "../components/feeedback"; // Adjust path as necessary
+import { ScoreCircle } from "../../../../features/AITest/components/score" // Adjust path as necessary
+import { DetailedFeedbackCard } from "../../../../features/AITest/components/feeedback"; // Adjust path as necessary
 
 // --- Data Structures ---
 interface QuestionEvaluation {

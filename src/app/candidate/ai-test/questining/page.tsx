@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useEvaluateAnswers } from "../../../../features/AITest/hooks/aiTestApi";
 
-import { ProgressDots } from "../components/quepProgress";
-import { QuestionArea } from "../components/questionArea";
+import { ProgressDots } from "../../../../features/AITest/components/quepProgress";
+import { QuestionArea } from "../../../../features/AITest/components/questionArea";
 
 interface Question {
   id: string;

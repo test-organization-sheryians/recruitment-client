@@ -10,6 +10,9 @@ interface Message {
   isQuestion?: boolean;
 }
 
+// -----------------------------
+// FILE UPLOAD COMPONENT
+// -----------------------------
 const FileUpload = ({ onFileChange }: { onFileChange: (file: File) => void }) => {
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,16 +40,23 @@ const FileUpload = ({ onFileChange }: { onFileChange: (file: File) => void }) =>
             clipRule="evenodd" 
           />
         </svg>
+
         <div>
-          <p className="text-sm font-medium text-gray-900">{file?.name || 'No file chosen'}</p>
-          <p className="text-xs text-gray-500">{file ? `${(file.size / 1024).toFixed(0)} KB` : 'PDF, DOCX, TXT (max 5MB)'}</p>
+          <p className="text-sm font-medium text-gray-900">
+            {file?.name || 'No file chosen'}
+          </p>
+          <p className="text-xs text-gray-500">
+            {file ? `${(file.size / 1024).toFixed(0)} KB` : 'PDF, DOCX, TXT (max 5MB)'}
+          </p>
         </div>
+
         <button
           onClick={() => fileInputRef.current?.click()}
           className="ml-4 px-3 py-1 text-sm text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
         >
           {file ? 'Change' : 'Browse'}
         </button>
+
         <input
           ref={fileInputRef}
           type="file"
@@ -59,6 +69,9 @@ const FileUpload = ({ onFileChange }: { onFileChange: (file: File) => void }) =>
   );
 };
 
+// -----------------------------
+// MAIN CHAT COMPONENT
+// -----------------------------
 export default function ResumeChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -73,10 +86,6 @@ export default function ResumeChat() {
     },
   ]);
 
-  const handleFileUpload = (file: File) => {
-    // Here you would typically handle the file upload to your server
-    console.log('File uploaded:', file.name);
-  };
   const [inputValue, setInputValue] = useState('');
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState('');
@@ -88,19 +97,22 @@ export default function ResumeChat() {
     'How to optimize React performance?',
   ];
 
+  const handleFileUpload = (file: File) => {
+    console.log('File uploaded:', file.name);
+  };
+
   const handleSendMessage = () => {
     if (inputValue.trim() === '') return;
-    
+
     const newMessage: Message = {
       id: Date.now().toString(),
       text: inputValue,
       sender: 'user',
     };
-    
+
     setMessages([...messages, newMessage]);
     setInputValue('');
-    
-    // Simulate AI response
+
     setTimeout(() => {
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -117,22 +129,35 @@ export default function ResumeChat() {
   };
 
   const handleCodeSubmit = () => {
-    // Handle code submission
     console.log('Code submitted:', code);
     setShowCodeModal(false);
     setCode('');
   };
 
-  // Avatar component
+  // -----------------------------
+  // AVATAR COMPONENT
+  // -----------------------------
   const Avatar = ({ isAI = false }: { isAI?: boolean }) => (
-    <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${isAI ? 'bg-purple-100' : 'bg-blue-100'}`}>
+    <div
+      className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
+        isAI ? 'bg-purple-100' : 'bg-blue-100'
+      }`}
+    >
       {isAI ? (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10a1 1 0 01-1.64 0l-7-10A1 1 0 014 7h4V2a1 1 0 011.3-.954z" clipRule="evenodd" />
+          <path 
+            fillRule="evenodd" 
+            d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10a1 1 0 01-1.64 0l-7-10A1 1 0 014 7h4V2a1 1 0 011.3-.954z" 
+            clipRule="evenodd" 
+          />
         </svg>
       ) : (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+          <path 
+            fillRule="evenodd" 
+            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" 
+            clipRule="evenodd" 
+          />
         </svg>
       )}
     </div>
@@ -140,18 +165,18 @@ export default function ResumeChat() {
 
   return (
     <div className="flex flex-col h-full font-sans">
+
+      {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[calc(100vh-120px)]">
         {messages.map((message) => (
           <div key={message.id} className="space-y-1">
+
             {message.sender === 'ai' ? (
-              // AI Message
               <div className="flex items-start gap-3">
                 <Avatar isAI />
                 <div className="flex-1">
-                  <div className="text-gray-800 max-w-[80%]">
-                    <p className="font-medium">{message.text}</p>
-                  </div>
-                  
+                  <p className="font-medium text-gray-800 max-w-[80%]">{message.text}</p>
+
                   {message.id === '2' && (
                     <div className="mt-4 space-y-3 flex flex-col items-start w-[50%]">
                       {questions.map((question, index) => (
@@ -160,8 +185,8 @@ export default function ResumeChat() {
                           onClick={() => handleQuestionClick(question)}
                           className="w-full text-left p-3 bg-[#ebf0f8] text-black rounded-md border border-blue-200 hover:bg-[#d9e0eb] transition-colors flex items-start gap-3"
                         >
-                          <span className="font-medium text-black">{index + 1}.</span>
-                          <span className="text-left">{question}</span>
+                          <span className="font-medium">{index + 1}.</span>
+                          <span>{question}</span>
                         </button>
                       ))}
                     </div>
@@ -169,11 +194,11 @@ export default function ResumeChat() {
                 </div>
               </div>
             ) : (
-              // User Message
               <div className="flex items-start justify-end gap-3">
                 <div className="flex flex-col items-end max-w-[80%]">
                   <div className="bg-[#d9e8ff] text-black rounded-lg p-3 rounded-br-none">
                     <p>{message.text}</p>
+
                     {message.id === '1' && (
                       <FileUpload onFileChange={handleFileUpload} />
                     )}
@@ -182,10 +207,12 @@ export default function ResumeChat() {
                 <Avatar />
               </div>
             )}
+
           </div>
         ))}
       </div>
 
+      {/* Message Input */}
       <div className="p-4 border-t bg-white sticky bottom-0">
         <div className="flex justify-center">
           <div className="flex w-full max-w-2xl mx-auto">
@@ -193,9 +220,9 @@ export default function ResumeChat() {
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder="Type your message..."
-              className="flex-1 p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-1 focus:ring-blue-500 bg-[#ebf0f8]"
+              className="flex-1 p-2 border border-gray-300 rounded-l-lg bg-[#ebf0f8] focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <button
               onClick={handleSendMessage}
@@ -207,12 +234,15 @@ export default function ResumeChat() {
         </div>
       </div>
 
+      {/* Code Modal */}
       {showCodeModal && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] flex flex-col shadow-xl">
-            <div className="p-4 border-b sticky top-0 bg-white z-10">
+            
+            <div className="p-4 border-b bg-white">
               <h3 className="text-lg font-medium">{currentQuestion}</h3>
             </div>
+
             <div className="flex-1 p-4 overflow-auto">
               <textarea
                 value={code}
@@ -221,6 +251,7 @@ export default function ResumeChat() {
                 placeholder="Write your code here..."
               />
             </div>
+
             <div className="p-4 border-t flex justify-end space-x-2">
               <button
                 onClick={() => {
@@ -238,9 +269,11 @@ export default function ResumeChat() {
                 Submit
               </button>
             </div>
+
           </div>
         </div>
       )}
+
     </div>
   );
 }

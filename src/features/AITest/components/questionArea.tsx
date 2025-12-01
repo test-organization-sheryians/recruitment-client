@@ -20,7 +20,7 @@ export const QuestionArea: React.FC<QuestionAreaProps> = ({
   answerCode,
   setAnswerCode,
 }) => {
-  const handleEditorMount = (editor: any, monaco: any) => {
+   const handleEditorMount = (editor: any, monaco: any) => {
     const domNode = editor.getDomNode();
 
     domNode.addEventListener("paste", (e: any) => {
@@ -55,7 +55,7 @@ export const QuestionArea: React.FC<QuestionAreaProps> = ({
       <textarea
         value={answerText}
         onChange={(e) => setAnswerText(e.target.value)}
-        onPaste={(e) => e.preventDefault()}
+         onPaste={(e) => e.preventDefault()}
         rows={8}
         placeholder="Type your answer here..."
         disabled={isPending}
@@ -71,7 +71,7 @@ export const QuestionArea: React.FC<QuestionAreaProps> = ({
           defaultLanguage="javascript"
           value={answerCode}
           theme="vs-dark"
-          onMount={handleEditorMount}
+           onMount={handleEditorMount}
           onChange={(value) => setAnswerCode(value || "")}
           options={{
             fontSize: 20,

@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 
 
 const ResumeChat = dynamic(
-  () => import('../components/ResumeChat'),
+  () => import('../../../../features/AITest/components/Resumechat'),
   { ssr: false }
 );
 
