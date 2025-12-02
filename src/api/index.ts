@@ -17,5 +17,7 @@ export * from "./experience/deleteExperience"
 export * from "./experience/getCandidateExperience"
 export * from "./experience/getSingleExperience"
 export * from "./experience/updateExperience"
+export * from "./AITest/evaluteAns"
+export * from "./AITest/questionGen"
 
 
