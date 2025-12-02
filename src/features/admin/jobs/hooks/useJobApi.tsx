@@ -40,6 +40,8 @@ export const useDeleteJob = () => {
 export const useGetJobsByCategory = (categoryId: string | null) => {
   return useQuery({
     queryKey: ["jobsByCategory", categoryId],
+
+    
     queryFn: () => categoryId ? api.getJobsByCategory(categoryId) : Promise.resolve([]),
     enabled: !!categoryId,
     retry: 0,
