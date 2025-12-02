@@ -114,7 +114,7 @@ export default function UsersTable() {
 
   return (
     <>
-      {/* 🔍 Search Bar */}
+     
       <div className="w-full flex justify-end mb-4">
         <input
           type="text"
