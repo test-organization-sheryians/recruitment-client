@@ -24,10 +24,13 @@ export const useCreateProfile = () =>
   });
 
 // UPDATE
-export const useUpdateProfile = () =>
+export const useUpdateProfile = (onSuccessCallback?: () => void) =>
   useMutation({
     mutationKey: ["updateProfile"],
-    mutationFn: (profileData: string[]) => api.updateProfile(profileData), // Changed to accept string directly
+    mutationFn: (profileData: string[]) => api.updateProfile(profileData),
+    onSuccess: () => {
+      if (onSuccessCallback) onSuccessCallback();
+    },// Changed to accept string directly
   });
 
 // ADD SKILLS
@@ -82,6 +85,7 @@ interface RemoveSkillOptions {
 }
 
 export const useRemoveSkill = (options?: RemoveSkillOptions) => {
+
   const queryClient = useQueryClient();
 
   return useMutation({
