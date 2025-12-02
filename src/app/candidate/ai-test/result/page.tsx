@@ -13,9 +13,12 @@ interface QuestionEvaluation {
 }
 
 interface InterviewResult {
-    success: boolean;
+    data:{
+        success: boolean;
     evaluations: QuestionEvaluation[];
     total: number; // Total possible score/total number of questions evaluated
+    }
+    
 }
 
 export default function ResultPage() {
@@ -26,7 +29,8 @@ export default function ResultPage() {
         if (!data) return;
 
         try {
-            const parsed: InterviewResult = JSON.parse(data);
+
+            const parsed: InterviewResult = JSON.parse(data.data);
             setResult(parsed);
         } catch (err) {
             console.error("Failed to parse interviewResult:", err);
@@ -37,9 +41,11 @@ export default function ResultPage() {
         return <p className="p-8 text-center">Loading interview results...</p>;
 
     // Calculate total score and total evaluation points
-    const totalScore = result.evaluations.reduce((sum, q) => sum + q.score, 0);
 
-    const totalQuestions = result.total || result.evaluations.length; 
+    console.log(result.data)
+    const totalScore = result.data.evaluations.reduce((sum, q) => sum + q.score, 0);
+
+    const totalQuestions = result.data.total || result.data.evaluations.length; 
 
     return (
         <div className="max-w-3xl mx-auto my-10 p-8 bg-white rounded-xl shadow-2xl">
@@ -60,7 +66,7 @@ export default function ResultPage() {
             </h2>
 
             <div className="space-y-3">
-                {result.evaluations.map((evalItem, index) => (
+                {result.data.evaluations.map((evalItem, index) => (
                     <DetailedFeedbackCard key={index} evaluation={evalItem} index={index} />
                 ))}
             </div>
