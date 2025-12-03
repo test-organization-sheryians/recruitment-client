@@ -107,7 +107,7 @@ export const useUploadResume = () => {
 
   return useMutation({
     mutationKey: ["uploadResume"],
-    mutationFn: (data: FormData) => api.uploadResume(data),
+    mutationFn: (data: File) => api.uploadResume(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["candidateProfile"] });
     },
