@@ -3,45 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { generatePDF } from "./generatePdf";
+import { Result } from "../types/resume";
 
-interface Education {
-  degree: string;
-  institution: string;
-  start_date: string;
-  end_date: string;
-}
-interface Experience {
-  job_title: string;
-  company: string;
-  start_date: string;
-  end_date: string;
-  responsibilities?: string[];
-}
-interface Skills {
-  technical_skills?: string[];
-  programming_languages?: string[];
-  tools?: string[];
-}
-interface Certification {
-  name: string;
-  issuer: string;
-  date_issued: string;
-}
-interface Project {
-  name: string;
-  description: string;
-  technologies?: string[];
-}
-interface ResumeData {
-  education?: Education[];
-  experience?: Experience[];
-  skills?: Skills;
-  certifications?: Certification[];
-  projects?: Project[];
-}
-interface Result {
-  data?: ResumeData;
-}
 
 export const ResumeDownloadButtons = ({ result }: { result: Result }) => {
     return (

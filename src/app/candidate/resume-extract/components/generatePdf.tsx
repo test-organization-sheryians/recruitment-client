@@ -1,128 +1,122 @@
 "use client";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { Result } from "../types/resume";
 
-interface Education {
-  degree: string;
-  institution: string;
-  start_date: string;
-  end_date: string;
-}
-interface Experience {
-  job_title: string;
-  company: string;
-  start_date: string;
-  end_date: string;
-  responsibilities?: string[];
-}
-interface Skills {
-  technical_skills?: string[];
-  programming_languages?: string[];
-  tools?: string[];
-}
-interface Certification {
-  name: string;
-  issuer: string;
-  date_issued: string;
-}
-interface Project {
-  name: string;
-  description: string;
-  technologies?: string[];
-}
-interface ResumeData {
-  education?: Education[];
-  experience?: Experience[];
-  skills?: Skills;
-  certifications?: Certification[];
-  projects?: Project[];
-}
-interface Result {
-  data?: ResumeData;
-}
-
-export const generatePDF = async (result: Result | null) => {
+export const generatePDF = async (result: Result): Promise<void> => {
   if (!result?.data) return;
 
-  const d: ResumeData = result.data;
+  const d = result.data;
+
   const pdf = await PDFDocument.create();
   let page = pdf.addPage([600, 800]);
+
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   let y = 760;
 
-  const write = (text: string, size = 12) => {
-    const maxWidth = 520;
-    let line = "";
+  const LEFT = 40;
+  const BODY = 12;
 
-    text.split(" ").forEach((word) => {
-      const testLine = line + word + " ";
-      if (font.widthOfTextAtSize(testLine, size) > maxWidth) {
-        page.drawText(line, { x: 40, y, size, font, color: rgb(0, 0, 0) });
-        y -= size + 4;
-        line = word + " ";
-      } else line = testLine;
-    });
+  const colors = {
+    heading: rgb(0.2, 0.4, 0.8),
+    text: rgb(0, 0, 0),
+  };
 
-    if (line.trim()) {
-      page.drawText(line, { x: 40, y, size, font, color: rgb(0, 0, 0) });
-      y -= size + 6;
+  const write = (text: string, size: number = BODY, color = colors.text) => {
+    const maxWidth = 520; // Approximate max width for text (600 - 40 - 40 for margins)
+    const words = text.split(' ');
+    let line = '';
+
+    for (const word of words) {
+      const testLine = line + (line ? ' ' : '') + word;
+      const width = font.widthOfTextAtSize(testLine, size);
+      if (width > maxWidth && line) {
+        page.drawText(line, { x: LEFT, y, size, font, color });
+        y -= size + 6;
+        if (y < 40) {
+          page = pdf.addPage([600, 800]);
+          y = 760;
+        }
+        line = word;
+      } else {
+        line = testLine;
+      }
     }
-
-    if (y < 40) {
-      page = pdf.addPage([600, 800]);
-      y = 760;
+    if (line) {
+      page.drawText(line, { x: LEFT, y, size, font, color });
+      y -= size + 6;
+      if (y < 40) {
+        page = pdf.addPage([600, 800]);
+        y = 760;
+      }
     }
   };
 
-  write("Extracted Resume Data", 20);
-  y -= 12;
-
-  d.education?.forEach((e) => {
-    write("EDUCATION", 16);
-    write(`• ${e.degree} (${e.start_date} - ${e.end_date})`);
-    write(e.institution);
-    y -= 10;
-  });
-
-  d.experience?.forEach((e) => {
-    write("EXPERIENCE", 16);
-    write(`• ${e.job_title} — ${e.company}`);
-    write(`${e.start_date} to ${e.end_date}`);
-    e.responsibilities?.forEach((r) => write(`- ${r}`));
-    y -= 10;
-  });
-
-  if (d.skills) {
-    write("SKILLS", 16);
-    d.skills.technical_skills &&
-      write(`Technical: ${d.skills.technical_skills.join(", ")}`);
-    d.skills.programming_languages &&
-      write(`Programming: ${d.skills.programming_languages.join(", ")}`);
-    d.skills.tools && write(`Tools: ${d.skills.tools.join(", ")}`);
-    y -= 10;
-  }
-
-  d.certifications?.forEach((c) => {
-    write("CERTIFICATIONS", 16);
-    write(`• ${c.name} — ${c.issuer} (${c.date_issued})`);
-    y -= 6;
-  });
-
-  d.projects?.forEach((p) => {
-    write("PROJECTS", 16);
-    write(`• ${p.name}`);
-    write(p.description);
-    p.technologies && write(`Tech: ${p.technologies.join(", ")}`);
+  const heading = (title: string) => {
+    write(title, 20, colors.heading);
     y -= 4;
+  };
+
+  const list = (items?: string[]) => {
+    if (!items) return;
+    items.forEach((i) => write(`• ${i}`));
+    y -= 4;
+  };
+
+  const section = (title: string, cb: () => void) => {
+    heading(title);
+    cb();
+    y -= 10;
+  };
+
+  section("EDUCATION", () => {
+    d.education?.forEach((e) => {
+      write(`${e.degree} (${e.start_date} - ${e.end_date})`);
+      write(e.institution);
+      y -= 6;
+    });
+  });
+
+  section("EXPERIENCE", () => {
+    d.experience?.forEach((e) => {
+      write(`${e.job_title} — ${e.company}`);
+      write(`${e.start_date} to ${e.end_date}`);
+      list(e.responsibilities);
+      y -= 6;
+    });
+  });
+
+  section("SKILLS", () => {
+    const s = d.skills;
+    if (!s) return;
+
+    s.technical_skills && write(`Technical: ${s.technical_skills.join(", ")}`);
+    s.programming_languages &&
+      write(`Programming: ${s.programming_languages.join(", ")}`);
+    s.tools && write(`Tools: ${s.tools.join(", ")}`);
+  });
+
+  section("CERTIFICATIONS", () => {
+    d.certifications?.forEach((c) =>
+      write(`${c.name} — ${c.issuer} (${c.date_issued})`)
+    );
+  });
+
+  section("PROJECTS", () => {
+    d.projects?.forEach((p) => {
+      write(p.name, 14);
+      write(p.description);
+      p.technologies && write(`Tech: ${p.technologies.join(", ")}`);
+      y -= 6;
+    });
   });
 
   const pdfBytes = await pdf.save();
-  const uint8Array = new Uint8Array(pdfBytes);
-  const blob = new Blob([uint8Array], { type: "application/pdf" });
+  const blob = new Blob([new Uint8Array(pdfBytes)], { type: "application/pdf" });
 
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "extracted_resume.pdf";
+  a.download = "resume.pdf";
   a.click();
   URL.revokeObjectURL(url);
 };

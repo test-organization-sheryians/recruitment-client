@@ -6,45 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UploadCloud, Loader2 } from "lucide-react";
 import { ResumeDownloadButtons } from "./ResumeDownloadButtons";
+import { Result } from "../types/resume";
 
-interface Education {
-  degree: string;
-  institution: string;
-  start_date: string;
-  end_date: string;
-}
-interface Experience {
-  job_title: string;
-  company: string;
-  start_date: string;
-  end_date: string;
-  responsibilities?: string[];
-}
-interface Skills {
-  technical_skills?: string[];
-  programming_languages?: string[];
-  tools?: string[];
-}
-interface Certification {
-  name: string;
-  issuer: string;
-  date_issued: string;
-}
-interface Project {
-  name: string;
-  description: string;
-  technologies?: string[];
-}
-interface ResumeData {
-  education?: Education[];
-  experience?: Experience[];
-  skills?: Skills;
-  certifications?: Certification[];
-  projects?: Project[];
-}
-interface Result {
-  data?: ResumeData;
-}
 
 export const UploadResume = () => {
     const [file, setFile] = useState<File | null>(null);
