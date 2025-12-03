@@ -14,27 +14,33 @@ export interface User {
   role?: Role | null;
 }
 
-
+/* ============================
+   GET USERS
+============================ */
 export const useGetUsers = () =>
   useQuery<User[], Error>({
     queryKey: ["users"],
     queryFn: async () => {
-      const users = await api.getAllUsers(); 
+      const users = await api.getAllUsers();
       return Array.isArray(users) ? users : [];
     },
     retry: 0,
   });
 
 
+interface UpdateRolePayload {
+  userId: string;
+  role: string;
+}
+
 export const useUpdateUserRole = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<any, unknown, { userId: string; role: string }>({
+  return useMutation<unknown, Error, UpdateRolePayload>({
     mutationFn: async ({ userId, role }) => {
       return api.updateUserRole(userId, role);
     },
     onSuccess: () => {
-      
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
     retry: 0,
@@ -42,15 +48,18 @@ export const useUpdateUserRole = () => {
 };
 
 
+interface DeleteUserPayload {
+  userId: string;
+}
+
 export const useDeleteUser = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<any, unknown, { userId: string }>({
+  return useMutation<unknown, Error, DeleteUserPayload>({
     mutationFn: async ({ userId }) => {
       return api.deleteUser(userId);
     },
     onSuccess: () => {
-   
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
     retry: 0,
