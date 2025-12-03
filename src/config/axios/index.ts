@@ -1,3 +1,4 @@
+// config/axios.ts or wherever you keep it
 import axios from "axios";
 import Cookies from "js-cookie";
 
@@ -5,26 +6,28 @@ const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const publicRoutes = ["/login", "/register", "/"] as const;
 
+// Updated: Check if path starts with these instead of exact match
+const isPublicRoute = (path: string) => {
+  if (!path) return false;
+
+  return (
+    publicRoutes.includes(path as typeof publicRoutes[number]) ||
+    path.includes("/user-verification/") ||  
+    path.includes("/user-verification")     
+  );
+};
+
 const api = axios.create({
   baseURL,
   headers: {
     "Content-Type": "application/json",
   },
   withCredentials: true,
-
   validateStatus: (status) => status >= 200 && status < 300,
 });
 
-// Optional: Add auth token if you use accessToken in headers (not cookies)
-// api.interceptors.request.use((config) => {
-//   const token = Cookies.get("accessToken");
-//   if (token) config.headers.Authorization = `Bearer ${token}`;
-//   return config;
-// });
-
 api.interceptors.response.use(
   (response) => response,
-
   (error) => {
     const status = error.response?.status;
     const responseData = error.response?.data;
@@ -43,12 +46,17 @@ api.interceptors.response.use(
       }
     }
 
+<<<<<<< HEAD
     const isPublicRoute = currentPath
       ? publicRoutes.includes(currentPath as (typeof publicRoutes)[number])
       : false;
 
+=======
+    const publicRoute = isPublicRoute(currentPath);
+   console.log(publicRoute , currentPath)
+>>>>>>> fce9dadd67fc69c7cd69a827b576cc61dd65a8dc
     if (
-      !isPublicRoute &&
+      !publicRoute &&
       (status === 401 ||
         status === 403 ||
         (message &&
