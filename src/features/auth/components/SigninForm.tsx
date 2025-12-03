@@ -29,7 +29,7 @@ const SigninForm = () => {
     sendData.append("password", formData.password);
 
     loginUser(sendData, {
-      onSuccess: (res: { data: { token: string; user: { _id: string; email: string; firstName: string; lastName: string; role?: { name: string } } } }) => {
+      onSuccess: (res: { data: { token: string; user: { _id: string; email: string; firstName: string; lastName: string; role?: { name: string } ,isVerified:boolean  } } }) => {
         Cookies.set("access", res.data.token);
 
         dispatch(
@@ -39,6 +39,7 @@ const SigninForm = () => {
             firstName: res.data.user.firstName,
             lastName: res.data.user.lastName,
             role: res.data.user?.role?.name || "user",
+            isVerified:res.data.user.isVerified
           })
         );
         if (res.data.user?.role?.name && res.data.user?.role?.name === "admin") {

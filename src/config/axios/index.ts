@@ -1,3 +1,4 @@
+// config/axios.ts or wherever you keep it
 import axios from "axios";
 import Cookies from "js-cookie";
 
@@ -5,28 +6,29 @@ const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const publicRoutes = ["/login", "/register", "/"] as const;
 
+// Updated: Check if path starts with these instead of exact match
+const isPublicRoute = (path: string) => {
+  if (!path) return false;
+
+  return (
+    publicRoutes.includes(path as typeof publicRoutes[number]) ||
+    path.includes("/user-verification/") ||  
+    path.includes("/user-verification")     
+  );
+};
+
 const api = axios.create({
   baseURL,
   headers: {
     "Content-Type": "application/json",
   },
   withCredentials: true,
-
   validateStatus: (status) => status >= 200 && status < 300,
 });
 
-// Optional: Add auth token if you use accessToken in headers (not cookies)
-// api.interceptors.request.use((config) => {
-//   const token = Cookies.get("accessToken");
-//   if (token) config.headers.Authorization = `Bearer ${token}`;
-//   return config;
-// });
-
 api.interceptors.response.use(
   (response) => response,
-
   (error) => {
-
     const status = error.response?.status;
     const responseData = error.response?.data;
     const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
@@ -35,7 +37,7 @@ api.interceptors.response.use(
 
     if (responseData) {
       if (typeof responseData === "string") {
-        message = responseData.slice(0, 200); 
+        message = responseData.slice(0, 200);
       } else if (responseData.message) {
         message = responseData.message;
       } else if (responseData.error) {
@@ -43,18 +45,17 @@ api.interceptors.response.use(
       }
     }
 
-    const isPublicRoute = currentPath ? publicRoutes.includes(currentPath as typeof publicRoutes[number]) : false;
-
+    const publicRoute = isPublicRoute(currentPath);
+   console.log(publicRoute , currentPath)
     if (
-      !isPublicRoute &&
+      !publicRoute &&
       (status === 401 ||
         status === 403 ||
-        (message && (
-          message.toLowerCase().includes("unauthorized") ||
-          message.toLowerCase().includes("token expired") ||
-          message.toLowerCase().includes("unauthenticated") ||
-          message.toLowerCase().includes("invalid token")
-        )))
+        (message &&
+          (message.toLowerCase().includes("unauthorized") ||
+            message.toLowerCase().includes("token expired") ||
+            message.toLowerCase().includes("unauthenticated") ||
+            message.toLowerCase().includes("invalid token"))))
     ) {
       Cookies.remove("refreshToken");
       Cookies.remove("accessToken");
@@ -65,7 +66,7 @@ api.interceptors.response.use(
     }
 
     if (error.response) {
-      error.message = message; 
+      error.message = message;
     }
 
     return Promise.reject(error);
