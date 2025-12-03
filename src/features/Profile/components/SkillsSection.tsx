@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import Modal from "@/components/ui/Modal";
+import { LoaderCircleIcon } from "lucide-react";
 
-import { useAddSkills, useRemoveSkill, useUpdateProfile } from "../hooks/useProfileApi";
+import { useAddSkills, useGetProfile, useRemoveSkill, useUpdateProfile } from "../hooks/useProfileApi";
 import { useGetAllSkills } from "@/features/admin/skills/hooks/useSkillApi";
 
 interface Props {
@@ -15,128 +16,101 @@ interface Props {
 export default function SkillsSection({ refetchProfile }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [deletingSkill, setDeletingSkill] = useState<string | null>(null); // ⭐ Track which skill is deleting
 
-  const [userSkills, setUserSkills] = useState([]);
-
+  const { data: profile, refetch } = useGetProfile();
+  const userSkills = profile?.skills || [];
 
   const { data: skillsResponse = [] } = useGetAllSkills();
 
-  const userSkillNames = selectedSkills
-    .map((id) => skillsResponse.find((s: any) => s._id === id)?.name)
-    .filter(Boolean);
-
-
-
-   const updateSkills=useUpdateProfile();
-
-console.log(selectedSkills)
-   const handleUpdateSkills = ()=>{
-    updateSkills.mutate(selectedSkills)
-   }
-   
-
-
-  const { isPending } = useAddSkills({
-    onSuccess: () => {
-      setSelectedSkills([]);
-      setIsOpen(false);
-      refetchProfile?.();
-    },
+  // Update Skills
+  const updateSkills = useUpdateProfile(() => {
+    refetch();
+    setSelectedSkills([]);
+    setIsOpen(false);
+    refetchProfile?.();
   });
 
- 
+  const handleUpdateSkills = () => {
+    updateSkills.mutate(selectedSkills);
+  };
 
+  // Remove Skill
   const { mutate: removeSkill } = useRemoveSkill({
-    onSuccess: () => refetchProfile?.(),
+    onSuccess: () => {
+      setDeletingSkill(null);
+      refetch();
+      refetchProfile?.();
+    },
+    onError: () => {
+      setDeletingSkill(null);
+    }
   });
 
   const toggleSkill = (id: string) => {
-    setSelectedSkills((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    setSelectedSkills(prev =>
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
     );
   };
-
- 
-
-
-  // const handleAddSkills = () => {
-  //   if (selectedSkills.length === 0) return;
-  //   addSkill({ skills: selectedSkills });
-  // };
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between">
         <h2 className="text-lg font-semibold text-gray-800">Skills</h2>
-
-        <button onClick={() => setIsOpen(true)}
-          >
+        <button onClick={() => setIsOpen(true)}>
           <FaPlus />
         </button>
       </div>
 
+      {/* Modal */}
       <Modal
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         title="Add Skills"
       >
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 max-h-72 overflow-y-auto p-3 bg-gray-50 rounded-xl border">
-            {skillsResponse.map((skill: any) => {
-              const isAlreadyAdded = selectedSkills.includes(skill._id);
+        <div className="flex flex-wrap gap-2 max-h-72 overflow-y-auto p-3 bg-gray-50 rounded-xl border">
+          {skillsResponse.map((skill: any) => {
+            const isAlreadyAdded = userSkills.includes(skill.name);
+            const isSelected = selectedSkills.includes(skill._id);
 
-              return (
-                <label
-                  key={skill._id}
-                  className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg border transition ${
-                    isAlreadyAdded
-                      ? "bg-green-50 border-green-300 opacity-80"
-                      : "bg-white hover:border-blue-300"
-                  }`}
-                >
-                  {!isAlreadyAdded && (
-                    <input
-                      type="checkbox"
-                      checked={selectedSkills.includes(skill._id)}
-                      onChange={() => toggleSkill(skill._id)}
-                      className="w-5 h-5 text-blue-600"
-                    />
-                  )}
-
-                  {/* Skill name */}
-                  <span
-                    className={`text-sm font-medium ${
-                      isAlreadyAdded ? "text-green-800" : "text-gray-800"
-                    }`}
-                  >
-                    {skill.name || skill._id}
-                  </span>
-
-                  {isAlreadyAdded && (
-                    <span className="ml-auto text-xs px-2 py-1 bg-green-200 text-green-800 rounded-full">
-                      Added
-                    </span>
-                  )}
-                </label>
-              );
-            })}
-          </div>
-
-          <button
-            onClick={handleUpdateSkills}
-            disabled={isPending || selectedSkills.length === 0}
-            className="w-full bg-blue-700 text-white py-2 rounded-lg hover:bg-blue-800 disabled:opacity-50"
-          >
-            {isPending ? "Adding..." : "Add Selected Skills"}
-          </button>
+            return (
+              <button
+                type="button"
+                key={skill._id}
+                disabled={isAlreadyAdded}
+                onClick={() => !isAlreadyAdded && toggleSkill(skill._id)}
+                className={`
+                  px-4 py-1.5 rounded-full border text-sm transition
+                  ${isAlreadyAdded
+                    ? "bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed opacity-60"
+                    : isSelected
+                      ? "bg-[#3B82F6] border-[#3B82F6] text-white"
+                      : "bg-white border-gray-300 text-gray-700 hover:border-[#60A5FA]"
+                  }
+                `}
+              >
+                {skill.name}
+              </button>
+            );
+          })}
         </div>
+
+        {/* Add Skills Button */}
+        <button
+          onClick={handleUpdateSkills}
+          disabled={updateSkills.isPending || selectedSkills.length === 0}
+          className="w-full bg-blue-700 text-white py-2 rounded-lg hover:bg-blue-800 disabled:opacity-50 flex justify-center"
+        >
+          {updateSkills.isPending ? <LoaderCircleIcon /> : "Add Selected Skills"}
+        </button>
       </Modal>
 
-      {userSkillNames.length === 0 ? (
+      {/* Display Skills */}
+      {userSkills.length === 0 ? (
         <p className="text-sm text-gray-500 italic">No skills added yet</p>
       ) : (
         <div className="flex flex-wrap gap-3">
-          {userSkillNames.map((skillName, index) => (
+          {userSkills.map((skillName, index) => (
             <div
               key={index}
               className="flex items-center gap-2 bg-gray-100 px-4 py-1.5 rounded-full text-sm"
@@ -144,10 +118,17 @@ console.log(selectedSkills)
               <span>{skillName}</span>
 
               <button
-                onClick={() => removeSkill(skillName as string)}
+                onClick={() => {
+                  setDeletingSkill(skillName); // ⭐ set loader for this skill only
+                  removeSkill(skillName);
+                }}
                 className="text-gray-400 hover:text-red-500"
               >
-                ✕
+                {deletingSkill === skillName ? (
+                  <LoaderCircleIcon className="animate-spin w-4 h-4" />
+                ) : (
+                  "✕"
+                )}
               </button>
             </div>
           ))}
