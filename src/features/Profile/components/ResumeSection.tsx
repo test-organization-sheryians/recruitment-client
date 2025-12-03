@@ -31,12 +31,9 @@ export default function ResumeSection({ resumeUrl }: Props) {
 
   const handleUpload = () => {
     if (!file) return;
-
-    const formData = new FormData();
-    formData.append("resume", file);
-
-    uploadMutation.mutate(formData, {
-      onSuccess: () => {
+  
+    uploadMutation.mutate(file, {
+      onSuccess: (signedUrl) => {
         setFile(null);
         setIsOpen(false);
         refetchProfile();
