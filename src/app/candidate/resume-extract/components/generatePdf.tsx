@@ -2,10 +2,10 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { Result } from "../types/resume";
 
-export const generatePDF = async (result: Result): Promise<void> => {
-  if (!result?.data) return;
+export const generatePDF = async (result: Result): Promise<Uint8Array> => {
+  if (!result?.data) return new Uint8Array();
 
-  
+
 
   const d = result.data;
 
@@ -24,7 +24,7 @@ export const generatePDF = async (result: Result): Promise<void> => {
   };
 
   const write = (text: string, size: number = BODY, color = colors.text) => {
-    const maxWidth = 520; // Approximate max width for text (600 - 40 - 40 for margins)
+    const maxWidth = 520;
     const words = text.split(' ');
     let line = '';
 
@@ -119,9 +119,7 @@ export const generatePDF = async (result: Result): Promise<void> => {
   const a = document.createElement("a");
   a.href = url;
   a.download = "resume.pdf";
-  // a.click();
   URL.revokeObjectURL(url);
-
   return pdfBytes;
 };
 
