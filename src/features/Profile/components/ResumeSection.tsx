@@ -34,6 +34,7 @@ export default function ResumeSection({ resumeUrl }: Props) {
   
     uploadMutation.mutate(file, {
       onSuccess: (signedUrl) => {
+        console.log("FINAL FILE URL:", signedUrl);
         setFile(null);
         setIsOpen(false);
         refetchProfile();
