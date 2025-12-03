@@ -7,11 +7,14 @@ import { Input } from "@/components/ui/input";
 import { UploadCloud, Loader2 } from "lucide-react";
 import { ResumeDownloadButtons } from "./ResumeDownloadButtons";
 import { Result } from "../types/resume";
+import { uploadFileToS3 } from "@/lib/uploadFile";
+import { generatePDF } from "./generatePdf";
 
 
 export const UploadResume = () => {
     const [file, setFile] = useState<File | null>(null);
     const [result, setResult] = useState<Result>({});
+    const [s3Url, setS3Url] = useState<string>("");
 
     const { mutate: extract, isPending, error } = useExtractResume();
 
@@ -24,10 +27,26 @@ export const UploadResume = () => {
         setResult({});
     };
 
-    const handleExtract = () => {
+    const handleExtract = async () => {
         if (!file) return;
         extract(file, {
-            onSuccess: (data) => setResult(data),
+            onSuccess: async (data) => {
+                try {
+                    const pdfBytes = await generatePDF(data);
+                    if (!pdfBytes) return;
+
+                    const pdfFile = new File([pdfBytes], `resume-${Date.now()}.pdf`, {
+                        type: "application/pdf",
+                    });
+                    const url = await uploadFileToS3(pdfFile);
+                    setS3Url(url);
+                    setResult(data);
+                    console.log("PDF generated and uploaded successfully:", url);
+                    
+                } catch (err) {
+                    console.error("Error generating PDF:", err);
+                }
+            },
         });
     };
 
@@ -90,15 +109,12 @@ export const UploadResume = () => {
             )}
 
             {/* Results */}
-            {result?.data && (
+            {s3Url && (
                 <div className="mt-6 bg-gray-50 p-4 rounded-lg border">
-                    <h3 className="text-lg font-semibold mb-2">Extracted JSON</h3>
-
-                    <pre className="bg-black text-white p-3 rounded-md text-sm overflow-x-auto">
-                        {JSON.stringify(result.data, null, 2)}
-                    </pre>
-
-                    <ResumeDownloadButtons result={result} />
+                    <h3 className="text-lg font-semibold mb-2">Uploaded Resume PDF</h3>
+                    <a href={s3Url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">
+                        {s3Url}
+                    </a>
                 </div>
             )}
         </div>

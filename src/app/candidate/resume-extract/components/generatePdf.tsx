@@ -5,6 +5,8 @@ import { Result } from "../types/resume";
 export const generatePDF = async (result: Result): Promise<void> => {
   if (!result?.data) return;
 
+  
+
   const d = result.data;
 
   const pdf = await PDFDocument.create();
@@ -117,6 +119,9 @@ export const generatePDF = async (result: Result): Promise<void> => {
   const a = document.createElement("a");
   a.href = url;
   a.download = "resume.pdf";
-  a.click();
+  // a.click();
   URL.revokeObjectURL(url);
+
+  return pdfBytes;
 };
+
