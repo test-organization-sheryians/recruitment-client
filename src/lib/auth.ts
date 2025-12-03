@@ -9,6 +9,7 @@ export type User = {
   name: string;
   email: string;
   role: Role;
+  isVerified:boolean
 };
 
 const JWT_SECRET = process.env.JWT_SECRET!;
@@ -30,7 +31,7 @@ export async function getCurrentUser(): Promise<User | null> {
     }) as User;
     return payload;
   } catch (error: unknown) {
-    const err = error as { name?: string; expiredAt?: Date }; // JWT errors
+    const err = error as { name?: string; expiredAt?: Date }; 
     if (err?.name === "TokenExpiredError") {
       console.log("Token expired at:", err?.expiredAt);
       try {
