@@ -33,7 +33,8 @@ export default function ResumeSection({ resumeUrl }: Props) {
     if (!file) return;
 
     const formData = new FormData();
-    formData.append("resume", file);
+        formData.append("fileName", file.name);
+        formData.append("contentType", file.type);
 
     uploadMutation.mutate(formData, {
       onSuccess: () => {
