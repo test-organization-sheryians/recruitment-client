@@ -5,7 +5,6 @@ import { useExtractResume } from "../features/hooks/resumeExtract";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UploadCloud, Loader2 } from "lucide-react";
-import { ResumeDownloadButtons } from "./ResumeDownloadButtons";
 import { Result } from "../types/resume";
 import { uploadFileToS3 } from "@/lib/uploadFile";
 import { generatePDF } from "./generatePdf";
@@ -35,7 +34,7 @@ export const UploadResume = () => {
                     const pdfBytes = await generatePDF(data);
                     if (!pdfBytes) return;
 
-                    const pdfFile = new File([pdfBytes], `resume-${Date.now()}.pdf`, {
+                    const pdfFile = new File([new Uint8Array(pdfBytes)], `resume-${Date.now()}.pdf`, {
                         type: "application/pdf",
                     });
                     const url = await uploadFileToS3(pdfFile);
