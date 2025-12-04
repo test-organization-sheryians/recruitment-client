@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import Editor from "@monaco-editor/react";
+import Editor, { OnMount } from "@monaco-editor/react";
+import { editor as MonacoEditor, KeyMod, KeyCode } from "monaco-editor";
 
 interface QuestionAreaProps {
   questionText: string;
@@ -20,27 +21,35 @@ export const QuestionArea: React.FC<QuestionAreaProps> = ({
   answerCode,
   setAnswerCode,
 }) => {
-   const handleEditorMount = (editor: any, monaco: any) => {
-    const domNode = editor.getDomNode();
 
-    domNode.addEventListener("paste", (e: any) => {
+  const handleEditorMount: OnMount = (
+    editor: MonacoEditor.IStandaloneCodeEditor
+  ) => {
+    const domNode = editor.getDomNode();
+    if (!domNode) return;
+
+    // Disable paste 
+    const pasteHandler = (e: ClipboardEvent) => {
       e.preventDefault();
-    });
+    };
+    domNode.addEventListener("paste", pasteHandler);
 
     editor.addAction({
       id: "disable-paste",
-      label: "Paste",
+      label: "Disable Paste",
       keybindings: [
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV,
-        monaco.KeyMod.Shift | monaco.KeyCode.Insert,
+        KeyMod.CtrlCmd | KeyCode.KeyV,
+        KeyMod.Shift | KeyCode.Insert,
       ],
       contextMenuGroupId: "disable",
+      
       run: () => {},
     });
   };
 
   return (
     <>
+    
       <div className="bg-white p-6 rounded-t-xl border border-gray-200 mb-0 shadow-sm">
         <p
           className="text-xl font-medium text-gray-700 no-copy"
@@ -52,16 +61,17 @@ export const QuestionArea: React.FC<QuestionAreaProps> = ({
         </p>
       </div>
 
+
       <textarea
         value={answerText}
         onChange={(e) => setAnswerText(e.target.value)}
-         onPaste={(e) => e.preventDefault()}
+        onPaste={(e) => e.preventDefault()}
         rows={8}
         placeholder="Type your answer here..."
         disabled={isPending}
         className="w-full p-4 text-[20px] leading-relaxed border border-gray-300 
-        focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 
-        rounded-b-none rounded-t-none"
+          focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 
+          rounded-b-none rounded-t-none"
         style={{ resize: "vertical", minHeight: "150px" }}
       />
 
@@ -71,8 +81,8 @@ export const QuestionArea: React.FC<QuestionAreaProps> = ({
           defaultLanguage="javascript"
           value={answerCode}
           theme="vs-dark"
-           onMount={handleEditorMount}
-          onChange={(value) => setAnswerCode(value || "")}
+          onMount={handleEditorMount}
+          onChange={(value) => setAnswerCode(value ?? "")}
           options={{
             fontSize: 20,
             minimap: { enabled: false },

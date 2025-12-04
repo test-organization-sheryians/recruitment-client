@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Editor, { OnMount } from "@monaco-editor/react";
+import { editor as MonacoEditor, KeyMod, KeyCode } from "monaco-editor";
 import { useEvaluateAnswers } from "../../../../features/AITest/hooks/aiTestApi";
-
-import { ProgressDots } from "../../../../features/AITest/components/quepProgress";
-import { QuestionArea } from "../../../../features/AITest/components/questionArea";
 
 interface Question {
   id: string;
@@ -14,22 +13,65 @@ interface Question {
 
 type AnswerContent = string | { text: string; code: string };
 
+interface ProgressData {
+  currentStep: number;
+  allAnswers: AnswerContent[];
+  answerText: string;
+  answerCode: string;
+  finished: boolean;
+}
+
 export default function InterviewPage() {
   const router = useRouter();
   const evaluateAnswers = useEvaluateAnswers();
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
-
   const [allAnswers, setAllAnswers] = useState<AnswerContent[]>([]);
   const [answerText, setAnswerText] = useState("");
   const [answerCode, setAnswerCode] = useState("");
   const [finished, setFinished] = useState(false);
 
-  const saveProgress = (data: any) => {
-    localStorage.setItem("interview_progress", JSON.stringify(data));
+  // Save progress (fixed typing)
+  const saveProgress = (data: ProgressData) => {
+    try {
+      localStorage.setItem("interview_progress", JSON.stringify(data));
+    } catch (err) {
+      console.warn("Failed to save progress", err);
+    }
   };
 
+
+
+  const preventClipboardEvent = useCallback(
+    (e: React.ClipboardEvent | ClipboardEvent) => {
+      e.preventDefault();
+    },
+    []
+  );
+
+  const preventContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const preventDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleKeyDownBlockClipboard = useCallback(
+    (e: React.KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && ["c", "v", "x"].includes(key)) {
+        e.preventDefault();
+      }
+      if (e.shiftKey && e.key === "Insert") {
+        e.preventDefault();
+      }
+    },
+    []
+  );
+
+ 
   useEffect(() => {
     const stored = localStorage.getItem("interviewQuestions");
     if (!stored) {
@@ -39,42 +81,38 @@ export default function InterviewPage() {
 
     const parsed: Question[] = JSON.parse(stored);
     setQuestions(parsed);
-    setAllAnswers(new Array(parsed.length).fill(""));
 
-    const savedProgress = localStorage.getItem("interview_progress");
-    if (savedProgress) {
-      const p = JSON.parse(savedProgress);
-
+    const saved = localStorage.getItem("interview_progress");
+    if (saved) {
+      const p: ProgressData = JSON.parse(saved);
       setCurrentStep(p.currentStep || 0);
-      setAllAnswers(p.allAnswers || []);
+      setAllAnswers(p.allAnswers || new Array(parsed.length).fill(""));
       setAnswerText(p.answerText || "");
       setAnswerCode(p.answerCode || "");
       setFinished(p.finished || false);
+    } else {
+      setAllAnswers(new Array(parsed.length).fill(""));
     }
   }, [router]);
 
+ 
   useEffect(() => {
     if (questions.length === 0) return;
 
-    const storedAnswer = allAnswers[currentStep];
+    const stored = allAnswers[currentStep];
 
-    if (
-      typeof storedAnswer === "object" &&
-      storedAnswer !== null &&
-      "text" in storedAnswer &&
-      "code" in storedAnswer
-    ) {
-      setAnswerText(storedAnswer.text);
-      setAnswerCode(storedAnswer.code);
+    if (stored && typeof stored === "object") {
+      setAnswerText(stored.text || "");
+      setAnswerCode(stored.code || "");
     } else {
-      setAnswerText(String(storedAnswer || ""));
+      setAnswerText(typeof stored === "string" ? stored : "");
       setAnswerCode("");
     }
-  }, [currentStep, questions, allAnswers]);
+  }, [currentStep, allAnswers, questions]);
 
-  const handleTextAnswer = (value: string) => {
+  // Answer updates
+  const handleTextChange = (value: string) => {
     setAnswerText(value);
-
     saveProgress({
       currentStep,
       allAnswers,
@@ -84,9 +122,8 @@ export default function InterviewPage() {
     });
   };
 
-  const handleCodeAnswer = (value: string) => {
+  const handleCodeChange = (value: string) => {
     setAnswerCode(value);
-
     saveProgress({
       currentStep,
       allAnswers,
@@ -96,18 +133,18 @@ export default function InterviewPage() {
     });
   };
 
+  // Submit Test
   const submitTest = async (finalAnswers: AnswerContent[]) => {
     try {
-      const answersForBackend = finalAnswers.map((ans) => {
-        if (typeof ans === "object" && ans !== null && "text" in ans && "code" in ans) {
-          return `${ans.text}\n\n[CODE START]\n${ans.code}\n[CODE END]`;
-        }
-        return String(ans);
-      });
+      const formatted = finalAnswers.map((ans) =>
+        typeof ans === "object"
+          ? `${ans.text}\n\n[CODE START]\n${ans.code}\n[CODE END]`
+          : String(ans)
+      );
 
       const payload = {
         questions: questions.map((q) => q.question),
-        answers: answersForBackend,
+        answers: formatted,
       };
 
       const result = await evaluateAnswers.mutateAsync(payload);
@@ -127,7 +164,8 @@ export default function InterviewPage() {
     }
   };
 
-  const handleNextQuestion = () => {
+  // Next Question
+  const handleNext = () => {
     const currentAnswer: AnswerContent =
       answerText.trim() || answerCode.trim()
         ? { text: answerText, code: answerCode }
@@ -137,17 +175,17 @@ export default function InterviewPage() {
     updated[currentStep] = currentAnswer;
     setAllAnswers(updated);
 
-    const next = currentStep + 1;
-
-    saveProgress({
-      currentStep: next,
-      allAnswers: updated,
-      answerText: "",
-      answerCode: "",
-      finished,
-    });
-
     if (currentStep < questions.length - 1) {
+      const next = currentStep + 1;
+
+      saveProgress({
+        currentStep: next,
+        allAnswers: updated,
+        answerText: "",
+        answerCode: "",
+        finished,
+      });
+
       setCurrentStep(next);
       setAnswerText("");
       setAnswerCode("");
@@ -156,76 +194,137 @@ export default function InterviewPage() {
     }
   };
 
-  const handlePreviousQuestion = () => {
-    if (currentStep > 0) {
-      const prev = currentStep - 1;
-
-      saveProgress({
-        currentStep: prev,
-        allAnswers,
-        answerText,
-        answerCode,
-        finished,
-      });
-
-      setCurrentStep(prev);
-    }
+  // Previous
+  const handlePrevious = () => {
+    if (currentStep === 0) return;
+    setCurrentStep(currentStep - 1);
   };
 
-  if (questions.length === 0) {
-    return <div className="p-8 text-center">Loading interview questions...</div>;
-  }
+  if (!questions.length)
+    return <div className="text-center p-6">Loading...</div>;
 
   const currentQuestion = questions[currentStep];
+  const disabled = evaluateAnswers.isPending || (!answerText.trim() && !answerCode.trim());
   const isLast = currentStep === questions.length - 1;
-  const disabled =
-    evaluateAnswers.isPending || (!answerText.trim() && !answerCode.trim());
+
+
+  const handleEditorMount: OnMount = (
+    editor: MonacoEditor.IStandaloneCodeEditor,
+    
+  ) => {
+    try {
+      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyV, () => {});
+      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyC, () => {});
+      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyX, () => {});
+      editor.addCommand(KeyMod.Shift | KeyCode.Insert, () => {});
+      editor.updateOptions({ contextmenu: false });
+
+      const node = editor.getDomNode();
+      if (node) {
+        node.addEventListener("paste", (e: ClipboardEvent) =>
+          e.preventDefault()
+        );
+        node.addEventListener("drop", (e: DragEvent) =>
+          e.preventDefault()
+        );
+      }
+    } catch {}
+  };
 
   return (
-    <div className="max-w-3xl mx-auto my-10 p-8 bg-white rounded-xl shadow-2xl">
-      <h1 className="text-3xl font-extrabold text-gray-800 text-center mb-6">
-        Question {currentStep + 1} of {questions.length}
-      </h1>
+    <div className="min-h-screen bg-gray-50 font-sans">
+      <div className="mx-auto py-6 px-4">
 
-      <ProgressDots total={questions.length} current={currentStep} />
+        <div className="flex justify-between items-center mb-6 w-full">
+         
+          <button
+            onClick={handlePrevious}
+            disabled={currentStep === 0}
+            className={`px-6 py-3 rounded-xl border border-gray-300 text-sm font-medium ${
+              currentStep === 0
+                ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                : "bg-white hover:bg-gray-50 text-gray-800 shadow-sm"
+            }`}
+          >
+            ⟵ Previous
+          </button>
 
-      <QuestionArea
-        questionText={currentQuestion.question}
-        isPending={evaluateAnswers.isPending}
-        answerText={answerText}
-        setAnswerText={handleTextAnswer}
-        answerCode={answerCode}
-        setAnswerCode={handleCodeAnswer}
-      />
+     
+          <div
+            className="text-lg font-semibold text-gray-900 px-4 select-none text-center max-w-[60%]"
+            onCopy={preventClipboardEvent}
+            onCut={preventClipboardEvent}
+            onPaste={preventClipboardEvent}
+            onKeyDown={handleKeyDownBlockClipboard}
+            onContextMenu={preventContextMenu}
+          >
+            <span className="font-bold mr-2">Q.{currentStep + 1}:</span>
+            {currentQuestion.question}
+          </div>
 
-      <div className="flex justify-between items-center mt-6">
-        <button
-          onClick={handlePreviousQuestion}
-          disabled={currentStep === 0}
-          className={`px-6 py-3 text-lg font-semibold rounded-lg transition ${
-            currentStep === 0
-              ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-              : "bg-gray-500 text-white hover:bg-gray-600"
-          }`}
-        >
-          Back
-        </button>
+          <button
+            onClick={handleNext}
+            disabled={disabled}
+            className={`px-8 py-3 rounded-xl font-bold text-sm ${
+              disabled
+                ? "bg-gray-400 text-gray-100 cursor-not-allowed"
+                : "bg-[#3668FF] text-white hover:bg-[#0733b5]"
+            }`}
+          >
+            {evaluateAnswers.isPending
+              ? "Processing..."
+              : isLast
+              ? "Submit Test"
+              : "Next →"}
+          </button>
+        </div>
 
-        <button
-          onClick={handleNextQuestion}
-          disabled={disabled}
-          className={`px-8 py-3 text-lg font-bold text-white rounded-lg transition ${
-            disabled
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-teal-600 hover:bg-teal-700"
-          }`}
-        >
-          {evaluateAnswers.isPending
-            ? "Submitting..."
-            : isLast
-            ? "Submit Test"
-            : "Submit Answer & Next"}
-        </button>
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+          📝 Problem Solution
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        
+          <textarea
+            className="w-full min-h-[500px] p-4 border border-gray-300 rounded-lg bg-white text-base outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+            placeholder="Write your explanation..."
+            value={answerText}
+            onChange={(e) => handleTextChange(e.target.value)}
+            onPaste={preventClipboardEvent}
+            onCopy={preventClipboardEvent}
+            onCut={preventClipboardEvent}
+            onDrop={preventDrop}
+            onKeyDown={handleKeyDownBlockClipboard}
+            onContextMenu={preventContextMenu}
+          />
+
+      
+          <div className="bg-gray-900 rounded-lg overflow-hidden shadow-xl">
+            <div className="px-5 py-3 border-b border-gray-800 flex justify-between items-center">
+              <h3 className="text-gray-100 font-medium tracking-wide">
+                💻 Your Code
+              </h3>
+              <span className="text-xs text-gray-400">Auto-save enabled</span>
+            </div>
+
+            <Editor
+              height="500px"
+              defaultLanguage="javascript"
+              value={answerCode}
+              onChange={(value) => handleCodeChange(value || "")}
+              theme="vs-dark"
+              onMount={handleEditorMount}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                wordWrap: "on",
+                contextmenu: false,
+              }}
+            />
+          </div>
+
+        </div>
       </div>
     </div>
   );

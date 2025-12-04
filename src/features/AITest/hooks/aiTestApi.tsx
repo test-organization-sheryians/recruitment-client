@@ -1,83 +1,21 @@
+// src/hooks/AITestHooks.ts
+
+import { useMutation } from "@tanstack/react-query";
 import { evaluateAnswersAPI } from "@/api/AITest/evaluteAns";
 import { parseResumeAPI } from "@/api/AITest/parseResume.";
 import { generateQuestionsAPI } from "@/api/AITest/questionGen";
-import { useMutation } from "@tanstack/react-query";
 
+// ---------- TYPES ----------
+export interface GenerateQuestionsPayload {
+  resumeText: string;
+}
 
-// export const parseResumeAPI = async (file: File) => {
-//   const res = await fetch("/api/parse-resume", {
-//     method: "POST",
-//     body: file,
-//   }); //ihihihhihihi
+export interface EvaluateAnswersPayload {
+  questions: string[];
+  answers: string[];
+}
 
-//   const data = await res.json();
-//   if (!res.ok) throw new Error(data.error || "PDF parsing failed");
-
-//   return data.text; 
-// };
-
-// // generate que
-// export const generateQuestionsAPI = async (resumeText: string) => {
-//   const res = await fetch("http://localhost:9000/api/ai/questionset", {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: "Bearer " + localStorage.getItem("token"),
-//     },
-//     body: JSON.stringify({ resumeText }),
-//   });
-
-//   const data = await res.json();
-//   if (!res.ok) throw new Error(data.error || "Failed to get questions");
-
-//   return data.questions; // returns array of objects
-// };
-
-// // evalute ans
-// export const evaluateAnswersAPI = async ({
-//   questions,
-//   answers,
-// }: {
-//   questions: string[];
-//   answers: string[];
-// }) => {
-//   const res = await fetch("http://localhost:9000/api/ai/evaluateset", {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: "Bearer " + localStorage.getItem("token"),
-//     },
-//     body: JSON.stringify({ questions, answers }),
-//   });
-
-//   const data = await res.json();
-//   if (!res.ok) throw new Error(data.error || "Failed to evaluate answers");
-
-//   return data;
-// };
-
-
-
-//  //Parse Resume
-// export const useParseResume = () =>
-//   useMutation({
-//     mutationFn: parseResumeAPI,
-//   });
-
-// // generate question
-// export const useGenerateQuestions = () =>
-//   useMutation({
-//     mutationFn: generateQuestionsAPI,
-//   });
-
-// // evaluate answers
-// export const useEvaluateAnswers = () =>
-//   useMutation({
-//     mutationFn: evaluateAnswersAPI,
-//   });
-
-
-
+// ---------- HOOKS ----------
 
 // Parse Resume
 export const useParseResume = () => {
@@ -92,7 +30,8 @@ export const useParseResume = () => {
 export const useGenerateQuestions = () => {
   return useMutation({
     mutationKey: ["generateQuestions"],
-    mutationFn: (resumeData: any) => generateQuestionsAPI(resumeData),
+    mutationFn: (payload: GenerateQuestionsPayload) =>
+      generateQuestionsAPI(payload), // FULL PAYLOAD
     retry: 0,
   });
 };
@@ -101,7 +40,8 @@ export const useGenerateQuestions = () => {
 export const useEvaluateAnswers = () => {
   return useMutation({
     mutationKey: ["evaluateAnswers"],
-    mutationFn: (answersPayload: any) => evaluateAnswersAPI(answersPayload),
+    mutationFn: (payload: EvaluateAnswersPayload) =>
+      evaluateAnswersAPI(payload), // FULL PAYLOAD
     retry: 0,
   });
 };

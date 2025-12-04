@@ -2,14 +2,17 @@
 
 import { useRef } from "react";
 import Editor, { OnMount } from "@monaco-editor/react";
+import { editor as MonacoEditor } from "monaco-editor";
 
 export default function CodeEditor() {
-  const editorRef = useRef<any>(null);
+  // FIX: useRef typed properly (no any)
+  const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
 
-  const handleMount: OnMount = (editor, monaco) => {
+  // FIX: removed unused `monaco`
+  const handleMount: OnMount = (editor) => {
     editorRef.current = editor;
 
-    // ❌ Disable paste using browser event (strongest method)
+    // Disable paste (browser-level)
     const pasteHandler = (ev: ClipboardEvent) => {
       if (editor.hasTextFocus()) {
         ev.preventDefault();
@@ -17,11 +20,12 @@ export default function CodeEditor() {
     };
     document.addEventListener("paste", pasteHandler, true);
 
-    // ❌ Disable Ctrl+V / Cmd+V / Shift+Insert
+    // Disable Ctrl+V, Cmd+V, Shift+Insert
     const keyHandler = (ev: KeyboardEvent) => {
       if (!editor.hasTextFocus()) return;
 
-      const isCtrlV = (ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "v";
+      const isCtrlV =
+        (ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "v";
       const isShiftInsert = ev.shiftKey && ev.key === "Insert";
 
       if (isCtrlV || isShiftInsert) {
@@ -30,10 +34,10 @@ export default function CodeEditor() {
     };
     document.addEventListener("keydown", keyHandler, true);
 
-    // ❌ Disable right-click paste
+    // Disable right-click paste
     editor.onContextMenu((e) => e.event.preventDefault());
 
-    // Cleanup listeners when editor unmounts
+    // Cleanup listeners
     editor.onDidDispose(() => {
       document.removeEventListener("paste", pasteHandler, true);
       document.removeEventListener("keydown", keyHandler, true);

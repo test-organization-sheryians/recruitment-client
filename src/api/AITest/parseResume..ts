@@ -16,3 +16,4 @@ export const parseResumeAPI = async (file: File) => {
 
   return data.text;
 };
+
