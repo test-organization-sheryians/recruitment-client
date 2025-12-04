@@ -1,6 +1,11 @@
 import { Search, MapPin } from "lucide-react";
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  searchTerm: string;
+  setSearchTerm: (value: string) => void;
+}
+
+export default function HeroSection({ searchTerm, setSearchTerm }: HeroSectionProps) {
   return (
     <div
       className="w-full py-10 md:py-20 bg-no-repeat bg-right bg-cover md:bg-contain"
@@ -33,10 +38,12 @@ export default function HeroSection() {
               type="text"
               placeholder="Job Title or Keywords"
               className="flex-1 bg-transparent outline-none text-sm md:text-base"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          {/* Location Input */}
+          {/* Location Input (optional, not used for filtering yet) */}
           <div className="flex items-center bg-gray-100 px-3 py-2 rounded flex-1 gap-2">
             <MapPin size={18} className="text-gray-500" />
             <input
@@ -46,7 +53,7 @@ export default function HeroSection() {
             />
           </div>
 
-          {/* Button */}
+          {/* Button (optional, could trigger search) */}
           <button className="bg-blue-800 text-white px-6 py-2 rounded hover:bg-blue-900 w-full md:w-auto">
             Search
           </button>

@@ -38,7 +38,7 @@ export default function JobCard({ job }: JobCardProps) {
 
   const handleCardClick = () => {
     if (!job._id) return;
-    router.push(`/candidate/jobs/job-details?id=${job._id}`);
+    router.push(`jobs/job-details?id=${job._id}`);
   };
 
   // Convert category safely
