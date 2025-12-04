@@ -42,7 +42,7 @@ export default function ResumeSection({ resumefile }: Props) {
     try {
       const finalUrl = await uploadFileToS3(file);
       console.log("FINAL URL:", finalUrl);
-
+ 
       updateProfile.mutate({ resumeFile: finalUrl });
     } catch (err) {
       console.error("Upload failed:", err);
