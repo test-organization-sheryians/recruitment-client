@@ -46,17 +46,11 @@ api.interceptors.response.use(
       }
     }
 
-<<<<<<< HEAD
-    const isPublicRoute = currentPath
-      ? publicRoutes.includes(currentPath as (typeof publicRoutes)[number])
-      : false;
 
-=======
     const publicRoute = isPublicRoute(currentPath);
    console.log(publicRoute , currentPath)
->>>>>>> fce9dadd67fc69c7cd69a827b576cc61dd65a8dc
-    if (
-      !publicRoute &&
+    if (  
+      !publicRoute &&   
       (status === 401 ||
         status === 403 ||
         (message &&

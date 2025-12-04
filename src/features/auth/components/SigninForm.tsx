@@ -32,22 +32,7 @@ const SigninForm = () => {
     sendData.append("password", formData.password);
 
     loginUser(sendData, {
-<<<<<<< HEAD
-      onSuccess: (res: {
-        data: {
-          token: string;
-          user: {
-            _id: string;
-            email: string;
-            firstName: string;
-            lastName: string;
-            role?: { name: string };
-          };
-        };
-      }) => {
-=======
-      onSuccess: (res: { data: { token: string; user: { _id: string; email: string; firstName: string; lastName: string; role?: { name: string } ,isVerified:boolean  } } }) => {
->>>>>>> fce9dadd67fc69c7cd69a827b576cc61dd65a8dc
+      onSuccess: (res: { data: { token : string; user: { _id: string; email: string; firstName: string; lastName: string; role?: { name: string } ,isVerified:boolean  } } }) => {
         Cookies.set("access", res.data.token);
 
         dispatch(
