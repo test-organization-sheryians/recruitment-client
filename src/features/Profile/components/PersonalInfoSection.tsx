@@ -12,7 +12,11 @@ export default function PersonalInfoSection({
   phone,
 }: Props) {
   return (
+<<<<<<< HEAD
     <div className="bg-white p-4 rounded-lg ">
+=======
+    <div className="bg-white p-4 rounded-lg">
+>>>>>>> 0d8085918cdb1a0c987d68e5eb26771f9169b8e8
       <h2 className="text-lg font-medium mb-4">Personal Information</h2>
 
       <div className="grid grid-cols-2 gap-4">

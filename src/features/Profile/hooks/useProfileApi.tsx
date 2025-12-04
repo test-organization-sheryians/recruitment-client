@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import * as api from "@/api";
 import { CandidateProfile, AddSkillsPayload } from "@/types/profile";
+import { uploadFileToS3 } from "@/lib/uploadFile";
 
 // GET
 export const useGetProfile = (): UseQueryResult<CandidateProfile, Error> =>
@@ -107,7 +108,7 @@ export const useUploadResume = () => {
 
   return useMutation({
     mutationKey: ["uploadResume"],
-    mutationFn: (data: FormData) => api.uploadResume(data),
+    mutationFn: (file: File) => uploadFileToS3(file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["candidateProfile"] });
     },

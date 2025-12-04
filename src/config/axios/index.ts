@@ -1,4 +1,4 @@
-// config/axios.ts or wherever you keep it
+// config/axios.ts
 import axios from "axios";
 import Cookies from "js-cookie";
 
@@ -12,8 +12,8 @@ const isPublicRoute = (path: string) => {
 
   return (
     publicRoutes.includes(path as typeof publicRoutes[number]) ||
-    path.includes("/user-verification/") ||  
-    path.includes("/user-verification")     
+    path.includes("/user-verification/") ||
+    path.includes("/user-verification")
   );
 };
 
@@ -46,11 +46,20 @@ api.interceptors.response.use(
       }
     }
 
+<<<<<<< HEAD
 
     const publicRoute = isPublicRoute(currentPath);
    console.log(publicRoute , currentPath)
     if (  
       !publicRoute &&   
+=======
+    // ✅ Keep the GOOD version
+    const publicRoute = isPublicRoute(currentPath);
+    console.log(publicRoute, currentPath);
+
+    if (
+      !publicRoute &&
+>>>>>>> 0d8085918cdb1a0c987d68e5eb26771f9169b8e8
       (status === 401 ||
         status === 403 ||
         (message &&
@@ -61,9 +70,11 @@ api.interceptors.response.use(
     ) {
       Cookies.remove("refreshToken");
       Cookies.remove("accessToken");
+
       if (typeof window !== "undefined") {
         // window.location.href = "/login";
       }
+
       return Promise.reject(
         new Error("Session expired. Redirecting to login...")
       );
