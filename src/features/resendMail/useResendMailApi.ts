@@ -1,6 +1,5 @@
-// hooks/useResendVerification.ts
-import { useMutation } from "@tanstack/react-query";
-import api from "@/config/axios";
+import { useMutation } from '@tanstack/react-query';
+import api from '@/config/axios';
 
 export interface ResendEmailResponse {
   success: boolean;
@@ -8,9 +7,13 @@ export interface ResendEmailResponse {
 }
 
 export const useResendVerification = () => {
-  return useMutation<ResendEmailResponse, Error>({
+  return useMutation<ResendEmailResponse, any>({
     mutationFn: async () => {
-      const { data } = await api.post("/api/auth/resend-verification-email");
+      const { data } = await api.post(
+        '/api/auth/resend-verification-email',
+        {},
+        { withCredentials: true }
+      );
       return data;
     },
   });
