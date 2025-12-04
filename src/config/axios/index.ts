@@ -46,20 +46,12 @@ api.interceptors.response.use(
       }
     }
 
-<<<<<<< HEAD
-
-    const publicRoute = isPublicRoute(currentPath);
-   console.log(publicRoute , currentPath)
-    if (  
-      !publicRoute &&   
-=======
     // ✅ Keep the GOOD version
     const publicRoute = isPublicRoute(currentPath);
     console.log(publicRoute, currentPath);
 
     if (
       !publicRoute &&
->>>>>>> 0d8085918cdb1a0c987d68e5eb26771f9169b8e8
       (status === 401 ||
         status === 403 ||
         (message &&

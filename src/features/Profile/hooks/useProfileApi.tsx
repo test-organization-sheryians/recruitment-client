@@ -28,7 +28,7 @@ export const useCreateProfile = () =>
 export const useUpdateProfile = (onSuccessCallback?: () => void) =>
   useMutation({
     mutationKey: ["updateProfile"],
-    mutationFn: (profileData: string[]) => api.updateProfile(profileData),
+    mutationFn: (profileData: { resumeFile?: string; skills?: string[] }) => api.updateProfile(profileData),
     onSuccess: () => {
       if (onSuccessCallback) onSuccessCallback();
     },
@@ -103,17 +103,18 @@ export const useRemoveSkill = (options?: RemoveSkillOptions) => {
   });
 };
 
-export const useUploadResume = () => {
-  const queryClient = useQueryClient();
+// export const useUploadResume = () => {
+//   const queryClient = useQueryClient();
+//   const updateProfileMutation = useUpdateProfile();
 
-  return useMutation({
-    mutationKey: ["uploadResume"],
-    mutationFn: (file: File) => uploadFileToS3(file),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["candidateProfile"] });
-    },
-  });
-};
+//   return useMutation({
+//     mutationKey: ["uploadResume"],
+//     mutationFn: (file: File) => uploadFileToS3(file),
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({ queryKey: ["candidateProfile"] });
+//     },
+//   });
+// };
 
 export const useDeleteResume = () => {
   const queryClient = useQueryClient();
