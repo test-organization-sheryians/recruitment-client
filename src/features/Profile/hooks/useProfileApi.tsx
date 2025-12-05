@@ -6,7 +6,6 @@ import {
 } from "@tanstack/react-query";
 import * as api from "@/api";
 import { CandidateProfile, AddSkillsPayload } from "@/types/profile";
-import { uploadFileToS3 } from "@/lib/uploadFile";
 
 // GET
 export const useGetProfile = (): UseQueryResult<CandidateProfile, Error> =>

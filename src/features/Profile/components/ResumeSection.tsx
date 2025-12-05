@@ -30,10 +30,18 @@ export default function ResumeSection({ resumefile }: Props) {
   const toggleModal = () => setIsOpen(!isOpen);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setFile(e.target.files[0]);
-    }
-  };
+  const selected = e.target.files?.[0];
+  if (!selected) return;
+
+  // Frontend validation
+  if (selected.type !== "application/pdf") {
+    alert("Only PDF files are allowed.");
+    return;
+  }
+
+  setFile(selected);
+};
+
 
   // ⭐ Upload to S3 → updateProfile({ resumeFile: finalUrl })
   const handleUpload = async () => {
