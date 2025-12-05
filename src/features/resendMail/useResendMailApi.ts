@@ -7,10 +7,20 @@ export interface ResendEmailResponse {
   message: string;
 }
 
+// Explicit error type instead of "any"
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
 export const useResendVerification = () => {
   const toast = useToast();
 
-  return useMutation<ResendEmailResponse, any>({
+  return useMutation<ResendEmailResponse, ApiError>({
     mutationFn: async () => {
       const { data } = await api.post(
         "/api/auth/resend-verification-email",
@@ -24,7 +34,7 @@ export const useResendVerification = () => {
       toast.success(data?.message || "Verification email sent successfully");
     },
 
-    onError: (error: any) => {
+    onError: (error:ApiError) => {
       const msg =
         error?.response?.data?.message ||
         error?.message ||
