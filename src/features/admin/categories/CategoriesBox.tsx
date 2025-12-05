@@ -34,7 +34,7 @@ const CategoriesBox = () => {
     error: updateError
   } = useUpdateJobCategory();
 
-  // Show error toasts when mutations fail
+
   useEffect(() => {
     if (deleteError) {
       showError(

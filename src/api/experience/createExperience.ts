@@ -1,5 +1,4 @@
 import api from "@/config/axios";
-import { ExperienceItem } from "@/types/ExperienceItem ";
 
 export interface CreateExperiencePayload {
  

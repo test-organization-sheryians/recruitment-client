@@ -130,3 +130,18 @@
     @apply bg-background text-foreground;
   }
 }
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+
+
