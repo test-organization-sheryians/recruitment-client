@@ -27,11 +27,13 @@ export default function SocialLinksSection({
   const toggleModal = () => setIsOpen(!isOpen);
 
   const handleSave = () => {
-    const profileData = JSON.stringify({
+    const profileData = {
+      resumeFile: undefined,
+      skills: [],
       linkedinUrl: linkedinValue,
       githubUrl: githubValue,
       portfolioUrl: portfolioValue,
-    });
+    };
 
     updateProfileMutation.mutate(profileData, {
       onSuccess: () => {

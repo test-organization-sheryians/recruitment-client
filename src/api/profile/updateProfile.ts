@@ -1,14 +1,25 @@
 import api from "@/config/axios";
+export interface UpdateProfilePayload {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phoneNumber?: string;
+  resumeFile?: string;
+  skills?: string[];
+  linkedinUrl?: string;
+  githubUrl?: string;
+  portfolioUrl?: string;
+  key?: string;
+}
 
-export const updateProfile = async (data: any) => {
+export const updateProfile = async (data: UpdateProfilePayload) => {
+  const cleanData: Partial<UpdateProfilePayload> = {};
 
-  // Remove null or undefined fields
-  const cleanData: any = {};
-  Object.keys(data).forEach((key) => {
-    if (data[key] !== null && data[key] !== undefined) {
-      cleanData[key] = data[key];
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== null && value !== undefined) {
+      cleanData[key as keyof UpdateProfilePayload] = value;
     }
-  });
+  }
 
   const response = await api.patch(
     "/api/candidate-profile/update-profile",

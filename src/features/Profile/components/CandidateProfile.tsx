@@ -13,6 +13,7 @@ import ResumeSection from "./ResumeSection";
 import SocialLinksSection from "./SocialLinksSection";
 import AvailabilitySection from "./AvailabilitySection";
 
+
 export default function CandidateProfile() {
   const user = useSelector((state: RootState) => state.auth.user);
 
@@ -63,7 +64,7 @@ export default function CandidateProfile() {
           {/* Resume */}
           <div className="bg-white rounded-2xl shadow-sm p-6">
             {/* <h2 className="text-lg font-semibold mb-4">Resume</h2> */}
-            <ResumeSection resumeUrl={profile?.resumeUrl} />
+            <ResumeSection resumefile={profile?.resumeUrl} />
           </div>
         </div>
 

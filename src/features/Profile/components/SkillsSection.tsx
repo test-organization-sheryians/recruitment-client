@@ -32,7 +32,7 @@ export default function SkillsSection({ refetchProfile }: Props) {
   });
 
   const handleUpdateSkills = () => {
-    updateSkills.mutate(selectedSkills);
+    updateSkills.mutate({skills:selectedSkills});
   };
 
   // Remove Skill
@@ -69,7 +69,7 @@ export default function SkillsSection({ refetchProfile }: Props) {
         title="Add Skills"
       >
         <div className="flex flex-wrap gap-2 max-h-72 overflow-y-auto p-3 bg-gray-50 rounded-xl border">
-          {skillsResponse.map((skill: any) => {
+          {skillsResponse.map((skill: { _id: string; name: string }) => {
             const isAlreadyAdded = userSkills.includes(skill.name);
             const isSelected = selectedSkills.includes(skill._id);
 
