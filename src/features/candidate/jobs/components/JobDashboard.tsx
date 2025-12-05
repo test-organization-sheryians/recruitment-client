@@ -41,16 +41,21 @@ export default function JobDashboardPage() {
   const jobsLoading = selectedCategory ? jobsByCategory.isLoading : allJobs.isLoading;
   const jobs: Job[] = Array.isArray(jobsData) ? jobsData : [];
 
-  // Filter jobs by search term
-  const filteredJobs = jobs?.filter((job: any) => {
-    const titleMatch = job?.title?.toLowerCase().includes(searchTerm.toLowerCase());
-    const departmentMatch = job?.department?.toLowerCase().includes(searchTerm.toLowerCase());
-    const skillMatch = job?.skills?.some((s: any) =>
-      (typeof s === "string" ? s : s.name)?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+ // Safe lowercase search term
+const term = searchTerm?.toLowerCase() || "";
 
-    return titleMatch || departmentMatch || skillMatch;
+// Type-safe filtering without ANY
+const filteredJobs = jobs?.filter((job: Job) => {
+  const titleMatch = job.title?.toLowerCase().includes(term);
+  const departmentMatch = job.department?.toLowerCase().includes(term);
+
+  const skillMatch = job.skills?.some((skill) => {
+    const skillName = typeof skill === "string" ? skill : skill?.name;
+    return skillName?.toLowerCase().includes(term);
   });
+
+  return titleMatch || departmentMatch || skillMatch;
+});
 
   return (
     <div className="min-h-screen bg-blue-50">
