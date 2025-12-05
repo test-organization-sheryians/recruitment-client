@@ -161,7 +161,7 @@ export default function ExperienceSection({ candidateId }: Props) {
               value={form.company}
               onChange={handleChange}
               placeholder="Company Name"
-              className="input"
+              className="input border-gray-500 border-1 px-3 rounded-xl"
             />
             <input
               type="text"
@@ -169,7 +169,7 @@ export default function ExperienceSection({ candidateId }: Props) {
               value={form.title}
               onChange={handleChange}
               placeholder="Job Title"
-              className="input"
+              className="input border-gray-500 border-1 px-3 rounded-xl"
             />
             <input
               type="text"
@@ -177,7 +177,7 @@ export default function ExperienceSection({ candidateId }: Props) {
               value={form.location}
               onChange={handleChange}
               placeholder="Location"
-              className="input"
+              className="input border-gray-500 border-1 px-3 rounded-xl"
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -217,8 +217,9 @@ export default function ExperienceSection({ candidateId }: Props) {
             onChange={handleChange}
             placeholder="Brief description of your role"
             rows={3}
-            className="input resize-none"
+            className="input resize-none w-full border-gray-500 border-1 py-1 px-2 mb-2 rounded-xl"
           />
+          <br />
 
           <button
             onClick={handleSubmit}
