@@ -2,6 +2,7 @@
 
 import { Mail, RefreshCw } from "lucide-react";
 import { useResendVerification } from "@/features/resendMail/useResendMailApi";
+import { AxiosError } from "axios";
 
 interface Props {
   email: string;
@@ -18,7 +19,7 @@ export default function ReVerifyEmailPage({ email, isVerified }: Props) {
 
     try {
       const res = await mutateAsync();
-    } catch (error: any) {
+    } catch (error) {
     }
   };
 
