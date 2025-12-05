@@ -66,6 +66,7 @@ export default function SkillPage() {
   const handleDelete = (id: string) => {
     deleteSkill(id, {
       onSuccess: () => success("Skill deleted"),
+
       onError: (e) => {
         console.log(e);
       },

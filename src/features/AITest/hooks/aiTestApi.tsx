@@ -6,9 +6,7 @@ import { parseResumeAPI } from "@/api/AITest/parseResume.";
 import { generateQuestionsAPI } from "@/api/AITest/questionGen";
 
 // ---------- TYPES ----------
-export interface GenerateQuestionsPayload {
-  resumeText: string;
-}
+export type GenerateQuestionsPayload  = string
 
 export interface EvaluateAnswersPayload {
   questions: string[];
