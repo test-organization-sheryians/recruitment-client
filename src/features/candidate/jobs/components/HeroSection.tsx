@@ -27,37 +27,36 @@ export default function HeroSection({ searchTerm, setSearchTerm }: HeroSectionPr
         </p>
 
         {/* SEARCH BAR */}
-        <div
-          className="mt-10 bg-white p-3 md:p-4 rounded-lg shadow-md 
-                     flex flex-col md:flex-row gap-3 border w-full max-w-3xl mx-auto"
-        >
-          {/* Job Input */}
-          <div className="flex items-center bg-gray-100 px-3 py-2 rounded flex-1 gap-2">
-            <Search size={18} className="text-gray-500" />
-            <input
-              type="text"
-              placeholder="Job Title or Keywords"
-              className="flex-1 bg-transparent outline-none text-sm md:text-base"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+    <div
+  className="mt-10 bg-white p-3 md:p-4 rounded-lg shadow-md 
+             flex flex-col md:flex-row gap-3 border w-full max-w-3xl mx-auto"
+>
+  {/* Combined Search Input */}
+  <div className="relative flex-1">
+    <input
+      type="text"
+      placeholder="Search by Job Title, Keywords, or Location"
+      className="w-full bg-gray-100 px-4 py-3 pr-10 rounded outline-none text-sm md:text-base
+                 focus:ring-2 focus:ring-blue-500"
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+    />
+    <MapPin
+      size={18}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+    />
+  </div>
 
-          {/* Location Input (optional, not used for filtering yet) */}
-          <div className="flex items-center bg-gray-100 px-3 py-2 rounded flex-1 gap-2">
-            <MapPin size={18} className="text-gray-500" />
-            <input
-              type="text"
-              placeholder="Location"
-              className="flex-1 bg-transparent outline-none text-sm md:text-base"
-            />
-          </div>
+  {/* Search Button */}
+  <button
+    onClick={() => console.log("Searching for:", searchTerm)}
+    className="bg-blue-800 text-white px-6 py-3 rounded hover:bg-blue-900 
+               w-full md:w-auto md:min-w-[120px] transition-all"
+  >
+    Search
+  </button>
+</div>
 
-          {/* Button (optional, could trigger search) */}
-          <button className="bg-blue-800 text-white px-6 py-2 rounded hover:bg-blue-900 w-full md:w-auto">
-            Search
-          </button>
-        </div>
       </div>
     </div>
   );
