@@ -17,6 +17,7 @@ if (!user) {
     redirect("/login");
   } else {
     if (!user?.isVerified) {
+      console.log("user is" ,user)
       redirect("/un-verified");
     }
   }

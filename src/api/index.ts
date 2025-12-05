@@ -27,5 +27,8 @@ export * from "./experience/deleteExperience"
 export * from "./experience/getCandidateExperience"
 export * from "./experience/getSingleExperience"
 export * from "./experience/updateExperience"
+export * from "./users/getAllUsers";
+export * from "./users/updateUserRole";
+export * from "./users/deleteUser";
 
 

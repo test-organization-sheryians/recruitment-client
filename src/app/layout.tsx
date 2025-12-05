@@ -4,6 +4,8 @@ import "./globals.css";
 import Wrapper from "@/components/hoc/Wrapper";
 import AuthProvider from "@/components/hoc/AuthProvider";
 
+
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
