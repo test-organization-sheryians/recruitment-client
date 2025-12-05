@@ -13,15 +13,12 @@ export default function ReVerifyEmailPage({ email, isVerified }: Props) {
 
   const handleResend = async () => {
     if (isVerified) {
-      alert('Your account is already verified!');
       return;
     }
 
     try {
       const res = await mutateAsync();
-      alert(res.message || 'Verification email sent again!');
     } catch (error: any) {
-      alert(error.response?.data?.message || error.message || 'Something went wrong');
     }
   };
 
