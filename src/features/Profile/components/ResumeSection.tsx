@@ -23,15 +23,8 @@ export default function ResumeSection({ resumefile }: Props) {
   const deleteMutation = useDeleteResume();
   const isDeleting = deleteMutation.status === "pending";
 
-  // update profile hook - AFTER SUCCESS closes modal
+  // update profile hook
   const updateProfile = useUpdateProfile1();
-  
-  // Handle successful update
-  if (updateProfile.isSuccess) {
-    setIsOpen(false);
-    setFile(null);
-    refetchProfile();
-  }
 
   const toggleModal = () => setIsOpen(!isOpen);
 
@@ -60,6 +53,12 @@ export default function ResumeSection({ resumefile }: Props) {
       updateProfile.mutate({ 
         id: user?.id || '',
         resumeFile: finalUrl 
+      }, {
+        onSuccess: () => {
+          setIsOpen(false);
+          setFile(null);
+          refetchProfile();
+        }
       });
     } catch (err) {
       console.error("Upload failed:", err);
@@ -81,9 +80,21 @@ export default function ResumeSection({ resumefile }: Props) {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold text-gray-800">Resume</h2>
-        <button onClick={toggleModal}>
-          <FaPlus />
-        </button>
+        {resumefile ? (
+      <button
+      onClick={toggleModal}
+      className="bg-blue-600 hover:bg-blue-800 text-md px-3 py-1 rounded-md text-white "
+      >
+      Edit
+      </button>
+  ) : (
+      <button 
+      onClick={toggleModal}
+      className="text-blue-600 hover:text-blue-800"
+      >
+      <FaPlus className="text-black" />
+      </button>
+  )}
       </div>
 
       {/* Resume display */}
