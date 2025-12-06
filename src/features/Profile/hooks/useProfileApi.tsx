@@ -26,12 +26,25 @@ export const useCreateProfile = () =>
 // UPDATE
 export const useUpdateProfile = (onSuccessCallback?: () => void) =>
   useMutation({
-    mutationKey: ["updateProfile"],
+    mutationKey: ["candidateProfile"],
     mutationFn: (profileData: { resumeFile?: string; skills?: string[] }) => api.updateProfile(profileData),
     onSuccess: () => {
       if (onSuccessCallback) onSuccessCallback();
     },
   });
+
+export const useUpdateProfile1 = ()=> {
+  const queryClient = useQueryClient() ; 
+   return  useMutation({
+        mutationKey:["candidateProfile"],
+       mutationFn: (payload:api.UpdateProfilePayload) => api.updateProfile(payload), // Direct call – perfect match!
+        onSuccess:()=> {
+             queryClient.invalidateQueries({
+               queryKey:["candidateProfile"]
+             })
+        }
+    })
+}
 
 // ADD SKILLS
 interface AddSkillsOptions {

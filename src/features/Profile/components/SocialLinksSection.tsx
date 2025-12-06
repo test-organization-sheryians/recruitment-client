@@ -1,8 +1,12 @@
 "use client";
+
 import { useState } from "react";
-import { useUpdateProfile } from "../hooks/useProfileApi";
 import { FaPlus } from "react-icons/fa";
 import Modal from "@/components/ui/Modal";
+import { LoaderCircleIcon } from "lucide-react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/config/store";
+import { useUpdateProfile1 } from "../hooks/useProfileApi";
 
 interface Props {
   linkedin?: string;
@@ -12,128 +16,166 @@ interface Props {
 }
 
 export default function SocialLinksSection({
-  linkedin,
-  github,
-  portfolioUrl,
+  linkedin = "",
+  github = "",
+  portfolioUrl = "",
   onUpdate,
 }: Props) {
-  const [linkedinValue, setLinkedinValue] = useState(linkedin || "");
-  const [githubValue, setGithubValue] = useState(github || "");
-  const [portfolioValue, setPortfolioValue] = useState(portfolioUrl || "");
   const [isOpen, setIsOpen] = useState(false);
 
-  const updateProfileMutation = useUpdateProfile();
+  const [linkedinValue, setLinkedinValue] = useState(linkedin);
+  const [githubValue, setGithubValue] = useState(github);
+  const [portfolioValue, setPortfolioValue] = useState(portfolioUrl);
 
-  const toggleModal = () => setIsOpen(!isOpen);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const userId = user?.id
+
+  const { mutate: updateProfile, isPending } = useUpdateProfile1();
+
+  const toggleModal = () => setIsOpen((prev) => !prev);
 
   const handleSave = () => {
-    const profileData = {
-      resumeFile: undefined,
-      skills: [],
-      linkedinUrl: linkedinValue,
-      githubUrl: githubValue,
-      portfolioUrl: portfolioValue,
-    };
+    if (!userId) return;
 
-    updateProfileMutation.mutate(profileData, {
-      onSuccess: () => {
-        setIsOpen(false);
-        onUpdate?.();
+    updateProfile(
+      {
+        id: userId,
+        linkedinUrl: linkedinValue.trim() || "",
+        githubUrl: githubValue.trim() || "",
+        portfolioUrl: portfolioValue.trim() || "",
       },
-    });
+      {
+        onSuccess: () => {
+          toggleModal();
+          onUpdate?.();
+        },
+        onError: () => {
+          alert("Failed to update links. Try again.");
+        },
+      }
+    );
   };
 
-  return (
-    <div className="space-y-4">
-      {/* Header like Skills */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-gray-800">Social Links</h2>
+  const hasAnyLink = linkedin || github || portfolioUrl;
 
-        <button onClick={toggleModal}>
-          <FaPlus />
+  return (
+    <div className="space-y-6 border border-gray-200 rounded-xl p-6 bg-white shadow-md">
+      {/* Header */}
+      <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+        <h2 className="text-xl font-bold text-gray-800">Social Links</h2>
+        <button
+          onClick={toggleModal}
+          className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition shadow-lg"
+          disabled={isPending}
+        >
+          <FaPlus className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Display Section */}
-      {linkedin || github || portfolioUrl ? (
-        <div className="space-y-2 text-sm">
+      {/* Display Links */}
+      {hasAnyLink ? (
+        <div className="space-y-3">
           {linkedin && (
             <a
               href={linkedin}
               target="_blank"
-              className="block text-blue-600 hover:underline"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 text-blue-600 hover:underline font-medium"
             >
-              LinkedIn
+              LinkedIn → {linkedin}
             </a>
           )}
           {github && (
             <a
               href={github}
               target="_blank"
-              className="block text-blue-600 hover:underline"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 text-blue-600 hover:underline font-medium"
             >
-              GitHub
+              GitHub → {github}
             </a>
           )}
           {portfolioUrl && (
             <a
               href={portfolioUrl}
               target="_blank"
-              className="block text-blue-600 hover:underline"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 text-blue-600 hover:underline font-medium"
             >
-              Portfolio
+              Portfolio → {portfolioUrl}
             </a>
           )}
         </div>
       ) : (
-        <div className="text-sm text-gray-500 italic">
-          No social links added yet
-        </div>
+        <p className="text-gray-500 italic py-4 bg-gray-50 rounded-lg">
+          No social links added yet. Click the + button to add them!
+        </p>
       )}
 
-      {/* Modal */}
+      {/* Edit Modal */}
       <Modal isOpen={isOpen} onClose={toggleModal} title="Edit Social Links">
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
-            <label className="text-sm font-medium text-gray-600">LinkedIn</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              LinkedIn Profile
+            </label>
             <input
               type="url"
               value={linkedinValue}
               onChange={(e) => setLinkedinValue(e.target.value)}
-              placeholder="https://linkedin.com/in/username"
-              className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/60 transition"
+              placeholder="https://linkedin.com/in/yourname"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-600">GitHub</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              GitHub Profile
+            </label>
             <input
               type="url"
               value={githubValue}
               onChange={(e) => setGithubValue(e.target.value)}
-              placeholder="https://github.com/username"
-              className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/60 transition"
+              placeholder="https://github.com/yourname"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-600">Portfolio</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Portfolio Website
+            </label>
             <input
               type="url"
               value={portfolioValue}
               onChange={(e) => setPortfolioValue(e.target.value)}
-              placeholder="https://myportfolio.com"
-              className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/60 transition"
+              placeholder="https://yourportfolio.com"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
             />
           </div>
 
-          <button
-            onClick={handleSave}
-            disabled={updateProfileMutation.isPending}
-            className="bg-blue-800 text-white px-5 py-2 rounded-lg hover:bg-blue-900 transition disabled:opacity-50"
-          >
-            {updateProfileMutation.isPending ? "Saving..." : "Save Links"}
-          </button>
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={toggleModal}
+              className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isPending}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-2"
+            >
+              {isPending ? (
+                <>
+                  <LoaderCircleIcon className="animate-spin w-5 h-5" />
+                  Saving...
+                </>
+              ) : (
+                "Save Links"
+              )}
+            </button>
+          </div>
         </div>
       </Modal>
     </div>

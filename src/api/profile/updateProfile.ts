@@ -1,5 +1,6 @@
 import api from "@/config/axios";
 export interface UpdateProfilePayload {
+  id:string , 
   firstName?: string;
   lastName?: string;
   email?: string;
@@ -14,7 +15,7 @@ export interface UpdateProfilePayload {
 
 export const updateProfile = async (data: UpdateProfilePayload) => {
   const cleanData: Partial<UpdateProfilePayload> = {};
-
+  console.log(data , "this is from the api ")
   for (const [key, value] of Object.entries(data)) {
     if (value !== null && value !== undefined) {
       cleanData[key as keyof UpdateProfilePayload] = value;

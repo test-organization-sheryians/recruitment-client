@@ -7,9 +7,9 @@ export interface ExperienceItem {
   location?: string;
   description?: string;
 
-  startDate: string | Date;
-  endDate?: string | Date;
-  isCurrent?: boolean;
+  startDate: string | Date|null;
+  endDate?: string | Date | null ;
+  isCurrent?: boolean|null;
   createdAt?: string;
   updatedAt?: string;
 }
