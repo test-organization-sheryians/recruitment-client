@@ -29,7 +29,6 @@ export default function CandidateProfile() {
   }, [isError, user?.id, refetch, createProfileMutation]);
 
   if (isLoading) return <p className="text-center mt-10">Loading profile...</p>;
-  if (!user) return <p className="text-center mt-10 text-red-500">User not found</p>;
    
   return (
 <div className="min-h-screen bg-gray-50 px-3 py-2 sm:px-6 sm:py-6 md:p-8">
@@ -40,14 +39,14 @@ export default function CandidateProfile() {
           <h1 className="text-3xl font-bold text-gray-900">
             Candidate Profile
           </h1>
-        </div>
+        </div>  
 
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <PersonalInfoSection
-            firstName={user.firstName || ""}
-            lastName={user.lastName || ""}
-            email={user.email || ""}
-            phone={profile?.phone || ""}
+            firstName={user?.firstName ?? ""}
+            lastName={user?.lastName ?? ""}
+            email={user?.email ?? ""}
+            phone={profile?.phone ?? ""}
           />
         </div>
 
@@ -56,7 +55,10 @@ export default function CandidateProfile() {
           {/* Skills */}
           <div className="bg-white rounded-2xl shadow-sm p-6">
             {/* <h2 className="text-lg font-semibold mb-4">Skills</h2> */}
-            <SkillsSection skills={profile?.skills ?? []} />
+            <SkillsSection skills={profile?.skills?.map((skill: string | { _id: string; name: string }) => ({
+              _id: typeof skill === 'string' ? skill : skill._id,
+              name: typeof skill === 'string' ? skill : skill.name
+            })) ?? []} />
           </div>
 
           {/* Resume */}
@@ -69,7 +71,11 @@ export default function CandidateProfile() {
         {/* Experience Full Width */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           {/* <h2 className="text-lg font-semibold mb-4">Experience</h2> */}
-           <ExperienceSection candidateId={profile?._id || ""}  experiences={profile?.experiences || []} />
+           <ExperienceSection 
+            candidateId={profile?._id || ""}  
+            experiences={profile?.experiences || []} 
+            refetchProfile={refetch}
+          />
         </div>
 
         {/* Social & Availability */}
@@ -87,7 +93,10 @@ export default function CandidateProfile() {
 
           <div className="bg-white rounded-2xl shadow-sm p-6">
             {/* <h2 className="text-lg font-semibold mb-4">Availability</h2> */}
-            <AvailabilitySection availability={profile?.availability} />
+            <AvailabilitySection 
+            availability={profile?.availability} 
+            onUpdate={refetch}
+          />
           </div>
 
         </div>

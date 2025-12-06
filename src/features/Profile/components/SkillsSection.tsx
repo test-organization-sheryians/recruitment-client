@@ -12,7 +12,7 @@ import { useUpdateProfile1 } from "../hooks/useProfileApi";
 interface Skill {
   _id: string;
   name: string;
-}
+} 
 
 interface Props {
   skills: Skill[]; 

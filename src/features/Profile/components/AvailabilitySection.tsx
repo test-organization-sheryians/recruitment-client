@@ -68,8 +68,8 @@ export default function AvailabilitySection({ availability, onUpdate }: Props) {
           Availability
         </h2>
 
-        <button onClick={toggleModal}>
-          <FaPlus />
+        <button className="text-white bg-blue-600 px-4 py-2 rounded-lg text-md" onClick={toggleModal}>
+          Edit
         </button>
       </div>
 

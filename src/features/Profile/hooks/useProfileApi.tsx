@@ -5,7 +5,7 @@ import {
   UseQueryResult,
 } from "@tanstack/react-query";
 import * as api from "@/api";
-import { CandidateProfile, AddSkillsPayload } from "@/types/profile";
+import { CandidateProfile  } from "@/types/profile";
 
 // GET
 export const useGetProfile = (): UseQueryResult<CandidateProfile, Error> =>
@@ -24,15 +24,6 @@ export const useCreateProfile = () =>
   });
 
 // UPDATE
-export const useUpdateProfile = (onSuccessCallback?: () => void) =>
-  useMutation({
-    mutationKey: ["candidateProfile"],
-    mutationFn: (profileData: { resumeFile?: string; skills?: string[] }) => api.updateProfile(profileData),
-    onSuccess: () => {
-      if (onSuccessCallback) onSuccessCallback();
-    },
-  });
-
 export const useUpdateProfile1 = ()=> {
   const queryClient = useQueryClient() ; 
    return  useMutation({
@@ -46,87 +37,6 @@ export const useUpdateProfile1 = ()=> {
     })
 }
 
-// ADD SKILLS
-interface AddSkillsOptions {
-  onSuccess?: (
-    data: unknown,
-    variables: AddSkillsPayload,
-    context: unknown
-  ) => void;
-  onError?: (
-    error: Error,
-    variables: AddSkillsPayload,
-    context: unknown
-  ) => void;
-}
-
-export const useAddSkills = (options?: AddSkillsOptions) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: ["addSkills"],
-    mutationFn: (data: AddSkillsPayload) => api.addSkills(data),
-
-    onSuccess: (
-      data: unknown,
-      variables: AddSkillsPayload,
-      context: unknown
-    ) => {
-      queryClient.setQueryData(
-        ["candidateProfile"],
-        (old: CandidateProfile | undefined): CandidateProfile | undefined => {
-          if (!old) return old;
-
-          return {
-            ...old,
-            skills: [...(old.skills || []), ...variables.skills],
-          };
-        }
-      );
-
-      options?.onSuccess?.(data, variables, context);
-    },
-
-    onError: (error: Error, variables: AddSkillsPayload, context: unknown) => {
-      options?.onError?.(error, variables, context);
-    },
-  });
-};
-interface RemoveSkillOptions {
-  onSuccess?: (data: unknown, variables: string, context: unknown) => void;
-  onError?: (error: Error, variables: string, context: unknown) => void;
-}
-
-export const useRemoveSkill = (options?: RemoveSkillOptions) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: ["removeSkill"],
-    mutationFn: (skillName: string) => api.removeSkill(skillName),
-
-    onSuccess: (data: unknown, variables: string, context: unknown) => {
-      queryClient.invalidateQueries({ queryKey: ["candidateProfile"] });
-      options?.onSuccess?.(data, variables, context);
-    },
-
-    onError: (error: Error, variables: string, context: unknown) => {
-      options?.onError?.(error, variables, context);
-    },
-  });
-};
-
-// export const useUploadResume = () => {
-//   const queryClient = useQueryClient();
-//   const updateProfileMutation = useUpdateProfile();
-
-//   return useMutation({
-//     mutationKey: ["uploadResume"],
-//     mutationFn: (file: File) => uploadFileToS3(file),
-//     onSuccess: () => {
-//       queryClient.invalidateQueries({ queryKey: ["candidateProfile"] });
-//     },
-//   });
-// };
 
 export const useDeleteResume = () => {
   const queryClient = useQueryClient();

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, ChangeEvent } from "react";
-import { useUpdateProfile, useDeleteResume, useGetProfile } from "../hooks/useProfileApi";
+import { useUpdateProfile1, useDeleteResume, useGetProfile } from "../hooks/useProfileApi";
+import { useSelector } from "react-redux";
+import { RootState } from "@/config/store";
 import { FaPlus } from "react-icons/fa";
 import Modal from "@/components/ui/Modal";
 import { uploadFileToS3 } from "@/lib/uploadFile";// adjust path if needed
@@ -15,17 +17,21 @@ export default function ResumeSection({ resumefile }: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
   const { refetch: refetchProfile } = useGetProfile();
+  const user = useSelector((state: RootState) => state.auth.user);
 
   // delete resume
   const deleteMutation = useDeleteResume();
   const isDeleting = deleteMutation.status === "pending";
 
   // update profile hook - AFTER SUCCESS closes modal
-  const updateProfile = useUpdateProfile(() => {
+  const updateProfile = useUpdateProfile1();
+  
+  // Handle successful update
+  if (updateProfile.isSuccess) {
     setIsOpen(false);
     setFile(null);
     refetchProfile();
-  });
+  }
 
   const toggleModal = () => setIsOpen(!isOpen);
 
@@ -51,7 +57,10 @@ export default function ResumeSection({ resumefile }: Props) {
       const finalUrl = await uploadFileToS3(file);
       console.log("FINAL URL:", finalUrl);
  
-      updateProfile.mutate({ resumeFile: finalUrl });
+      updateProfile.mutate({ 
+        id: user?.id || '',
+        resumeFile: finalUrl 
+      });
     } catch (err) {
       console.error("Upload failed:", err);
     }
