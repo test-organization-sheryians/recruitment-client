@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 // Assuming "@/components/ui/button" is a standard Button component
 import { Button } from "@/components/ui/button";
+import { useCreateTest } from "../hooks/useTest";
+import { useToast } from "@/components/ui/Toast";
 import {
   BookOpen,
   FileText,
@@ -26,7 +28,7 @@ interface Errors {
   [key: string]: string;
 }
 
-export default function CreateTestForm() {
+export default function CreateTestForm({ onSuccess }: { onSuccess?: () => void }) {
   const [formData, setFormData] = useState<FormData>({
     title: "",
     summary: "",
@@ -39,6 +41,9 @@ export default function CreateTestForm() {
   const [errors, setErrors] = useState<Errors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const createTest = useCreateTest();
+  const { success, error: showError } = useToast();
+  const isLoading = createTest?.status === "pending";
 
   const validateForm = (): boolean => {
     const newErrors: Errors = {};
@@ -93,12 +98,23 @@ export default function CreateTestForm() {
     setSuccessMessage("");
 
     if (!validateForm()) return;
-
     setIsSubmitting(true);
     try {
-      // Simulate API delay
-      console.log("Form submitted:", formData);
-      await new Promise(resolve => setTimeout(resolve, 800)); 
+      const durationNum = parseInt(formData.duration);
+      const scoreNum = parseInt(formData.passingScore);
+
+      const payload = {
+        title: formData.title,
+        summary: formData.summary,
+        description: formData.summary,
+        duration: durationNum,
+        category: formData.category,
+        passingScore: scoreNum,
+        prompt: formData.aiPrompt,
+      };
+
+      await createTest.mutateAsync(payload);
+      success("Test created successfully!");
       setSuccessMessage("Test created successfully!");
       setFormData({
         title: "",
@@ -109,67 +125,41 @@ export default function CreateTestForm() {
         aiPrompt: "",
       });
       setTimeout(() => setSuccessMessage(""), 4000);
-    } catch (error) {
-      console.error("Error creating test:", error);
+      if (onSuccess) onSuccess();
+    } catch (err: unknown) {
+      console.error("Error creating test:", err);
+      const msg = err instanceof Error ? err.message : String(err);
+      showError(msg || "Failed to create test");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const FormField = ({
-    label,
-    icon: Icon,
-    error,
-    children,
-    optional = false,
-  }: {
-    label: string;
-    icon: React.ComponentType<{ className?: string }>;
-    error?: string;
-    children: React.ReactNode;
-    optional?: boolean;
-  }) => (
-    <div className="space-y-1"> {/* Reduced vertical spacing */}
-      <label className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-        <Icon className="w-4 h-4 text-teal-600" />
-        {label}
-        {optional && <span className="text-xs font-normal text-gray-400">(Optional)</span>}
-      </label>
-      {children}
-      {error && (
-        <p className="flex items-center gap-1 text-xs text-red-600">
-          <AlertCircle className="w-3 h-3" /> {/* Smaller icon */}
-          {error}
-        </p>
-      )}
-    </div>
-  );
-
   return (
-    <div className="min-h-[70vh] bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 py-6 px-4 sm:px-6 lg:px-8"> {/* Reduced py-8 to py-6 */}
-      <div className="max-w-7xl mx-auto"> 
+    <div className="min-h-[70vh] bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
 
         {/* Top header with actions */}
         <div className="flex items-start justify-between mb-4">
-          <div className="flex items-start gap-1"> {/* Reduced gap-4 to gap-3 */}
-            <div className="inline-flex items-center justify-center w-10 h-10 bg-white rounded-full shadow-sm flex-shrink-0"> {/* Smaller icon container */}
-              <BookOpen className="w-5 h-5 text-teal-600" /> {/* Smaller icon */}
+          <div className="flex items-start gap-1">
+            <div className="inline-flex items-center justify-center w-10 h-10 bg-white rounded-full shadow-sm flex-shrink-0">
+              <BookOpen className="w-5 h-5 text-teal-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Create New Assessment</h1> {/* Smaller header */}
+              <h1 className="text-2xl font-bold text-gray-900">Create New Assessment</h1>
               <p className="text-sm text-gray-600">Configure core details and AI generation prompts.</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2"> {/* Reduced gap-3 to gap-2 */}
+          <div className="flex items-center gap-2">
             <Button
               type="submit"
               form="create-test-form"
               className="px-4 py-2 bg-blue-600 hover:bg-black text-white text-sm shadow-md"
-              disabled={isSubmitting}
-              aria-busy={isSubmitting}
+              disabled={isSubmitting || isLoading}
+              aria-busy={isSubmitting || isLoading}
             >
-              {isSubmitting ? "Saving..." : "Save & Generate"}
+              {isSubmitting || isLoading ? "Saving..." : "Save & Generate"}
             </Button>
             <button
               type="button"
@@ -188,18 +178,22 @@ export default function CreateTestForm() {
           </div>
         )}
 
-        {/* Updated grid to 5 columns on large screens to make sidebar narrower (1/5) and main wider (4/5) */}
-        <form id="create-test-form" onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-5 gap-4"> 
+        <form id="create-test-form" onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {/* Left/Main column - Takes 4/5ths of the space */}
           <div className="lg:col-span-4 space-y-4">
             
-            {/* Basic Information Block - Now has three columns (Title, Category, Summary) */}
+            {/* Basic Information Block */}
             <div className="bg-white rounded-xl shadow p-5 border border-gray-100">
               <h2 className="text-lg font-semibold text-gray-800 mb-3">Basic Information</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> {/* Changed to 3 columns */}
-                <div className="md:col-span-2"> {/* Title takes 2/3 of the row */}
-                  <FormField label="Test Title" icon={BookOpen} error={errors.title}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Title Field - Fixed direct implementation */}
+                <div className="md:col-span-2">
+                  <div className="space-y-1">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                      <BookOpen className="w-4 h-4 text-teal-600" />
+                      Test Title
+                    </label>
                     <input
                       type="text"
                       name="title"
@@ -212,10 +206,21 @@ export default function CreateTestForm() {
                           : "border-gray-300 focus:ring-2 focus:ring-teal-500"
                       } focus:outline-none focus:border-transparent`}
                     />
-                  </FormField>
+                    {errors.title && (
+                      <p className="flex items-center gap-1 text-xs text-red-600">
+                        <AlertCircle className="w-3 h-3" />
+                        {errors.title}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                <FormField label="Category" icon={Tag} error={errors.category}> {/* Category takes 1/3 of the row */}
+                {/* Category Field */}
+                <div className="space-y-1">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                    <Tag className="w-4 h-4 text-teal-600" />
+                    Category
+                  </label>
                   <select
                     name="category"
                     value={formData.category}
@@ -236,11 +241,22 @@ export default function CreateTestForm() {
                     <option value="Technical">Technical</option>
                     <option value="Other">Other</option>
                   </select>
-                </FormField>  
+                  {errors.category && (
+                    <p className="flex items-center gap-1 text-xs text-red-600">
+                      <AlertCircle className="w-3 h-3" />
+                      {errors.category}
+                    </p>
+                  )}
+                </div>
               </div>
               
+              {/* Summary Field - Fixed direct implementation */}
               <div className="mt-4">
-                <FormField label="Summary" icon={FileText} error={errors.summary}>
+                <div className="space-y-1">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                    <FileText className="w-4 h-4 text-teal-600" />
+                    Summary
+                  </label>
                   <textarea
                     name="summary"
                     value={formData.summary}
@@ -250,51 +266,57 @@ export default function CreateTestForm() {
                       errors.summary
                         ? "border-red-300 focus:ring-2 focus:ring-red-200"
                         : "border-gray-300 focus:ring-2 focus:ring-teal-500"
-                    } focus:outline-none focus:border-transparent resize-none min-h-[60px]`} 
+                    } focus:outline-none focus:border-transparent resize-none min-h-[60px]`}
                   />
-                </FormField>
+                  {errors.summary && (
+                    <p className="flex items-center gap-1 text-xs text-red-600">
+                      <AlertCircle className="w-3 h-3" />
+                      {errors.summary}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
-
-              {/* FULL WIDTH PROMPT BOX */}
-              <div className="bg-white rounded-xl shadow p-5 border border-gray-100 w-full">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">AI Prompt</h3>
-
-                  <textarea
-                      name="aiPrompt"
-                      value={formData.aiPrompt}
-                      onChange={handleChange}
-                      placeholder="E.g., 'Act as a senior software architect. Generate 10 multiple-choice questions about React Hooks, focusing on useEffect and useMemo. Questions must be medium difficulty.'"
-                      className={`w-full px-3 py-2 border rounded-lg text-sm transition-all ${
-                          errors.aiPrompt
-                              ? "border-red-300 focus:ring-2 focus:ring-red-200"
-                              : "border-gray-300 focus:ring-2 focus:ring-teal-500"
-                      } focus:outline-none focus:border-transparent resize-none min-h-[140px]`}
-                  />
-
-                  {errors.aiPrompt && (
-                      <p className="flex items-center gap-1 text-xs text-red-600 mt-2">
-                          <AlertCircle className="w-3 h-3" />
-                          {errors.aiPrompt}
-                      </p>
-                  )}
+            {/* AI Prompt Block */}
+            <div className="bg-white rounded-xl shadow p-5 border border-gray-100 w-full">
+              <div className="space-y-1">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                  <FileText className="w-4 h-4 text-teal-600" />
+                  AI Prompt
+                </label>
+                <textarea
+                  name="aiPrompt"
+                  value={formData.aiPrompt}
+                  onChange={handleChange}
+                  placeholder="E.g., 'Act as a senior software architect. Generate 10 multiple-choice questions about React Hooks, focusing on useEffect and useMemo. Questions must be medium difficulty.'"
+                  className={`w-full px-3 py-2 border rounded-lg text-sm transition-all ${
+                    errors.aiPrompt
+                      ? "border-red-300 focus:ring-2 focus:ring-red-200"
+                      : "border-gray-300 focus:ring-2 focus:ring-teal-500"
+                  } focus:outline-none focus:border-transparent resize-none min-h-[140px]`}
+                />
+                {errors.aiPrompt && (
+                  <p className="flex items-center gap-1 text-xs text-red-600">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.aiPrompt}
+                  </p>
+                )}
               </div>
-            </div>            
+            </div>
           </div>
 
           {/* Right/Sidebar column - Now takes 1/5th of the space */}
-          <aside className="lg:col-span-1 space-y-4"> 
+          <aside className="lg:col-span-1 space-y-4">
             
             {/* Test Parameters Block */}
-            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm"> {/* Reduced p-5 to p-4 */}
+            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-800 mb-3">Settings</h3>
-              <div className="space-y-3"> {/* Reduced vertical space */}
+              <div className="space-y-3">
                 
                 {/* Duration */}
                 <div>
-                  <div className="flex items-center gap-1.5 mb-1"> {/* Reduced spacing */}
+                  <div className="flex items-center gap-1.5 mb-1">
                     <Clock className="w-4 h-4 text-gray-600" />
                     <p className="text-sm font-medium text-gray-700">Duration (min)</p>
                   </div>
@@ -316,7 +338,7 @@ export default function CreateTestForm() {
 
                 {/* Passing Score */}
                 <div>
-                  <div className="flex items-center gap-1.5 mb-1"> {/* Reduced spacing */}
+                  <div className="flex items-center gap-1.5 mb-1">
                     <Target className="w-4 h-4 text-gray-600" />
                     <p className="text-sm font-medium text-gray-700">Passing Score (%)</p>
                   </div>
@@ -339,7 +361,6 @@ export default function CreateTestForm() {
               </div>
             </div>
 
-
             {/* Visibility Block */}
             <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
               <h4 className="text-sm font-medium text-gray-800 mb-3">Controls</h4>
@@ -348,27 +369,25 @@ export default function CreateTestForm() {
                   <p className="text-sm text-gray-600">Active Status</p>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" aria-label="Status" title="Status" defaultChecked />
-                    <div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-teal-500 peer-focus:ring-2 peer-focus:ring-teal-300 transition-colors"></div> {/* Smaller switch */}
+                    <div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-teal-500 peer-focus:ring-2 peer-focus:ring-teal-300 transition-colors"></div>
                   </label>
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-600">Show Results?</p>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" aria-label="Show Results" title="Show Results" defaultChecked />
-                    <div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-teal-500 peer-focus:ring-2 peer-focus:ring-teal-300 transition-colors"></div> {/* Smaller switch */}
+                    <div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-teal-500 peer-focus:ring-2 peer-focus:ring-teal-300 transition-colors"></div>
                   </label>
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-600">Shuffle Questions?</p>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" aria-label="Shuffle Questions" title="Shuffle Questions" />
-                    <div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-teal-500 peer-focus:ring-2 peer-focus:ring-teal-300 transition-colors"></div> {/* Smaller switch */}
+                    <div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-teal-500 peer-focus:ring-2 peer-focus:ring-teal-300 transition-colors"></div>
                   </label>
                 </div>
               </div>
-           </div>
-
-        
+            </div>
           </aside>
         </form>
       </div>

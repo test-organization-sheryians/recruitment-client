@@ -10,76 +10,80 @@ import {
   Search,
 } from "lucide-react";
 
-// --------------------------
-// Test Data
-// --------------------------
-const ALL_TESTS = [
-  {
-    id: 1,
-    title: "JavaScript Basics",
-    category: "Programming",
-    duration: 30,
-    passingScore: 60,
-    skills: ["javascript", "html", "basics"],
-  },
-  {
-    id: 2,
-    title: "React Assessment",
-    category: "Frontend",
-    duration: 45,
-    passingScore: 70,
-    
-  },
-  {
-    id: 3,
-    title: "Node.js Backend",
-    category: "Backend",
-    duration: 60,
-    passingScore: 75,
-  },{
-    id: 4,
-    title: "CSS & Tailwind Mastery",
-    category: "Design",
-    duration: 25,
-    passingScore: 80,
-    
-  },
-];
+import { useGetAllTests } from "@/features/admin/test/hooks/useTest";
 
+// --------------------------
+// Types
+// --------------------------
+interface Test {
+  _id: string;
+  title: string;
+  category: string;
+  duration: number;
+  passingScore: number;
+  skills?: string[];
+}
+
+// --------------------------
 // Search filter function
-const filterTests = (tests: any[], searchTerm: string) => {
+// --------------------------
+const filterTests = (tests: Test[], searchTerm: string) => {
   if (!searchTerm) return tests;
 
   const lower = searchTerm.toLowerCase();
 
   return tests.filter(
     (test) =>
-      test.title.toLowerCase().includes(lower) ||
-      test.category.toLowerCase().includes(lower) ||
-      test.skills.some((skill: string) => skill.toLowerCase().includes(lower))
+      test.title?.toLowerCase().includes(lower) ||
+      test.category?.toLowerCase().includes(lower) ||
+      test.skills?.some((skill: string) =>
+        skill.toLowerCase().includes(lower)
+      )
   );
 };
 
 export default function TestList() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [openMenu, setOpenMenu] = useState<number | null>(null);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
 
-  // Close dropdown on outside click
+  // Fetch API
+  const { data, isLoading, isError } = useGetAllTests();
+
+  // Close dropdown when user clicks outside
   useEffect(() => {
-    const closeMenu = () => setOpenMenu(null);
-    window.addEventListener("click", closeMenu);
-    return () => window.removeEventListener("click", closeMenu);
+    const handler = () => setOpenMenu(null);
+    window.addEventListener("click", handler);
+    return () => window.removeEventListener("click", handler);
   }, []);
 
-  const filteredTests = useMemo(
-    () => filterTests(ALL_TESTS, searchTerm),
-    [searchTerm]
+  const tests: Test[] = useMemo(
+    () => (Array.isArray(data) ? (data as Test[]) : []),
+    [data]
   );
+
+  const filteredTests = useMemo(
+    () => filterTests(tests, searchTerm),
+    [tests, searchTerm]
+  );
+
+  // Loading UI
+  if (isLoading)
+    return (
+      <div className="min-h-screen flex justify-center items-center text-lg">
+        Loading...
+      </div>
+    );
+
+  if (isError)
+    return (
+      <div className="min-h-screen flex justify-center items-center text-red-500 text-lg">
+        Failed to load tests
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-white">
-
       {/* Search Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="relative w-full">
@@ -102,21 +106,22 @@ export default function TestList() {
           <div className="text-center py-20 bg-gray-50 rounded-lg border border-dashed border-gray-300">
             <Search size={32} className="mx-auto text-gray-400 mb-4" />
             <p className="text-gray-600 text-xl font-medium">
-              No tests found for '{searchTerm}'
+              No tests found for {searchTerm || "your search"}
             </p>
-            <p className="text-gray-500 mt-2">Try adjusting your search query.</p>
+            <p className="text-gray-500 mt-2">
+              Try adjusting your search query.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTests.map((test) => (
+            {filteredTests.map((test: Test) => (
               <div
-                key={test.id}
-                className="relative bg-white border border-gray-100 rounded-xl  p-6 flex flex-col shadow-lg hover:shadow-xl transition"
+                key={test._id}
+                className="relative bg-white border border-gray-100 rounded-xl p-6 flex flex-col shadow-lg hover:shadow-xl transition"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}
                 <div className="flex justify-between items-start mb-0.5">
-
                   <div>
                     <h2 className="text-xl font-bold">{test.title}</h2>
                     <p className="text-blue-600 font-normal text-xs mt-0.5">
@@ -134,14 +139,14 @@ export default function TestList() {
                       aria-label="More options"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenMenu(openMenu === test.id ? null : test.id);
+                        setOpenMenu(openMenu === test._id ? null : test._id);
                       }}
                     >
                       <EllipsisVertical size={20} />
                     </button>
 
-                    {/* DROPDOWN - Appears OUTSIDE CARD on RIGHT side */}
-                    {openMenu === test.id && (
+                    {/* Dropdown */}
+                    {openMenu === test._id && (
                       <div
                         className="
                           absolute 
@@ -162,7 +167,7 @@ export default function TestList() {
                           className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                           onClick={() => {
                             setOpenMenu(null);
-                            router.push(`/admin/tests/Enrolled/${test.id}`);
+                            router.push(`/admin/tests/Enrolled/${test._id}`);
                           }}
                         >
                           Enrolled
@@ -172,7 +177,7 @@ export default function TestList() {
                           className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                           onClick={() => {
                             setOpenMenu(null);
-                            router.push(`/admin/tests/${test.id}`);
+                            router.push(`/admin/tests/${test._id}`);
                           }}
                         >
                           View Details
@@ -207,18 +212,6 @@ export default function TestList() {
                   </div>
                 </div>
 
-                {/* Skills */}
-                {/* <div className="flex flex-wrap gap-2 mb-6">
-                  {test.skills.map((skill: string) => (
-                    <span
-                      key={skill}
-                      className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div> */}
-
                 <div className="border-t my-1"></div>
 
                 {/* Footer */}
@@ -233,7 +226,7 @@ export default function TestList() {
                   <Button
                     className="text-blue-600 border border-blue-600 hover:bg-blue-50 rounded-lg font-semibold"
                     variant="outline"
-                    onClick={() => router.push(`/admin/tests/${test.id}`)}
+                    onClick={() => router.push(`/admin/tests/${test._id}`)}
                   >
                     View Details
                   </Button>

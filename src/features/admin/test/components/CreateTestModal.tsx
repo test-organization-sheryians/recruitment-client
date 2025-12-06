@@ -31,7 +31,7 @@ export default function CreateTestModal({
         </div>
 
         {/* Form */}
-        <CreateTestForm />
+        <CreateTestForm onSuccess={onClose} />
       </div>
     </div>
   );
