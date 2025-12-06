@@ -27,7 +27,7 @@ export default function Modal({
   title,
   children,
   className = "",
-  maxWidth = "md",
+  maxWidth = "lg",
   showCloseButton = true,
 }: ModalProps) {
   if (!isOpen) return null;
@@ -40,7 +40,7 @@ export default function Modal({
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       <div
-        className={`relative bg-white rounded-2xl shadow-2xl w-full ${maxWidthClasses[maxWidth]} ${className}`}
+        className={`relative bg-white rounded-2xl shadow-2xl ] ${maxWidthClasses[maxWidth]} ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
