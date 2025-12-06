@@ -1,19 +1,177 @@
-'use client'
-import { useParams } from 'next/navigation'
-import React from 'react'
+"use client";
 
-const Page = () => { // Renamed 'page' to 'Page' for convention
-    const param = useParams()
-    const id = param.id // Assuming your parameter is named 'id'
-    console.log(param)
+import React from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useStartTest } from "@/features/AITest/hooks/useStartsTest";
+
+import {
+  Clock,
+  Target,
+  Trophy,
+  Calendar,
+  AlertCircle,
+  BookOpen,
+  CheckCircle,
+} from "lucide-react";
+
+const StartTestPage = () => {
+  const router = useRouter();
+  const { testId } = useParams(); // dynamic route id
+
+  const { mutate, isPending } = useStartTest();
+
+  // Mock Test Data (Later fetch this from DB using React Query)
+  const test = {
+    title: "Full-Stack Developer Assessment 2025",
+    summary:
+      "This exam evaluates your skills in React, Node.js, MongoDB, TypeScript & problem-solving. For senior-level engineers.",
+    category: "Technical Interview",
+    duration: 90,
+    passingScore: 75,
+    showResults: true,
+    createdBy: { name: "Sarah Johnson" },
+    createdAt: "2025-03-15T10:30:00.000Z",
+    prompt:
+      "You have 90 minutes to complete this test. Timer won't pause. Auto-saving is enabled. Best of luck!",
+  };
+
+  const formatDuration = (mins: number) =>
+    mins >= 60 ? `1h ${mins - 60}m` : `${mins}m`;
+
+  const formatDate = (d: string) =>
+    new Date(d).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+  const handleStart = () => {
+    mutate(
+      { testId: String(testId) },
+      {
+        onSuccess: (res: any) => {
+          console.log("✨ Test Started:", res);
+          router.push(`/test/attempt/${res.attemptId}`);
+        },
+        onError: (err: any) => {
+          alert(err.message || "❌ Something went wrong.");
+        },
+      }
+    );
+  };
+
   return (
-    <div>
-       {/* Use regular JSX interpolation { } to display the value */}
-       This is the **ID**: **{id}**
-       {/* You can still use the template literal, but within the { } */}
-       <p>The entire param object is: {JSON.stringify(param)}</p>
-    </div>
-  )
-}
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden animate-fadeIn">
+        
+        {/* LEFT SIDE */}
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-10 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="px-4 py-1.5 bg-white/80 backdrop-blur rounded-full text-xs font-semibold text-blue-700">
+                {test.category}
+              </span>
+              <span className="flex items-center gap-1.5 text-xs font-medium text-green-700">
+                <CheckCircle className="w-3.5 h-3.5" /> Active
+              </span>
+            </div>
 
-export default Page
+            <h1 className="text-3xl font-bold text-gray-900 mb-3">
+              {test.title}
+            </h1>
+
+            <p className="text-gray-700 mb-6">{test.summary}</p>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+                <Clock className="w-7 h-7 text-blue-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-600">Duration</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {formatDuration(test.duration)}
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+                <Target className="w-7 h-7 text-emerald-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-600">Passing</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {test.passingScore}%
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+                <Trophy className="w-7 h-7 text-purple-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-600">Results</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {test.showResults ? "Instant" : "Later"}
+                </p>
+              </div>
+            </div>
+
+            {/* Creator */}
+            <div className="flex items-center gap-4 text-sm text-gray-600">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
+                {test.createdBy.name.slice(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Created by</p>
+                <p className="font-semibold">{test.createdBy.name}</p>
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-gray-500" />
+                <span className="text-xs">{formatDate(test.createdAt)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT SIDE */}
+        <div className="p-10 flex flex-col justify-center">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="p-3 bg-amber-100 rounded-xl">
+              <AlertCircle className="w-6 h-6 text-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold mb-2">Before You Begin</h2>
+              <p className="text-gray-700">{test.prompt}</p>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-8">
+            <div className="flex gap-4">
+              <BookOpen className="w-6 h-6 text-blue-600 mt-1" />
+              <ul className="text-gray-700 text-sm space-y-2">
+                <li>• Stable internet connection</li>
+                <li>• Laptop/Desktop recommended</li>
+                <li>• Do not refresh the page</li>
+                <li>• Auto-save enabled</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Button */}
+          <div className="text-center">
+            <button
+              onClick={handleStart}
+              disabled={isPending}
+              className={`group inline-flex items-center gap-3 px-10 py-4 text-white font-bold text-lg rounded-xl shadow-lg transition-all ${
+                isPending
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-90 hover:-translate-y-1"
+              }`}
+            >
+              {isPending ? "Starting..." : "Start Assessment →"}
+            </button>
+
+            <p className="mt-3 text-xs text-gray-500">
+              Timer starts immediately after clicking.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default StartTestPage;
