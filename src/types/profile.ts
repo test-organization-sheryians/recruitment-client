@@ -8,6 +8,7 @@ export interface CandidateProfile {
   skills: string[];
   experiences: ExperienceItem[];
   resumeFile?: string;
+  resumeFileNoPI?: string;
   linkedinUrl?: string;
   githubUrl?: string;
   portfolioUrl?: string;

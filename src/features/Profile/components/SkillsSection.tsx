@@ -84,7 +84,7 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
         <button
           onClick={toggleModal}
           disabled={loadingSkills || isPending}
-          className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition shadow-lg disabled:opacity-50"
+          className="p-2 rounded-full bg-blue-600 cursor-pointer text-white hover:bg-blue-700 transition shadow-lg disabled:opacity-50"
         >
           <FaPlus className="w-4 h-4" />
         </button>
@@ -103,7 +103,7 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
               <button
                 onClick={() => removeSkill(skill._id)}
                 disabled={isPending}
-                className="text-blue-600 hover:text-red-600 transition"
+                className="text-blue-600 hover:text-red-600 transition cursor-pointer"
               >
                 {isPending ? (
                   <LoaderCircleIcon className="w-4 h-4 animate-spin" />

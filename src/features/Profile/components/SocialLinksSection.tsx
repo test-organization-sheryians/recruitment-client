@@ -65,7 +65,7 @@ export default function SocialLinksSection({
         <h2 className="text-xl font-bold text-gray-800">Social Links</h2>
         <button
           onClick={toggleModal}
-          className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition shadow-lg"
+          className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition shadow-lg cursor-pointer"
           disabled={isPending}
         >
           <FaPlus className="w-5 h-5" />
@@ -157,14 +157,14 @@ export default function SocialLinksSection({
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={toggleModal}
-              className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              className="px-5 py-2 border border-gray-300 cursor-pointer rounded-lg hover:bg-gray-50 transition"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={isPending}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-2"
+              className="px-6 py-2 bg-blue-600 text-white cursor-pointer rounded-lg hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-2"
             >
               {isPending ? (
                 <>
