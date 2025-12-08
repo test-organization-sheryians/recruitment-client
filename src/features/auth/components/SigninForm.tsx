@@ -31,6 +31,7 @@ const SigninForm = () => {
     loginUser(sendData, {
       onSuccess: (res: { data: { token: string; user: { _id: string; email: string; firstName: string; lastName: string; role?: { name: string } ,isVerified:boolean  } } }) => {
         Cookies.set("access", res.data.token);
+         localStorage.setItem("token", res.data.token);  //<<this change
 
         dispatch(
           setUser({

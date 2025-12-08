@@ -7,8 +7,9 @@ import { editor as MonacoEditor, KeyMod, KeyCode } from "monaco-editor";
 import { useEvaluateAnswers } from "../../../../features/AITest/hooks/aiTestApi";
 
 interface Question {
-  id: string;
+  id?: string;
   question: string;
+  options?: string[]; // 👈 added for MCQ flexibility
 }
 
 type AnswerContent = string | { text: string; code: string };
@@ -32,54 +33,32 @@ export default function InterviewPage() {
   const [answerCode, setAnswerCode] = useState("");
   const [finished, setFinished] = useState(false);
 
-  // Save progress (fixed typing)
   const saveProgress = (data: ProgressData) => {
-    try {
-      localStorage.setItem("interview_progress", JSON.stringify(data));
-    } catch (err) {
-      console.warn("Failed to save progress", err);
-    }
+    localStorage.setItem("interview_progress", JSON.stringify(data));
   };
 
-
-
-  const preventClipboardEvent = useCallback(
-    (e: React.ClipboardEvent | ClipboardEvent) => {
-      e.preventDefault();
-    },
-    []
-  );
-
-  const preventContextMenu = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
+  const preventClipboardEvent = useCallback((e: ClipboardEvent | any) => e.preventDefault(), []);
+  const preventContextMenu = useCallback((e: any) => e.preventDefault(), []);
+  const preventDrop = useCallback((e: any) => e.preventDefault(), []);
+  const handleKeyDownBlockClipboard = useCallback((e: any) => {
+    const key = e.key?.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && ["c", "v", "x"].includes(key)) e.preventDefault();
+    if (e.shiftKey && e.key === "Insert") e.preventDefault();
   }, []);
 
-  const preventDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-  }, []);
-
-  const handleKeyDownBlockClipboard = useCallback(
-    (e: React.KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-      if ((e.ctrlKey || e.metaKey) && ["c", "v", "x"].includes(key)) {
-        e.preventDefault();
-      }
-      if (e.shiftKey && e.key === "Insert") {
-        e.preventDefault();
-      }
-    },
-    []
-  );
-
- 
+  // Load Questions
   useEffect(() => {
-    const stored = localStorage.getItem("interviewQuestions");
-    if (!stored) {
+    const storedTest = localStorage.getItem("currentTestQuestions"); // 👈 new
+    const storedInterview = localStorage.getItem("interviewQuestions"); // old resume based
+
+    const source = storedTest || storedInterview;
+
+    if (!source) {
       router.push("/candidate/resume-upload");
       return;
     }
 
-    const parsed: Question[] = JSON.parse(stored);
+    const parsed: Question[] = JSON.parse(source);
     setQuestions(parsed);
 
     const saved = localStorage.getItem("interview_progress");
@@ -95,7 +74,6 @@ export default function InterviewPage() {
     }
   }, [router]);
 
- 
   useEffect(() => {
     if (questions.length === 0) return;
 
@@ -110,36 +88,30 @@ export default function InterviewPage() {
     }
   }, [currentStep, allAnswers, questions]);
 
-  // Answer updates
+  // Detect MCQ
+  const currentQuestion = questions[currentStep];
+  const isMCQ = Array.isArray(currentQuestion?.options);
+
+  const disabled = isMCQ
+    ? !answerText
+    : evaluateAnswers.isPending || (!answerText.trim() && !answerCode.trim());
+
+  const isLast = currentStep === questions.length - 1;
+
   const handleTextChange = (value: string) => {
     setAnswerText(value);
-    saveProgress({
-      currentStep,
-      allAnswers,
-      answerText: value,
-      answerCode,
-      finished,
-    });
+    saveProgress({ currentStep, allAnswers, answerText: value, answerCode, finished });
   };
 
   const handleCodeChange = (value: string) => {
     setAnswerCode(value);
-    saveProgress({
-      currentStep,
-      allAnswers,
-      answerText,
-      answerCode: value,
-      finished,
-    });
+    saveProgress({ currentStep, allAnswers, answerText, answerCode: value, finished });
   };
 
-  // Submit Test
   const submitTest = async (finalAnswers: AnswerContent[]) => {
     try {
       const formatted = finalAnswers.map((ans) =>
-        typeof ans === "object"
-          ? `${ans.text}\n\n[CODE START]\n${ans.code}\n[CODE END]`
-          : String(ans)
+        typeof ans === "object" ? `${ans.text}\n\n${ans.code}` : ans
       );
 
       const payload = {
@@ -150,42 +122,28 @@ export default function InterviewPage() {
       const result = await evaluateAnswers.mutateAsync(payload);
       localStorage.setItem("interviewResult", JSON.stringify(result));
 
-      saveProgress({
-        currentStep,
-        allAnswers,
-        answerText,
-        answerCode,
-        finished: true,
-      });
-
+      saveProgress({ currentStep, allAnswers, answerText, answerCode, finished: true });
       router.push("/candidate/ai-test/result");
-    } catch (error) {
-      console.error("Submission Error:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  // Next Question
   const handleNext = () => {
-    const currentAnswer: AnswerContent =
-      answerText.trim() || answerCode.trim()
-        ? { text: answerText, code: answerCode }
-        : "";
+    const currentAnswer: AnswerContent = isMCQ
+      ? answerText
+      : answerText.trim() || answerCode.trim()
+      ? { text: answerText, code: answerCode }
+      : "";
 
     const updated = [...allAnswers];
     updated[currentStep] = currentAnswer;
+
     setAllAnswers(updated);
 
-    if (currentStep < questions.length - 1) {
+    if (!isLast) {
       const next = currentStep + 1;
-
-      saveProgress({
-        currentStep: next,
-        allAnswers: updated,
-        answerText: "",
-        answerCode: "",
-        finished,
-      });
-
+      saveProgress({ currentStep: next, allAnswers: updated, answerText: "", answerCode: "", finished });
       setCurrentStep(next);
       setAnswerText("");
       setAnswerCode("");
@@ -194,137 +152,97 @@ export default function InterviewPage() {
     }
   };
 
-  // Previous
-  const handlePrevious = () => {
-    if (currentStep === 0) return;
-    setCurrentStep(currentStep - 1);
-  };
+  if (!questions.length) return <p className="p-6 text-center">Loading...</p>;
 
-  if (!questions.length)
-    return <div className="text-center p-6">Loading...</div>;
+  const handleEditorMount: OnMount = (editor) => {
+    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyV, () => {});
+    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyC, () => {});
+    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyX, () => {});
+    editor.addCommand(KeyMod.Shift | KeyCode.Insert, () => {});
+    editor.updateOptions({ contextmenu: false });
 
-  const currentQuestion = questions[currentStep];
-  const disabled = evaluateAnswers.isPending || (!answerText.trim() && !answerCode.trim());
-  const isLast = currentStep === questions.length - 1;
-
-
-  const handleEditorMount: OnMount = (
-    editor: MonacoEditor.IStandaloneCodeEditor,
-    
-  ) => {
-    try {
-      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyV, () => {});
-      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyC, () => {});
-      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyX, () => {});
-      editor.addCommand(KeyMod.Shift | KeyCode.Insert, () => {});
-      editor.updateOptions({ contextmenu: false });
-
-      const node = editor.getDomNode();
-      if (node) {
-        node.addEventListener("paste", (e: ClipboardEvent) =>
-          e.preventDefault()
-        );
-        node.addEventListener("drop", (e: DragEvent) =>
-          e.preventDefault()
-        );
-      }
-    } catch {}
+    const node = editor.getDomNode();
+    if (node) {
+      node.addEventListener("paste", (e) => e.preventDefault());
+      node.addEventListener("drop", (e) => e.preventDefault());
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-gray-50">
       <div className="mx-auto py-6 px-4">
 
-        <div className="flex justify-between items-center mb-6 w-full">
-         
+        {/* Navigation */}
+        <div className="flex justify-between items-center mb-6">
           <button
-            onClick={handlePrevious}
+            onClick={() => currentStep > 0 && setCurrentStep(currentStep - 1)}
             disabled={currentStep === 0}
-            className={`px-6 py-3 rounded-xl border border-gray-300 text-sm font-medium ${
-              currentStep === 0
-                ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                : "bg-white hover:bg-gray-50 text-gray-800 shadow-sm"
-            }`}
+            className={`px-6 py-3 rounded-xl border ${currentStep === 0 ? "bg-gray-200 cursor-not-allowed" : "bg-white hover:bg-gray-50"}`}
           >
             ⟵ Previous
           </button>
 
-     
-          <div
-            className="text-lg font-semibold text-gray-900 px-4 select-none text-center max-w-[60%]"
+          <h2 className="text-lg font-semibold max-w-[60%] text-center select-none"
             onCopy={preventClipboardEvent}
             onCut={preventClipboardEvent}
             onPaste={preventClipboardEvent}
-            onKeyDown={handleKeyDownBlockClipboard}
             onContextMenu={preventContextMenu}
           >
-            <span className="font-bold mr-2">Q.{currentStep + 1}:</span>
-            {currentQuestion.question}
-          </div>
+            Q.{currentStep + 1}: {currentQuestion.question}
+          </h2>
 
           <button
             onClick={handleNext}
             disabled={disabled}
-            className={`px-8 py-3 rounded-xl font-bold text-sm ${
-              disabled
-                ? "bg-gray-400 text-gray-100 cursor-not-allowed"
-                : "bg-[#3668FF] text-white hover:bg-[#0733b5]"
-            }`}
+            className={`px-8 py-3 rounded-xl font-bold ${disabled ? "bg-gray-300" : "bg-blue-600 text-white hover:bg-blue-700"}`}
           >
-            {evaluateAnswers.isPending
-              ? "Processing..."
-              : isLast
-              ? "Submit Test"
-              : "Next →"}
+            {isLast ? "Submit Test" : "Next →"}
           </button>
         </div>
 
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">
-          📝 Problem Solution
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-        
-          <textarea
-            className="w-full min-h-[500px] p-4 border border-gray-300 rounded-lg bg-white text-base outline-none focus:ring-2 focus:ring-teal-500 resize-none"
-            placeholder="Write your explanation..."
-            value={answerText}
-            onChange={(e) => handleTextChange(e.target.value)}
-            onPaste={preventClipboardEvent}
-            onCopy={preventClipboardEvent}
-            onCut={preventClipboardEvent}
-            onDrop={preventDrop}
-            onKeyDown={handleKeyDownBlockClipboard}
-            onContextMenu={preventContextMenu}
-          />
-
-      
-          <div className="bg-gray-900 rounded-lg overflow-hidden shadow-xl">
-            <div className="px-5 py-3 border-b border-gray-800 flex justify-between items-center">
-              <h3 className="text-gray-100 font-medium tracking-wide">
-                💻 Your Code
-              </h3>
-              <span className="text-xs text-gray-400">Auto-save enabled</span>
-            </div>
-
-            <Editor
-              height="500px"
-              defaultLanguage="javascript"
-              value={answerCode}
-              onChange={(value) => handleCodeChange(value || "")}
-              theme="vs-dark"
-              onMount={handleEditorMount}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                wordWrap: "on",
-                contextmenu: false,
-              }}
-            />
+        {/* Conditional Rendering */}
+        {isMCQ ? (
+          <div className="space-y-4">
+            {currentQuestion.options?.map((opt, idx) => (
+              <label
+                key={idx}
+                onClick={() => handleTextChange(opt)}
+                className={`block p-4 border rounded-xl cursor-pointer ${answerText === opt ? "bg-blue-600 text-white" : "bg-white hover:bg-gray-100"}`}
+              >
+                <input type="radio" checked={answerText === opt} readOnly className="mr-2" />
+                {opt}
+              </label>
+            ))}
           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-        </div>
+            <textarea
+              className="w-full min-h-[500px] p-4 border rounded-lg"
+              value={answerText}
+              placeholder="Write explanation..."
+              onChange={(e) => handleTextChange(e.target.value)}
+              onPaste={preventClipboardEvent}
+              onCopy={preventClipboardEvent}
+              onCut={preventClipboardEvent}
+              onDrop={preventDrop}
+              onKeyDown={handleKeyDownBlockClipboard}
+              onContextMenu={preventContextMenu}
+            />
+
+            <div className="bg-black rounded-lg overflow-hidden">
+              <Editor
+                height="500px"
+                defaultLanguage="javascript"
+                value={answerCode}
+                onChange={(value) => handleCodeChange(value || "")}
+                theme="vs-dark"
+                onMount={handleEditorMount}
+                options={{ minimap: { enabled: false }, wordWrap: "on", fontSize: 14 }}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

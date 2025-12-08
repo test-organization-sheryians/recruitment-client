@@ -3,7 +3,8 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useStartTest } from "@/features/AITest/hooks/useStartsTest";
-
+import Cookies from "js-cookie";
+//import qwe from '../../candidate/ai-test/questining'
 import {
   Clock,
   Target,
@@ -16,15 +17,16 @@ import {
 
 const StartTestPage = () => {
   const router = useRouter();
-  const { testId } = useParams(); // dynamic route id
+  const params = useParams();
+  const testId = params?.testId as string; // 👈 /test/:testId
 
   const { mutate, isPending } = useStartTest();
 
-  // Mock Test Data (Later fetch this from DB using React Query)
+  // TEMP MOCK DATA – later fetch real test summary from API
   const test = {
     title: "Full-Stack Developer Assessment 2025",
     summary:
-      "This exam evaluates your skills in React, Node.js, MongoDB, TypeScript & problem-solving. For senior-level engineers.",
+      "This exam evaluates your skills in React, Node.js, MongoDB, TypeScript & problem-solving.",
     category: "Technical Interview",
     duration: 90,
     passingScore: 75,
@@ -32,7 +34,7 @@ const StartTestPage = () => {
     createdBy: { name: "Sarah Johnson" },
     createdAt: "2025-03-15T10:30:00.000Z",
     prompt:
-      "You have 90 minutes to complete this test. Timer won't pause. Auto-saving is enabled. Best of luck!",
+      "You have 90 minutes to complete this test. Timer will not pause. Auto-saving is enabled.",
   };
 
   const formatDuration = (mins: number) =>
@@ -46,15 +48,47 @@ const StartTestPage = () => {
     });
 
   const handleStart = () => {
+    const token = Cookies.get("access"); // or localStorage.getItem("token")
+
+    if (!token) {
+      alert(" Please login first.");
+      return router.push("/login");
+    }
+
+    console.log("🆔 testId being sent:", testId);
+
     mutate(
-      { testId: String(testId) },
+      { testId },
       {
         onSuccess: (res: any) => {
-          console.log("✨ Test Started:", res);
-          router.push(`/test/attempt/${res.attemptId}`);
+          console.log(" Test Started:", res);
+
+          const attemptId = res?.data?._id;
+          const questions = res?.questions?.test?.questions;
+          const duration = res?.questions?.test?.duration;
+          console.log(questions)
+
+          if (!attemptId) {
+            alert("No attemptId returned from backend");
+            return;
+          }
+
+          // store questions & duration for attempt page
+          if (questions) {
+            localStorage.setItem(
+              "currentTestQuestions",
+              JSON.stringify(questions)
+            );
+          }
+          if (duration) {
+            localStorage.setItem("currentTestDuration", String(duration));
+          }
+
+         router.push(`../../candidate/ai-test/questining`);
         },
         onError: (err: any) => {
-          alert(err.message || "❌ Something went wrong.");
+          console.error("❌ Start test error:", err);
+          alert(err?.message || "❌ Failed to start test.");
         },
       }
     );
@@ -62,8 +96,8 @@ const StartTestPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden animate-fadeIn">
-        
+      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden">
+
         {/* LEFT SIDE */}
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-10 flex flex-col justify-between">
           <div>
@@ -145,12 +179,11 @@ const StartTestPage = () => {
                 <li>• Stable internet connection</li>
                 <li>• Laptop/Desktop recommended</li>
                 <li>• Do not refresh the page</li>
-                <li>• Auto-save enabled</li>
+                <li>• Auto-save is enabled</li>
               </ul>
             </div>
           </div>
 
-          {/* Button */}
           <div className="text-center">
             <button
               onClick={handleStart}
