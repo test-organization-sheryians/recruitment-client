@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-
+import Link from "next/link";
 export const dynamic = 'force-dynamic';
 
 export default async function UnauthorizedPage() {
@@ -32,12 +32,12 @@ export default async function UnauthorizedPage() {
           You don&#39;t have permission to access this page.
         </p>
 
-        <a
+        <Link
           href="/"
           className="inline-block bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-full transition"
         >
           Back to Home
-        </a>
+        </Link>
       </div>
     </div>
   );
