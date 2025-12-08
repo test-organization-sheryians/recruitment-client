@@ -1,62 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
-import { useParams } from "next/navigation";
-import InroletextEmail from "@/features/admin/test/components/EnrolledTestEmail";
-import { useEnRollTest } from "@/features/admin/test/hooks/useTest";
+import React from "react";
+import EnrolledTestEmail from "@/features/admin/test/components/EnrolledTestEmail";
+import { Button } from "@/components/ui/button";
 
-export default function InroleEditPage() {
-  const params = useParams();
-  const id = params?.id as string;
-  const [emails, setEmails] = useState<string[]>([]);
-
-  // --- Mutation Hook ---
-  const { mutate, isPending } = useEnRollTest(id);
-
-  const handleSubmit = () => {
-    if (!id) {
-      alert("Test ID is missing");
-      return;
-    }
-
-    if (emails.length === 0) {
-      alert("Please add at least one email");
-      return;
-    }
-
-    mutate(
-      { testId: id, emails },
-      {
-        onSuccess: () => {
-          alert("Users enrolled successfully!");
-          
-        },
-        onError: (err: Error) => {
-          console.error("Enrollment error:", err);
-          alert(`Failed to enroll users: ${err.message || "Unknown error"}`);
-        },
-      }
-    );
-  };
-
+export default function EnrolledPopup({
+  testId,
+  onClose,
+}: {
+  testId: string;
+  onClose: () => void;
+}) {
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <h1 className="text-2xl font-bold mb-6">
-        Enroll Users for Test {id || "Unknown"}
-      </h1>
+    <div className="fixed inset-0 bg-black/40 bg-opacity-40 z-[999] flex justify-center items-center">
+      <div className="bg-white w-[80vw] h-[95vh] overflow-y-auto rounded-2xl shadow-xl p-8 relative">
 
-      <InroletextEmail
-        initialEmails={emails}
-        onChange={(updated) => setEmails(updated)}
-      />
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Manage Enrolled Emails</h2>
 
-      <button
-        onClick={handleSubmit}
-        disabled={isPending || emails.length === 0}
-        className="mt-6 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
-      >
-        {isPending ? "Enrolling..." : "Enroll Users"}
-      </button>
+          <Button
+            className="bg-red-500 hover:bg-red-600 text-white"
+            onClick={onClose}
+          >
+            Close
+          </Button>
+        </div>
+
+        {/* YOUR EMAIL COMPONENT */}
+        <EnrolledTestEmail testId={testId} />
+      </div>
     </div>
   );
 }

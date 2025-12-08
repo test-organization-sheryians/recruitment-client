@@ -25,3 +25,4 @@ export * from "./tests/createTest";
 export * from "./tests/getTest";
 export * from "./tests/getTestDetails";
 export * from "./tests/enRolltest";
+export * from "./tests/updateTest";

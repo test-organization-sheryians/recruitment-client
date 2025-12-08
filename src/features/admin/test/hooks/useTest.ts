@@ -51,3 +51,15 @@ export const useEnRollTest = (id: string) => {
     retry: 0,
   });
 }
+
+export const useUpdateTest = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updateTest"],
+    mutationFn: (data: TestFormValues) => api.updateTest(data), 
+    retry: 0,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tests"] });
+    }
+  });
+};
