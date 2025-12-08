@@ -19,7 +19,7 @@ export default function CandidateProfile() {
 
   const { data: profile, isLoading, isError, refetch } = useGetProfile();
   const createProfileMutation = useCreateProfile();
-   console.log(profile , "this is profile ")
+  console.log(profile, "this is profile ")
   useEffect(() => {
     if (isError && user?.id) {
       createProfileMutation.mutate(user.id, {
@@ -29,17 +29,17 @@ export default function CandidateProfile() {
   }, [isError, user?.id, refetch, createProfileMutation]);
 
   if (isLoading) return <p className="text-center mt-10">Loading profile...</p>;
-   
+
   return (
-<div className="min-h-screen bg-gray-50 px-3 py-2 sm:px-6 sm:py-6 md:p-8">
+    <div className="min-h-screen bg-gray-50 px-3 py-2 sm:px-6 sm:py-6 md:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
 
-       
+
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">
             Candidate Profile
           </h1>
-        </div>  
+        </div>
 
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <PersonalInfoSection
@@ -64,16 +64,16 @@ export default function CandidateProfile() {
           {/* Resume */}
           <div className="bg-white rounded-2xl shadow-sm p-6">
             {/* <h2 className="text-lg font-semibold mb-4">Resume</h2> */}
-            <ResumeSection resumefile={profile?.resumeFile} />
+            <ResumeSection resumefile={profile?.resumeFile} resumeFileNoPI={profile?.resumeFileNoPI} />
           </div>
         </div>
 
         {/* Experience Full Width */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           {/* <h2 className="text-lg font-semibold mb-4">Experience</h2> */}
-           <ExperienceSection 
-            candidateId={profile?._id || ""}  
-            experiences={profile?.experiences || []} 
+          <ExperienceSection
+            candidateId={profile?._id || ""}
+            experiences={profile?.experiences || []}
             refetchProfile={refetch}
           />
         </div>
@@ -93,10 +93,10 @@ export default function CandidateProfile() {
 
           <div className="bg-white rounded-2xl shadow-sm p-6">
             {/* <h2 className="text-lg font-semibold mb-4">Availability</h2> */}
-            <AvailabilitySection 
-            availability={profile?.availability} 
-            onUpdate={refetch}
-          />
+            <AvailabilitySection
+              availability={profile?.availability}
+              onUpdate={refetch}
+            />
           </div>
 
         </div>

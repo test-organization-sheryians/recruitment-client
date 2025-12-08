@@ -7,12 +7,15 @@ import { RootState } from "@/config/store";
 import { FaPlus } from "react-icons/fa";
 import Modal from "@/components/ui/Modal";
 import { uploadFileToS3 } from "@/lib/uploadFile";// adjust path if needed
+import { generatePDF } from "@/app/candidate/resume-extract/components/generatePdf";
+import { useExtractResume } from "@/app/candidate/resume-extract/features/hooks/resumeExtract";
 
 interface Props {
   resumefile?: string;
+  resumeFileNoPI?: string;
 }
 
-export default function ResumeSection({ resumefile }: Props) {
+export default function ResumeSection({ resumefile, resumeFileNoPI }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -29,17 +32,19 @@ export default function ResumeSection({ resumefile }: Props) {
   const toggleModal = () => setIsOpen(!isOpen);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-  const selected = e.target.files?.[0];
-  if (!selected) return;
+    const selected = e.target.files?.[0];
+    if (!selected) return;
 
-  // Frontend validation
-  if (selected.type !== "application/pdf") {
-    alert("Only PDF files are allowed.");
-    return;
-  }
+    // Frontend validation
+    if (selected.type !== "application/pdf") {
+      alert("Only PDF files are allowed.");
+      return;
+    }
 
-  setFile(selected);
-};
+    setFile(selected);
+  };
+
+  const extractResume = useExtractResume();
 
 
   // ⭐ Upload to S3 → updateProfile({ resumeFile: finalUrl })
@@ -49,15 +54,31 @@ export default function ResumeSection({ resumefile }: Props) {
     try {
       const finalUrl = await uploadFileToS3(file);
       console.log("FINAL URL:", finalUrl);
- 
-      updateProfile.mutate({ 
-        id: user?.id || '',
-        resumeFile: finalUrl 
-      }, {
-        onSuccess: () => {
-          setIsOpen(false);
-          setFile(null);
-          refetchProfile();
+
+      extractResume.mutate(file, {
+        onSuccess: async (data) => {
+          const noPIData = { ...data, data: { ...data.data } };
+          delete noPIData.data.email;
+          delete noPIData.data.phone;
+          delete noPIData.data.name;
+
+          const pdfBytes = await generatePDF(noPIData);
+          const pdfFile = new File([pdfBytes], `resume-anonymized-${Date.now()}.pdf`, { type: "application/pdf" });
+          const noPIUrl = await uploadFileToS3(pdfFile);
+
+          console.log("NO PI URL:", noPIUrl);
+
+          updateProfile.mutate({
+            id: user?.id || '',
+            resumeFile: finalUrl,
+            resumeFileNoPI: noPIUrl
+          }, {
+            onSuccess: () => {
+              setIsOpen(false);
+              setFile(null);
+              refetchProfile();
+            }
+          })
         }
       });
     } catch (err) {
@@ -81,47 +102,64 @@ export default function ResumeSection({ resumefile }: Props) {
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold text-gray-800">Resume</h2>
         {resumefile ? (
-      <button
-      onClick={toggleModal}
-      className="bg-blue-600 hover:bg-blue-800 text-md px-3 py-1 rounded-md text-white "
-      >
-      Edit
-      </button>
-  ) : (
-      <button 
-      onClick={toggleModal}
-      className="text-blue-600 hover:text-blue-800"
-      >
-      <FaPlus className="text-black" />
-      </button>
-  )}
+          <button
+            onClick={toggleModal}
+            className="bg-blue-600 hover:bg-blue-800 text-md px-3 py-1 rounded-md text-white cursor-pointer"
+          >
+            Edit
+          </button>
+        ) : (
+          <button
+            onClick={toggleModal}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            <FaPlus className="text-black" />
+          </button>
+        )}
       </div>
 
       {/* Resume display */}
-      {resumefile ? (
-        <div className="flex items-center justify-between bg-gray-100 border border-gray-200 px-4 py-3 rounded-xl">
-          <a
-            href={resumefile}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:underline"
-          >
-            View Resume
-          </a>
-
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="text-red-500 text-sm hover:text-red-700 transition"
-          >
-            {isDeleting ? "Deleting..." : "Delete"}
-          </button>
-        </div>
-      ) : (
-        <div className="text-sm text-gray-500 italic">
-          No resume uploaded yet
-        </div>
-      )}
+      <div className="space-y-2">
+        {(resumefile || resumeFileNoPI) ? (
+          <>
+            {resumefile && (
+              <div className="flex items-center justify-between bg-gray-100 border border-gray-200 px-4 py-3 rounded-xl">
+                <a
+                  href={resumefile}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:underline cursor-pointer"
+                >
+                  View Resume
+                </a>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="text-red-500 text-sm hover:text-red-700 transition cursor-pointer"
+                >
+                  {isDeleting ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            )}
+            {resumeFileNoPI && (
+              <div className="flex items-center justify-between bg-gray-100 border border-gray-200 px-4 py-3 rounded-xl">
+                <a
+                  href={resumeFileNoPI}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-700 hover:underline cursor-pointer"
+                >
+                  View Resume Without PI
+                </a>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-sm text-gray-500 italic">
+            No resume uploaded yet
+          </div>
+        )}
+      </div>
 
       {/* Modal */}
       <Modal isOpen={isOpen} onClose={toggleModal} title="Upload Resume">
