@@ -8,9 +8,8 @@ import { useGetAllSkills } from "@/features/admin/skills/hooks/useSkillApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/config/store";
 import { useUpdateProfile1 } from "../hooks/useProfileApi";
-import { useQuery } from "@tanstack/react-query";
-import { searchSkill } from "@/api/skills/searchSkill";
 import { useDebounce } from "@/features/admin/users/hooks/useDebounce";
+import { useSearchSkills } from "../hooks/useSkillSearch";
 
 interface Skill {
   _id: string;
@@ -26,7 +25,7 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
   const [isOpen, setIsOpen] = useState(false);
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [debounceValue] = useDebounce(searchTerm)
+  const debounceValue = useDebounce(searchTerm)
 
 
 
@@ -83,17 +82,8 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
     );
   };
 
-  const { data: skillsResult, isFetching } = useQuery({
-    queryKey: ["search-skills", debounceValue],
-    queryFn: async () => {
-      if (!debounceValue) return [];
-      const data = await searchSkill(debounceValue)
-      return data;
-    },
-    enabled: !!debounceValue
-  })
+  const { data: skillsResult, isFetching } = useSearchSkills(debounceValue);
 
-  console.log(skillsResult)
   return (
     <div className="space-y-6 border border-gray-200 rounded-xl p-6 shadow-md bg-white">
       <div className="flex justify-between items-center pb-2 border-b border-gray-100">
