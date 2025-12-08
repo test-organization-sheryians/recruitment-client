@@ -9,7 +9,7 @@ import { useEvaluateAnswers } from "../../../../features/AITest/hooks/aiTestApi"
 interface Question {
   id?: string;
   question: string;
-  options?: string[]; // 👈 added for MCQ flexibility
+  options?: string[]; // 
 }
 
 type AnswerContent = string | { text: string; code: string };
