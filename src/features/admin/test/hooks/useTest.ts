@@ -2,11 +2,12 @@ import * as api from "@/api";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Test } from "@/types/Test";
 
+
 type TestFormValues = {
   title: string;
   description: string;
   duration: number;
-  summury: string;
+  summary: string;
   category: string;
   passingScore: number;
   prompt: string;
@@ -44,13 +45,14 @@ export const useGetTest = (id: string) => {
   });
 };
 
-export const useEnRollTest = (id: string) => {
+export const useEnrollTest = (id: string) => {
   return useMutation({
-    mutationKey: ["enRollTest",id],
-    mutationFn: (data) => api.enRolltest(data),
+    mutationKey: ["enrollTest", id],
+    mutationFn: async (data: { testId: string; emails: string[] }) => api.enRolltest(data),
     retry: 0,
   });
 }
+
 
 export const useUpdateTest = () => {
   const queryClient = useQueryClient();
@@ -61,5 +63,14 @@ export const useUpdateTest = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tests"] });
     }
+  });
+
+};
+export const useSearchUser = (searchTerm: string) => {
+  return useQuery({
+    queryKey: ["search-user", searchTerm],
+    queryFn: () => api.searchUser(searchTerm),
+    enabled: !!searchTerm,   // only run query if searchTerm exists
+    staleTime: 5000,         // 5s caching
   });
 };

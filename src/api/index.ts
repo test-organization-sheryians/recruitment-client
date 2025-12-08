@@ -21,8 +21,10 @@ export * from "./experience/updateExperience"
 export * from "./users/getAllUsers";
 export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
+export * from "./users/searchUser";
 export * from "./tests/createTest";
 export * from "./tests/getTest";
 export * from "./tests/getTestDetails";
 export * from "./tests/enRolltest";
 export * from "./tests/updateTest";
+export * from "./tests/testSearch"

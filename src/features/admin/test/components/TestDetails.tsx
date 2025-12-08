@@ -59,7 +59,7 @@ export default function TestDetails({ params }: any) {
         </button>
 
         <h1 className="text-3xl font-bold">{test.title}</h1>
-        <p className="text-gray-600">{test.summury}</p>
+        <p className="text-gray-600">{test.summary}</p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
           <div className="p-4 bg-gray-100 rounded-xl text-center">

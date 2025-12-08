@@ -31,9 +31,11 @@ interface Errors {
 export default function CreateTestForm({
   testId,
   onClose,
+  onSuccess,
 }: {
   testId?: string;
   onClose: () => void;
+  onSuccess?: () => void;
 }) {
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -148,6 +150,7 @@ export default function CreateTestForm({
         });
       }
 
+      onSuccess?.();
       setTimeout(() => setSuccessMessage(""), 2000);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
@@ -156,25 +159,7 @@ export default function CreateTestForm({
   };
 
   return (
-    <>
-      {/* BACKDROP */}
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[999]"></div>
-
-      {/* MODAL CONTAINER (your UI stays inside this) */}
-      <div className="fixed inset-0 z-[1000] flex justify-center items-center overflow-y-auto p-4">
-        <div className="bg-white w-full max-w-5xl rounded-xl shadow-xl relative">
-
-          {/* CLOSE BUTTON */}
-          <button
-            className="absolute top-3 right-3 text-gray-600 hover:text-black"
-            onClick={onClose}
-            aria-label="Close modal"
-          >
-            <X size={24} />
-          </button>
-
-          {/* YOUR ORIGINAL UI (UNCHANGED) */}
-          <div className="min-h-[70vh] bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 py-6 px-4 sm:px-6 lg:px-8 rounded-xl">
+    <div className="min-h-[70vh] bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 py-6 px-4 sm:px-6 lg:px-8 rounded-xl">
             <div className="max-w-7xl mx-auto">
 
               {/* HEADER */}
@@ -383,10 +368,5 @@ export default function CreateTestForm({
               </form>
             </div>
           </div>
-
-          {/* END original UI */}
-        </div>
-      </div>
-    </>
-  );
-}
+        );
+      }

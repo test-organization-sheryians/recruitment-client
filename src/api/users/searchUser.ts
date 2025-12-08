@@ -10,6 +10,6 @@ export const searchUser = async (query: string) => {
     return []; 
   }
 
-  const res = await api.get(`/api/users/search?query=${query}`);
+  const res = await api.get(`/api/users/search?searchQuery=${query}`);
   return res.data.data;
 };

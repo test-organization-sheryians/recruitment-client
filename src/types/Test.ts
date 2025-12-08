@@ -22,7 +22,7 @@ export interface EnrolledUser {
 export interface Test {
   _id: string;
   title: string;
-  summury: string;
+  summary: string;
   showResults: boolean;
   createdBy: string;
   category: string;
