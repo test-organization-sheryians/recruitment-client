@@ -6,6 +6,7 @@ export interface UpdateProfilePayload {
   email?: string;
   phoneNumber?: string;
   resumeFile?: string;
+  resumeFileNoPI?: string;
   skills?: string[];
   linkedinUrl?: string;
   githubUrl?: string;
