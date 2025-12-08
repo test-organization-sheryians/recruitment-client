@@ -26,14 +26,14 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
   const [isOpen, setIsOpen] = useState(false);
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [debounceSearch] = useDebounce(searchTerm, 300)
+  const [debounceValue] = useDebounce(searchTerm)
 
 
 
   const user = useSelector((state: RootState) => state.auth.user);
   const userId = user?.id
 
-  const { data: allSkills = [], isLoading: loadingSkills } = useGetAllSkills();
+  const { data: allSkills, isLoading: loadingSkills } = useGetAllSkills();
   const { mutate: updateProfile, isPending } = useUpdateProfile1();
 
   // Extract skill IDs that user already has
@@ -84,13 +84,13 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
   };
 
   const { data: skillsResult, isFetching } = useQuery({
-    queryKey: ["search-skills", debounceSearch],
+    queryKey: ["search-skills", debounceValue],
     queryFn: async () => {
-      if (!debounceSearch) return [];
-      const data = await searchSkill(debounceSearch)
+      if (!debounceValue) return [];
+      const data = await searchSkill(debounceValue)
       return data;
     },
-    enabled: !!debounceSearch
+    enabled: !!debounceValue
   })
 
   console.log(skillsResult)
@@ -110,7 +110,7 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
       {userSkillNames.length === 0 ? (
         <p className="text-gray-500 italic py-4">No skills added yet.</p>
       ) : (
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 ">
           {profileSkills.map((skill) => (
             <div
               key={skill._id}
@@ -145,7 +145,7 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
           />
         </div>
 
-        <div className="max-h-96  w-[500px] overflow-y-auto p-4 space-y-2">
+        <div className="max-h-[120px] w-[500px] overflow-y-scroll p-4 space-y-2 scrollbar-hide">
           {isFetching ? (
             <div className="text-center py-8 text-gray-500">
               <LoaderCircleIcon className="animate-spin mx-auto" />
