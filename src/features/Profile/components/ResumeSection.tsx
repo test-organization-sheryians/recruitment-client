@@ -63,7 +63,10 @@ export default function ResumeSection({ resumefile, resumeFileNoPI }: Props) {
           delete noPIData.data.name;
 
           const pdfBytes = await generatePDF(noPIData);
-          const pdfFile = new File([pdfBytes], `resume-anonymized-${Date.now()}.pdf`, { type: "application/pdf" });
+          // Convert Uint8Array to ArrayBuffer first, then create Blob
+          const buffer = new Uint8Array(pdfBytes).buffer;
+          const blob = new Blob([buffer], { type: 'application/pdf' });
+          const pdfFile = new File([blob], `resume-anonymized-${Date.now()}.pdf`, { type: 'application/pdf' });
           const noPIUrl = await uploadFileToS3(pdfFile);
 
           console.log("NO PI URL:", noPIUrl);
@@ -111,9 +114,9 @@ export default function ResumeSection({ resumefile, resumeFileNoPI }: Props) {
         ) : (
           <button
             onClick={toggleModal}
-            className="text-blue-600 hover:text-blue-800"
+            className="p-2 rounded-full bg-blue-600 cursor-pointer text-white hover:bg-blue-700 transition shadow-lg disabled:opacity-50"
           >
-            <FaPlus className="text-black" />
+            <FaPlus className="w-4 h-4" />
           </button>
         )}
       </div>
@@ -132,17 +135,6 @@ export default function ResumeSection({ resumefile, resumeFileNoPI }: Props) {
                 >
                   View Resume
                 </a>
-                <button
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="text-red-500 text-sm hover:text-red-700 transition cursor-pointer"
-                >
-                  {isDeleting ? "Deleting..." : "Delete"}
-                </button>
-              </div>
-            )}
-            {resumeFileNoPI && (
-              <div className="flex items-center justify-between bg-gray-100 border border-gray-200 px-4 py-3 rounded-xl">
                 <a
                   href={resumeFileNoPI}
                   target="_blank"
@@ -151,6 +143,13 @@ export default function ResumeSection({ resumefile, resumeFileNoPI }: Props) {
                 >
                   View Resume Without PI
                 </a>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="text-red-500 text-sm hover:text-red-700 transition cursor-pointer"
+                >
+                  {isDeleting ? "Deleting..." : "Delete"}
+                </button>
               </div>
             )}
           </>
