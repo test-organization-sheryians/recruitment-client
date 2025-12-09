@@ -13,8 +13,15 @@ export default async function AdminLayout({
 }) {
   const user = await getCurrentUser();
 
-  if (!user) redirect("/login");
-  if (user.role !== "admin") redirect("/unauthorized");
+if (!user) {
+    redirect("/login");
+  } else {
+    if (!user?.isVerified) {
+      console.log("user is" ,user)
+      redirect("/un-verified");
+    }
+  }
+    if (user.role !== "admin") redirect("/unauthorized");
 
   return (
     <div className="min-h-screen w-full bg-[#F0F2F5] font-[satoshi]">
