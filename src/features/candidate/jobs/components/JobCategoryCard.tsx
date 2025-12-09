@@ -1,21 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getAllSkills } from "../../../../api/skills/getAllSkills";
-
-// Types
-interface Skill {
-  _id: string;
-  name: string;
-}
 
 interface Category {
   _id: string;
   name: string;
 }
 
-interface Job {
+interface Skill {
+  _id: string;
+  name: string;
+}
+
+ export interface Job {
   _id: string;
   title: string;
   category?: Category | string;
@@ -24,7 +21,7 @@ interface Job {
   expiry?: string | Date;
   salary?: string;
   department?: string;
-  skills?: (Skill | string)[];
+  skills?: Skill[];
 }
 
 interface JobCardProps {
@@ -32,130 +29,103 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job }: JobCardProps) {
-  const [skillNames, setSkillNames] = useState<string[]>([]);
-  const [showAllSkills, setShowAllSkills] = useState(false);
   const router = useRouter();
 
-  const handleCardClick = () => {
-    if (!job._id) return;
-    router.push(`jobs/job-details?id=${job._id}`);
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent navigation when clicking "Apply" button
+    if ((e.target as HTMLElement).closest("button")) return;
+    router.push(`/jobs/job-details?id=${job._id}`);
   };
 
-  // Convert category safely
-const categoryText =
-  job?.category && typeof job.category === "object" && job.category.name
-    ? job.category.name
-    : null;
+  // Safely extract category name
+  const categoryName =
+    typeof job.category === "object" && job.category?.name ? job.category.name : null;
 
-
-  // Load skills & map IDs → names
-  useEffect(() => {
-    const loadSkills = async () => {
-      try {
-        const allSkills: Skill[] = await getAllSkills();
-
-        const map: Record<string, string> = {};
-        allSkills.forEach((s) => {
-          map[s._id] = s.name;
-        });
-
-        const names = (job.skills || []).map((skill) => {
-          if (typeof skill === "object" && skill.name) return skill.name;
-          return typeof skill === "string" ? map[skill] || "Unknown" : "Unknown";
-        });
-
-        setSkillNames(names);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    loadSkills();
-  }, [job.skills]);
+  // Extract skill names directly (no fetching needed!)
+  const skillNames = job.skills?.map((skill) => skill.name).filter(Boolean) || [];
 
   return (
     <div
       onClick={handleCardClick}
-      className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer relative"
+      className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-gray.was-300 
+                 transition-all duration-200 cursor-pointer group"
     >
-      <div className="flex justify-between items-start gap-4 relative">
-        {/* LEFT CONTENT */}
-        <div className="flex-1">
-          {/* TAGS */}
-          <div className="flex flex-wrap items-center gap-2 mb-2 text-[10px] sm:text-xs font-medium">
-            {categoryText && (
-              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md">
-                {categoryText}
+      <div className="flex justify-between items-start gap-6">
+        {/* Left: Job Info */}
+        <div className="flex-1 min-w-0">
+          {/* Tags */}
+          <div className="flex flex-wrap gap-2 text-xs font-medium text-gray-600 mb-3">
+            {categoryName && (
+              <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
+                {categoryName}
               </span>
             )}
-
             {job.requiredExperience && (
-              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md">
+              <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">
                 {job.requiredExperience}
               </span>
             )}
-
             {job.education && (
-              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md">
+              <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full truncate max-w-[140px]">
                 {job.education}
               </span>
             )}
-
-            {job.expiry && (
-              <span className="text-gray-600">
-                {new Date(job.expiry).toLocaleDateString()}
-              </span>
-            )}
           </div>
 
-          {/* JOB TITLE */}
-          <h2 className="text-base sm:text-lg font-bold mb-1">{job.title}</h2>
+          {/* Title */}
+          <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-blue-700 transition-colors">
+            {job.title}
+          </h3>
 
-          {/* SALARY + DEPARTMENT */}
-          <div className="mb-2">
-            {job.salary && (
-              <p className="text-gray-700 text-sm font-semibold">{job.salary}</p>
-            )}
-            {job.department && <p className="text-gray-600 text-sm">{job.department}</p>}
+          {/* Salary & Department */}
+          <div className="text-sm text-gray-600 space-y-1 mb-3">
+            {job.salary && <p className="font-semibold text-gray-800">{job.salary}</p>}
+            {job.department && <p>{job.department}</p>}
           </div>
 
-          {/* SKILLS */}
+          {/* Skills */}
           {skillNames.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {(showAllSkills ? skillNames : skillNames.slice(0, 4)).map((skill, i) => (
+            <div className="flex flex-wrap gap-2">
+              {skillNames.slice(0, 5).map((skill, i) => (
                 <span
                   key={i}
-                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-[10px] sm:text-xs"
+                  className="px-3 py-1.5 bg-gray-50 text-gray-700 text-xs font-medium rounded-lg border border-gray-200"
                 >
                   {skill}
                 </span>
               ))}
-
-              {skillNames.length > 4 && !showAllSkills && (
-                <button
-                  onClick={() => setShowAllSkills(true)}
-                  className="text-xs text-blue-700 font-medium"
-                >
-                  +{skillNames.length - 4} more
-                </button>
-              )}
-
-              {showAllSkills && (
-                <button
-                  onClick={() => setShowAllSkills(false)}
-                  className="text-xs text-blue-700 font-medium"
-                >
-                  Show less
-                </button>
+              {skillNames.length > 5 && (
+                <span className="px-3 py-1.5 text-xs font-medium text-gray-500">
+                  +{skillNames.length - 5} more
+                </span>
               )}
             </div>
           )}
+
+          {/* Expiry */}
+          {job.expiry && (
+            <p className="text-xs text-gray-500 mt-4">
+              Expires: {new Date(job.expiry).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </p>
+          )}
         </div>
 
-        {/* RIGHT BUTTONS */}
-        <div className="flex flex-col gap-3 items-end shrink-0">
-          <button className="px-5 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 text-sm font-semibold shadow-sm">
-            Apply
+        {/* Right: Apply Button */}
+        <div className="shrink-0">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              // Handle apply logic here
+              console.log("Applied to:", job.title);
+            }}
+            className="px-6 py-2.5 bg-blue-600 text-white font-medium text-sm rounded-lg
+                       hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+          >
+            Apply Now
           </button>
         </div>
       </div>

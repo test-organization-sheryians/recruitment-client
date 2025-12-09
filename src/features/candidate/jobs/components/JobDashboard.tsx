@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Sidebar from "./Sidebar";
-import JobCard from "./JobCategoryCard";
+import JobCard, { Job } from "./JobCategoryCard";
 import HeroSection from "./HeroSection";
 import { Menu, X } from "lucide-react";
 import { useGetJobCategories } from "@/features/admin/categories/hooks/useJobCategoryApi";
@@ -16,18 +16,7 @@ interface Category {
   name: string;
 }
 
-interface Job {
-  _id: string;
-  title: string;
-  category?: Category | string;
-  requiredExperience?: string;
-  education?: string;
-  salary?: string;
-  department?: string;
-  expiry?: string | Date;
-  skills?: Array<{ _id: string; name: string } | string>;
-  description?: string;
-}
+
 
 export default function JobDashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
