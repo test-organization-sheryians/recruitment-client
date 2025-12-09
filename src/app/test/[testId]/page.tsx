@@ -3,8 +3,8 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useStartTest } from "@/features/AITest/hooks/useStartsTest";
+import { useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
-//import qwe from '../../candidate/ai-test/questining'
 import {
   Clock,
   Target,
@@ -15,14 +15,15 @@ import {
   CheckCircle,
 } from "lucide-react";
 
-const StartTestPage = () => {
+export default function StartTestPage() {
   const router = useRouter();
   const params = useParams();
-  const testId = params?.testId as string; // 👈 /test/:testId
+  const testId = params?.testId as string;
 
+  const queryClient = useQueryClient();
   const { mutate, isPending } = useStartTest();
 
-  // TEMP MOCK DATA – later fetch real test summary from API
+  /** ⚠️ Dummy test info (STATIC UI) */
   const test = {
     title: "Full-Stack Developer Assessment 2025",
     summary:
@@ -47,48 +48,36 @@ const StartTestPage = () => {
       year: "numeric",
     });
 
+  /** START TEST */
   const handleStart = () => {
-    const token = Cookies.get("access"); // or localStorage.getItem("token")
+    const token = Cookies.get("access");
 
     if (!token) {
-      alert(" Please login first.");
+      alert("Please login first.");
       return router.push("/login");
     }
-
-    console.log("🆔 testId being sent:", testId);
 
     mutate(
       { testId },
       {
         onSuccess: (res: any) => {
-          console.log(" Test Started:", res);
+          const questions = res?.questions?.test?.questions ?? [];
 
-          const attemptId = res?.data?._id;
-          const questions = res?.questions?.test?.questions;
-          const duration = res?.questions?.test?.duration;
-          console.log(questions)
+          /** ⭐ KEY CHANGE:
+              stop using:
+              ❌ currentTestQuestions
+              ❌ currentTestDuration
+              ❌ localStorage
+              
+              and use only:
+              ✔ active-questions
+          */
+          queryClient.setQueryData(["active-questions"], questions);
 
-          if (!attemptId) {
-            alert("No attemptId returned from backend");
-            return;
-          }
-
-          // store questions & duration for attempt page
-          if (questions) {
-            localStorage.setItem(
-              "currentTestQuestions",
-              JSON.stringify(questions)
-            );
-          }
-          if (duration) {
-            localStorage.setItem("currentTestDuration", String(duration));
-          }
-
-         router.push(`../../candidate/ai-test/questining`);
+          router.push("/candidate/ai-test/questining");
         },
         onError: (err: any) => {
-          console.error("❌ Start test error:", err);
-          alert(err?.message || "❌ Failed to start test.");
+          alert(err?.message || "Failed to start test.");
         },
       }
     );
@@ -98,14 +87,14 @@ const StartTestPage = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden">
 
-        {/* LEFT SIDE */}
+        {/* LEFT INFO SIDE */}
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-10 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-3 mb-4">
               <span className="px-4 py-1.5 bg-white/80 backdrop-blur rounded-full text-xs font-semibold text-blue-700">
                 {test.category}
               </span>
-              <span className="flex items-center gap-1.5 text-xs font-medium text-green-700">
+              <span className="flex items-center gap-1.5 text-xs text-green-700">
                 <CheckCircle className="w-3.5 h-3.5" /> Active
               </span>
             </div>
@@ -116,7 +105,6 @@ const StartTestPage = () => {
 
             <p className="text-gray-700 mb-6">{test.summary}</p>
 
-            {/* Stats */}
             <div className="grid grid-cols-3 gap-4 mb-8">
               <div className="bg-white rounded-xl p-4 text-center shadow-sm">
                 <Clock className="w-7 h-7 text-blue-600 mx-auto mb-2" />
@@ -143,7 +131,6 @@ const StartTestPage = () => {
               </div>
             </div>
 
-            {/* Creator */}
             <div className="flex items-center gap-4 text-sm text-gray-600">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
                 {test.createdBy.name.slice(0, 2).toUpperCase()}
@@ -178,8 +165,8 @@ const StartTestPage = () => {
               <ul className="text-gray-700 text-sm space-y-2">
                 <li>• Stable internet connection</li>
                 <li>• Laptop/Desktop recommended</li>
-                <li>• Do not refresh the page</li>
-                <li>• Auto-save is enabled</li>
+                <li>• Do not refresh</li>
+                <li>• Auto-save active</li>
               </ul>
             </div>
           </div>
@@ -196,15 +183,9 @@ const StartTestPage = () => {
             >
               {isPending ? "Starting..." : "Start Assessment →"}
             </button>
-
-            <p className="mt-3 text-xs text-gray-500">
-              Timer starts immediately after clicking.
-            </p>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default StartTestPage;
+}

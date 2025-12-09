@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
 import { useState, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 import {
   useParseResume,
@@ -12,72 +13,88 @@ import { FileUploadArea } from "../../../../features/AITest/components/fileUploa
 import { PrimaryButton } from "../../../../features/AITest/components/button";
 
 interface Question {
-    question: string;
+  question: string;
 }
 
 export default function ResumeUploadPage() {
-    const router = useRouter();
-    const [questions, setQuestions] = useState<Question[]>([]);
-    const [file, setFile] = useState<File | null>(null);
+  const router = useRouter();
+  const queryClient = useQueryClient();
 
-    const parseResume = useParseResume();
-    const generateQuestions = useGenerateQuestions();
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [file, setFile] = useState<File | null>(null);
 
-    const isProcessing = parseResume.isPending || generateQuestions.isPending;
-    const fileName = file ? file.name : null;
+  const parseResume = useParseResume();
+  const generateQuestions = useGenerateQuestions();
 
-    const handleProcessResume = async () => {
-        if (!file) {
-            console.log("❌ No file selected!");
-            return;
-        }
+  const isProcessing = parseResume.isPending || generateQuestions.isPending;
+  const fileName = file ? file.name : null;
 
-        try {
-            console.log("📥 Sending file to parseResume hook...");
-            const resumeText = await parseResume.mutateAsync(file);
+  /** =========================================
+   *   PROCESS RESUME → GENERATE QUESTIONS
+   * ========================================= */
+  const handleProcessResume = async () => {
+    if (!file) return;
 
-            console.log("🚀 Sending resumeText to generateQuestions API...");
-            const generatedQuestions = await generateQuestions.mutateAsync(resumeText) as Question[];
+    try {
+      const resumeText = await parseResume.mutateAsync(file);
+      const generatedQuestions = await generateQuestions.mutateAsync(resumeText);
 
-            if (Array.isArray(generatedQuestions)) {
-                setQuestions(generatedQuestions);
-                localStorage.setItem("interviewQuestions", JSON.stringify(generatedQuestions));
-                console.log(`✅ Analysis complete! ${generatedQuestions.length} questions generated.`);
-            } else {
-                console.error("❌ ERROR: generateQuestions did NOT return an array.");
-            }
+      if (Array.isArray(generatedQuestions)) {
+        setQuestions(generatedQuestions);
 
-        } catch (error) {
-            console.error("🔥 ERROR in handleProcessResume():", error);
-        }
-    };
-    
-    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const selectedFile = e.target.files?.[0];
-        if (selectedFile) {
-            setFile(selectedFile);
-        }
-        setQuestions([]);
-    };
-    
-    const handleRemoveFile = () => {
-        setFile(null);
-        setQuestions([]);
-    };
-    
-    const handleStartInterview = () => {
-        router.push("/candidate/ai-test/questining");
-    };
+        /** 🧠 Store in ONE key ONLY */
+        queryClient.setQueryData(["active-questions"], generatedQuestions);
 
-    return  (
-  <div className="max-w-xl mx-auto my-10 p-6 bg-white rounded-xl shadow-lg">
-    <div className="text-center mb-6">
-      <h1 className="text-2xl font-bold text-gray-800 leading-tight">AI Interview Simulator</h1>
-      <p className="text-sm text-gray-500 -mt-1">Resume Deep Dive</p>
-    </div>
+        console.log(`🎯 ${generatedQuestions.length} AI interview questions ready`);
+      }
 
-    {questions.length === 0 ? (
-      <>
+    } catch (error) {
+      console.error("❌ Resume processing failed:", error);
+    }
+  };
+
+  /** =========================================
+   *   ON FILE SELECT → RESET QUESTIONS
+   * ========================================= */
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    setFile(selectedFile);
+    setQuestions([]);
+
+    /** 🧹 Clear old interview data completely */
+    queryClient.removeQueries({ queryKey: ["active-questions"] });
+  };
+
+  /** =========================================
+   *   REMOVE FILE → CLEAR EVERYTHING
+   * ========================================= */
+  const handleRemoveFile = () => {
+    setFile(null);
+    setQuestions([]);
+
+    queryClient.removeQueries({ queryKey: ["active-questions"] });
+  };
+
+  /** =========================================
+   *   START INTERVIEW →
+   *   active-questions already set, just start
+   * ========================================= */
+  const handleStartInterview = () => {
+    router.push("/candidate/ai-test/questining");
+  };
+
+  return (
+    <div className="max-w-xl mx-auto my-10 p-6 bg-white rounded-xl shadow-lg">
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">
+          AI Interview Simulator
+        </h1>
+        <p className="text-sm text-gray-500 -mt-1">Resume Deep Dive</p>
+      </div>
+
+      {questions.length === 0 ? (
         <FileUploadArea
           fileName={fileName}
           isUploading={isProcessing}
@@ -86,43 +103,32 @@ export default function ResumeUploadPage() {
           onAnalyzeClick={handleProcessResume}
           isDisabled={!file || isProcessing}
         />
+      ) : (
+        <div>
+          <div className="mt-6 p-5 bg-teal-50 border-l-4 border-teal-600 rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-teal-800 mb-3">
+              {questions.length} Questions Generated 🎯
+            </h3>
+            <div className="space-y-2.5">
+              {questions.map((q, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-2 p-2 bg-white border rounded-md hover:bg-gray-50"
+                >
+                  <span className="font-bold">{i + 1}.</span>
+                  <p className="text-sm text-gray-700">{q.question.trim()}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
-        <div className="mt-3 text-center">
-          {(parseResume.isError || generateQuestions.isError) && (
-            <p className="text-red-600 font-semibold text-sm">
-              ❌ Error: Failed to process resume or generate questions.
-            </p>
-          )}
-        </div>
-      </>
-    ) : (
-      <div className="max-w-xl mx-auto">
-        <div className="mt-6 p-5 bg-teal-50 border-l-4 border-teal-600 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-teal-800 mb-3">
-            ✅ Analysis Complete – {questions.length} Questions Generated
-          </h3>
-
-          <div className="space-y-2.5 text-left">
-            {questions.map((q, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-2 p-2 bg-white rounded-md border border-gray-200 hover:bg-gray-50 transition"
-              >
-                <span className="font-bold text-gray-700">{i + 1}.</span>
-                <p className="text-sm text-gray-700 leading-snug">{q.question.trim()}</p>
-              </div>
-            ))}
+          <div className="text-center mt-6">
+            <PrimaryButton onClick={handleStartInterview}>
+              Start Interview
+            </PrimaryButton>
           </div>
         </div>
-
-        <div className="text-center mt-6">
-          <PrimaryButton onClick={handleStartInterview} disabled={isProcessing}>
-            Start Interview
-          </PrimaryButton>
-        </div>
-      </div>
-    )}
-  </div>
-);
-
+      )}
+    </div>
+  );
 }
