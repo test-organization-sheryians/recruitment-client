@@ -148,7 +148,7 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
             : skillsResult?.length === 0 ? (
               <p className="text-center text-gray-500">No skills found</p>
             ) : (
-              skillsResult?.map((skill: any) => {
+              skillsResult?.map((skill: {_id:string, name:string}) => {
                 const isAdded = userSkillIds.includes(skill._id);
                 const isSelected = selectedSkillIds.includes(skill._id);
 
