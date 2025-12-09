@@ -1,4 +1,4 @@
-// config/axios.ts or wherever you keep it
+// config/axios.ts
 import axios from "axios";
 import Cookies from "js-cookie";
 
@@ -12,8 +12,8 @@ const isPublicRoute = (path: string) => {
 
   return (
     publicRoutes.includes(path as typeof publicRoutes[number]) ||
-    path.includes("/user-verification/") ||  
-    path.includes("/user-verification")     
+    path.includes("/user-verification/") ||
+    path.includes("/user-verification")
   );
 };
 
@@ -31,7 +31,8 @@ api.interceptors.response.use(
   (error) => {
     const status = error.response?.status;
     const responseData = error.response?.data;
-    const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+    const currentPath =
+      typeof window !== "undefined" ? window.location.pathname : "";
 
     let message = "Something went wrong";
 
@@ -45,8 +46,10 @@ api.interceptors.response.use(
       }
     }
 
+    // ✅ Keep the GOOD version
     const publicRoute = isPublicRoute(currentPath);
-   console.log(publicRoute , currentPath)
+    console.log(publicRoute, currentPath);
+
     if (
       !publicRoute &&
       (status === 401 ||
@@ -59,10 +62,14 @@ api.interceptors.response.use(
     ) {
       Cookies.remove("refreshToken");
       Cookies.remove("accessToken");
+
       if (typeof window !== "undefined") {
-        window.location.href = "/login";
+        // window.location.href = "/login";
       }
-      return Promise.reject(new Error("Session expired. Redirecting to login..."));
+
+      return Promise.reject(
+        new Error("Session expired. Redirecting to login...")
+      );
     }
 
     if (error.response) {

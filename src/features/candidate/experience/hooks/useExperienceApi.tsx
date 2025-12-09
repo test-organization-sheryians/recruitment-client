@@ -19,7 +19,7 @@ export const useGetCandidateExperience = (candidateId?: string) =>
 // --------------------------------------
 export const useGetSingleExperience = (id: string) =>
   useQuery<ExperienceItem, Error>({
-    queryKey: ["singleExperience", id],
+    queryKey: ["candidateExperience", id],
     queryFn: () => getSingleExperience({ id }),
     enabled: !!id,
     staleTime: 0,
@@ -67,13 +67,12 @@ export const useUpdateExperience = (options?: UpdateExperienceOptions) => {
   const queryClient = useQueryClient();
 
   return useMutation<ExperienceItem, unknown, UpdateExperienceVariables>({
-    mutationKey: ["updateExperience"],
+    mutationKey: ["candidateExperience"],
     mutationFn: (data: UpdateExperienceVariables) => api.updateExperience(data), // fully typed
     onSuccess: (response, variables) => {
       if (variables.candidateId) {
         queryClient.invalidateQueries({ queryKey: ["candidateExperience", variables.candidateId] });
       }
-      queryClient.invalidateQueries({ queryKey: ["singleExperience", variables.id] });
       options?.onSuccess?.(response);
     },
     onError: (error: unknown) => {
@@ -101,7 +100,7 @@ export const useDeleteExperience = (options?: DeleteExperienceOptions) => {
   const queryClient = useQueryClient();
 
   return useMutation<unknown, unknown, DeleteExperienceVariables>({
-    mutationKey: ["deleteExperience"],
+    mutationKey: ["candidateExperience"],
     mutationFn: (data) => api.deleteExperience(data),
     onSuccess: (response, variables) => {
       queryClient.invalidateQueries({ queryKey: ["candidateExperience", variables.candidateId] });
