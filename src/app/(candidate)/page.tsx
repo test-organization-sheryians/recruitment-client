@@ -1,14 +1,6 @@
-import CandidateProfile from '@/features/candidate/Profile/components/CandidateProfile'
-import React from 'react'
-
-const page = () => {
+import JobDashboardPage from "@/features/candidate/jobs/components/JobDashboard";
 
 
-  return (
-    <div>
-       <CandidateProfile/>
-    </div>
-  )
+export default function CandidateHomePage() {
+  return <JobDashboardPage />;
 }
-
-export default page

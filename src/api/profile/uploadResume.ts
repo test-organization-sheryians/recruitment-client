@@ -1,10 +1,6 @@
 import api from "@/config/axios";
 
-export const uploadResume = async (data: FormData) => {
-  const response = await api.post("/api/candidate-profile/upload-resume", data, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+const uploadResume = async (file: File) => {
+  const response = await api.post("/api/aws/presignedurl-s3", { fileName: file.name, contentType: file.type });
   return response.data;
 };
