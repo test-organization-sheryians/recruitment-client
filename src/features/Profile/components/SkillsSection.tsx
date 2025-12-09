@@ -8,25 +8,31 @@ import { useGetAllSkills } from "@/features/admin/skills/hooks/useSkillApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/config/store";
 import { useUpdateProfile1 } from "../hooks/useProfileApi";
+import { useDebounce } from "@/features/admin/users/hooks/useDebounce";
+import { useSearchSkills } from "../hooks/useSkillSearch";
 
 interface Skill {
   _id: string;
   name: string;
-} 
+}
 
 interface Props {
-  skills: Skill[]; 
+  skills: Skill[];
   refetchProfile?: () => void;
 }
 
 export default function SkillsSection({ skills: profileSkills = [], refetchProfile }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debounceValue = useDebounce(searchTerm)
+
+
 
   const user = useSelector((state: RootState) => state.auth.user);
-  const userId = user?.id 
+  const userId = user?.id
 
-  const { data: allSkills = [], isLoading: loadingSkills } = useGetAllSkills();
+  const { data: allSkills, isLoading: loadingSkills } = useGetAllSkills();
   const { mutate: updateProfile, isPending } = useUpdateProfile1();
 
   // Extract skill IDs that user already has
@@ -58,7 +64,7 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
           refetchProfile?.();
           toggleModal();
         },
-       
+
       }
     );
   };
@@ -72,10 +78,11 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
       { id: userId, skills: updatedSkillIds },
       {
         onSuccess: () => refetchProfile?.(),
-        
       }
     );
   };
+
+  const { data: skillsResult, isFetching } = useSearchSkills(debounceValue);
 
   return (
     <div className="space-y-6 border border-gray-200 rounded-xl p-6 shadow-md bg-white">
@@ -84,7 +91,7 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
         <button
           onClick={toggleModal}
           disabled={loadingSkills || isPending}
-          className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition shadow-lg disabled:opacity-50"
+          className="p-2 rounded-full bg-blue-600 cursor-pointer text-white hover:bg-blue-700 transition shadow-lg disabled:opacity-50"
         >
           <FaPlus className="w-4 h-4" />
         </button>
@@ -93,7 +100,7 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
       {userSkillNames.length === 0 ? (
         <p className="text-gray-500 italic py-4">No skills added yet.</p>
       ) : (
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 ">
           {profileSkills.map((skill) => (
             <div
               key={skill._id}
@@ -103,7 +110,7 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
               <button
                 onClick={() => removeSkill(skill._id)}
                 disabled={isPending}
-                className="text-blue-600 hover:text-red-600 transition"
+                className="text-blue-600 hover:text-red-600 transition cursor-pointer"
               >
                 {isPending ? (
                   <LoaderCircleIcon className="w-4 h-4 animate-spin" />
@@ -118,38 +125,55 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
 
       {/* Modal */}
       <Modal isOpen={isOpen} onClose={toggleModal} title="Add Skills">
-        <div className="max-h-96 overflow-y-auto p-4 space-y-2">
-          {loadingSkills ? (
+        <div className="p-4 border-b">
+          <input
+            type="text"
+            className="w-full border px-3 py-2 rounded"
+            placeholder="Search skills..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+          />
+        </div>
+
+        <div className="max-h-[120px] w-[500px] overflow-y-scroll p-4 space-y-2 scrollbar-hide">
+          {isFetching ? (
             <div className="text-center py-8 text-gray-500">
               <LoaderCircleIcon className="animate-spin mx-auto" />
             </div>
-          ) : (
-            allSkills.map((skill) => {
-              const isAdded = userSkillIds.includes(skill._id);
-              const isSelected = selectedSkillIds.includes(skill._id);
+          ) : !searchTerm ? (
+            <p className="text-center text-gray-500">Type to search...</p>
+          ) : skillsResult?.length === 0 ? (
+            <p className="text-center text-gray-500">No skills found.</p>
+          )
+            : skillsResult?.length === 0 ? (
+              <p className="text-center text-gray-500">No skills found</p>
+            ) : (
+              skillsResult?.map((skill: any) => {
+                const isAdded = userSkillIds.includes(skill._id);
+                const isSelected = selectedSkillIds.includes(skill._id);
 
-              return (
-                <button
-                  key={skill._id}
-                  disabled={isAdded}
-                  onClick={() => toggleSkill(skill._id)}
-                  className={`
-                    px-5 py-2 rounded-full border transition mr-2 mb-2
-                    ${isAdded
-                      ? "bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed"
-                      : isSelected
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-white border-gray-300 hover:border-blue-500"
-                    }
-                  `}
-                >
-                  {skill.name}
-                  {isAdded && <span className="ml-2 text-xs"> (added)</span>}
-                </button>
-              );
-            })
-          )}
+                return (
+                  <button
+                    key={skill._id}
+                    disabled={isAdded}
+                    onClick={() => toggleSkill(skill._id)}
+                    className={`
+            px-5 py-2 rounded-full border transition mr-2 mb-2
+            ${isAdded
+                        ? "bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed"
+                        : isSelected
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white border-gray-300 hover:border-blue-500"
+                      }
+          `}
+                  >
+                    {skill.name}
+                  </button>
+                );
+              })
+            )}
         </div>
+
 
         <div className="p-4 border-t">
           <button

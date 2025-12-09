@@ -18,12 +18,9 @@ export * from "./experience/deleteExperience"
 export * from "./experience/getCandidateExperience"
 export * from "./experience/getSingleExperience"
 export * from "./experience/updateExperience"
-<<<<<<< HEAD
 export * from "./resumeExtract"
-=======
 export * from "./users/getAllUsers";
 export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
->>>>>>> fce9dadd67fc69c7cd69a827b576cc61dd65a8dc
 
 
