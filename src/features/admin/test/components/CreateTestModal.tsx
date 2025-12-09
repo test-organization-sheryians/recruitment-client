@@ -5,9 +5,11 @@ import { X, FilePlus } from "lucide-react";
 export default function CreateTestModal({
   open,
   onClose,
+  testId,
 }: {
   open: boolean;
   onClose: () => void;
+  testId?: string;
 }) {
   if (!open) return null;
 
@@ -19,7 +21,9 @@ export default function CreateTestModal({
         <div className="flex justify-between items-center mb-5">
           <div className="flex items-center gap-2">
             <FilePlus className="w-6 h-6 text-blue-700" />
-            <h2 className="text-2xl font-bold text-gray-800">Create New Test</h2>
+            <h2 className="text-2xl font-bold text-gray-800">
+              {testId ? "Update Test" : "Create New Test"}
+            </h2>
           </div>
 
           <button
@@ -31,7 +35,7 @@ export default function CreateTestModal({
         </div>
 
         {/* Form */}
-        <CreateTestForm onSuccess={onClose} />
+        <CreateTestForm onClose={onClose} testId={testId} />
       </div>
     </div>
   );

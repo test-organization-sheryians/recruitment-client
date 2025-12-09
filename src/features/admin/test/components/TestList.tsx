@@ -14,14 +14,12 @@ export default function TestList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
-  // POPUP STATES
   const [showEnrollPopup, setShowEnrollPopup] = useState(false);
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
   const [editTestId, setEditTestId] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useGetAllTests();
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -87,18 +85,20 @@ export default function TestList() {
               {/* Dropdown Menu */}
               <div className="relative dropdown-area">
                 <button
-                  className="p-2 hover:bg-gray-100 rounded-full"
+                  className="p-2 hover:bg-gray-100 rounded-full cursor-pointer"
                   onClick={() => setOpenMenu(openMenu === test._id ? null : test._id)}
                 >
                   <EllipsisVertical />
                 </button>
 
                 {openMenu === test._id && (
-                  <div className="absolute right-[-150px] top-10 w-40 bg-white border shadow-lg rounded-md z-50 dropdown-area">
-
+                  <div
+                    className="absolute right-[-150px] top-10 w-40 bg-white border shadow-lg rounded-md z-50 dropdown-area
+                               animate-dropdown origin-top"
+                  >
                     {/* ENROLLED POPUP BUTTON */}
                     <button
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer"
                       onClick={() => {
                         setSelectedTestId(test._id);
                         setShowEnrollPopup(true);
@@ -110,7 +110,7 @@ export default function TestList() {
 
                     {/* EDIT TEST POPUP */}
                     <button
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer"
                       onClick={() => {
                         setEditTestId(test._id);
                         setOpenMenu(null);
@@ -120,18 +120,18 @@ export default function TestList() {
                     </button>
 
                     {/* VIEW DETAILS */}
-                    <button
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                    {/* <button
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer"
                       onClick={() => {
                         router.push(`/admin/tests/${test._id}`);
                         setOpenMenu(null);
                       }}
                     >
                       View Details
-                    </button>
+                    </button> */}
 
                     {/* DELETE */}
-                    <button className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600">
+                    <button className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 cursor-pointer">
                       Delete
                     </button>
                   </div>
@@ -157,7 +157,7 @@ export default function TestList() {
 
               <Button
                 variant="outline"
-                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                className="text-blue-600 border-blue-600 hover:bg-blue-50 cursor-pointer"
                 onClick={() => router.push(`/admin/tests/${test._id}`)}
               >
                 View Details
@@ -167,18 +167,13 @@ export default function TestList() {
         ))}
       </div>
 
-      {/* =============== ENROLLED POPUP =============== */}
+      {/* ENROLLED POPUP */}
       {showEnrollPopup && selectedTestId && (
         <EnrolledPopup testId={selectedTestId} onClose={() => setShowEnrollPopup(false)} />
       )}
 
-      {/* =============== EDIT TEST POPUP =============== */}
-      {editTestId && (
-        <CreateTestForm
-          testId={editTestId}
-          onClose={() => setEditTestId(null)}
-        />
-      )}
+      {/* EDIT TEST POPUP */}
+      {editTestId && <CreateTestForm testId={editTestId} onClose={() => setEditTestId(null)} />}
     </div>
   );
 }

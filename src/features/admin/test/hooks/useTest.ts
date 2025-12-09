@@ -1,6 +1,7 @@
 import * as api from "@/api";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Test } from "@/types/Test";
+import { searchUserTest } from "@/api";
 
 type TestFormValues = {
   title: string;
@@ -54,12 +55,47 @@ export const useEnRollTest = (id: string) => {
 
 export const useUpdateTest = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationKey: ["updateTest"],
-    mutationFn: (data: TestFormValues) => api.updateTest(data), 
+
+    // FIXED: id MUST be included
+    mutationFn: (data: TestFormValues & { id: string }) =>
+      api.updateTest(data),
+
     retry: 0,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tests"] });
-    }
+    },
   });
 };
+
+export const useEnrollTestuser = () => {
+  return useMutation({
+    mutationKey: ["enrollTestuser"],
+    mutationFn: (data: { testId: string; emails: string[] }) =>
+      api.enrollTestuser(data),
+    retry: 0,
+  });
+};
+
+
+export const useSearchUserTest = (query: string) => {
+  return useQuery({
+    queryKey: ["search-users", query],
+    queryFn: async () => {
+      const res = await searchUserTest(query);
+
+      // ⚠️ data is users list → we return only emails
+      if (res?.data) {
+        return res.data.map((user: any) => user.email);
+      }
+
+      return [];
+    },
+    enabled: query.trim().length > 1,
+    staleTime: 5000,
+    placeholderData: [],
+  });
+};
+
