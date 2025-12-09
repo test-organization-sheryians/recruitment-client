@@ -18,7 +18,6 @@ const ResumeUpload = () => {
     const file = e.target.files?.[0];
     if (file) {
       setResume(file);
-      // Simulate file upload progress
       let progress = 0;
       const interval = setInterval(() => {
         progress += 5;
