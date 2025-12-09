@@ -100,3 +100,11 @@ export const useSearchUserTest = (query: string) => {
   });
 };
 
+export const useGetUserAttempts = (id : string) => {
+  return useQuery({
+        queryKey: ["getUserAttempts" , id],
+        queryFn: () => api.getUserAttempts(id),
+        retry: 0,
+  })
+}
+
