@@ -1,49 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { updateJob, getJobs } from "@/api/index";
-import JobForm from "../../categories/components/JobForm";
 import { useRouter } from "next/navigation";
-import { Job } from "@/types/Job";
+import JobForm from "../../categories/components/JobForm";
+import { useGetJob, useUpdateJob } from "@/features/admin/jobs/hooks/useJobApi";
 
-export default function UpdateJob({ jobId, onJobUpdated }: { jobId: string; onJobUpdated?: () => void }) {
-  const router = useRouter();
-  const [job, setJob] = useState<Job>();
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    fetchJob();
-  }, []);
-
-  const fetchJob = async () => {
-    const res = await getJobs(jobId);
-    if (res.success) setJob(res.data);
-  };
-
-  const handleSubmit = async (data: { [key: string]: string | string[] }) => {
-    setLoading(true);
-
-    const formDataObj = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (key === "skills") {
-        (value as string[]).forEach((id: string) =>
-          formDataObj.append("skills[]", id)
-        );
-      } else {
-        formDataObj.append(key, value as string);
-      }
-    });
-
-    const res = await updateJob(jobId, formDataObj);
-    setLoading(false);
-
-    if (res.success) {
-      onJobUpdated?.();
-      router.refresh();
-    }
-  };
-
-  if (!job) return <p className="p-4">Loading...</p>;
 interface Skill {
   _id: string;
   name: string;
@@ -53,6 +13,7 @@ interface Category {
   _id: string;
   name: string;
 }
+
 interface JobFormData {
   _id?: string;
   title: string;
@@ -65,12 +26,64 @@ interface JobFormData {
   clientId: string;
 }
 
+export default function UpdateJob({
+  jobId,
+  onJobUpdated,
+}: {
+  jobId: string;
+  onJobUpdated?: () => void;
+}) {
+  const router = useRouter();
+
+  // Fetch single job by ID
+  const { data: job, isLoading, isError } = useGetJob(jobId);
+
+  // 🔥 Mutation using your centralized "useUpdateJob"
+  const { mutate: updateJob, isPending } = useUpdateJob();
+
+  const handleSubmit = async (data: { [key: string]: string | string[] }): Promise<void> => {
+    const formDataObj = new FormData();
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (key === "skills") {
+        (value as string[]).forEach((id) =>
+          formDataObj.append("skills[]", id)
+        );
+      } else {
+        formDataObj.append(key, value as string);
+      }
+    });
+    return new Promise((resolve, reject) => {
+      updateJob(
+        { id: jobId, formData: formDataObj },
+        {
+          onSuccess: (res) => {
+            if (res.success) {
+              onJobUpdated?.();
+              router.refresh();
+              resolve();
+            } else {
+              reject(new Error('Failed to update job'));
+            }
+          },
+          onError: (error ) => {
+            console.error('Error updating job:', error);
+            reject(error);
+          },
+        }
+      );
+    });
+  };
+
+  if (isLoading) return <p className="p-4">Loading...</p>;
+  if (isError) return <p className="p-4 text-red-600">Failed to load job.</p>;
+
   return (
     <JobForm
       mode="update"
-      initialData={job as unknown as Partial<JobFormData>}
+      initialData={job as Partial<JobFormData>}
       onSubmit={handleSubmit}
-      loading={loading}
+      loading={isPending}
     />
   );
 }
