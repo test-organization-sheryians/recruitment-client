@@ -64,7 +64,7 @@ export default function ResumeUploadPage() {
         setFile(null);
         setQuestions([]);
     };
-     
+    
     const handleStartInterview = () => {
         router.push("/candidate/ai-test/questining");
     };

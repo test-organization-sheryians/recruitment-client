@@ -1,246 +1,525 @@
+// "use client";
+
+// import { useState, useEffect, useCallback } from "react";
+// import { useRouter } from "next/navigation";
+// import Editor from "@monaco-editor/react";
+// import { KeyMod, KeyCode } from "monaco-editor";
+// import { useEvaluateAnswers } from "@/features/AITest/hooks/aiTestApi";
+
+// interface QType {
+//   question: string;
+//   options?: string[];
+// }
+
+// type Ans = string | { text: string; code: string };
+
+// export default function UniversalQuestioningPage() {
+//   const router = useRouter();
+//   const evalTheory = useEvaluateAnswers(); // subjective eval
+// //  const evalMCQ = useEvaluateMCQ();        // MCQ eval
+
+//   const [questions, setQuestions] = useState<QType[]>([]);
+//   const [step, setStep] = useState(0);
+//   const [answers, setAnswers] = useState<Ans[]>([]);
+//   const [text, setText] = useState("");
+//   const [code, setCode] = useState("");
+
+//   const prevent = useCallback((e: any) => e.preventDefault(), []);
+//   const keyBlock = useCallback((e: any) => {
+//     if ((e.ctrlKey || e.metaKey) && ["c", "v", "x"].includes(e.key?.toLowerCase()))
+//       e.preventDefault();
+//   }, []);
+
+//   /* ----------------------------------------------------
+//       LOAD QUESTIONS FROM ANY SOURCE
+//   -----------------------------------------------------*/
+//   useEffect(() => {
+//     const fromTest = localStorage.getItem("currentTestQuestions");
+//     const fromResume = localStorage.getItem("interviewQuestions");
+
+//     let parsed: QType[] = [];
+
+//     if (fromTest) {
+//       const data = JSON.parse(fromTest);
+
+//       if (data?.questions?.test?.questions) {
+//         parsed = data.questions.test.questions.map((q: any) => ({
+//           question: q.question,
+//           options: q.options || null
+//         }));
+//       } else if (data?.test?.questions) {
+//         parsed = data.test.questions;
+//       } else if (Array.isArray(data)) {
+//         parsed = data;
+//       }
+//     }
+
+//     if (!parsed.length && fromResume) parsed = JSON.parse(fromResume);
+
+//     if (!parsed.length) {
+//       alert("⚠️ No questions found.");
+//       return router.push("/");
+//     }
+
+//     setQuestions(parsed);
+//     setAnswers(new Array(parsed.length).fill(""));
+//     localStorage.removeItem("interview_progress"); // avoid mixing
+//   }, []);
+
+//   /* ----------------------------------------------------
+//       UPDATE UI WHEN CHANGING QUESTION
+//   -----------------------------------------------------*/
+//   useEffect(() => {
+//     const stored = answers[step];
+//     if (stored && typeof stored === "object") {
+//       setText(stored.text || "");
+//       setCode(stored.code || "");
+//     } else {
+//       setText(typeof stored === "string" ? stored : "");
+//       setCode("");
+//     }
+//   }, [step, answers]);
+
+//   const current = questions[step];
+//   const isMCQ = Array.isArray(current?.options);
+
+//   /* ----------------------------------------------------
+//       SAVE ANSWER
+//   -----------------------------------------------------*/
+//   const storeAnswer = () => {
+//     const clone = [...answers];
+//     clone[step] = isMCQ ? text : { text, code };
+//     setAnswers(clone);
+//   };
+
+//   const next = () => {
+//     storeAnswer();
+//     if (step < questions.length - 1) {
+//       setStep(step + 1);
+//       setText("");
+//       setCode("");
+//     } else {
+//       finalSubmit(cloneAll());
+//     }
+//   };
+
+//   const prev = () => {
+//     if (step === 0) return;
+//     storeAnswer();
+//     setStep(step - 1);
+//   };
+
+//   const cloneAll = () =>
+//     answers.map((a) =>
+//       typeof a === "object" ? `${a.text}\n\n${a.code}` : a
+//     );
+
+//   /* ----------------------------------------------------
+//       FINAL SUBMIT BASED ON TYPE
+//   -----------------------------------------------------*/
+//   const finalSubmit = async (final: string[]) => {
+//     try {
+//       const payload = {
+//         questions: questions.map((q) => q.question),
+//         answers: final
+//       };
+
+//       let result;
+//       if (isMCQ) result = await evalMCQ.mutateAsync(payload);
+//       else result = await evalTheory.mutateAsync(payload);
+//      // console.log(finalSubmit)
+
+//       localStorage.setItem("finalEvaluation", JSON.stringify(result));
+//       router.push("../ai-test/result");
+//     } catch (err) {
+//       console.error(err);
+//       alert("❌ Evaluation failed");
+//     }
+//   };
+
+//   /* ----------------------------------------------------
+//       MONACO CHEAT BLOCK
+//   -----------------------------------------------------*/
+//   const editorMount = (editor: any) => {
+//     editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyV, () => {});
+//     editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyC, () => {});
+//     editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyX, () => {});
+//     editor.updateOptions({ contextmenu: false });
+
+//     editor.getDomNode()?.addEventListener("paste", prevent);
+//   };
+
+//   if (!questions.length) return <p className="p-6 text-center">Loading...</p>;
+
+//   /* ----------------------------------------------------
+//       UI
+//   -----------------------------------------------------*/
+//   return (
+//     <div className="min-h-screen bg-gray-50 p-6">
+//       <div className="max-w-4xl mx-auto">
+
+//         <div className="flex justify-between items-center mb-6">
+//           <button
+//             disabled={step === 0}
+//             onClick={prev}
+//             className="px-6 py-3 rounded-xl border bg-white hover:bg-gray-100 disabled:bg-gray-300"
+//           >
+//             ← Previous
+//           </button>
+
+//           <h2 className="text-lg font-semibold max-w-[60%] text-center select-none"
+//               onCopy={prevent} onPaste={prevent} onCut={prevent}>
+//             Q{step + 1}. {current.question}
+//           </h2>
+
+//           <button
+//             onClick={next}
+//             className="px-8 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700"
+//           >
+//             {step === questions.length - 1 ? "Submit" : "Next →"}
+//           </button>
+//         </div>
+
+//         {/* ------------------ MCQ ------------------ */}
+//         {isMCQ ? (
+//           <div className="space-y-3">
+//             {current.options?.map((opt, i) => (
+//               <label
+//                 key={i}
+//                 className={`block p-4 border rounded-xl cursor-pointer ${
+//                   text === opt ? "bg-blue-600 text-white" : "bg-white hover:bg-gray-100"
+//                 }`}
+//                 onClick={() => setText(opt)}
+//               >
+//                 <input type="radio" readOnly checked={text === opt} className="mr-2" />
+//                 {opt}
+//               </label>
+//             ))}
+//           </div>
+//         ) : (
+//           <div className="grid grid-cols-2 gap-6">
+//             <textarea
+//               value={text}
+//               onChange={(e) => setText(e.target.value)}
+//               onPaste={prevent}
+//               onCopy={prevent}
+//               onCut={prevent}
+//               onKeyDown={keyBlock}
+//               className="w-full min-h-[400px] border p-4 rounded-lg bg-white"
+//               placeholder="Write your explanation..."
+//             />
+
+//             <Editor
+//               height="400px"
+//               defaultLanguage="javascript"
+//               value={code}
+//               onChange={(v) => setCode(v || "")}
+//               theme="vs-dark"
+//               onMount={editorMount}
+//               options={{ minimap: { enabled: false }, wordWrap: "on" }}
+//             />
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Editor, { OnMount } from "@monaco-editor/react";
-import { editor as MonacoEditor, KeyMod, KeyCode } from "monaco-editor";
-import { useEvaluateAnswers } from "../../../../features/AITest/hooks/aiTestApi";
+import Editor from "@monaco-editor/react";
+import { KeyMod, KeyCode } from "monaco-editor";
+import { useEvaluateAnswers, } from "@/features/AITest/hooks/aiTestApi";
 
 interface Question {
-  id?: string;
   question: string;
-  options?: string[]; // 
+  options?: string[];
 }
 
-type AnswerContent = string | { text: string; code: string };
+type Answer = string | { text: string; code: string };
 
-interface ProgressData {
-  currentStep: number;
-  allAnswers: AnswerContent[];
-  answerText: string;
-  answerCode: string;
-  finished: boolean;
-}
-
-export default function InterviewPage() {
+export default function QuestioningPage() {
   const router = useRouter();
-  const evaluateAnswers = useEvaluateAnswers();
+  const evalTheory = useEvaluateAnswers();
+  // const evalMCQ = useEvaluateMCQ();
 
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [allAnswers, setAllAnswers] = useState<AnswerContent[]>([]);
-  const [answerText, setAnswerText] = useState("");
-  const [answerCode, setAnswerCode] = useState("");
-  const [finished, setFinished] = useState(false);
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [text, setText] = useState("");
+  const [code, setCode] = useState("");
 
-  const saveProgress = (data: ProgressData) => {
-    localStorage.setItem("interview_progress", JSON.stringify(data));
-  };
+  const total = questions.length;
+  const current = questions[step];
+  const isMCQ = Array.isArray(current?.options);
 
-  const preventClipboardEvent = useCallback((e: ClipboardEvent | any) => e.preventDefault(), []);
-  const preventContextMenu = useCallback((e: any) => e.preventDefault(), []);
-  const preventDrop = useCallback((e: any) => e.preventDefault(), []);
-  const handleKeyDownBlockClipboard = useCallback((e: any) => {
-    const key = e.key?.toLowerCase();
-    if ((e.ctrlKey || e.metaKey) && ["c", "v", "x"].includes(key)) e.preventDefault();
-    if (e.shiftKey && e.key === "Insert") e.preventDefault();
+
+  useEffect(() => {
+    const fromTest = localStorage.getItem("currentTestQuestions");
+    const fromResume = localStorage.getItem("interviewQuestions");
+
+    let parsed: Question[] = [];
+
+    if (fromTest) {
+      const t = JSON.parse(fromTest);
+
+      if (t?.questions?.test?.questions) {
+        parsed = t.questions.test.questions.map((q: any) => ({
+          question: q.question,
+          options: q.options || null
+        }));
+      } else if (Array.isArray(t)) parsed = t;
+      else if (t?.test?.questions) parsed = t.test.questions;
+    }
+
+    if (!parsed.length && fromResume) parsed = JSON.parse(fromResume);
+
+    if (!parsed.length) {
+      alert("No questions found");
+      return router.push("/");
+    }
+
+    setQuestions(parsed);
+    setAnswers(new Array(parsed.length).fill(""));
   }, []);
 
-  // Load Questions
+  /* =======================================================
+      RESTORE ANSWER ON STEP CHANGE
+   ======================================================= */
   useEffect(() => {
-    const storedTest = localStorage.getItem("currentTestQuestions"); // 👈 new
-    const storedInterview = localStorage.getItem("interviewQuestions"); // old resume based
-
-    const source = storedTest || storedInterview;
-
-    if (!source) {
-      router.push("/candidate/resume-upload");
-      return;
-    }
-
-    const parsed: Question[] = JSON.parse(source);
-    setQuestions(parsed);
-
-    const saved = localStorage.getItem("interview_progress");
-    if (saved) {
-      const p: ProgressData = JSON.parse(saved);
-      setCurrentStep(p.currentStep || 0);
-      setAllAnswers(p.allAnswers || new Array(parsed.length).fill(""));
-      setAnswerText(p.answerText || "");
-      setAnswerCode(p.answerCode || "");
-      setFinished(p.finished || false);
-    } else {
-      setAllAnswers(new Array(parsed.length).fill(""));
-    }
-  }, [router]);
-
-  useEffect(() => {
-    if (questions.length === 0) return;
-
-    const stored = allAnswers[currentStep];
+    const stored = answers[step];
 
     if (stored && typeof stored === "object") {
-      setAnswerText(stored.text || "");
-      setAnswerCode(stored.code || "");
+      setText(stored.text || "");
+      setCode(stored.code || "");
     } else {
-      setAnswerText(typeof stored === "string" ? stored : "");
-      setAnswerCode("");
+      setText(typeof stored === "string" ? stored : "");
+      setCode("");
     }
-  }, [currentStep, allAnswers, questions]);
+  }, [step]);
 
-  // Detect MCQ
-  const currentQuestion = questions[currentStep];
-  const isMCQ = Array.isArray(currentQuestion?.options);
-
-  const disabled = isMCQ
-    ? !answerText
-    : evaluateAnswers.isPending || (!answerText.trim() && !answerCode.trim());
-
-  const isLast = currentStep === questions.length - 1;
-
-  const handleTextChange = (value: string) => {
-    setAnswerText(value);
-    saveProgress({ currentStep, allAnswers, answerText: value, answerCode, finished });
+  /* =======================================================
+      SAVE ANSWER FOR CURRENT QUESTION
+   ======================================================= */
+  const storeAnswer = () => {
+    setAnswers((prev) => {
+      const clone = [...prev];
+      clone[step] = isMCQ ? text : { text, code };
+      return clone;
+    });
   };
 
-  const handleCodeChange = (value: string) => {
-    setAnswerCode(value);
-    saveProgress({ currentStep, allAnswers, answerText, answerCode: value, finished });
+  /* =======================================================
+      NEXT
+   ======================================================= */
+  const next = () => {
+    storeAnswer();
+    if (step < total - 1) {
+      setStep((p) => p + 1);
+      return;
+    }
+    submit();
   };
 
-  const submitTest = async (finalAnswers: AnswerContent[]) => {
+  /* =======================================================
+      PREV
+   ======================================================= */
+  const prev = () => {
+    if (step === 0) return;
+    storeAnswer();
+    setStep((p) => p - 1);
+  };
+
+  /* =======================================================
+      COMBINE ANSWERS FOR SUBMISSION
+   ======================================================= */
+  const finalAnswers = () =>
+    answers.map((a) =>
+      typeof a === "object" ? `${a.text}\n\n${a.code}` : a
+    );
+
+  /* =======================================================
+      SUBMIT (MIXED TEST SUPPORTED)
+   ======================================================= */
+  const submit = async () => {
+    storeAnswer();
+    const payload = {
+      questions: questions.map((q) => q.question),
+      answers: finalAnswers()
+    };
+
     try {
-      const formatted = finalAnswers.map((ans) =>
-        typeof ans === "object" ? `${ans.text}\n\n${ans.code}` : ans
-      );
+      let result;
+      const allMCQ = questions.every((q) => Array.isArray(q.options));
 
-      const payload = {
-        questions: questions.map((q) => q.question),
-        answers: formatted,
-      };
+      // If whole test is MCQ → evalMCQ
+      if (allMCQ) result = await evalMCQ.mutateAsync(payload);
+      else result = await evalTheory.mutateAsync(payload);
 
-      const result = await evaluateAnswers.mutateAsync(payload);
-      localStorage.setItem("interviewResult", JSON.stringify(result));
-
-      saveProgress({ currentStep, allAnswers, answerText, answerCode, finished: true });
-      router.push("/candidate/ai-test/result");
-    } catch (err) {
-      console.error(err);
+      localStorage.setItem("finalTestEvaluation", JSON.stringify(result));
+      router.push("/test/result");
+    } catch (e) {
+      console.error(e);
+      alert("Submission failed");
     }
   };
 
-  const handleNext = () => {
-    const currentAnswer: AnswerContent = isMCQ
-      ? answerText
-      : answerText.trim() || answerCode.trim()
-      ? { text: answerText, code: answerCode }
-      : "";
+  /* =======================================================
+      MONACO BLOCK COPY/PASTE
+   ======================================================= */
+  const prevent = useCallback((e: any) => e.preventDefault(), []);
+  const keyBlock = useCallback((e: any) => {
+    const k = e.key?.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && ["c", "v", "x"].includes(k)) prevent(e);
+  }, []);
 
-    const updated = [...allAnswers];
-    updated[currentStep] = currentAnswer;
-
-    setAllAnswers(updated);
-
-    if (!isLast) {
-      const next = currentStep + 1;
-      saveProgress({ currentStep: next, allAnswers: updated, answerText: "", answerCode: "", finished });
-      setCurrentStep(next);
-      setAnswerText("");
-      setAnswerCode("");
-    } else {
-      submitTest(updated);
-    }
+  const editorMount = (ed: any) => {
+    ed.addCommand(KeyMod.CtrlCmd | KeyCode.KeyV, () => {});
+    ed.addCommand(KeyMod.CtrlCmd | KeyCode.KeyC, () => {});
+    ed.addCommand(KeyMod.CtrlCmd | KeyCode.KeyX, () => {});
+    ed.updateOptions({ contextmenu: false });
+    ed.getDomNode()?.addEventListener("paste", prevent);
   };
 
-  if (!questions.length) return <p className="p-6 text-center">Loading...</p>;
+  if (!questions.length) return <p className="p-4 text-center">Loading...</p>;
 
-  const handleEditorMount: OnMount = (editor) => {
-    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyV, () => {});
-    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyC, () => {});
-    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyX, () => {});
-    editor.addCommand(KeyMod.Shift | KeyCode.Insert, () => {});
-    editor.updateOptions({ contextmenu: false });
-
-    const node = editor.getDomNode();
-    if (node) {
-      node.addEventListener("paste", (e) => e.preventDefault());
-      node.addEventListener("drop", (e) => e.preventDefault());
-    }
-  };
-
+  /* =======================================================
+      UI
+   ======================================================= */
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto py-6 px-4">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-4xl mx-auto">
 
-        {/* Navigation */}
         <div className="flex justify-between items-center mb-6">
-          <button
-            onClick={() => currentStep > 0 && setCurrentStep(currentStep - 1)}
-            disabled={currentStep === 0}
-            className={`px-6 py-3 rounded-xl border ${currentStep === 0 ? "bg-gray-200 cursor-not-allowed" : "bg-white hover:bg-gray-50"}`}
-          >
-            ⟵ Previous
+          <button onClick={prev} disabled={step === 0} className="btn">
+            ← Previous
           </button>
 
-          <h2 className="text-lg font-semibold max-w-[60%] text-center select-none"
-            onCopy={preventClipboardEvent}
-            onCut={preventClipboardEvent}
-            onPaste={preventClipboardEvent}
-            onContextMenu={preventContextMenu}
-          >
-            Q.{currentStep + 1}: {currentQuestion.question}
+          <h2 className="text-xl font-semibold">
+            Q{step + 1}/{total}: {current.question}
           </h2>
 
-          <button
-            onClick={handleNext}
-            disabled={disabled}
-            className={`px-8 py-3 rounded-xl font-bold ${disabled ? "bg-gray-300" : "bg-blue-600 text-white hover:bg-blue-700"}`}
-          >
-            {isLast ? "Submit Test" : "Next →"}
+          <button onClick={next} className="btn-primary">
+            {step === total - 1 ? "Submit" : "Next →"}
           </button>
         </div>
 
-        {/* Conditional Rendering */}
+        {/* MCQ */}
         {isMCQ ? (
-          <div className="space-y-4">
-            {currentQuestion.options?.map((opt, idx) => (
+          <div className="space-y-3">
+            {current.options?.map((opt, i) => (
               <label
-                key={idx}
-                onClick={() => handleTextChange(opt)}
-                className={`block p-4 border rounded-xl cursor-pointer ${answerText === opt ? "bg-blue-600 text-white" : "bg-white hover:bg-gray-100"}`}
+                key={i}
+                className={`block p-4 border rounded-xl cursor-pointer ${
+                  text === opt ? "bg-blue-600 text-white" : "bg-white"
+                }`}
+                onClick={() => setText(opt)}
               >
-                <input type="radio" checked={answerText === opt} readOnly className="mr-2" />
+                <input type="radio" checked={text === opt} readOnly className="mr-2" />
                 {opt}
               </label>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-
+          <div className="grid grid-cols-2 gap-6">
             <textarea
-              className="w-full min-h-[500px] p-4 border rounded-lg"
-              value={answerText}
-              placeholder="Write explanation..."
-              onChange={(e) => handleTextChange(e.target.value)}
-              onPaste={preventClipboardEvent}
-              onCopy={preventClipboardEvent}
-              onCut={preventClipboardEvent}
-              onDrop={preventDrop}
-              onKeyDown={handleKeyDownBlockClipboard}
-              onContextMenu={preventContextMenu}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onPaste={prevent}
+              onCopy={prevent}
+              onCut={prevent}
+              onKeyDown={keyBlock}
+              className="p-4 min-h-[400px] border rounded-lg"
+              placeholder="Write your logic/explanation..."
             />
 
-            <div className="bg-black rounded-lg overflow-hidden">
-              <Editor
-                height="500px"
-                defaultLanguage="javascript"
-                value={answerCode}
-                onChange={(value) => handleCodeChange(value || "")}
-                theme="vs-dark"
-                onMount={handleEditorMount}
-                options={{ minimap: { enabled: false }, wordWrap: "on", fontSize: 14 }}
-              />
-            </div>
+            <Editor
+              height="400px"
+              onMount={editorMount}
+              defaultLanguage="javascript"
+              value={code}
+              onChange={(v) => setCode(v || "")}
+              theme="vs-dark"
+              options={{ minimap: { enabled: false }, wordWrap: "on" }}
+            />
           </div>
         )}
       </div>
