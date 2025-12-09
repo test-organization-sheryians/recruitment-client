@@ -74,7 +74,7 @@ const SignupForm = () => {
             isVerified:res.data.user.isVerified
           })
         );
-        router.push("/candidate/resume");
+        router.push("/un-verified");
       },
       onError: (err: {
         response?: { data?: { message: string } };

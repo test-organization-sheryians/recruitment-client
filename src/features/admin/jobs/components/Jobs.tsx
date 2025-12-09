@@ -48,8 +48,8 @@ export default function Jobs() {
   useEffect(() => {
     if (!data) return;
 
-    if (data.success && Array.isArray(data.data)) {
-      setJobs(data.data);
+    if ( Array.isArray(data)) {
+      setJobs(data);
       setError(null);
     } else {
       setJobs([]);
@@ -86,7 +86,6 @@ export default function Jobs() {
 
   return (
     <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-      {/* Header section */}
       <div className="p-6 border-b flex justify-between items-center">
         <div>
           <h2 className="text-xl font-semibold text-gray-800">Job Listings</h2>
