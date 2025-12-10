@@ -131,7 +131,7 @@ export default function ResumeSection({ resumefile, resumeFileNoPI }: Props) {
                   href={resumefile}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:underline cursor-pointer"
+                  className="text-sm text-sm text-blue-600  hover:underline cursor-pointer"
                 >
                   View Resume
                 </a>
