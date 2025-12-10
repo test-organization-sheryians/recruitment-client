@@ -6,16 +6,13 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/config/store";
 import { FaPlus } from "react-icons/fa";
 import Modal from "@/components/ui/Modal";
-import { uploadFileToS3 } from "@/lib/uploadFile";// adjust path if needed
-import { generatePDF } from "@/app/candidate/resume-extract/components/generatePdf";
-import { useExtractResume } from "@/app/candidate/resume-extract/features/hooks/resumeExtract";
+import { uploadFileToS3 } from "@/lib/uploadFile";
 
 interface Props {
   resumefile?: string;
-  resumeFileNoPI?: string;
 }
 
-export default function ResumeSection({ resumefile, resumeFileNoPI }: Props) {
+export default function ResumeSection({ resumefile }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -28,6 +25,7 @@ export default function ResumeSection({ resumefile, resumeFileNoPI }: Props) {
 
   // update profile hook
   const updateProfile = useUpdateProfile1();
+  const isUploading = updateProfile.status === "pending";
 
   const toggleModal = () => setIsOpen(!isOpen);
 
@@ -44,60 +42,37 @@ export default function ResumeSection({ resumefile, resumeFileNoPI }: Props) {
     setFile(selected);
   };
 
-  const extractResume = useExtractResume();
-
-
-  // ⭐ Upload to S3 → updateProfile({ resumeFile: finalUrl })
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || !user?.id) return;
 
     try {
       const finalUrl = await uploadFileToS3(file);
-      console.log("FINAL URL:", finalUrl);
-
-      extractResume.mutate(file, {
-        onSuccess: async (data) => {
-          const noPIData = { ...data, data: { ...data.data } };
-          delete noPIData.data.email;
-          delete noPIData.data.phone;
-          delete noPIData.data.name;
-
-          const pdfBytes = await generatePDF(noPIData);
-          // Convert Uint8Array to ArrayBuffer first, then create Blob
-          const buffer = new Uint8Array(pdfBytes).buffer;
-          const blob = new Blob([buffer], { type: 'application/pdf' });
-          const pdfFile = new File([blob], `resume-anonymized-${Date.now()}.pdf`, { type: 'application/pdf' });
-          const noPIUrl = await uploadFileToS3(pdfFile);
-
-          console.log("NO PI URL:", noPIUrl);
-
-          updateProfile.mutate({
-            id: user?.id || '',
-            resumeFile: finalUrl,
-            resumeFileNoPI: noPIUrl
-          }, {
-            onSuccess: () => {
-              setIsOpen(false);
-              setFile(null);
-              refetchProfile();
-            }
-          })
+      
+      updateProfile.mutate({
+        id: user.id,
+        resumeFile: finalUrl
+      }, {
+        onSuccess: () => {
+          setIsOpen(false);
+          setFile(null);
+          refetchProfile();
         }
       });
     } catch (err) {
       console.error("Upload failed:", err);
+      alert("Failed to upload resume. Please try again.");
     }
   };
 
   const handleDelete = () => {
-    deleteMutation.mutate(undefined, {
-      onSuccess: () => {
-        refetchProfile();
-      },
-    });
+    if (window.confirm("Are you sure you want to delete your resume?")) {
+      deleteMutation.mutate(undefined, {
+        onSuccess: () => {
+          refetchProfile();
+        },
+      });
+    }
   };
-
-  const isUploading = updateProfile.status === "pending";
 
   return (
     <div className="space-y-4">
@@ -123,36 +98,24 @@ export default function ResumeSection({ resumefile, resumeFileNoPI }: Props) {
 
       {/* Resume display */}
       <div className="space-y-2">
-        {(resumefile || resumeFileNoPI) ? (
-          <>
-            {resumefile && (
-              <div className="flex items-center justify-between bg-gray-100 border border-gray-200 px-4 py-3 rounded-xl">
-                <a
-                  href={resumefile}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:underline cursor-pointer"
-                >
-                  View Resume
-                </a>
-                <a
-                  href={resumeFileNoPI}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-700 hover:underline cursor-pointer"
-                >
-                  View Resume Without PI
-                </a>
-                <button
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="text-red-500 text-sm hover:text-red-700 transition cursor-pointer"
-                >
-                  {isDeleting ? "Deleting..." : "Delete"}
-                </button>
-              </div>
-            )}
-          </>
+        {resumefile ? (
+          <div className="flex items-center justify-between bg-gray-100 border border-gray-200 px-4 py-3 rounded-xl">
+            <a
+              href={resumefile}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:underline cursor-pointer"
+            >
+              View Resume
+            </a>
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="text-red-500 text-sm hover:text-red-700 transition cursor-pointer"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </button>
+          </div>
         ) : (
           <div className="text-sm text-gray-500 italic">
             No resume uploaded yet
@@ -166,7 +129,7 @@ export default function ResumeSection({ resumefile, resumeFileNoPI }: Props) {
           <input
             type="file"
             onChange={handleFileChange}
-            accept=".pdf,.doc,.docx"
+            accept=".pdf"
             className="block w-full text-sm file:mr-4 file:py-2 file:px-4
             file:rounded-lg file:border-0
             file:bg-blue-200 file:text-blue-700
