@@ -89,7 +89,7 @@ export const useSearchUserTest = (query: string) => {
 
       // ⚠️ data is users list → we return only emails
       if (res?.data) {
-        return res.data.map((user: any) => user.email);
+        return res.data.map((user: { email: string }) => user.email);
       }
 
       return [];
@@ -99,6 +99,7 @@ export const useSearchUserTest = (query: string) => {
     placeholderData: [],
   });
 };
+
 
 export const useGetUserAttempts = (id : string) => {
   return useQuery({

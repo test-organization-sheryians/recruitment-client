@@ -1,6 +1,7 @@
 import React from "react";
 import CreateTestForm from "./CreateTestForm";
 import { X, FilePlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function CreateTestModal({
   open,
@@ -26,12 +27,12 @@ export default function CreateTestModal({
             </h2>
           </div>
 
-          <button
+          <Button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-gray-200 transition"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
 
         {/* Form */}

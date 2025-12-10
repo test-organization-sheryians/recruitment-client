@@ -7,6 +7,16 @@ type Props = {
   testId: string;
 };
 
+// Define a proper type for attempt data
+type Attempt = {
+  _id: string;
+  email: string;
+  createdAt: string;
+  score: number;
+  isPassed: boolean;
+  status: string;
+};
+
 export default function AttemptsSection({ testId }: Props) {
   const {
     data: response,
@@ -15,8 +25,6 @@ export default function AttemptsSection({ testId }: Props) {
   } = useGetUserAttempts(testId);
 
   console.log(testId);
-
-  const attempts = Array.isArray(response) ? response : response?.data || [];
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [filterStatus, setFilterStatus] = useState<
@@ -28,6 +36,9 @@ export default function AttemptsSection({ testId }: Props) {
   const [openFilter, setOpenFilter] = useState(false);
 
   const processedAttempts = useMemo(() => {
+    // Move the attempts logic inside useMemo to fix the dependency issue
+    const attempts = Array.isArray(response) ? response : response?.data || [];
+    
     let filtered = [...attempts];
 
     if (filterStatus === "passed") {
@@ -47,7 +58,7 @@ export default function AttemptsSection({ testId }: Props) {
     );
 
     return filtered;
-  }, [attempts, sortOrder, filterStatus]);
+  }, [response, sortOrder, filterStatus]); // Use response instead of attempts
 
   if (isLoading) {
     return (
@@ -119,7 +130,7 @@ export default function AttemptsSection({ testId }: Props) {
                 <button
                   key={v}
                   onClick={() => {
-                    setFilterStatus(v as any);
+                    setFilterStatus(v as "all" | "passed" | "failed"); // Fix: Remove 'any'
                     setOpenFilter(false);
                   }}
                   className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 capitalize ${
@@ -144,7 +155,7 @@ export default function AttemptsSection({ testId }: Props) {
         </div>
       ) : (
         <div className="space-y-3">
-          {processedAttempts.map((a: any) => (
+          {processedAttempts.map((a: Attempt) => ( // Fix: Use Attempt type instead of 'any'
             <div
               key={a._id}
               className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-gray-200 rounded-xl p-5 bg-white hover:shadow-sm"

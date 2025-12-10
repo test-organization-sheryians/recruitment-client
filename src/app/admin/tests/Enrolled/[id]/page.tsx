@@ -28,6 +28,7 @@ export default function EnrolledPopup({
 
         {/* YOUR EMAIL COMPONENT */}
         <EnrolledTestEmail testId={testId} />
+        
       </div>
     </div>
   );
