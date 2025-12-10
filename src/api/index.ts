@@ -38,3 +38,4 @@ export * from "./tests/enRolltest";
 export * from "./tests/updateTest";
 export * from "./tests/neRolluser";
 export * from "./tests/searchUsertest";
+export * from "./tests/getUserAttempts";

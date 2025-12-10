@@ -8,6 +8,7 @@ type TestFormValues = {
   description: string;
   duration: number;
   summury: string;
+  showResults : boolean
   category: string;
   passingScore: number;
   prompt: string;
@@ -60,7 +61,7 @@ export const useUpdateTest = () => {
     mutationKey: ["updateTest"],
 
     // FIXED: id MUST be included
-    mutationFn: (data: TestFormValues & { id: string }) =>
+    mutationFn: (data: Partial<TestFormValues> & { id: string }) =>
       api.updateTest(data),
 
     retry: 0,
@@ -98,4 +99,12 @@ export const useSearchUserTest = (query: string) => {
     placeholderData: [],
   });
 };
+
+export const useGetUserAttempts = (id : string) => {
+  return useQuery({
+        queryKey: ["getUserAttempts" , id],
+        queryFn: () => api.getUserAttempts(id),
+        retry: 0,
+  })
+}
 

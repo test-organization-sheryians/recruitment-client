@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Clock, GraduationCap, EllipsisVertical, Search } from "lucide-react";
 
-import { useGetAllTests } from "@/features/admin/test/hooks/useTest";
+import { useGetAllTests, useUpdateTest } from "@/features/admin/test/hooks/useTest";
 import EnrolledPopup from "@/app/admin/tests/Enrolled/[id]/page";
 import CreateTestForm from "./CreateTestForm";
 
@@ -19,6 +19,8 @@ export default function TestList() {
   const [editTestId, setEditTestId] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useGetAllTests();
+
+  const { mutate: updateTest } = useUpdateTest();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -54,6 +56,13 @@ export default function TestList() {
         Failed to load tests
       </div>
     );
+
+  const handleDiscloseResult = (id: string) => {
+    updateTest({
+      id,
+      showResults: true,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -129,6 +138,12 @@ export default function TestList() {
                     >
                       View Details
                     </button> */}
+
+                    {test.showResults == false && <button className="w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => handleDiscloseResult(test._id)}>
+                      {/* {test.showResults} */}
+                      Disclose Result
+                    </button>}
 
                     {/* DELETE */}
                     <button className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 cursor-pointer">
