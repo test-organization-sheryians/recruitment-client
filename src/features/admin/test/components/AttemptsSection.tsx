@@ -7,14 +7,15 @@ type Props = {
   testId: string;
 };
 
-// Define a proper type for attempt data
 type Attempt = {
   _id: string;
   email: string;
+  firstName: string;
+  lastName: string;
   createdAt: string;
   score: number;
   isPassed: boolean;
-  status: string;
+  status: "Graded" | "Failed" | "Started";
 };
 
 export default function AttemptsSection({ testId }: Props) {
@@ -24,21 +25,19 @@ export default function AttemptsSection({ testId }: Props) {
     isError,
   } = useGetUserAttempts(testId);
 
-  console.log(testId);
-
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [filterStatus, setFilterStatus] = useState<
     "all" | "passed" | "failed"
   >("all");
 
-  // ✅ UI popup state (ONLY FOR APPEARANCE)
   const [openSort, setOpenSort] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
 
   const processedAttempts = useMemo(() => {
-    // Move the attempts logic inside useMemo to fix the dependency issue
-    const attempts = Array.isArray(response) ? response : response?.data || [];
-    
+    const attempts: Attempt[] = Array.isArray(response)
+      ? response
+      : response?.data || [];
+
     let filtered = [...attempts];
 
     if (filterStatus === "passed") {
@@ -58,7 +57,7 @@ export default function AttemptsSection({ testId }: Props) {
     );
 
     return filtered;
-  }, [response, sortOrder, filterStatus]); // Use response instead of attempts
+  }, [response, sortOrder, filterStatus]);
 
   if (isLoading) {
     return (
@@ -78,9 +77,9 @@ export default function AttemptsSection({ testId }: Props) {
 
   return (
     <div className="space-y-4">
-      
+      {/* CONTROLS */}
       <div className="flex items-center justify-between relative z-30">
-
+        {/* SORT */}
         <div className="relative">
           <button
             onClick={() => setOpenSort((p) => !p)}
@@ -112,7 +111,7 @@ export default function AttemptsSection({ testId }: Props) {
           )}
         </div>
 
-        
+        {/* FILTER */}
         <div className="relative">
           <button
             onClick={() => setOpenFilter((p) => !p)}
@@ -130,7 +129,7 @@ export default function AttemptsSection({ testId }: Props) {
                 <button
                   key={v}
                   onClick={() => {
-                    setFilterStatus(v as "all" | "passed" | "failed"); // Fix: Remove 'any'
+                    setFilterStatus(v as "all" | "passed" | "failed");
                     setOpenFilter(false);
                   }}
                   className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 capitalize ${
@@ -145,7 +144,7 @@ export default function AttemptsSection({ testId }: Props) {
         </div>
       </div>
 
-      
+      {/* LIST */}
       {processedAttempts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-gray-100 rounded-xl">
           <p className="text-gray-400 font-medium">No attempts found</p>
@@ -155,45 +154,60 @@ export default function AttemptsSection({ testId }: Props) {
         </div>
       ) : (
         <div className="space-y-3">
-          {processedAttempts.map((a: Attempt) => ( // Fix: Use Attempt type instead of 'any'
-            <div
-              key={a._id}
-              className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-gray-200 rounded-xl p-5 bg-white hover:shadow-sm"
-            >
-              {/* User Info */}
-              <div>
-                <p className="font-semibold text-gray-900">{a.email}</p>
-                <p className="text-xs text-gray-500">
-                  {new Date(a.createdAt).toLocaleString()}
-                </p>
-              </div>
+          {processedAttempts.map((a) => {
+            const statusStyles =
+              a.status === "Graded" && a.isPassed
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : a.status === "Failed"
+                ? "bg-red-50 text-red-700 border-red-200"
+                : "bg-yellow-50 text-yellow-700 border-yellow-200"; // Started
 
-              {/* Metrics */}
-              <div className="flex items-center gap-6">
-                <div className="text-right">
-                  <p className="text-[10px] uppercase text-gray-400 font-bold">
-                    Score
+            const dotStyles =
+              a.status === "Graded" && a.isPassed
+                ? "bg-emerald-500"
+                : a.status === "Failed"
+                ? "bg-red-500"
+                : "bg-yellow-500";
+
+            return (
+              <div
+                key={a._id}
+                className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-gray-200 rounded-xl p-5 bg-white hover:shadow-sm"
+              >
+                {/* USER INFO */}
+                <div>
+                  <p className="font-semibold text-gray-900">
+                    {a.firstName} {a.lastName}
                   </p>
-                  <p className="text-lg font-bold">{a.score}</p>
+
+                  <p className="text-xs text-gray-400">{a.email}</p>
+
+                  <p className="text-[10px] text-gray-500">
+                    {new Date(a.createdAt).toLocaleString()}
+                  </p>
                 </div>
 
-                <span
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${
-                    a.isPassed
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : "bg-red-50 text-red-700 border-red-200"
-                  }`}
-                >
+
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <p className="text-[10px] uppercase text-gray-400 font-bold">
+                      Score
+                    </p>
+                    <p className="text-lg font-bold">{a.score}</p>
+                  </div>
+
                   <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      a.isPassed ? "bg-emerald-500" : "bg-red-500"
-                    }`}
-                  />
-                  {a.status}
-                </span>
+                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${statusStyles}`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${dotStyles}`}
+                    />
+                    {a.status}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

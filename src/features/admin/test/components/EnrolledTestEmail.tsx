@@ -49,7 +49,7 @@ const EnrolledTestEmail: React.FC<Props> = ({ testId }) => {
   };
 
   const removeEmail = (email: string) =>
-  setEmails((prev) => prev.filter((e) => e !== email));
+    setEmails((prev) => prev.filter((e) => e !== email));
 
   const handleSubmit = () => {
     if (emails.length === 0) {
@@ -64,8 +64,12 @@ const EnrolledTestEmail: React.FC<Props> = ({ testId }) => {
           toast.success("Users enrolled successfully!");
           setEmails([]);
         },
-        onError: (err: any) => {
-          toast.error(err?.message || "Something went wrong");
+        onError: (err: unknown) => {
+          if (err instanceof Error) {
+            toast.error(err.message);
+          } else {
+            toast.error("Something went wrong");
+          }
         },
       }
     );
@@ -93,9 +97,8 @@ const EnrolledTestEmail: React.FC<Props> = ({ testId }) => {
                 setShowDropdown(true);
               }}
               onFocus={() => setShowDropdown(true)}
-              className={`flex-1 px-4 py-2.5 rounded-lg border text-sm shadow-sm ${
-                error ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`flex-1 px-4 py-2.5 rounded-lg border text-sm shadow-sm ${error ? "border-red-500" : "border-gray-300"
+                }`}
             />
 
             {/* <button

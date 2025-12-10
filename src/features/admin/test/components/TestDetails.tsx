@@ -140,50 +140,83 @@ export default function TestDetails({ testId, onClose }: TestDetailsProps) {
         </div>
 
         {/* SAME ENROLLMENTS */}
-        {activeTab === "enrollments" && (
-          <div className="space-y-4 mt-4">
-            {attempts.map((a: Attempt) => (
-              <div key={a._id} className="border shadow-md rounded-2xl p-4 bg-white">
-                <div className="grid grid-cols-2 gap-3">
+       {activeTab === "enrollments" && (
+  <div className="space-y-4 mt-4">
+    {attempts.map((a: Attempt) => {
+      const statusStyles =
+        a.status === "passed"
+          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+          : a.status === "failed"
+          ? "bg-red-50 text-red-700 border-red-200"
+          : "bg-yellow-50 text-yellow-700 border-yellow-200";
 
-                  <p><b>Name:</b> {a.user ? `${a.user.firstName} ${a.user.lastName}` : "Unknown User"}</p>
-                  <p><b>Email:</b> {a.email}</p>
-                  <p><b>Phone:</b> {a.user?.phoneNumber || "N/A"}</p>
+      const dotStyles =
+        a.status === "passed"
+          ? "bg-emerald-500"
+          : a.status === "failed"
+          ? "bg-red-500"
+          : "bg-yellow-500";
 
-                  <p
-                  className="flex items-center gap-2 "
-                  ><b>Status:</b>
-                  
-                    <span
-                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium border
-                        ${
-                          a.status === "passed"
-                            ? "bg-green-50 text-green-700 border-green-400"
-                            : a.status === "failed"
-                            ? "bg-red-50 text-red-700 border-red-400"
-                            : "bg-yellow-50 text-yellow-700 border-yellow-400"
-                        }`}
-                    >
-                      <span
-                        className={`w-2 h-2 rounded-full 
-                          ${
-                            a.status === "passed"
-                              ? "bg-green-600"
-                              : a.status === "failed"
-                              ? "bg-red-600"
-                              : "bg-yellow-600"
-                          }`}
-                      ></span>
+      return (
+        <div
+          key={a._id}
+          className="group border border-gray-200 rounded-xl p-5 bg-white hover:shadow-sm"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm">
 
-                      {a.status}
-                    </span>
-                  </p>
+            {/* NAME */}
+            <div>
+              <p className="text-[11px] uppercase text-gray-400 font-bold">
+                Name
+              </p>
+              <p className="font-medium text-gray-900">
+                {a.user
+                  ? `${a.user.firstName} ${a.user.lastName}`
+                  : "Unknown User"}
+              </p>
+            </div>
 
-                </div>
-              </div>
-            ))}
+            {/* EMAIL */}
+            <div>
+              <p className="text-[11px] uppercase text-gray-400 font-bold">
+                Email
+              </p>
+              <p className="text-gray-600 break-all">{a.email}</p>
+            </div>
+
+            {/* PHONE */}
+            <div>
+              <p className="text-[11px] uppercase text-gray-400 font-bold">
+                Phone
+              </p>
+              <p className="text-gray-700">
+                {a.user?.phoneNumber || "N/A"}
+              </p>
+            </div>
+
+            {/* STATUS */}
+            <div className="flex flex-col justify-center">
+              <p className="text-[11px] uppercase text-gray-400 font-bold mb-1">
+                Status
+              </p>
+
+              <span
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border w-fit ${statusStyles}`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${dotStyles}`}
+                />
+                {a.status}
+              </span>
+            </div>
+
           </div>
-        )}
+        </div>
+      );
+    })}
+  </div>
+)}
+
 
         {/* SAME ATTEMPTS */}
         {activeTab === "attempts" && <AttemptsSection testId={id} />}
