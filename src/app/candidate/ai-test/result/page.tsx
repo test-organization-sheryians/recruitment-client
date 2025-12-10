@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useQuery } from "@tanstack/react-query";
 import { ScoreCircle } from "../../../../features/AITest/components/score";
@@ -10,55 +10,34 @@ interface QuestionEvaluation {
 }
 
 interface InterviewResult {
-  data: {
-    success: boolean;
-    evaluations: QuestionEvaluation[];
-    total: number;
-  };
+  success: boolean;
+  evaluations: QuestionEvaluation[];
+  total: number;
 }
 
-const getInterviewResult = async (): Promise<InterviewResult | null> => {
+const getInterviewResult = (): InterviewResult | null => {
   const saved = localStorage.getItem("interviewResult");
-
-  if (!saved) return null;
-
-  try {
-    return JSON.parse(saved);
-  } catch (error) {
-    console.error("Failed to parse interviewResult:", error);
-    return null;
-  }
+  return saved ? JSON.parse(saved) : null;
 };
 
-
 export default function ResultPage() {
-  // ⬇️ Use TanStack Query
-  const { data: result, isLoading, isError } = useQuery({
+  const { data: result, isLoading } = useQuery({
     queryKey: ["interview-result"],
     queryFn: getInterviewResult,
-    staleTime: Infinity,     
-    gcTime: Infinity,         
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 
   if (isLoading) {
     return <p className="p-8 text-center">Loading interview results...</p>;
   }
 
-  if (!result || isError) {
-    return (
-      <p className="p-8 text-center text-red-500">
-        Failed to load results.
-      </p>
-    );
+  if (!result) {
+    return <p className="p-8 text-center text-red-500">No evaluation found.</p>;
   }
 
-  const totalScore = result.data.evaluations.reduce(
-    (sum, q) => sum + q.score,
-    0
-  );
-
-  const totalQuestions =
-    result.data.total || result.data.evaluations.length;
+  const totalScore = result.evaluations.reduce((sum, q) => sum + q.score, 0);
+  const totalQuestions = result.total ?? result.evaluations.length;
 
   return (
     <div className="max-w-3xl mx-auto my-10 p-8 bg-white rounded-xl shadow-2xl">
@@ -66,7 +45,7 @@ export default function ResultPage() {
         Your Results
       </h1>
       <p className="text-center text-gray-500 mb-8">
-        Interview Evaluation Complete
+        Interview Completed
       </p>
 
       <div className="flex justify-center mb-8">
@@ -74,11 +53,11 @@ export default function ResultPage() {
       </div>
 
       <h2 className="text-xl font-bold text-gray-800 mb-4">
-        Detailed Feedback by Question
+        Question Feedback
       </h2>
 
       <div className="space-y-3">
-        {result.data.evaluations.map((evalItem, index) => (
+        {result.evaluations.map((evalItem, index) => (
           <DetailedFeedbackCard
             key={index}
             evaluation={evalItem}
