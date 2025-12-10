@@ -1,63 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getJobs } from "@/api/jobs/getjobs";
 import { Bookmark, ArrowLeft } from "lucide-react";
-
-
-// Define TypeScript types
-interface Category {
-  _id: string;
-  name: string;
-}
-
-interface Skill {
-  _id?: string;
-  name: string;
-}
-
-interface Job {
-  _id: string;
-  title: string;
-  category?: Category;
-  salary?: string;
-  department?: string;
-  requiredExperience?: string;
-  education?: string;
-  expiry?: string;
-  description?: string;
-  skills?: (Skill | string)[];
-}
+import { useGetJobById } from "@/features/admin/jobs/hooks/useJobApi";
+ // your hook
 
 export default function JobDetails() {
   const searchParams = useSearchParams();
   const jobId = searchParams.get("id");
-
   const router = useRouter();
-  const [job, setJob] = useState<Job | null>(null);
 
-  useEffect(() => {
-    if (!jobId) return;
+  const { data: job, isLoading, error } = useGetJobById(jobId || undefined);
 
-    const fetchJob = async () => {
-      try {
-        const data: Job = await getJobs(jobId);
-        setJob(data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchJob();
-  }, [jobId]);
-
-  if (!job)
+  if (isLoading)
     return (
       <p className="text-center mt-10 text-gray-500">
         Fetching job details...
       </p>
     );
+
+  if (error || !job)
+    return (
+      <p className="text-center mt-10 text-red-500">
+        Failed to load job details
+      </p>
+    );
+    
 
   return (
     <div className="min-h-screen bg-gray-50 flex justify-center items-center p-6">
@@ -87,9 +55,12 @@ export default function JobDetails() {
 
         {/* Job Meta Info */}
         <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
-          {job.category?.name && (
+          {job.category && (
             <p>
-              <strong>Category:</strong> {job.category.name}
+              <strong>Category:</strong>{" "}
+              {typeof job.category === "string"
+                ? job.category
+                : job.category.name}
             </p>
           )}
           {job.salary && (
@@ -130,23 +101,22 @@ export default function JobDetails() {
           </div>
         )}
 
-     {/* Skills */}
-{(job.skills ?? []).length > 0 && (
-  <div>
-    <h2 className="font-semibold text-gray-800 mb-2">Skills Required</h2>
-    <div className="flex flex-wrap gap-2">
-      {(job.skills ?? []).map((skill, i) => (
-        <span
-          key={i}
-          className="px-3 py-1 bg-gray-100 rounded-md text-xs text-gray-700"
-        >
-          {typeof skill === "string" ? skill : skill?.name ?? "Unknown"}
-        </span>
-      ))}
-    </div>
-  </div>
-)}
-
+        {/* Skills */}
+        {(job.skills ?? []).length > 0 && (
+          <div>
+            <h2 className="font-semibold text-gray-800 mb-2">Skills Required</h2>
+            <div className="flex flex-wrap gap-2">
+              {(job.skills ?? []).map((skill, i) => (
+                <span
+                  key={i}
+                  className="px-3 py-1 bg-gray-100 rounded-md text-xs text-gray-700"
+                >
+                  {typeof skill === "string" ? skill : skill.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
