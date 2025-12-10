@@ -9,7 +9,7 @@ import {
   useCreateExperience,
   useUpdateExperience,
   useDeleteExperience,
-} from "@/features/experience/hooks/useExperienceApi";
+} from "@/features/candidate/experience/hooks/useExperienceApi";
 import { ExperienceItem } from "@/types/ExperienceItem ";
 
 interface Props {

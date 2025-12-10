@@ -1,6 +1,6 @@
  import api from "@/config/axios";
  import { ExperienceItem } from "@/types/ExperienceItem ";
- import { UpdateExperienceVariables } from "@/features/experience/hooks/useExperienceApi";
+ import { UpdateExperienceVariables } from "@/features/candidate/experience/hooks/useExperienceApi";
 
 export const updateExperience = async (
   data: UpdateExperienceVariables

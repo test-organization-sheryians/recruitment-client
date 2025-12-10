@@ -1,9 +1,7 @@
-import CandidateProfile from '@/features/Profile/components/CandidateProfile'
+import CandidateProfile from '@/features/candidate/Profile/components/CandidateProfile'
 import React from 'react'
 
 const page = () => {
-
-
   return (
     <div>
        <CandidateProfile/>

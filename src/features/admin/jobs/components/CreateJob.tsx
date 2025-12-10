@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createJob } from "@/api/jobs";
+import { createJob } from "@/api/index";
 import JobForm from "../../categories/components/JobForm";
 import { useState } from "react";
 
