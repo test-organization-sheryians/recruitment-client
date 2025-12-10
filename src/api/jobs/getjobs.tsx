@@ -1,9 +1,7 @@
 import api from "@/config/axios/index";
 
-export const getJobs = async (userId?: string) => {
+export const getJobs = async (id?: string) => {
   const url = "/api/jobs";
-  const res = await api.get(url, {
-    params: { userId }, // pass the current user's ID
-  });
-  return res.data.data;  // each job now has `applied` from aggregation
+  const res = await api.get(`${url}/${id}`);
+  return res.data.data; 
 };
