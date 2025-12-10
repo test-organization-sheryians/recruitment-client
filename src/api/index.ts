@@ -14,6 +14,8 @@ export * from "./jobs/createJob";
 export * from "./jobs/updateJob";
 export * from "./jobs/deleteJob";
 export * from "./jobs/jobCategory";
+export * from "./activeJobs/getJobsByStatus";
+export * from "./activeJobs/updateJobStatus"
 
 
  
