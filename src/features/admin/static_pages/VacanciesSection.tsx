@@ -1,64 +1,24 @@
-import React, { use } from "react";
+import React from "react";
 import VacancyCard from "./VacancyCard";
 import { useGetActiveJob } from "../jobs/hooks/useJobApi";
 
-
-
-
-
-interface Vacancy {
-  id: string;
-  company: string;
-  role: string;
-  tags: string[];
-  salary: string;
-  location: string;
-  applicants: number;
-}
-
-const VACANCIES: Vacancy[] = [
-  {
-    id: "v1",
-    company: "Sheryians Coding School",
-    role: "Frontend Developer",
-    tags: ["React.js", "TypeScript", "etc"],
-    salary: "6.6 LPA – 7.8 LPA",
-    location: "Bhopal, India",
-    applicants: 129,
-  },
-  {
-    id: "v2",
-    company: "Slice",
-    role: "Backend Developer",
-    tags: ["Node.js", "TypeScript", "Express"],
-    salary: "6.6 LPA – 7.8 LPA",
-    location: "India",
-    applicants: 129,
-  },
-  {
-    id: "v3",
-    company: "PhonePe",
-    role: "Backend Developer",
-    tags: ["Node.js", "TypeScript", "etc"],
-    salary: "6.6 LPA – 7.8 LPA",
-    location: "India",
-    applicants: 129,
-  },
-];
-const getStyleValue = (value: string | number | undefined) => {
+// 🔥 FIX 1: Add typing to helper function
+const getStyleValue = (value: string | number | undefined): string | undefined => {
   if (value === undefined) return undefined;
   return typeof value === "number" ? `${value}px` : value;
-
 };
 
-const VacanciesSection: React.FC<{
+// 🔥 FIX 2: Add proper typing to component props
+interface VacanciesProps {
   width?: string | number;
   height?: string | number;
-}> = ({ width, height }) => {
+}
 
-    const {data: activeJob, isLoading, error} = useGetActiveJob();
+const VacanciesSection: React.FC<VacanciesProps> = ({ width, height }) => {
+  const { data: activeJob, isLoading, error } = useGetActiveJob();
 
-  console.log(activeJob, isLoading, error);
+  // API returns array
+  const jobs = Array.isArray(activeJob) ? activeJob : [];
 
   return (
     <div
@@ -66,30 +26,69 @@ const VacanciesSection: React.FC<{
         width: getStyleValue(width),
         height: getStyleValue(height),
       }}
-      className='rounded-2xl bg-white p-4 border border-gray-200'
+      className="rounded-2xl bg-white p-4 border border-gray-200"
     >
-      <div className='mb-4 flex items-center justify-between'>
-        <div className='flex items-center gap-2'>
-          <h3 className='text-lg font-semibold'>Current Vacancies</h3>
-          <span className='text-xs px-2 py-0.5 rounded-full bg-[#E9EFF7] text-[#1270B0]'>
-            104
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold">Current Vacancies</h3>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-[#E9EFF7] text-[#1270B0]">
+            {jobs.length}
           </span>
         </div>
-        <div className='flex items-center gap-3'>
-          <select className='text-sm border rounded-lg px-2 py-1'>
+
+        <div className="flex items-center gap-3">
+          {/* 🔥 FIX 3: Add accessible name (does NOT change UI) */}
+          <select className="text-sm border rounded-lg px-2 py-1" aria-label="Sort vacancies">
             <option>Popular</option>
             <option>Recent</option>
           </select>
-          <button className='text-sm underline'>See All</button>
+
+          <button className="text-sm underline">See All</button>
         </div>
       </div>
 
-      <div className='grid md:grid-cols-2 gap-4'>
-        {VACANCIES.map((v) => (
-          <VacancyCard key={v.id} {...v} />
-        ))}
+      {isLoading && <p className="text-sm">Loading...</p>}
+      {error && <p className="text-sm text-red-500">Something went wrong.</p>}
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {jobs.map((job: any, index: number) => {
+          const id = job._id || index;
+
+          // 🔥 FIX 4: Convert objects → strings safely
+          const company = job.category?.name || "Company Not Provided";
+          const role = job.title || "Unknown Role";
+
+          // 🔥 FIX 5: Add typing to skill mapping
+          const tags: string[] = Array.isArray(job.skills)
+            ? job.skills.map((s: any) =>
+                typeof s === "string" ? s : s?.name || ""
+              )
+            : [];
+
+          const salary = "";
+          const location = "";
+          const applicants = job.applicationsCount || 0;
+
+          return (
+            <VacancyCard
+              key={id}
+              id={id}
+              company={company}
+              role={role}
+              tags={tags}
+              salary={salary}
+              location={location}
+              applicants={applicants}
+            />
+          );
+        })}
       </div>
+
+      {!isLoading && jobs.length === 0 && (
+        <p className="text-sm text-gray-500">No vacancies available.</p>
+      )}
     </div>
   );
 };
+
 export default VacanciesSection;
