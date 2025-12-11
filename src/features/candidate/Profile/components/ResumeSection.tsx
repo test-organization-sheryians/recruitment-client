@@ -15,6 +15,7 @@ interface Props {
 export default function ResumeSection({ resumefile }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const { refetch: refetchProfile } = useGetProfile();
   const user = useSelector((state: RootState) => state.auth.user);
@@ -65,14 +66,16 @@ export default function ResumeSection({ resumefile }: Props) {
   };
 
   const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete your resume?")) {
-      deleteMutation.mutate(undefined, {
-        onSuccess: () => {
-          refetchProfile();
-        },
-      });
-    }
+    deleteMutation.mutate(undefined, {
+      onSuccess: () => {
+        refetchProfile();
+        setIsDeleteDialogOpen(false);
+      },
+    });
   };
+
+  const openDeleteDialog = () => setIsDeleteDialogOpen(true);
+  const closeDeleteDialog = () => setIsDeleteDialogOpen(false);
 
   return (
     <div className="space-y-4">
@@ -109,7 +112,7 @@ export default function ResumeSection({ resumefile }: Props) {
               View Resume
             </a>
             <button
-              onClick={handleDelete}
+              onClick={openDeleteDialog}
               disabled={isDeleting}
               className="text-red-500 text-sm hover:text-red-700 transition cursor-pointer"
             >
@@ -143,6 +146,29 @@ export default function ResumeSection({ resumefile }: Props) {
           >
             {isUploading ? "Uploading..." : "Upload Resume"}
           </button>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <Modal isOpen={isDeleteDialogOpen} onClose={closeDeleteDialog} title="Delete Resume">
+        <div className="flex flex-col gap-6">
+          <p className="text-gray-700">Are you sure you want to delete your resume? This action cannot be undone.</p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={closeDeleteDialog}
+              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
+              disabled={isDeleting}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete}
+              className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </button>
+          </div>
         </div>
       </Modal>
     </div>
