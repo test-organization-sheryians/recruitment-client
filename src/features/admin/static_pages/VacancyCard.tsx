@@ -1,25 +1,21 @@
 import React from "react";
 
-export type Vacancy = {
-  id: string;
-  company: string;
-  role: string;
-  tags: string[];
+export type JobData = {
+  _id: string;
+  title: string;
+  education: string;
+  skills: any[];
   salary: string;
   location: string;
-  applicants: number;
-  postedLabel?: string;
+  applicantsCount: number;
+  createdAt?: string;
 };
 
-export default function VacancyCard({
-  company,
-  role,
-  tags,
-  salary,
-  location,
-  applicants,
-  postedLabel = "Posted",
-}: Vacancy) {
+interface VacancyCardProps {
+  data: JobData;
+}
+
+export default function VacancyCard({ data }: VacancyCardProps) {
   return (
     <div className='rounded-2xl border border-gray-200 p-4 bg-white hover:shadow-sm transition'>
       <div className='flex items-start justify-between'>
@@ -28,19 +24,19 @@ export default function VacancyCard({
             <span className='text-sm font-semibold'>🏢</span>
           </div>
           <div>
-            <h4 className='text-sm font-semibold'>{role}</h4>
-            <p className='text-xs text-gray-500'>{company}</p>
+            <h4 className='text-sm font-semibold'>{data.title}</h4>
+            <p className='text-xs text-gray-500'>{data.education}</p>
           </div>
         </div>
         <span className='text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-600'>
-          {postedLabel}
+          {data.createdAt ? new Date(data.createdAt).toLocaleDateString() : "Recent"}
         </span>
       </div>
 
       <div className='mt-3 flex flex-wrap gap-2'>
-        {tags.map((t) => (
+        {(data.skills?.map((s: any) => s.name || s) || []).map((t, index) => (
           <span
-            key={t}
+            key={`${t}-${index}`}
             className='text-[11px] px-2 py-1 rounded-md bg-[#F5F7FA] text-gray-700'
           >
             {t}
@@ -51,15 +47,15 @@ export default function VacancyCard({
       <div className='mt-4 grid grid-cols-3 gap-2 text-[11px]'>
         <div className='px-2 py-1 rounded-lg bg-[#F5F7FA] text-gray-700'>
           <span className='block text-[10px] text-gray-500'>Job Offer</span>
-          {salary}
+          {data.salary || "Not Specified"}
         </div>
         <div className='px-2 py-1 rounded-lg bg-[#F5F7FA] text-gray-700'>
           <span className='block text-[10px] text-gray-500'>Location</span>
-          {location}
+          {data.location || "Remote"}
         </div>
         <div className='px-2 py-1 rounded-lg bg-[#F5F7FA] text-gray-700'>
           <span className='block text-[10px] text-gray-500'>Applied</span>
-          {applicants} Applicants
+          {data.applicantsCount || 0} Applicants
         </div>
       </div>
     </div>
