@@ -12,6 +12,15 @@ export const useGetJobs = () => {
   });
 };
 
+export const useGetJob = (jobId: string) => {
+  return useQuery({
+    queryKey: ["job", jobId],
+    queryFn: () => api.getJobs(jobId),
+    retry: 0,
+    enabled: !!jobId,
+  });
+};
+
 export const useCreateJob = () => {
   return useMutation({
     mutationKey: ["createJob"],
