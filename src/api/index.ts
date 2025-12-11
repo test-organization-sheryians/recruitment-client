@@ -33,5 +33,6 @@ export * from "./resumeExtract"
 export * from "./users/getAllUsers";
 export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
+export * from "./applicant/applyJob";
 
 

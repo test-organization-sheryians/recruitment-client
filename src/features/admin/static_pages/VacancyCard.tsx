@@ -1,4 +1,7 @@
+"use client"; // IMPORTANT when using router in Next.js
+
 import React from "react";
+import { useRouter } from "next/navigation";
 
 export type Vacancy = {
   id: string;
@@ -6,12 +9,13 @@ export type Vacancy = {
   role: string;
   tags: string[];
   salary: string;
-  location: string;
+  location?: string;
   applicants: number;
   postedLabel?: string;
 };
 
 export default function VacancyCard({
+  id,
   company,
   role,
   tags,
@@ -20,8 +24,15 @@ export default function VacancyCard({
   applicants,
   postedLabel = "Posted",
 }: Vacancy) {
+
+  const router = useRouter();
+  console.log(id)
+
   return (
-    <div className='rounded-2xl border border-gray-200 p-4 bg-white hover:shadow-sm transition'>
+    <div
+      onClick={() => router.push(`admin/applicants/${id}`)}
+      className='rounded-2xl border border-gray-200 p-4 bg-white hover:shadow-lg transition cursor-pointer'
+    >
       <div className='flex items-start justify-between'>
         <div className='flex items-center gap-3'>
           <div className='w-10 h-10 rounded-xl bg-gray-100 grid place-items-center overflow-hidden'>
