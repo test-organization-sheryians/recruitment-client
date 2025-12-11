@@ -1,10 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/config/store";
-
-import { useGetProfile, useCreateProfile } from "../hooks/useProfileApi";
+import { useGetProfile, useCreateProfile, useGetUser } from "../hooks/useProfileApi";
 
 import PersonalInfoSection from "./PersonalInfoSection";
 import SkillsSection from "./SkillsSection";
@@ -15,20 +11,19 @@ import AvailabilitySection from "./AvailabilitySection";
 
 
 export default function CandidateProfile() {
-  const user = useSelector((state: RootState) => state.auth.user);
+  const { data: user, isLoading: userLoading } = useGetUser();
 
-  const { data: profile, isLoading, isError, refetch } = useGetProfile();
+  const { data: profile, isLoading: profileLoading, isError, refetch } = useGetProfile();
   const createProfileMutation = useCreateProfile();
-  console.log(profile, "this is profile ")
-  useEffect(() => {
-    if (isError && user?.id) {
-      createProfileMutation.mutate(user.id, {
-        onSuccess: () => refetch(),
-      });
-    }
-  }, [isError, user?.id, refetch, createProfileMutation]);
 
-  if (isLoading) return <p className="text-center mt-10">Loading profile...</p>;
+  // If profile error and user exists, create profile
+  if (isError && user?.id && !profileLoading) {
+    createProfileMutation.mutate(user.id, {
+      onSuccess: () => refetch(),
+    });
+  }
+
+  if (userLoading || profileLoading) return <p className="text-center mt-10">Loading...</p>;
 
   return (
     <div className="min-h-screen bg-gray-50 px-3 py-2 sm:px-6 sm:py-6 md:p-8">
@@ -43,10 +38,7 @@ export default function CandidateProfile() {
 
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <PersonalInfoSection
-            firstName={user?.firstName ?? ""}
-            lastName={user?.lastName ?? ""}
-            email={user?.email ?? ""}
-            phone={profile?.phone ?? ""}
+            user={user}
           />
         </div>
 
