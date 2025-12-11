@@ -1,5 +1,10 @@
-import React from "react";
+import React, { use } from "react";
 import VacancyCard from "./VacancyCard";
+import { useGetActiveJob } from "../jobs/hooks/useJobApi";
+
+
+
+
 
 interface Vacancy {
   id: string;
@@ -43,12 +48,18 @@ const VACANCIES: Vacancy[] = [
 const getStyleValue = (value: string | number | undefined) => {
   if (value === undefined) return undefined;
   return typeof value === "number" ? `${value}px` : value;
+
 };
 
 const VacanciesSection: React.FC<{
   width?: string | number;
   height?: string | number;
 }> = ({ width, height }) => {
+
+    const {data: activeJob, isLoading, error} = useGetActiveJob();
+
+  console.log(activeJob, isLoading, error);
+
   return (
     <div
       style={{
