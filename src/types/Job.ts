@@ -1,5 +1,5 @@
 export interface Job {
-    id: string;
+    _id: string;
     title: string;
     description: string;
     location: string;
@@ -10,7 +10,9 @@ export interface Job {
     isFeatured: boolean;
     createdAt: string;
     updatedAt: string;
-}   
+    status: string;
+    expiry: string;
+}
 
 export interface JobFormValues {
     title: string;

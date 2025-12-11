@@ -1,4 +1,7 @@
+"use client"; // IMPORTANT when using router in Next.js
+
 import React from "react";
+import { useRouter } from "next/navigation";
 
 interface VacancyCardProps {
   id: string;
@@ -6,24 +9,30 @@ interface VacancyCardProps {
   role: string;
   tags: string[];
   salary: string;
-  location: string;
+  location?: string;
   applicants: number;
 }
 
-const VacancyCard: React.FC<VacancyCardProps> = ({
+export default function VacancyCard({
+  id,
   company,
   role,
   tags,
   salary,
   location,
   applicants,
-}) => {
+}: VacancyCardProps) {
   return (
-    <div className="border rounded-xl p-4 bg-white shadow-sm hover:shadow-md transition">
-      <div className="flex justify-between items-start">
-        <div>
-          <h4 className="text-base font-semibold">{company}</h4>
-          <p className="text-sm text-gray-600">{role}</p>
+    <div className='rounded-2xl border border-gray-200 p-4 bg-white hover:shadow-sm transition'>
+      <div className='flex items-start justify-between'>
+        <div className='flex items-center gap-3'>
+          <div className='w-10 h-10 rounded-xl bg-gray-100 grid place-items-center overflow-hidden'>
+            <span className='text-sm font-semibold'>🏢</span>
+          </div>
+          <div>
+            <h4 className='text-sm font-semibold'>{role}</h4>
+            <p className='text-xs text-gray-500'>{company}</p>
+          </div>
         </div>
 
         <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
@@ -48,6 +57,4 @@ const VacancyCard: React.FC<VacancyCardProps> = ({
       </div>
     </div>
   );
-};
-
-export default VacancyCard;
+}
