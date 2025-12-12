@@ -1,6 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
+import { useToast } from "@/components/ui/Toast";
+import { useGetProfile } from "../../Profile/hooks/useProfileApi";
+import CandidateProfile from "../../Profile/components/CandidateProfile";
+
 
 interface Category {
   _id: string;
@@ -12,7 +17,7 @@ interface Skill {
   name: string;
 }
 
- export interface Job {
+export interface Job {
   _id: string;
   title: string;
   category?: Category | string;
@@ -22,6 +27,7 @@ interface Skill {
   salary?: string;
   department?: string;
   skills?: Skill[];
+  applied?: boolean;
 }
 
 interface JobCardProps {
@@ -30,6 +36,8 @@ interface JobCardProps {
 
 export default function JobCard({ job }: JobCardProps) {
   const router = useRouter();
+  const applyJobMutation = useApplyJob();
+  const toast = useToast();
 
   const handleCardClick = (e: React.MouseEvent) => {
     // Prevent navigation when clicking "Apply" button
@@ -39,15 +47,45 @@ export default function JobCard({ job }: JobCardProps) {
 
   // Safely extract category name
   const categoryName =
-    typeof job.category === "object" && job.category?.name ? job.category.name : null;
+    typeof job.category === "object" && job.category?.name
+      ? job.category.name
+      : null;
 
   // Extract skill names directly (no fetching needed!)
   const skillNames = job.skills?.map((skill) => skill.name).filter(Boolean) || [];
 
+  const isExpired = job.expiry ? new Date(job.expiry) < new Date() : false;
+
+  const { data: profile, isLoading: profileLoading } = useGetProfile();  
+
+ const handleApply = () => {
+  if (!job._id || isExpired) return;
+
+  if (profileLoading) {
+    toast.error("Profile is loading. Please wait.");
+    return;
+  }
+
+  if (!profile?.resumeFile) {
+    toast.error("Please upload your resume before applying.");
+    return;
+  }
+
+  // Only call mutation once
+  applyJobMutation.mutate(
+    {
+      jobId: job._id,
+      message: "Excited to apply!",
+      resumeUrl: profile.resumeFile,
+    }
+  );
+};
+
+
   return (
     <div
       onClick={handleCardClick}
-      className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-gray.was-300 
+      className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-gray-300 
                  transition-all duration-200 cursor-pointer group"
     >
       <div className="flex justify-between items-start gap-6">
@@ -105,7 +143,8 @@ export default function JobCard({ job }: JobCardProps) {
           {/* Expiry */}
           {job.expiry && (
             <p className="text-xs text-gray-500 mt-4">
-              Expires: {new Date(job.expiry).toLocaleDateString("en-US", {
+              Expires:{" "}
+              {new Date(job.expiry).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
                 year: "numeric",
@@ -116,17 +155,30 @@ export default function JobCard({ job }: JobCardProps) {
 
         {/* Right: Apply Button */}
         <div className="shrink-0">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              // Handle apply logic here
-              console.log("Applied to:", job.title);
-            }}
-            className="px-6 py-2.5 bg-blue-600 text-white font-medium text-sm rounded-lg
-                       hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
-          >
-            Apply Now
-          </button>
+<button
+  disabled={isExpired || job.applied || applyJobMutation.isPending}
+  onClick={(e) => {
+    e.stopPropagation();
+    handleApply();
+  }}
+  className={`px-6 py-2.5 text-white font-medium text-sm rounded-lg ${
+    isExpired
+      ? "bg-gray-400 cursor-not-allowed"
+      : job.applied
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+  }`}
+>
+  {job.applied
+    ? "Applied"
+    : applyJobMutation.isPending
+    ? "Applying..."
+    : isExpired
+    ? "Expired"
+    : "Apply Now"}
+</button>
+
+
         </div>
       </div>
     </div>
