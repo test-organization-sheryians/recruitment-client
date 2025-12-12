@@ -12,15 +12,26 @@ type ApplicantsListProps = {
   className?: string;
 };
 
+// Status colors map
 const statusColors: Record<string, string> = {
-  Applied: "bg-blue-100 text-blue-700",
-  Shortlisted: "bg-yellow-100 text-yellow-700",
-  Rejected: "bg-red-100 text-red-700",
-  Forwareded: "bg-purple-100 text-purple-700",
-  Interview: "bg-orange-100 text-orange-700",
-  Hired: "bg-green-100 text-green-700",
+  applied: "bg-blue-100 text-blue-700",
+  shortlisted: "bg-yellow-100 text-yellow-700",
+  rejected: "bg-red-100 text-red-700",
+  forwareded: "bg-purple-100 text-purple-700",
+  interview: "bg-orange-100 text-orange-700",
+  hired: "bg-green-100 text-green-700",
 };
 
+// Tabs list
+const tabs = [
+  "all",
+  "applied",
+  "shortlisted",
+  "rejected",
+  "forwareded",
+  "interview",
+  "hired",
+];
 
 export default function ApplicantsList({
   height = 520,
@@ -30,12 +41,17 @@ export default function ApplicantsList({
   const h = typeof height === "number" ? `${height}px` : height;
   const w = typeof width === "number" ? `${width}px` : width;
 
-  const { id } = useParams()
+  const { id } = useParams();
   const { data, isLoading } = useJobApplicant(id as string);
 
-  // ✅ Local state to store selected applicant IDs
+  // Selected applicant IDs
   const [selectedApplicants, setSelectedApplicants] = useState<string[]>([]);
-  const [statusMap, setStatusMap] = useState<Record<string, string>>({});
+
+  // Bulk status dropdown
+  const [bulkStatus, setBulkStatus] = useState("applied");
+
+  // Active tab (default: all)
+  const [activeTab, setActiveTab] = useState("all");
 
   const toggleSelect = (id: string) => {
     setSelectedApplicants((prev) =>
@@ -43,11 +59,7 @@ export default function ApplicantsList({
     );
   };
 
-  const handleStatusChange = (id: string, status: string) => {
-    setStatusMap((prev) => ({ ...prev, [id]: status }));
-  };
-
-  // ✅ Transform backend API data
+  // Transform backend API data
   const applicants =
     data?.applicants?.map((a: any) => ({
       id: a._id,
@@ -60,21 +72,28 @@ export default function ApplicantsList({
         day: "numeric",
       }),
       experience: `${a.totalExperienceYears}-${a.jobDetails.requiredExperience} years`,
-      status: a.status.charAt(0).toUpperCase() + a.status.slice(1),
+
+      // Keep lowercase to match backend + filters + colors
+      status: a.status.toLowerCase(),
+
       resume: a.resumeUrl,
     })) || [];
 
+  // Filter applicants by tab
+  const filteredApplicants =
+    activeTab === "all"
+      ? applicants
+      : applicants.filter((a: any) => a.status === activeTab);
+
+  // Submit bulk update
   const handleSubmit = () => {
-    // Prepare payload
-    const payload = selectedApplicants.map((id) => ({
-      id,
-      status: statusMap[id] || "Pending",
-    }));
+    const payload = {
+      applicationIds: selectedApplicants,
+      status: bulkStatus,
+    };
 
-    // Send to backend (replace with your API call)
-    console.log("Submitting:", payload);
+    console.log("Submitting to backend:", payload);
 
-    // Example: api.updateApplicationStatus(payload)
   };
 
   return (
@@ -93,13 +112,47 @@ export default function ApplicantsList({
           Applicants Lists
         </span>
 
-        <button
-          className="rounded-xl border border-gray-200 bg-blue-600 text-white px-3 py-2 text-sm font-semibold"
-          onClick={handleSubmit}
-          disabled={selectedApplicants.length === 0}
-        >
-          Submit Selected ({selectedApplicants.length})
-        </button>
+        {/* Bulk Status + Submit */}
+        <div className="flex items-center gap-3">
+          {/* Bulk Status Dropdown */}
+          <select
+            value={bulkStatus}
+            onChange={(e) => setBulkStatus(e.target.value)}
+            className="border rounded px-2 py-1"
+          >
+            <option value="applied">Applied</option>
+            <option value="shortlisted">Shortlisted</option>
+            <option value="rejected">Rejected</option>
+            <option value="forwareded">Forwareded</option>
+            <option value="interview">Interview</option>
+            <option value="hired">Hired</option>
+          </select>
+
+          {/* Submit Button */}
+          <button
+            className="rounded-xl border border-gray-200 bg-blue-600 text-white px-3 py-2 text-sm font-semibold"
+            onClick={handleSubmit}
+            disabled={selectedApplicants.length === 0}
+          >
+            Submit Selected ({selectedApplicants.length})
+          </button>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-3 mb-4">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-3 py-1 rounded-full text-sm border ${activeTab === tab
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700"
+              }`}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
       </div>
 
       {/* Table */}
@@ -118,7 +171,7 @@ export default function ApplicantsList({
           </thead>
 
           <tbody className="divide-y divide-gray-200">
-            {applicants.map((a: any) => (
+            {filteredApplicants.map((a: any) => (
               <tr
                 key={a.id}
                 className="grid grid-cols-[0.4fr_1.6fr_1.1fr_1fr_1fr_1fr_1fr] items-center px-4 py-3"
@@ -159,11 +212,12 @@ export default function ApplicantsList({
                   </a>
                 </td>
 
-                {/* Status Dropdown */}
+                {/* Status Badge */}
                 <td>
-                  <span className={`px-2 py-1 rounded ${statusColors[a.status]}`}>
+                  <span
+                    className={`px-2 py-1 rounded font-medium ${statusColors[a.status]}`}
+                  >
                     {a.status}
-                    {console.log(a.status)}
                   </span>
                 </td>
               </tr>
@@ -171,7 +225,7 @@ export default function ApplicantsList({
           </tbody>
         </table>
 
-        {applicants.length === 0 && (
+        {filteredApplicants.length === 0 && (
           <div className="text-center py-10 text-gray-500 text-sm">
             No applicants found.
           </div>
