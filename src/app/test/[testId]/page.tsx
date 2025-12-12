@@ -1,3 +1,4 @@
+// app/candidate/ai-test/start/[testId]/page or your path
 "use client";
 
 import React from "react";
@@ -19,60 +20,56 @@ export default function StartTestPage() {
   const router = useRouter();
   const params = useParams();
   const testId = params?.testId as string;
-
   const queryClient = useQueryClient();
   const { mutate, isPending } = useStartTest();
 
-  /** ⚠️ Dummy test info (STATIC UI) */
   const test = {
     title: "Full-Stack Developer Assessment 2025",
-    summary:
-      "This exam evaluates your skills in React, Node.js, MongoDB, TypeScript & problem-solving.",
+    summary: "This exam evaluates your skills in React, Node.js, MongoDB, TypeScript & problem-solving.",
     category: "Technical Interview",
     duration: 90,
     passingScore: 75,
     showResults: true,
     createdBy: { name: "Sarah Johnson" },
     createdAt: "2025-03-15T10:30:00.000Z",
-    prompt:
-      "You have 90 minutes to complete this test. Timer will not pause. Auto-saving is enabled.",
+    prompt: "You have 90 minutes to complete this test. Timer will not pause. Auto-saving is enabled.",
   };
 
-  const formatDuration = (mins: number) =>
-    mins >= 60 ? `1h ${mins - 60}m` : `${mins}m`;
-
+  const formatDuration = (m: number) => (m >= 60 ? `1h ${m - 60}m` : `${m}m`);
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
-  /** START TEST */
   const handleStart = () => {
     const token = Cookies.get("access");
-
     if (!token) {
       alert("Please login first.");
       return router.push("/login");
     }
 
+    localStorage.setItem("testId", testId);
+
     mutate(
       { testId },
       {
         onSuccess: (res: any) => {
-          const questions = res?.questions?.test?.questions ?? [];
+          const attemptId = res?.attemptId;
+          const email = res?.email;
+          const receivedTestId = res?.testId;
+          const startTime = res?.startTime;
 
-          /** ⭐ KEY CHANGE:
-              stop using:
-              ❌ currentTestQuestions
-              ❌ currentTestDuration
-              ❌ localStorage
-              
-              and use only:
-              ✔ active-questions
-          */
-          queryClient.setQueryData(["active-questions"], questions);
+          if (attemptId) localStorage.setItem("attemptId", attemptId);
+          if (email) localStorage.setItem("email", email);
+          if (receivedTestId) localStorage.setItem("testId", receivedTestId);
+          if (startTime) localStorage.setItem("startTime", startTime);
+
+          const rawQuestions = res?.questions?.test?.questions ?? [];
+          const testQuestions = rawQuestions.map((q: any) => ({
+            question: q.question?.trim() ?? "",
+            options: q.options ?? null,
+            source: "test",
+          }));
+
+          queryClient.setQueryData(["active-questions"], testQuestions);
 
           router.push("/candidate/ai-test/questining");
         },
@@ -86,12 +83,11 @@ export default function StartTestPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden">
-
-        {/* LEFT INFO SIDE */}
+        {/* left */}
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-10 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <span className="px-4 py-1.5 bg-white/80 backdrop-blur rounded-full text-xs font-semibold text-blue-700">
+              <span className="px-4 py-1.5 bg-white rounded-full text-xs font-semibold text-blue-700">
                 {test.category}
               </span>
               <span className="flex items-center gap-1.5 text-xs text-green-700">
@@ -99,35 +95,26 @@ export default function StartTestPage() {
               </span>
             </div>
 
-            <h1 className="text-3xl font-bold text-gray-900 mb-3">
-              {test.title}
-            </h1>
-
+            <h1 className="text-3xl font-bold text-gray-900 mb-3">{test.title}</h1>
             <p className="text-gray-700 mb-6">{test.summary}</p>
 
             <div className="grid grid-cols-3 gap-4 mb-8">
               <div className="bg-white rounded-xl p-4 text-center shadow-sm">
                 <Clock className="w-7 h-7 text-blue-600 mx-auto mb-2" />
                 <p className="text-sm text-gray-600">Duration</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {formatDuration(test.duration)}
-                </p>
+                <p className="text-lg font-bold text-gray-900">{formatDuration(test.duration)}</p>
               </div>
 
               <div className="bg-white rounded-xl p-4 text-center shadow-sm">
                 <Target className="w-7 h-7 text-emerald-600 mx-auto mb-2" />
                 <p className="text-sm text-gray-600">Passing</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {test.passingScore}%
-                </p>
+                <p className="text-lg font-bold text-gray-900">{test.passingScore}%</p>
               </div>
 
               <div className="bg-white rounded-xl p-4 text-center shadow-sm">
                 <Trophy className="w-7 h-7 text-purple-600 mx-auto mb-2" />
                 <p className="text-sm text-gray-600">Results</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {test.showResults ? "Instant" : "Later"}
-                </p>
+                <p className="text-lg font-bold text-gray-900">{test.showResults ? "Instant" : "Later"}</p>
               </div>
             </div>
 
@@ -147,7 +134,7 @@ export default function StartTestPage() {
           </div>
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* right */}
         <div className="p-10 flex flex-col justify-center">
           <div className="flex items-start gap-4 mb-6">
             <div className="p-3 bg-amber-100 rounded-xl">
@@ -175,10 +162,8 @@ export default function StartTestPage() {
             <button
               onClick={handleStart}
               disabled={isPending}
-              className={`group inline-flex items-center gap-3 px-10 py-4 text-white font-bold text-lg rounded-xl shadow-lg transition-all ${
-                isPending
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-90 hover:-translate-y-1"
+              className={`inline-flex items-center gap-3 px-10 py-4 text-white font-bold text-lg rounded-xl shadow-lg transition-all ${
+                isPending ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:-translate-y-1"
               }`}
             >
               {isPending ? "Starting..." : "Start Assessment →"}

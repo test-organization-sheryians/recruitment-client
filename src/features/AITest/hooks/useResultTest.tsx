@@ -1,51 +1,57 @@
-// useSubmitResult.ts
+// features/AITest/hooks/useResultTest.ts (or wherever you keep it)
 import { useMutation } from "@tanstack/react-query";
+
+type SubmitPayload = {
+  attemptId: string;
+  testId: string;
+  email: string;
+  score: number;
+  percentage: number;
+  isPassed: boolean;
+  status: string;
+  startTime: string;
+  endTime: string;
+  durationTaken: number;
+  questions: string[];
+  answers: any[];
+};
 
 export const useSubmitResult = () => {
   return useMutation({
-    mutationFn: async ({
-      attemptId,
-      answers,
-    }: {
-      attemptId: string;
-      answers: any; // array or object received from frontend
-    }) => {
+    mutationFn: async (payload: SubmitPayload) => {
       const token = localStorage.getItem("token");
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-      console.log("📌 Base URL:", baseUrl);
-      console.log("📌 attemptId Going:", attemptId);
-      console.log("📌 token:", token);
-      console.log("📌 answers submitting:", answers);
+      if (!token) throw new Error("Login required");
+      if (!baseUrl) throw new Error("API base URL missing");
 
-      if (!token) {
-        throw new Error("You must login first!");
-      }
-
-      if (!baseUrl) {
-        throw new Error("❌ NEXT_PUBLIC_API_BASE_URL missing");
-      }
-
-      const res = await fetch(
-        `${baseUrl}/api/test-attempts/submit/${attemptId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ answers }),
-        }
-      );
+      const res = await fetch(`${baseUrl}/api/test-attempts/submit/${payload.attemptId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          testId: payload.testId,
+          email: payload.email,
+          score: payload.score,
+          percentage: payload.percentage,
+          isPassed: payload.isPassed,
+          status: payload.status,
+          startTime: payload.startTime,
+          endTime: payload.endTime,
+          durationTaken: payload.durationTaken,
+          questions: payload.questions,
+          answers: payload.answers,
+        }),
+      });
 
       let data;
       try {
         data = await res.json();
-      } catch {
-        throw new Error("❌ Invalid server response");
+      } catch (e) {
+        throw new Error("Invalid server response");
       }
-
-      console.log("📩 Backend Submit Response:", data);
 
       if (!res.ok) {
         throw new Error(data?.message || "Failed to submit test");
@@ -55,4 +61,3 @@ export const useSubmitResult = () => {
     },
   });
 };
-   
