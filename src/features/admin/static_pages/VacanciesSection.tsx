@@ -1,3 +1,4 @@
+
 import React, { use } from "react";
 import VacancyCard from "./VacancyCard";
 import { useGetActiveJob } from "../jobs/hooks/useJobApi";

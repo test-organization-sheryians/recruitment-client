@@ -1,4 +1,5 @@
 import React from "react";
+import { useRouter } from "next/navigation";
 
 export type JobData = {
   _id: string;
@@ -15,9 +16,12 @@ interface VacancyCardProps {
   data: JobData;
 }
 
+
 export default function VacancyCard({ data }: VacancyCardProps) {
+
+  const router = useRouter();
   return (
-    <div className='rounded-2xl border border-gray-200 p-4 bg-white hover:shadow-sm transition'>
+    <div onClick={() => router.push(`/admin/applicants/${data._id}`)} className='rounded-2xl border border-gray-200 p-4 cursor-pointer bg-white hover:shadow-sm transition'>
       <div className='flex items-start justify-between'>
         <div className='flex items-center gap-3'>
           <div className='w-10 h-10 rounded-xl bg-gray-100 grid place-items-center overflow-hidden'>
