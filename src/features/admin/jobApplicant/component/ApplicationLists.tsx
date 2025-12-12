@@ -12,6 +12,16 @@ type ApplicantsListProps = {
   className?: string;
 };
 
+const statusColors: Record<string, string> = {
+  Applied: "bg-blue-100 text-blue-700",
+  Shortlisted: "bg-yellow-100 text-yellow-700",
+  Rejected: "bg-red-100 text-red-700",
+  Forwareded: "bg-purple-100 text-purple-700",
+  Interview: "bg-orange-100 text-orange-700",
+  Hired: "bg-green-100 text-green-700",
+};
+
+
 export default function ApplicantsList({
   height = 520,
   width = 840,
@@ -151,17 +161,10 @@ export default function ApplicantsList({
 
                 {/* Status Dropdown */}
                 <td>
-                  <select
-                    value={statusMap[a.id] || a.status}
-                    onChange={(e) => handleStatusChange(a.id, e.target.value)}
-                    className="border rounded px-2 py-1"
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Shortlisted">Shortlisted</option>
-                    <option value="Interviewing">Interviewing</option>
-                    <option value="Rejected">Rejected</option>
-                    <option value="Selected">Selected</option>
-                  </select>
+                  <span className={`px-2 py-1 rounded ${statusColors[a.status]}`}>
+                    {a.status}
+                    {console.log(a.status)}
+                  </span>
                 </td>
               </tr>
             ))}
