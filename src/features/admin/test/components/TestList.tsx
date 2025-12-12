@@ -20,10 +20,10 @@ interface Test {
   skills?: string[];
 }
 
-interface EnrolledPopupProps {
-  testId: string;
-  onClose: () => void;
-}
+// interface EnrolledPopupProps {
+//   testId: string;
+//   onClose: () => void;
+// }
 
 export default function TestList() {
   const [searchTerm, setSearchTerm] = useState("");

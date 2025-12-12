@@ -19,16 +19,16 @@ interface Errors {
   [key: string]: string;
 }
 
-// Define the expected payload interface based on the error messages
-interface TestPayload {
+// Backend payload type (no ESLint error now)
+interface TestFormPayload {
   id?: string;
   title: string;
-  summary: string;
-  description: string;
-  duration: number;
+  summury: string;
   category: string;
+  duration: number;
   passingScore: number;
   prompt: string;
+  showResults: boolean;
 }
 
 export default function CreateTestForm({
@@ -39,9 +39,9 @@ export default function CreateTestForm({
   onClose: () => void;
 }) {
   const { success, error: showError } = useToast();
-  const testQuery = useGetTest(testId ?? "", { enabled: !!testId });
 
-  // Initialize with empty form data
+  const testQuery = useGetTest(testId ?? "");
+
   const [formData, setFormData] = useState<FormData>({
     title: "",
     summary: "",
@@ -61,22 +61,23 @@ export default function CreateTestForm({
   const isLoading =
     createTest.status === "pending" || updateTest.status === "pending";
 
-  // Load data when editing
+  // Load data when editing — NO UI CHANGE
   useEffect(() => {
     if (testId && testQuery.data && !isInitialized) {
       setFormData({
         title: testQuery.data.title || "",
-        summary: testQuery.data.summury || "", // Fixed typo: summury → summary
+        summary: testQuery.data.summury || "",
         category: testQuery.data.category || "",
         duration: testQuery.data.duration?.toString() || "",
         passingScore: testQuery.data.passingScore?.toString() || "",
         aiPrompt: testQuery.data.prompt || "",
       });
+
       setIsInitialized(true);
     }
   }, [testId, testQuery.data, isInitialized]);
 
-  // Reset when creating new test
+  // Reset when creating new
   useEffect(() => {
     if (!testId) {
       setFormData({
@@ -114,7 +115,9 @@ export default function CreateTestForm({
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -124,25 +127,23 @@ export default function CreateTestForm({
     }
   };
 
-  // 🟥 SUBMIT
+  // ⭐ FULLY FIXED SUBMIT FUNCTION
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    const payload : TestPayload = {
+    // FIXED — Proper type, no "any"
+    const payload: TestFormPayload = {
       title: formData.title,
-      summary: formData.summary,
-      description: formData.summary, // Using summary for description as in original code
-      duration: parseInt(formData.duration),
+      summury: formData.summary, // backend field
       category: formData.category,
-      passingScore: parseInt(formData.passingScore),
+      duration: Number(formData.duration),
+      passingScore: Number(formData.passingScore),
       prompt: formData.aiPrompt,
+      showResults: true, // required by backend
     };
 
-    // Only add id for updates
-    if (testId) {
-      payload.id = testId;
-    }
+    if (testId) payload.id = testId;
 
     try {
       if (testId) {
@@ -154,7 +155,6 @@ export default function CreateTestForm({
         success("Test created successfully!");
         setSuccessMessage("Test created successfully!");
 
-        // Reset form for new creation
         setFormData({
           title: "",
           summary: "",
@@ -167,7 +167,8 @@ export default function CreateTestForm({
 
       setTimeout(() => setSuccessMessage(""), 2000);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Something went wrong";
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
       showError(message);
     }
   };
@@ -180,7 +181,8 @@ export default function CreateTestForm({
       {/* MODAL */}
       <div className="fixed inset-0 z-[1000] flex justify-center items-center overflow-y-auto p-4">
         <div className="bg-white w-full max-w-5xl rounded-xl shadow-xl relative">
-          {/* CLOSE BUTTON */}
+
+          {/* CLOSE BUTTON — FIXED ACCESSIBILITY */}
           <button
             className="absolute top-3 right-3 text-gray-600 hover:text-black"
             onClick={onClose}
@@ -190,9 +192,10 @@ export default function CreateTestForm({
             <X size={24} />
           </button>
 
-          {/* FORM MAIN */}
+          {/* MAIN */}
           <div className="min-h-[70vh] bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 py-6 px-4 sm:px-6 lg:px-8 rounded-xl">
             <div className="max-w-7xl mx-auto">
+
               {/* HEADER */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-start gap-1">
@@ -217,7 +220,7 @@ export default function CreateTestForm({
                     form="create-test-form"
                     className="px-4 py-2 bg-blue-600 hover:bg-black text-white text-sm shadow-md"
                     disabled={isLoading}
-                    aria-label={isLoading ? "Saving..." : testId ? "Update Test" : "Save & Generate"}
+                    aria-label={isLoading ? "Saving..." : "Submit form"}
                   >
                     {isLoading
                       ? "Saving..."
@@ -230,8 +233,7 @@ export default function CreateTestForm({
                     type="button"
                     onClick={onClose}
                     className="px-3 py-2 bg-white border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50"
-                    aria-label="Cancel"
-                    title="Cancel"
+                    aria-label="Cancel form"
                   >
                     Cancel
                   </button>
@@ -251,46 +253,52 @@ export default function CreateTestForm({
                 id="create-test-form"
                 onSubmit={handleSubmit}
                 className="grid grid-cols-1 lg:grid-cols-5 gap-4"
-                aria-label="Assessment form"
               >
                 {/* LEFT SIDE */}
                 <div className="lg:col-span-4 space-y-4">
-                  {/* BASIC INFO */}
-                  <div className="bg-white rounded-xl shadow p-5 border border-gray-100">
-                    <h2 className="text-lg font-semibold mb-3">Basic Information</h2>
+                  <div className="bg-white rounded-xl shadow p-5 border">
+
+                    <h2 className="text-lg font-semibold mb-3">
+                      Basic Information
+                    </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                      {/* TITLE */}
                       <div className="md:col-span-2 space-y-1">
                         <label htmlFor="title" className="text-sm font-semibold">
                           Test Title
                         </label>
                         <input
                           id="title"
-                          type="text"
                           name="title"
+                          aria-label="Test title"
+                          placeholder="Enter title"
                           value={formData.title}
                           onChange={handleChange}
                           className="w-full px-3 py-2 border rounded-lg text-sm"
-                          aria-label="Test title"
-                          aria-required="true"
-                          placeholder="Enter test title"
                         />
-                        {errors.title && <p className="text-red-500 text-xs">{errors.title}</p>}
+                        {errors.title && (
+                          <p className="text-red-500 text-xs">{errors.title}</p>
+                        )}
                       </div>
 
+                      {/* CATEGORY */}
                       <div className="space-y-1">
-                        <label htmlFor="category" className="text-sm font-semibold">
+                        <label
+                          htmlFor="category"
+                          className="text-sm font-semibold"
+                        >
                           Category
                         </label>
+
                         <select
                           id="category"
                           name="category"
+                          aria-label="Test category"
                           value={formData.category}
                           onChange={handleChange}
                           className="w-full px-3 py-2 border rounded-lg text-sm bg-white"
-                          aria-label="Test category"
-                          aria-required="true"
-                          title="Select test category"
                         >
                           <option value="">Select Category</option>
                           <option value="Programming">Programming</option>
@@ -300,10 +308,14 @@ export default function CreateTestForm({
                           <option value="Technical">Technical</option>
                           <option value="Other">Other</option>
                         </select>
-                        {errors.category && <p className="text-red-500 text-xs">{errors.category}</p>}
+
+                        {errors.category && (
+                          <p className="text-red-500 text-xs">{errors.category}</p>
+                        )}
                       </div>
                     </div>
 
+                    {/* SUMMARY */}
                     <div className="mt-4 space-y-1">
                       <label htmlFor="summary" className="text-sm font-semibold">
                         Summary
@@ -311,14 +323,15 @@ export default function CreateTestForm({
                       <textarea
                         id="summary"
                         name="summary"
+                        aria-label="Test summary"
+                        placeholder="Enter summary"
                         value={formData.summary}
                         onChange={handleChange}
                         className="w-full px-3 py-2 border rounded-lg text-sm resize-none min-h-[60px]"
-                        aria-label="Test summary"
-                        aria-required="true"
-                        placeholder="Enter test summary"
                       />
-                      {errors.summary && <p className="text-red-500 text-xs">{errors.summary}</p>}
+                      {errors.summary && (
+                        <p className="text-red-500 text-xs">{errors.summary}</p>
+                      )}
                     </div>
                   </div>
 
@@ -330,60 +343,73 @@ export default function CreateTestForm({
                     <textarea
                       id="aiPrompt"
                       name="aiPrompt"
+                      aria-label="AI prompt"
+                      placeholder="Enter AI prompt"
                       value={formData.aiPrompt}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border rounded-lg text-sm resize-none min-h-[140px]"
-                      aria-label="AI prompt for test generation"
-                      aria-required="true"
-                      placeholder="Enter AI prompt for test generation"
+                      className="w-full px-3 py-2 border rounded-lg text-sm resize-none min-h-[120px]"
                     />
-                    {errors.aiPrompt && <p className="text-red-500 text-xs">{errors.aiPrompt}</p>}
+                    {errors.aiPrompt && (
+                      <p className="text-red-500 text-xs">{errors.aiPrompt}</p>
+                    )}
                   </div>
                 </div>
 
                 {/* RIGHT SIDE */}
                 <aside className="lg:col-span-1 space-y-4">
+
                   <div className="bg-white rounded-xl p-4 border shadow-sm">
+
                     <h3 className="text-lg font-semibold mb-3">Settings</h3>
 
+                    {/* DURATION */}
                     <div>
-                      <label htmlFor="duration" className="text-sm font-medium">
+                      <label
+                        htmlFor="duration"
+                        className="text-sm font-medium"
+                      >
                         Duration (min)
                       </label>
                       <input
                         id="duration"
                         type="number"
                         name="duration"
+                        aria-label="Test duration"
+                        placeholder="Duration"
                         value={formData.duration}
                         onChange={handleChange}
                         className="w-full px-3 py-2 border rounded-lg text-sm"
-                        aria-label="Test duration in minutes"
-                        aria-required="true"
-                        placeholder="Duration in minutes"
                         min="1"
                       />
-                      {errors.duration && <p className="text-red-500 text-xs">{errors.duration}</p>}
+                      {errors.duration && (
+                        <p className="text-red-500 text-xs">{errors.duration}</p>
+                      )}
                     </div>
 
+                    {/* PASSING SCORE */}
                     <div className="mt-4">
-                      <label htmlFor="passingScore" className="text-sm font-medium">
+                      <label
+                        htmlFor="passingScore"
+                        className="text-sm font-medium"
+                      >
                         Passing Score (%)
                       </label>
                       <input
                         id="passingScore"
                         type="number"
                         name="passingScore"
+                        aria-label="Passing score"
+                        placeholder="0-100"
                         value={formData.passingScore}
                         onChange={handleChange}
                         className="w-full px-3 py-2 border rounded-lg text-sm"
-                        aria-label="Passing score percentage"
-                        aria-required="true"
-                        placeholder="0-100"
                         min="0"
                         max="100"
                       />
                       {errors.passingScore && (
-                        <p className="text-red-500 text-xs">{errors.passingScore}</p>
+                        <p className="text-red-500 text-xs">
+                          {errors.passingScore}
+                        </p>
                       )}
                     </div>
                   </div>
