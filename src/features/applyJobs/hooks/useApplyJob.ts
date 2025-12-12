@@ -3,6 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { applyJob } from "@/api/jobApplication/applyJob";
 import { useToast } from "@/components/ui/Toast";
+import { AxiosError } from "axios";
 
 export function useApplyJob() {
   const toast = useToast();
@@ -12,11 +13,13 @@ export function useApplyJob() {
     onSuccess: (data) => {
       toast.success(data.message || "Application submitted!");
     },
-    onError: (error: any) => {
-      const msg =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to apply";
+    onError: (error: unknown) => {
+      let msg = "Failed to apply";
+
+      if (error instanceof AxiosError) {
+        msg = error.response?.data?.message || msg;
+      }
+
       toast.error(msg);
     },
   });

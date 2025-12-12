@@ -15,7 +15,7 @@ export interface Job {
     skills?: (Skill | string)[];
     department?: string;
     expiry?: string;
-
+    applied?: boolean
 }   
 // Category can be an object or string
 interface Category {

@@ -3,14 +3,20 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Bookmark, ArrowLeft } from "lucide-react";
 import { useGetJobById } from "@/features/admin/jobs/hooks/useJobApi";
- // your hook
+import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
+import { useToast } from "@/components/ui/Toast";
+import { useGetProfile } from "../../Profile/hooks/useProfileApi";
 
 export default function JobDetails() {
   const searchParams = useSearchParams();
   const jobId = searchParams.get("id");
   const router = useRouter();
+  const applyJobMutation = useApplyJob();
+  const toast = useToast();
 
   const { data: job, isLoading, error } = useGetJobById(jobId || undefined);
+  const { data: profile, isLoading: profileLoading } = useGetProfile();  
+
 
   if (isLoading)
     return (
@@ -25,6 +31,28 @@ export default function JobDetails() {
         Failed to load job details
       </p>
     );
+
+     const isExpired = job.expiry ? new Date(job.expiry) < new Date() : false;
+
+
+ const handleApply = () => {
+  if (!job._id || isExpired) return;
+
+
+  if (!profile?.resumeFile) {
+    toast.error("Please upload your resume before applying.");
+    return;
+  }
+
+  // Only call mutation once
+  applyJobMutation.mutate(
+    {
+      jobId: job._id,
+      message: "Excited to apply!",
+      resumeUrl: profile.resumeFile,
+    }
+  );
+};
     
 
   return (
@@ -48,9 +76,29 @@ export default function JobDetails() {
             <Bookmark size={20} className="text-gray-600" />
           </button>
 
-          <button className="px-5 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 text-sm font-semibold">
-            Apply Now
-          </button>
+<button
+  disabled={isExpired || job.applied || applyJobMutation.isPending}
+  onClick={(e) => {
+    e.stopPropagation();
+    handleApply();
+  }}
+  className={`px-6 py-2.5 text-white font-medium text-sm rounded-lg ${
+    isExpired
+      ? "bg-gray-400 cursor-not-allowed"
+      : job.applied
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+  }`}
+>
+  {job.applied
+    ? "Applied"
+    : applyJobMutation.isPending
+    ? "Applying..."
+    : isExpired
+    ? "Expired"
+    : "Apply Now"}
+</button>
+
         </div>
 
         {/* Job Meta Info */}
