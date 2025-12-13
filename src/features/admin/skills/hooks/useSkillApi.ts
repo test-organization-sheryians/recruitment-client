@@ -17,7 +17,7 @@ export const useGetSkill = (id?: string) => {
     retry: 0,
   });
 };
-
+ 
 const invalidateSkills = (queryClient:QueryClient) => {
   queryClient.invalidateQueries({ queryKey: ["skills"] });
   queryClient.invalidateQueries({ queryKey: ["skill"] });

@@ -28,6 +28,8 @@ export * from "./experience/getCandidateExperience"
 export * from "./experience/getSingleExperience"
 export * from "./experience/updateExperience"
 export * from "./resumeExtract"
+export * from "./AITest/evaluteAns"
+export * from "./AITest/questionGen"
 export * from "./users/getAllUsers";
 export * from "./users/updateUserRole";
 export * from "./users/deleteUser";

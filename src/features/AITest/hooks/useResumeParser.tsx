@@ -1,9 +1,9 @@
-"use client"
+// "use client"
 
-const useResumeParser = () => {
+// const useResumeParser = () => {
 
 
-  return null;
-}
+//   return null;
+// }
 
-export default useResumeParser
+// export default useResumeParser

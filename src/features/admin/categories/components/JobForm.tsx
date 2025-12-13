@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Briefcase,
   FileText,
@@ -70,14 +70,14 @@ export default function JobForm({
     clientId: initialData?.clientId || "6915b90df6594de75060410b",
   });
 
-  useEffect(() => {
-    if (categories.length > 0 && !formData.category) {
-      setFormData((prev) => ({
-        ...prev,
-        category: categories[0]._id,
-      }));
-    }
-  }, [categories]);
+  // useEffect(() => {
+  //   if (categories.length > 0 && !formData.category) {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       category: categories[0]._id,
+  //     }));
+  //   }
+  // });
 
   const handleChange = (e: { target: { name: string; value: string } }) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
