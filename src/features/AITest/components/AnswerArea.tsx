@@ -13,9 +13,13 @@ interface Props {
   answerCode: string;
   onTextChange: (v: string) => void;
   onCodeChange: (v: string) => void;
-  prevent: (e: any) => void;
-  preventKey: (e: any) => void;
-  editorMount: (e: any) => void;
+
+  // ✅ FIXED TYPES
+  prevent: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
+  preventKey: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+
+  // Monaco requires 2 args; using tuple avoids eslint any-error
+  editorMount: (editor: unknown, monaco: unknown) => void;
 }
 
 export default function AnswerPanel({

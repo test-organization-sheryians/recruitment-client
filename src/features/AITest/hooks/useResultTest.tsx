@@ -1,7 +1,13 @@
-// features/AITest/hooks/useResultTest.ts (or wherever you keep it)
 import { useMutation } from "@tanstack/react-query";
 
-type SubmitPayload = {
+export interface TextAnswer {
+  text: string;
+  code?: string;
+}
+
+export type Answer = string | TextAnswer;
+
+export interface SubmitPayload {
   attemptId: string;
   testId: string;
   email: string;
@@ -13,8 +19,8 @@ type SubmitPayload = {
   endTime: string;
   durationTaken: number;
   questions: string[];
-  answers: any[];
-};
+  answers: Answer[];
+}
 
 export const useSubmitResult = () => {
   return useMutation({
@@ -25,31 +31,34 @@ export const useSubmitResult = () => {
       if (!token) throw new Error("Login required");
       if (!baseUrl) throw new Error("API base URL missing");
 
-      const res = await fetch(`${baseUrl}/api/test-attempts/submit/${payload.attemptId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          testId: payload.testId,
-          email: payload.email,
-          score: payload.score,
-          percentage: payload.percentage,
-          isPassed: payload.isPassed,
-          status: payload.status,
-          startTime: payload.startTime,
-          endTime: payload.endTime,
-          durationTaken: payload.durationTaken,
-          questions: payload.questions,
-          answers: payload.answers,
-        }),
-      });
+      const res = await fetch(
+        `${baseUrl}/api/test-attempts/submit/${payload.attemptId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            testId: payload.testId,
+            email: payload.email,
+            score: payload.score,
+            percentage: payload.percentage,
+            isPassed: payload.isPassed,
+            status: payload.status,
+            startTime: payload.startTime,
+            endTime: payload.endTime,
+            durationTaken: payload.durationTaken,
+            questions: payload.questions,
+            answers: payload.answers,
+          }),
+        }
+      );
 
       let data;
       try {
         data = await res.json();
-      } catch (e) {
+      } catch {
         throw new Error("Invalid server response");
       }
 

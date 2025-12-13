@@ -1,4 +1,3 @@
-// app/candidate/ai-test/start/[testId]/page or your path
 "use client";
 
 import React from "react";
@@ -15,6 +14,26 @@ import {
   BookOpen,
   CheckCircle,
 } from "lucide-react";
+
+// --------------------
+// TYPES FOR RESPONSE
+// --------------------
+interface TestQuestion {
+  question: string;
+  options?: string[];
+}
+
+interface StartTestResponse {
+  attemptId: string;
+  email: string;
+  testId: string;
+  startTime: string;
+  questions: {
+    test: {
+      questions: TestQuestion[];
+    };
+  };
+}
 
 export default function StartTestPage() {
   const router = useRouter();
@@ -51,19 +70,26 @@ export default function StartTestPage() {
     mutate(
       { testId },
       {
-        onSuccess: (res: any) => {
-          const attemptId = res?.attemptId;
-          const email = res?.email;
-          const receivedTestId = res?.testId;
-          const startTime = res?.startTime;
+        // --------------------
+        // ❌ FIXED: Removed any
+        // --------------------
+        onSuccess: (res: StartTestResponse) => {
+          const attemptId = res.attemptId;
+          const email = res.email;
+          const receivedTestId = res.testId;
+          const startTime = res.startTime;
 
           if (attemptId) localStorage.setItem("attemptId", attemptId);
           if (email) localStorage.setItem("email", email);
           if (receivedTestId) localStorage.setItem("testId", receivedTestId);
           if (startTime) localStorage.setItem("startTime", startTime);
 
-          const rawQuestions = res?.questions?.test?.questions ?? [];
-          const testQuestions = rawQuestions.map((q: any) => ({
+          // --------------------
+          // ❌ FIXED: Removed any
+          // --------------------
+          const rawQuestions = res.questions?.test?.questions ?? [];
+
+          const testQuestions = rawQuestions.map((q: TestQuestion) => ({
             question: q.question?.trim() ?? "",
             options: q.options ?? null,
             source: "test",
@@ -73,8 +99,14 @@ export default function StartTestPage() {
 
           router.push("/candidate/ai-test/questining");
         },
-        onError: (err: any) => {
-          alert(err?.message || "Failed to start test.");
+
+        // --------------------
+        // ❌ FIXED: Removed any
+        // --------------------
+        onError: (err: unknown) => {
+          const message =
+            err instanceof Error ? err.message : "Failed to start test.";
+          alert(message);
         },
       }
     );

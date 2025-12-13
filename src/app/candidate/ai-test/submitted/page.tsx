@@ -10,23 +10,19 @@ export default function TestSubmittedPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#E7E9F1] to-white flex items-center justify-center p-6">
       <div className="bg-white shadow-lg border rounded-3xl p-10 max-w-lg w-full text-center">
 
-        {/* SUCCESS ICON */}
         <div className="flex justify-center mb-6">
           <CheckCircle className="w-20 h-20 text-green-600" />
         </div>
 
-        {/* TITLE */}
         <h1 className="text-3xl font-bold text-gray-900 mb-3">
-          Test Submitted Successfully 🎉
+          Test Submitted Successfully 
         </h1>
 
-        {/* MESSAGE */}
         <p className="text-gray-600 text-md mb-6">
           Your responses have been securely recorded.  
           <br />Thank you for completing the assessment.
         </p>
 
-        {/* INFO BOX */}
         <div className="bg-green-50 border border-green-200 rounded-xl p-5 mb-8">
           <p className="text-gray-700 flex items-center justify-center gap-2">
             <Clock className="w-5 h-5 text-green-600" />
@@ -34,10 +30,9 @@ export default function TestSubmittedPage() {
           </p>
         </div>
 
-        {/* BUTTONS */}
         <div className="flex flex-col gap-4">
           <button
-            onClick={() => router.push("/candidate/dashboard")}
+            onClick={() => router.push("/candidate")}
             className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl text-lg font-semibold hover:opacity-90 transition"
           >
             Go to Dashboard

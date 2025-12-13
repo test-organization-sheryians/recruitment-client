@@ -13,7 +13,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({ onClick, disabled,
         onClick={onClick}
         disabled={disabled}
         className={`mt-6 w-full py-3 text-lg font-semibold text-white rounded-lg shadow-md transition duration-300
-            ${disabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'}
+            ${disabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-700'}
         `}
     >
         {children}
