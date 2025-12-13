@@ -20,9 +20,11 @@ import {
   GripVertical,
 } from "lucide-react";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
-
+// -------------------------
+// TYPES
+// -------------------------
 interface BaseQuestion {
   question: string;
   source?: "ai" | "test";
@@ -57,32 +59,60 @@ const MIN = 25;
 const MAX = 75;
 const INIT = 50;
 
+// -------------------------
 
 export default function UniversalInterviewPage() {
   const router = useRouter();
-  useQueryClient();
+  const queryClient = useQueryClient();
 
+  // -------------------------
+  // FETCH QUESTIONS + DURATION
+  // -------------------------
   const { data: questions = [], isLoading } = useActiveQuestions() as {
     data: Question[] | undefined;
     isLoading: boolean;
   };
 
-  const evaluateMutation = useEvaluateAnswers() as {
-    mutateAsync: (payload: {
-      questions: string[];
-      answers: string[];
-    }) => Promise<{ data: EvaluationResult }>;
-  };
-
+  const evaluateMutation = useEvaluateAnswers();
   const submitMutation = useSubmitResult() as any;
 
   const [step, setStep] = useState(0);
 
+  // ------------------------------------
+  // DURATION FROM LOCAL STORAGE
+  // ------------------------------------
+  const testDuration = Number(localStorage.getItem("duration") ?? 0); // minutes → number
+  const [secondsLeft, setSecondsLeft] = useState(testDuration * 60);
+
+  // Countdown Timer
+  useEffect(() => {
+    if (!secondsLeft) {
+      submit();
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setSecondsLeft((sec) => sec - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [secondsLeft]);
+
+  // Format Timer
+  const timerDisplay = () => {
+    const m = Math.floor(secondsLeft / 60);
+    const s = secondsLeft % 60;
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
+  };
+
+  // -------------------------
+  // ANSWERS
+  // -------------------------
   const [answers, setAnswers] = useState<CandidateAnswer[]>(
     questions.length > 0 ? Array(questions.length).fill({}) : []
   );
 
-  const current = questions[step] as Question;
+  const current = questions[step];
   const isMCQ = Array.isArray((current as MCQQuestion)?.options);
 
   const [text, setText] = useState("");
@@ -138,7 +168,9 @@ export default function UniversalInterviewPage() {
     }
   };
 
- 
+  // -------------------------
+  // SUBMIT LOGIC
+  // -------------------------
   const submit = async () => {
     const aiQ: string[] = [];
     const aiA: string[] = [];
@@ -161,7 +193,7 @@ export default function UniversalInterviewPage() {
       }
     });
 
-
+    // AI ROUTE
     if (aiQ.length > 0) {
       const res = await evaluateMutation.mutateAsync({
         questions: aiQ,
@@ -182,6 +214,7 @@ export default function UniversalInterviewPage() {
       return router.push("/candidate/ai-test/result");
     }
 
+    // NORMAL TEST SUBMIT
     submitMutation.mutate(
       {
         attemptId: localStorage.getItem("attemptId") ?? "",
@@ -195,22 +228,22 @@ export default function UniversalInterviewPage() {
         status: "Submitted",
         startTime: localStorage.getItem("startTime") ?? "",
         endTime: new Date().toISOString(),
-        durationTaken: 0,
+        durationTaken: (testDuration * 60) - secondsLeft,
       },
       {
         onSuccess: () => {
-          console.log("TEST SUBMITTED SUCCESSFULLY ✔️");
           router.push("/candidate/ai-test/submitted");
         },
         onError: (err: any) => {
-          console.error("SUBMIT ERROR :", err);
           alert("Submission failed: " + err.message);
         },
       }
     );
   };
 
-
+  // -------------------------
+  // DRAG RESIZE
+  // -------------------------
   const startDrag = useCallback(() => {
     setDragging(true);
     document.body.style.cursor = "col-resize";
@@ -236,62 +269,76 @@ export default function UniversalInterviewPage() {
     window.onmousemove = (e) => dragging && onDrag(e);
   }
 
-
+  // -------------------------
+  // LOADING STATES
+  // -------------------------
   if (isLoading)
-    return (
-      <p className="text-center p-6 text-lg text-gray-600">
-        Preparing questions...
-      </p>
-    );
+    return <p className="text-center p-6 text-lg">Preparing questions...</p>;
 
   if (!questions.length)
-    return (
-      <p className="text-center p-6 text-lg text-gray-600">
-        No questions found.
-      </p>
-    );
+    return <p className="text-center p-6 text-lg">No questions found.</p>;
 
-
+  // -------------------------
+  // UI
+  // -------------------------
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#dfe7ff] to-white">
+
+   
+<div className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b shadow-sm">
+
+ 
+  <div className="h-1 bg-gray-200">
+    <div
+      className="h-full bg-blue-600 transition-all"
+      style={{ width: `${progress}%` }}
+    />
+  </div>
+
+
+  <div className="px-6 py-4 flex items-center justify-between relative">
+
+   
+    <button
+      onClick={prev}
+      disabled={step === 0}
+      className="w-12 h-12 rounded-full border bg-white flex items-center justify-center 
+                 disabled:opacity-40 hover:bg-gray-100 transition"
+    >
+      <ChevronLeft />
+    </button>
+
     
-      <div className="sticky top-0 bg-white/70 backdrop-blur-xl border-b shadow-sm z-50">
-        <div className="h-1 bg-gray-200">
-          <div
-            className="h-full bg-blue-500 transition-all"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        <div className="relative px-6 py-4 flex items-center justify-between">
-          <button
-            onClick={prev}
-            disabled={step === 0}
-            className="w-12 h-12 rounded-full border bg-white flex items-center justify-center disabled:opacity-40 hover:bg-gray-100"
-          >
-            <ChevronLeft />
-          </button>
-
-          <h2 className="absolute left-1/2 -translate-x-1/2 font-medium text-gray-700 text-center w-[60%] line-clamp-2">
-            Q{step + 1}. {current.question}
-          </h2>
-
-          <button
-            onClick={next}
-            className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700"
-          >
-            {step === questions.length - 1 ? <Send /> : <ChevronRight />}
-          </button>
-        </div>
+    <div className="absolute left-1/2 -translate-x-1/2 text-center">
+      <div className="text-[13px] text-gray-500 tracking-wide">Time Remaining</div>
+      <div className={`font-bold text-2xl 
+          ${secondsLeft < 60 ? "text-red-600 animate-pulse" : "text-blue-700"}`}>
+        ⏳ {timerDisplay()}
       </div>
+    </div>
+
+    
+    <button
+      onClick={next}
+      className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center 
+                 justify-center hover:bg-blue-700 transition"
+    >
+      {step === questions.length - 1 ? <Send /> : <ChevronRight />}
+    </button>
+
+  </div>
+
+  {/* QUESTION TITLE BELOW TIMER */}
+  <div className="px-6 pb-3 text-center text-gray-800 font-medium text-lg line-clamp-2">
+    Q{step + 1}. {current.question}
+  </div>
+</div>
 
 
+      {/* MAIN */}
       <div className="flex-1 p-6 max-w-7xl mx-auto w-full">
-        <div
-          ref={ref}
-          className="bg-white shadow-xl border rounded-2xl flex min-h-[70vh]"
-        >
-          
+        <div ref={ref} className="bg-white shadow-xl border rounded-2xl flex min-h-[70vh]">
+
           {isMCQ ? (
             <div className="p-10 w-full flex justify-center">
               <div className="space-y-4 max-w-xl w-full">
@@ -319,7 +366,6 @@ export default function UniversalInterviewPage() {
             </div>
           ) : (
             <>
-            
               <div
                 style={{ width: `${width}%` }}
                 className="border-r bg-gray-50 flex flex-col"
@@ -336,7 +382,6 @@ export default function UniversalInterviewPage() {
                 />
               </div>
 
-            
               <div
                 className="w-2 bg-gray-200 hover:bg-blue-400 cursor-col-resize relative"
                 onMouseDown={startDrag}
@@ -348,14 +393,12 @@ export default function UniversalInterviewPage() {
                 style={{ width: `${100 - width}%` }}
                 className="bg-gray-900 flex flex-col"
               >
-                
                 <div className="p-3 bg-gray-800 border-b border-gray-700">
                   <h2 className="text-white text-sm font-semibold tracking-wide">
                     Write your code here
                   </h2>
                 </div>
 
-              
                 <Editor
                   height="100%"
                   defaultLanguage="javascript"
@@ -378,6 +421,7 @@ export default function UniversalInterviewPage() {
               </div>
             </>
           )}
+
         </div>
       </div>
     </div>

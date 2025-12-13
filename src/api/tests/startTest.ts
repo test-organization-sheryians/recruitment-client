@@ -4,6 +4,7 @@ import api from "@/config/axios";
 export interface StartTestResponse {
   attemptId: string;
   email?: string;
+  duration?: number;   // ⭐ added duration
   message?: string;
   questions?: any[];
 }
@@ -11,9 +12,15 @@ export interface StartTestResponse {
 export const startTestApi = async (testId: string): Promise<StartTestResponse> => {
   const res = await api.post("/api/test-attempts/start", { testId });
 
-  console.log("res→", res.data);
+  console.log("res →", res.data);
 
-  // Extract attemptId
+  
+  const duration =
+    res.data?.questions?.test?.duration ??
+    res.data?.data?.questions?.test?.duration;
+
+  console.log("duration >>", duration);
+
   let attemptId =
     res.data?.attemptId ||
     res.data?._id ||
@@ -35,12 +42,20 @@ export const startTestApi = async (testId: string): Promise<StartTestResponse> =
 
   localStorage.setItem("attemptId", attemptId);
   if (email) localStorage.setItem("email", email);
-  localStorage.setItem("startTime", new Date().toISOString());
+  if (duration) localStorage.setItem("duration", String(duration));
 
+
+  localStorage.setItem("startTime", new Date().toISOString());
 
   if (questions) {
     localStorage.setItem("activeQuestions", JSON.stringify(questions));
   }
 
-  return { attemptId, email, message: res.data?.message, questions };
+  return {
+    attemptId,
+    email,
+    duration,      
+    message: res.data?.message,
+    questions,
+  };
 };
