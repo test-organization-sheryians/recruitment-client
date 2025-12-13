@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useStartTest } from "@/features/AITest/hooks/useStartsTest";
+import { useStartTest } from "@/features/test/hooks/useStartsTest";
 import { 
   Clock, Target, Trophy, Calendar, AlertCircle, BookOpen, CheckCircle 
 } from "lucide-react";

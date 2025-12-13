@@ -23,5 +23,8 @@ export * from "./AITest/questionGen"
 export * from "./users/getAllUsers";
 export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
+export * from "./tests/startTest"
+export * from "./tests/testAttempts"
+
 
 

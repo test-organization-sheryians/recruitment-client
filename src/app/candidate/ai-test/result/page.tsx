@@ -24,7 +24,7 @@ export default function ResultPage() {
     staleTime: Infinity,
   });
 
-  // Redirect if no result
+
   if (!isLoading && !result) {
     router.push("/candidate/ai-test");
     return null;

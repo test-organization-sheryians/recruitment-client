@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { useActiveQuestions } from "@/features/AITest/hooks/useActivation";
 import { useEvaluateAnswers } from "@/features/AITest/hooks/aiTestApi";
-import { useSubmitResult } from "@/features/AITest/hooks/useResultTest";
+import { useSubmitResult } from "@/features/test/hooks/useResultTest";
 
 import Editor from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 import { useState, useRef, useCallback } from "react";
+
 
 interface BaseQuestion {
   question: string;
@@ -42,6 +43,10 @@ interface CandidateAnswer {
   code?: string;
 }
 
+interface ApiAnswer {
+  text: string;
+}
+
 interface EvaluationResult {
   score: number;
   percentage: number;
@@ -51,6 +56,7 @@ interface EvaluationResult {
 const MIN = 25;
 const MAX = 75;
 const INIT = 50;
+
 
 export default function UniversalInterviewPage() {
   const router = useRouter();
@@ -68,7 +74,7 @@ export default function UniversalInterviewPage() {
     }) => Promise<{ data: EvaluationResult }>;
   };
 
-  const submitMutation = useSubmitResult();
+  const submitMutation = useSubmitResult() as any;
 
   const [step, setStep] = useState(0);
 
@@ -132,85 +138,79 @@ export default function UniversalInterviewPage() {
     }
   };
 
-  // -------------------------
-  // FINAL SUBMIT FIXED
-  // -------------------------
- const submit = async () => {
-  const aiQ: string[] = [];
-  const aiA: string[] = [];
-  const fullAiAns: CandidateAnswer[] = [];
+ 
+  const submit = async () => {
+    const aiQ: string[] = [];
+    const aiA: string[] = [];
+    const fullAiAns: CandidateAnswer[] = [];
 
-  const tq: string[] = [];
-  const ta: string[] = [];
+    const tq: string[] = [];
+    const ta: ApiAnswer[] = [];
 
-  questions.forEach((q, i) => {
-    const ans = answers[i];
-    const primary = ans.text || ans.code || "";
+    questions.forEach((q, i) => {
+      const ans = answers[i];
+      const primary = ans.text || ans.code || "";
 
-    if (q.source === "ai") {
-      aiQ.push(q.question);
-      aiA.push(primary);
-      fullAiAns.push(ans);
-    } else {
-      tq.push(q.question);
-      ta.push(primary);
-    }
-  });
-
-  // -------------------------
-  // AI RESUME INTERVIEW PART
-  // -------------------------
-  if (aiQ.length > 0) {
-    const res = await evaluateMutation.mutateAsync({
-      questions: aiQ,
-      answers: aiA,
+      if (q.source === "ai") {
+        aiQ.push(q.question);
+        aiA.push(primary);
+        fullAiAns.push(ans);
+      } else {
+        tq.push(q.question);
+        ta.push({ text: primary });
+      }
     });
 
-    sessionStorage.setItem(
-      "resumeResult",
-      JSON.stringify({
+
+    if (aiQ.length > 0) {
+      const res = await evaluateMutation.mutateAsync({
         questions: aiQ,
-        answers: fullAiAns,
-        score: res.data.score,
-        percentage: res.data.percentage,
-        feedback: res.data.feedback,
-      })
+        answers: aiA,
+      });
+
+      sessionStorage.setItem(
+        "resumeResult",
+        JSON.stringify({
+          questions: aiQ,
+          answers: fullAiAns,
+          score: res.data.score,
+          percentage: res.data.percentage,
+          feedback: res.data.feedback,
+        })
+      );
+
+      return router.push("/candidate/ai-test/result");
+    }
+
+    submitMutation.mutate(
+      {
+        attemptId: localStorage.getItem("attemptId") ?? "",
+        testId: localStorage.getItem("testId") ?? "",
+        email: localStorage.getItem("email") ?? "",
+        questions: tq,
+        answers: ta,
+        score: 0,
+        percentage: 0,
+        isPassed: false,
+        status: "Submitted",
+        startTime: localStorage.getItem("startTime") ?? "",
+        endTime: new Date().toISOString(),
+        durationTaken: 0,
+      },
+      {
+        onSuccess: () => {
+          console.log("TEST SUBMITTED SUCCESSFULLY ✔️");
+          router.push("/candidate/ai-test/submitted");
+        },
+        onError: (err: any) => {
+          console.error("SUBMIT ERROR :", err);
+          alert("Submission failed: " + err.message);
+        },
+      }
     );
-
-    return router.push("/candidate/ai-test/result");
-  }
-
-  // -------------------------
-  // TEST SUBMISSION PART (NO EMAIL)
-  // -------------------------
-submitMutation.mutate(
-  {
-    attemptId: localStorage.getItem("attemptId") ?? "",
-    testId: localStorage.getItem("testId") ?? "",
-    email: localStorage.getItem("email") ?? "",   // 👈 add back email
-    questions: tq,
-    answers: ta,
-    score: 0,
-    percentage: 0,
-    isPassed: false,
-    status: "Submitted",
-    startTime: localStorage.getItem("startTime") ?? "",
-    endTime: new Date().toISOString(),
-    durationTaken: 0,
-  },
-  {
-    onSuccess: () => router.push("/candidate/ai-test/submitted"),
-    onError: (err) => alert("Submission failed: " + err),
-  }
-);
+  };
 
 
-};
-
-
-  // -------------------------
-  // DRAG LOGIC
-  // -------------------------
   const startDrag = useCallback(() => {
     setDragging(true);
     document.body.style.cursor = "col-resize";
@@ -236,9 +236,7 @@ submitMutation.mutate(
     window.onmousemove = (e) => dragging && onDrag(e);
   }
 
-  // -------------------------
-  // LOADING STATES
-  // -------------------------
+
   if (isLoading)
     return (
       <p className="text-center p-6 text-lg text-gray-600">
@@ -253,9 +251,10 @@ submitMutation.mutate(
       </p>
     );
 
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#dfe7ff] to-white">
-      {/* HEADER */}
+    
       <div className="sticky top-0 bg-white/70 backdrop-blur-xl border-b shadow-sm z-50">
         <div className="h-1 bg-gray-200">
           <div
@@ -286,12 +285,13 @@ submitMutation.mutate(
         </div>
       </div>
 
-      {/* MAIN */}
+
       <div className="flex-1 p-6 max-w-7xl mx-auto w-full">
         <div
           ref={ref}
           className="bg-white shadow-xl border rounded-2xl flex min-h-[70vh]"
         >
+          
           {isMCQ ? (
             <div className="p-10 w-full flex justify-center">
               <div className="space-y-4 max-w-xl w-full">
@@ -319,7 +319,7 @@ submitMutation.mutate(
             </div>
           ) : (
             <>
-              {/* LEFT TEXT AREA */}
+            
               <div
                 style={{ width: `${width}%` }}
                 className="border-r bg-gray-50 flex flex-col"
@@ -336,7 +336,7 @@ submitMutation.mutate(
                 />
               </div>
 
-              {/* DRAG */}
+            
               <div
                 className="w-2 bg-gray-200 hover:bg-blue-400 cursor-col-resize relative"
                 onMouseDown={startDrag}
@@ -344,11 +344,18 @@ submitMutation.mutate(
                 <GripVertical className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
               </div>
 
-              {/* CODE EDITOR */}
               <div
                 style={{ width: `${100 - width}%` }}
                 className="bg-gray-900 flex flex-col"
               >
+                
+                <div className="p-3 bg-gray-800 border-b border-gray-700">
+                  <h2 className="text-white text-sm font-semibold tracking-wide">
+                    Write your code here
+                  </h2>
+                </div>
+
+              
                 <Editor
                   height="100%"
                   defaultLanguage="javascript"
@@ -360,9 +367,7 @@ submitMutation.mutate(
                     editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyC, () => {});
                     editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyX, () => {});
                     editor.updateOptions({ contextmenu: false });
-                    editor
-                      .getDomNode()
-                      ?.addEventListener("paste", prevent);
+                    editor.getDomNode()?.addEventListener("paste", prevent);
                   }}
                   options={{
                     minimap: { enabled: false },
