@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useActiveQuestions } from "@/features/AITest/hooks/useActivation";
+import { useActiveQuestions } from "@/features/test/hooks/useActivation";
 import { useEvaluateAnswers } from "@/features/AITest/hooks/aiTestApi";
 import { useSubmitResult } from "@/features/test/hooks/useResultTest";
 

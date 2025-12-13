@@ -11,7 +11,7 @@ export interface StartTestResponse {
 export const startTestApi = async (testId: string): Promise<StartTestResponse> => {
   const res = await api.post("/api/test-attempts/start", { testId });
 
-  console.log("🔥 START TEST RAW RESPONSE →", res.data);
+  console.log("res→", res.data);
 
   // Extract attemptId
   let attemptId =

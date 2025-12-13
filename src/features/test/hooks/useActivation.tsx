@@ -4,7 +4,7 @@ export const useActiveQuestions = () =>
   useQuery({
     queryKey: ["active-questions"],
     queryFn: () => [],
-    enabled: false,         // 🚫 do not fetch, we manually set data
+    enabled: false,        
     staleTime: 0,
     gcTime: 0,
   });
