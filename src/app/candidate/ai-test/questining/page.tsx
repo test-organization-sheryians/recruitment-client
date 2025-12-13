@@ -263,7 +263,7 @@ const prevent = (
       </div>
 
       {/* MAIN */}
-      <div className="flex-1 p-6 max-w-7xl mx-auto w-full">
+      <div className="flex-1 p-6 max-w-8xl mx-auto w-full">
         <div
           ref={ref}
           className="bg-white shadow-xl border rounded-2xl flex min-h-[70vh]"
@@ -295,7 +295,7 @@ const prevent = (
             </div>
           ) : (
             <>
-              {/* LEFT TEXT AREA */}
+            
               <div
                 style={{ width: `${width}%` }}
                 className="border-r bg-gray-50 flex flex-col"
@@ -322,29 +322,36 @@ const prevent = (
 
               {/* RIGHT CODE EDITOR */}
               <div
-                style={{ width: `${100 - width}%` }}
-                className="bg-gray-900 flex flex-col"
-              >
-                <Editor
-                  height="100%"
-                  defaultLanguage="javascript"
-                  value={code}
-                  onChange={(v) => setCode(v ?? "")}
-                  theme="vs-dark"
-                  onMount={(editor: monaco.editor.IStandaloneCodeEditor) => {
-                    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyV, () => {});
-                    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyC, () => {});
-                    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyX, () => {});
-                    editor.updateOptions({ contextmenu: false });
-                    editor.getDomNode()?.addEventListener("paste", prevent);
-                  }}
-                  options={{
-                    minimap: { enabled: false },
-                    wordWrap: "on",
-                    fontSize: 15,
-                  }}
-                />
-              </div>
+  style={{ width: `${100 - width}%` }}
+  className="bg-gray-900 flex flex-col"
+>
+  {/* Heading Bar */}
+  <div className="bg-gray-800 px-4 py-2 border-b border-gray-700">
+    <h1 className="text-white text-sm font-semibold">Write your code here</h1>
+  </div>
+
+  {/* Monaco Editor */}
+  <Editor
+    height="100%"
+    defaultLanguage="javascript"
+    value={code}
+    onChange={(v) => setCode(v ?? "")}
+    theme="vs-dark"
+    onMount={(editor: monaco.editor.IStandaloneCodeEditor) => {
+      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyV, () => {});
+      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyC, () => {});
+      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyX, () => {});
+      editor.updateOptions({ contextmenu: false });
+      editor.getDomNode()?.addEventListener("paste", prevent);
+    }}
+    options={{
+      minimap: { enabled: false },
+      wordWrap: "on",
+      fontSize: 15,
+    }}
+  />
+</div>
+
             </>
           )}
         </div>
