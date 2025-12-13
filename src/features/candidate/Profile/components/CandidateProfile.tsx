@@ -62,9 +62,9 @@ export default function CandidateProfile() {
           </div>
 
           {/* Resume */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white bg-white rounded-2xl shadow-sm p-6">
             {/* <h2 className="text-lg font-semibold mb-4">Resume</h2> */}
-            <ResumeSection resumefile={profile?.resumeFile} resumeFileNoPI={profile?.resumeFileNoPI} />
+            <ResumeSection resumefile= {profile?.resumeFile}  />
           </div>
         </div>
 
