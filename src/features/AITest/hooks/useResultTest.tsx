@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import api from "@/config/axios";
 
 export interface TextAnswer {
   text: string;
@@ -8,9 +9,7 @@ export interface TextAnswer {
 export type Answer = string | TextAnswer;
 
 export interface SubmitPayload {
-  attemptId: string;
   testId: string;
-  email: string;
   score: number;
   percentage: number;
   isPassed: boolean;
@@ -26,47 +25,35 @@ export const useSubmitResult = () => {
   return useMutation({
     mutationFn: async (payload: SubmitPayload) => {
       const token = localStorage.getItem("token");
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const attemptId = localStorage.getItem("attemptId");
 
       if (!token) throw new Error("Login required");
-      if (!baseUrl) throw new Error("API base URL missing");
+      if (!attemptId) throw new Error("Attempt ID not found in localStorage");
 
-      const res = await fetch(
-        `${baseUrl}/api/test-attempts/submit/${payload.attemptId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            testId: payload.testId,
-            email: payload.email,
-            score: payload.score,
-            percentage: payload.percentage,
-            isPassed: payload.isPassed,
-            status: payload.status,
-            startTime: payload.startTime,
-            endTime: payload.endTime,
-            durationTaken: payload.durationTaken,
-            questions: payload.questions,
-            answers: payload.answers,
-          }),
-        }
-      );
-
-      let data;
       try {
-        data = await res.json();
-      } catch {
-        throw new Error("Invalid server response");
-      }
+        const res = await api.patch(`/api/test-attempts/submit/${attemptId}`, {
+          testId: payload.testId,
+          score: payload.score,
+          percentage: payload.percentage,
+          isPassed: payload.isPassed,
+          status: payload.status,
+          startTime: payload.startTime,
+          endTime: payload.endTime,
+          durationTaken: payload.durationTaken,
+          questions: payload.questions,
+          answers: payload.answers,
+        });
 
-      if (!res.ok) {
-        throw new Error(data?.message || "Failed to submit test");
-      }
+        console.log("SUBMISSION RESPONSE →", res.data);
 
-      return data;
+        return res.data;
+      } catch (error: any) {
+        console.error("Submit test error:", error);
+
+        throw new Error(
+          error?.response?.data?.message || "Failed to submit test"
+        );
+      }
     },
   });
 };

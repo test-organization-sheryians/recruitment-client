@@ -26,12 +26,15 @@ interface BaseQuestion {
   question: string;
   source?: "ai" | "test";
 }
+
 interface MCQQuestion extends BaseQuestion {
   options: string[];
 }
+
 interface CodeTextQuestion extends BaseQuestion {
   options?: never;
 }
+
 type Question = MCQQuestion | CodeTextQuestion;
 
 interface CandidateAnswer {
@@ -59,37 +62,35 @@ export default function UniversalInterviewPage() {
   };
 
   const evaluateMutation = useEvaluateAnswers() as {
-    mutateAsync: (payload: { questions: string[]; answers: string[] }) => Promise<{
-      data: EvaluationResult;
-    }>;
+    mutateAsync: (payload: {
+      questions: string[];
+      answers: string[];
+    }) => Promise<{ data: EvaluationResult }>;
   };
 
   const submitMutation = useSubmitResult();
 
   const [step, setStep] = useState(0);
+
   const [answers, setAnswers] = useState<CandidateAnswer[]>(
     questions.length > 0 ? Array(questions.length).fill({}) : []
   );
 
   const current = questions[step] as Question;
-
   const isMCQ = Array.isArray((current as MCQQuestion)?.options);
 
   const [text, setText] = useState("");
   const [code, setCode] = useState("");
 
-  const progress = questions.length ? ((step + 1) / questions.length) * 100 : 0;
+  const progress = questions.length
+    ? ((step + 1) / questions.length) * 100
+    : 0;
 
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(INIT);
   const [dragging, setDragging] = useState(false);
 
-const prevent = (
-  e: ClipboardEvent | Event | React.SyntheticEvent
-) => {
-  e.preventDefault();
-};
-
+  const prevent = (e: any) => e.preventDefault();
 
   const keyBlock = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.ctrlKey || e.metaKey) && ["c", "v", "x"].includes(e.key)) {
@@ -107,10 +108,10 @@ const prevent = (
 
   const next = () => {
     save();
+
     if (step < questions.length - 1) {
       const n = step + 1;
       setStep(n);
-
       const ans = answers[n];
       setText(ans?.text ?? "");
       setCode(ans?.code ?? "");
@@ -121,77 +122,95 @@ const prevent = (
 
   const prev = () => {
     save();
+
     if (step > 0) {
       const n = step - 1;
       setStep(n);
-
       const ans = answers[n];
       setText(ans?.text ?? "");
       setCode(ans?.code ?? "");
     }
   };
 
-  const submit = async () => {
-    const aiQ: string[] = [];
-    const aiA: string[] = [];
-    const fullAiAns: CandidateAnswer[] = [];
+  // -------------------------
+  // FINAL SUBMIT FIXED
+  // -------------------------
+ const submit = async () => {
+  const aiQ: string[] = [];
+  const aiA: string[] = [];
+  const fullAiAns: CandidateAnswer[] = [];
 
-    const tq: string[] = [];
-    const ta: string[] = [];
+  const tq: string[] = [];
+  const ta: string[] = [];
 
-    questions.forEach((q, i) => {
-      const ans = answers[i];
-      const primary = ans.text || ans.code || "";
+  questions.forEach((q, i) => {
+    const ans = answers[i];
+    const primary = ans.text || ans.code || "";
 
-      if (q.source === "ai") {
-        aiQ.push(q.question);
-        aiA.push(primary);
-        fullAiAns.push(ans);
-      } else {
-        tq.push(q.question);
-        ta.push(primary);
-      }
+    if (q.source === "ai") {
+      aiQ.push(q.question);
+      aiA.push(primary);
+      fullAiAns.push(ans);
+    } else {
+      tq.push(q.question);
+      ta.push(primary);
+    }
+  });
+
+  // -------------------------
+  // AI RESUME INTERVIEW PART
+  // -------------------------
+  if (aiQ.length > 0) {
+    const res = await evaluateMutation.mutateAsync({
+      questions: aiQ,
+      answers: aiA,
     });
 
-    if (aiQ.length > 0) {
-      const res = await evaluateMutation.mutateAsync({
+    sessionStorage.setItem(
+      "resumeResult",
+      JSON.stringify({
         questions: aiQ,
-        answers: aiA,
-      });
-
-      sessionStorage.setItem(
-        "resumeResult",
-        JSON.stringify({
-          questions: aiQ,
-          answers: fullAiAns,
-          score: res.data.score,
-          percentage: res.data.percentage,
-          feedback: res.data.feedback,
-        })
-      );
-
-      return router.push("/candidate/ai-test/result");
-    }
-
-    submitMutation.mutate(
-      {
-        attemptId: localStorage.getItem("attemptId") ?? "",
-        testId: localStorage.getItem("testId") ?? "",
-        email: localStorage.getItem("email") ?? "",
-        questions: tq,
-        answers: ta,
-        score: 0,
-        percentage: 0,
-        isPassed: false,
-        status: "Submitted",
-        startTime: localStorage.getItem("startTime") ?? "",
-        endTime: new Date().toISOString(),
-        durationTaken: 0,
-      },
-      { onSuccess: () => router.push("/candidate/ai-test/submitted") }
+        answers: fullAiAns,
+        score: res.data.score,
+        percentage: res.data.percentage,
+        feedback: res.data.feedback,
+      })
     );
-  };
 
+    return router.push("/candidate/ai-test/result");
+  }
+
+  // -------------------------
+  // TEST SUBMISSION PART (NO EMAIL)
+  // -------------------------
+submitMutation.mutate(
+  {
+    attemptId: localStorage.getItem("attemptId") ?? "",
+    testId: localStorage.getItem("testId") ?? "",
+    email: localStorage.getItem("email") ?? "",   // 👈 add back email
+    questions: tq,
+    answers: ta,
+    score: 0,
+    percentage: 0,
+    isPassed: false,
+    status: "Submitted",
+    startTime: localStorage.getItem("startTime") ?? "",
+    endTime: new Date().toISOString(),
+    durationTaken: 0,
+  },
+  {
+    onSuccess: () => router.push("/candidate/ai-test/submitted"),
+    onError: (err) => alert("Submission failed: " + err),
+  }
+);
+
+
+};
+
+
+  // -------------------------
+  // DRAG LOGIC
+  // -------------------------
   const startDrag = useCallback(() => {
     setDragging(true);
     document.body.style.cursor = "col-resize";
@@ -217,6 +236,9 @@ const prevent = (
     window.onmousemove = (e) => dragging && onDrag(e);
   }
 
+  // -------------------------
+  // LOADING STATES
+  // -------------------------
   if (isLoading)
     return (
       <p className="text-center p-6 text-lg text-gray-600">
@@ -225,11 +247,14 @@ const prevent = (
     );
 
   if (!questions.length)
-    return <p className="text-center p-6 text-gray-600">No questions found.</p>;
+    return (
+      <p className="text-center p-6 text-lg text-gray-600">
+        No questions found.
+      </p>
+    );
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#dfe7ff] to-white">
-
       {/* HEADER */}
       <div className="sticky top-0 bg-white/70 backdrop-blur-xl border-b shadow-sm z-50">
         <div className="h-1 bg-gray-200">
@@ -240,7 +265,6 @@ const prevent = (
         </div>
 
         <div className="relative px-6 py-4 flex items-center justify-between">
-
           <button
             onClick={prev}
             disabled={step === 0}
@@ -312,7 +336,7 @@ const prevent = (
                 />
               </div>
 
-              {/* DRAG BAR */}
+              {/* DRAG */}
               <div
                 className="w-2 bg-gray-200 hover:bg-blue-400 cursor-col-resize relative"
                 onMouseDown={startDrag}
@@ -320,7 +344,7 @@ const prevent = (
                 <GripVertical className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
               </div>
 
-              {/* RIGHT CODE EDITOR */}
+              {/* CODE EDITOR */}
               <div
                 style={{ width: `${100 - width}%` }}
                 className="bg-gray-900 flex flex-col"
@@ -336,7 +360,9 @@ const prevent = (
                     editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyC, () => {});
                     editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyX, () => {});
                     editor.updateOptions({ contextmenu: false });
-                    editor.getDomNode()?.addEventListener("paste", prevent);
+                    editor
+                      .getDomNode()
+                      ?.addEventListener("paste", prevent);
                   }}
                   options={{
                     minimap: { enabled: false },
