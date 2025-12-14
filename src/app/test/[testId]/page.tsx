@@ -29,6 +29,7 @@ interface StartTestResponse {
   questions: {
     test: {
       questions: TestQuestion[];
+      duration?: number;
     };
   };
 }
@@ -37,6 +38,7 @@ export default function StartTestPage() {
   const router = useRouter();
   const params = useParams();
   const testId = params?.testId as string;
+
   const queryClient = useQueryClient();
   const { mutate, isPending } = useStartTest();
 
@@ -44,8 +46,8 @@ export default function StartTestPage() {
     const token = Cookies.get("access");
 
     if (!token) {
-      alert("Please login first.");
-      return router.push("/login");
+      router.push("/login"); 
+      return;
     }
 
     localStorage.setItem("testId", testId);
@@ -56,34 +58,28 @@ export default function StartTestPage() {
         onSuccess: (data: unknown, variables: { testId: string }) => {
           const response = data as StartTestResponse;
 
-          const attemptId = response.attemptId;
-          const email = response.email;
-          const receivedTestId = response.testId || variables.testId;
-          const startTime = response.startTime;
+          localStorage.setItem("attemptId", response.attemptId);
+          localStorage.setItem("email", response.email);
+          localStorage.setItem("testId", response.testId);
+          localStorage.setItem("startTime", response.startTime);
 
-          if (attemptId) localStorage.setItem("attemptId", attemptId);
-          if (email) localStorage.setItem("email", email);
-          if (receivedTestId) localStorage.setItem("testId", receivedTestId);
-          if (startTime) localStorage.setItem("startTime", startTime);
+          const duration = response.questions?.test?.duration ?? 0;
+          localStorage.setItem("duration", String(duration));
 
-          const rawQuestions = response.questions?.test?.questions ?? [];
+          const formattedQuestions =
+            response.questions?.test?.questions?.map((q) => ({
+              question: q.question.trim(),
+              options: q.options ?? null,
+              source: "test",
+            })) || [];
 
-          const testQuestions = rawQuestions.map((q) => ({
-            question: q.question.trim(),
-            options: q.options ?? null,
-            source: "test",
-          }));
-
-          queryClient.setQueryData(["active-questions"], testQuestions);
+          queryClient.setQueryData(["active-questions"], formattedQuestions);
 
           router.push("/candidate/ai-test/questining");
         },
 
-        onError: (err: unknown) => {
-          const msg =
-            err instanceof Error ? err.message : "Failed to start test.";
-          alert(msg);
-          console.error("❌ START TEST ERROR:", err);
+        onError: () => {
+          
         },
       }
     );
@@ -115,7 +111,8 @@ export default function StartTestPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden">
+      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 bg-white rounded-3xl shadow-lg border overflow-hidden">
+        
         {/* LEFT SECTION */}
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-10 flex flex-col justify-between">
           <div>
@@ -159,7 +156,6 @@ export default function StartTestPage() {
               </div>
             </div>
 
-            {/* Creator Section */}
             <div className="flex items-center gap-4 text-sm text-gray-600">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
                 {test.createdBy.name.slice(0, 2).toUpperCase()}

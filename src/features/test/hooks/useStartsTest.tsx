@@ -1,28 +1,34 @@
-// src/hooks/useStartTest.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as api from "@/api";
-
-
-
-
+import { useRouter } from "next/navigation";
 
 export const useStartTest = () => {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   return useMutation({
-    mutationKey: ["startTest"],
+    mutationFn: ({ testId }: { testId: string }) => api.startTestApi(testId),
 
-    mutationFn: async ({ testId }: { testId: string }) => {
-      return await api.startTestApi(testId);
-    },
+    onSuccess: (res: api.StartTestResponse) => {
+   
+      const enrollments =
+        res.questions?.test?.enrollments ||
+        res.data?.questions?.test?.enrollments ||
+        [];
 
-    onSuccess: (res) => {
-      if (res.questions) {
-        
-        queryClient.setQueryData(["active-questions"], res.questions);
-      }
+     
+      queryClient.setQueryData(["active-questions"], res.questions?.test?.questions || res.questions);
 
-      console.log("👉 Questions cached:", res.questions);
+     
+      queryClient.setQueryData(["test-meta"], {
+        duration: res.duration ?? 0,
+        enrollments,
+        email: res.email ?? "",
+        attemptId: res.attemptId,
+      });
+
+      
+      router.push("/candidate/ai-test/questining");
     },
   });
 };
