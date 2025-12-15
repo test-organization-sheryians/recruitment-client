@@ -88,7 +88,6 @@ export default function HeroSection({
             {["Remote Jobs", "Full Time", "React Developer", "Senior", "Startup"].map((tag) => (
               <button
                 key={tag}
-                onClick={() => setSearchTerm(tag)}
                 className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-full
                            hover:bg-blue-100 hover:text-blue-700 transition-all duration-200
                            border border-gray-200"
