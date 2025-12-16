@@ -27,12 +27,12 @@ const Logout = () => {
       },
     });
   };
-  
+
   return (
     <button
       onClick={handleLogout}
       disabled={isPending}
-      className="px-6 py-2.5 bg-red-600 text-white rounded-full hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+      className="px-6 py-2.5 w-full cursor-pointer bg-red-600 text-white rounded-full hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed transition-colors font-medium text-sm"
     >
       {isPending ? "Logging out..." : "Logout"}
     </button>

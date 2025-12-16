@@ -1,3 +1,5 @@
+"use client";
+
 import { Search, MapPin } from "lucide-react";
 
 interface HeroSectionProps {
@@ -12,100 +14,89 @@ export default function HeroSection({
   onSearch,
 }: HeroSectionProps) {
   return (
-    <div
-      className="w-full py-16 md:py-20 bg-gradient-to-br from-blue-50 via-white to-indigo-50 
-                  bg-no-repeat bg-right bg-cover relative overflow-hidden"
-      style={{
-        backgroundImage: "url('/images/hero.jpeg')",
-        backgroundBlendMode: "overlay",
-        backgroundPosition: "center right",
-      }}
-    >
-      <div className="absolute inset-0 bg-black/10"></div>
+    <section className="relative w-full min-h-[75vh] flex items-center justify-center px-6">
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('/images/hero.jpeg')" }}
+      />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
-        {/* Main Heading - Professional Size */}
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 tracking-tight leading-tight">
-          Find Your{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">
-            Dream Job
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/40 backdrop-blur-[2px]" />
+
+      <div className="relative z-10 w-full max-w-4xl text-center">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold text-white leading-tight drop-shadow-xl">
+          Find the opportunities
+          <span className="block mt-2 text-blue-300 font-bold">
+            that shape your future
           </span>
         </h1>
 
-        {/* Subtitle - Clean & Readable */}
-        <p className="mt-4 text-lg md:text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
-          Search thousands of jobs from top companies — all in one place.
+        <p className="mt-4 text-lg md:text-xl text-gray-200 max-w-xl mx-auto drop-shadow">
+          Discover the best jobs tailored for your skills, industry, and goals.
         </p>
 
-        {/* PROFESSIONAL SEARCH BAR */}
-        <div className="mt-10 max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-3 
-                          transition-all duration-300 hover:shadow-2xl hover:border-gray-300">
-            <div className="flex flex-col lg:flex-row gap-3">
-              {/* Job Title / Keywords */}
+        <div className="mt-10">
+          <div
+            className="backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl 
+                          p-4 rounded-3xl max-w-3xl mx-auto"
+          >
+            <div className="flex flex-col lg:flex-row gap-4">
               <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 w-5" />
                 <input
                   type="text"
-                  placeholder="Job title, keywords, or company"
-                  className="w-full pl-12 pr-4 py-4 text-base text-gray-800 bg-gray-50 rounded-xl
-                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white
-                             transition-all duration-200 placeholder:text-gray-500"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Job title or keywords"
+                  className="w-full pl-12 pr-4 py-3 bg-white/20 text-white placeholder-white/60 
+                             rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300"
                   onKeyDown={(e) => e.key === "Enter" && onSearch?.()}
                 />
               </div>
 
-              {/* Location */}
               <div className="relative flex-1 lg:max-w-xs">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" />
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 w-5" />
                 <input
                   type="text"
-                  placeholder="City, state, or Remote"
-                  className="w-full pl-12 pr-4 py-4 text-base text-gray-800 bg-gray-50 rounded-xl
-                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white
-                             transition-all duration-200 placeholder:text-gray-500"
+                  placeholder="Location"
+                  className="w-full pl-12 pr-4 py-3 bg-white/20 text-white placeholder-white/60 
+                             rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300"
                 />
               </div>
 
-              {/* Search Button - Perfect Size */}
               <button
                 onClick={onSearch}
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold
-                           text-base rounded-xl hover:from-blue-700 hover:to-indigo-700
-                           active:scale-98 transition-all duration-200 shadow-lg hover:shadow-xl
-                           flex items-center justify-center gap-2"
+                className="px-8 py-3 bg-blue-500/90 hover:bg-blue-600 text-white rounded-xl 
+                           transition-all shadow-lg backdrop-blur-lg whitespace-nowrap"
               >
-                <Search className="w-5 h-5" />
-                Search Jobs
+                Search
               </button>
             </div>
           </div>
 
-          {/* Popular Tags - Subtle & Professional */}
-          <div className="mt-6 flex flex-wrap justify-center gap-2">
-            {["Remote Jobs", "Full Time", "React Developer", "Senior", "Startup"].map((tag) => (
-              <button
-                key={tag}
-                onClick={() => setSearchTerm(tag)}
-                className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-full
-                           hover:bg-blue-100 hover:text-blue-700 transition-all duration-200
-                           border border-gray-200"
-              >
-                {tag}
-              </button>
-            ))}
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            {["Remote", "Full Time", "React Developer", "UI/UX", "Backend"].map(
+              (tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setSearchTerm(tag)}
+                  className="px-4 py-2 bg-white/20 border border-white/30 text-white 
+                           backdrop-blur-md text-sm rounded-full hover:bg-white/30 transition-all"
+                >
+                  {tag}
+                </button>
+              )
+            )}
           </div>
         </div>
 
-        {/* Trust Indicator */}
-        <div className="mt-12">
-          <p className="text-gray-600 text-sm">
-            Trusted by <span className="font-bold text-blue-600">10,000+</span> job seekers every month
+        <div className="mt-10">
+          <p className="text-gray-200 text-sm">
+            Trusted by{" "}
+            <span className="text-blue-300 font-semibold">15,000+</span>{" "}
+            professionals worldwide
           </p>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
