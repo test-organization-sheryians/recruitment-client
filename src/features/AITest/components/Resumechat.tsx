@@ -139,7 +139,7 @@ export default function ResumeChat() {
   // -----------------------------
   const Avatar = ({ isAI = false }: { isAI?: boolean }) => (
     <div
-    className={`shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
+     className={`shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
   isAI ? "bg-purple-100" : "bg-blue-100"
 }`}
     >

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Pencil, Trash2, Loader2 } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useQueryClient } from "@tanstack/react-query";
 
