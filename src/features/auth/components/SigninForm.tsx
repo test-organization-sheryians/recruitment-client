@@ -46,6 +46,7 @@ const SigninForm = () => {
         };
       }) => {
         Cookies.set("access", res.data.token);
+         localStorage.setItem("token", res.data.token);  //<<this change
 
         dispatch(
           setUser({

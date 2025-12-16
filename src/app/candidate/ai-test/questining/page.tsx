@@ -5,7 +5,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useActiveQuestions } from "@/features/test/hooks/useActivation";
 import { useEvaluateAnswers } from "@/features/AITest/hooks/aiTestApi";
+<<<<<<< HEAD
 import { useSubmitResult } from "../../../../features/";
+=======
+import { useSubmitResult } from "@/features/test/hooks/useResultTest";
+>>>>>>> merged/aish-ai
 
 import Editor from "@monaco-editor/react";
 import { KeyMod, KeyCode } from "monaco-editor";
@@ -217,6 +221,7 @@ export default function UniversalInterviewPage() {
         </div>
       </div>
 
+<<<<<<< HEAD
       <div className="p-6 max-w-7xl mx-auto">
         <div ref={ref} className="flex min-h-[70vh] bg-white rounded-2xl shadow-lg overflow-hidden">
           {isMCQ ? (
@@ -240,6 +245,58 @@ export default function UniversalInterviewPage() {
                 </button>
               ))}
             </div>
+=======
+      <div className="p-6 max-w-8xl mx-auto">
+        <div ref={ref} className="flex min-h-[70vh] bg-white rounded-2xl shadow-lg overflow-hidden">
+          {isMCQ ? (
+          <div className="w-full max-w-xl mx-auto p-6 space-y-3">
+  {(current as MCQQuestion).options.map((opt, i) => {
+    const optionLabel = String.fromCharCode(65 + i); // A, B, C, D
+
+    return (
+      <label
+        key={i}
+        className={`flex items-center gap-4 p-3 rounded-md border cursor-pointer transition
+          ${
+            text === opt
+              ? "border-indigo-600 bg-indigo-50"
+              : "border-gray-300 hover:bg-gray-50"
+          }`}
+      >
+        {/* Radio */}
+        <input
+          type="radio"
+          name="mcq"
+          checked={text === opt}
+          onChange={() => setText(opt)}
+          className="hidden"
+        />
+
+        {/* Custom radio circle */}
+        <div
+          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center
+            ${
+              text === opt
+                ? "border-indigo-600"
+                : "border-gray-400"
+            }`}
+        >
+          {text === opt && (
+            <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full" />
+          )}
+        </div>
+
+        {/* Option text */}
+        <span className="text-sm font-medium text-gray-800">
+          <span className="mr-2 font-semibold">{optionLabel}.</span>
+          {opt}
+        </span>
+      </label>
+    );
+  })}
+</div>
+
+>>>>>>> merged/aish-ai
           ) : (
             <>
               <textarea
@@ -261,6 +318,7 @@ export default function UniversalInterviewPage() {
                 <GripVertical className="text-gray-600" />
               </div>
 
+<<<<<<< HEAD
               <div style={{ width: `${100 - width}%` }}>
                 <Editor
                   height="100%"
@@ -276,6 +334,40 @@ export default function UniversalInterviewPage() {
                   }}
                 />
               </div>
+=======
+             <div
+  style={{ width: `${100 - width}%` }}
+  className="flex flex-col border-l border-gray-700"
+>
+  {/* Header */}
+  <div className="h-10 px-4 flex items-center justify-between bg-[#1e1e1e] border-b border-gray-700">
+    <span className="text-sm font-semibold text-gray-200">
+      💻 Code Editor
+    </span>
+    <span className="text-xs text-gray-400">
+   
+    </span>
+  </div>
+
+  {/* Editor */}
+  <div className="flex-1">
+    <Editor
+      height="100%"
+      defaultLanguage="javascript"
+      value={code}
+      theme="vs-dark"
+      onChange={(v) => setCode(v ?? "")}
+      onMount={(editor) => {
+        editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyC, () => {});
+        editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyV, () => {});
+        editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyX, () => {});
+        editor.updateOptions({ contextmenu: false });
+      }}
+    />
+  </div>
+</div>
+
+>>>>>>> merged/aish-ai
             </>
           )}
         </div>
