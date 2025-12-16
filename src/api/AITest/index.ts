@@ -6,3 +6,5 @@ export const postResume = async (data: string) => {
   })
   return response.data;
 }
+
+
