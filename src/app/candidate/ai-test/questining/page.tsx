@@ -1,14 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useActiveQuestions } from "@/features/test/hooks/useActivation";
 import { useEvaluateAnswers } from "@/features/AITest/hooks/aiTestApi";
 import { useSubmitResult } from "@/features/test/hooks/useResultTest";
 
 import Editor from "@monaco-editor/react";
-import * as monaco from "monaco-editor";
 import { KeyMod, KeyCode } from "monaco-editor";
 
 import {
@@ -20,7 +19,7 @@ import {
   GripVertical,
 } from "lucide-react";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 
 interface BaseQuestion {
   question: string;
@@ -55,46 +54,37 @@ export default function UniversalInterviewPage() {
   const queryClient = useQueryClient();
 
   const { data: questions = [], isLoading } = useActiveQuestions() as {
-    data: Question[] | undefined;
+    data: Question[];
     isLoading: boolean;
   };
 
   const evaluateMutation = useEvaluateAnswers();
   const submitMutation = useSubmitResult() as any;
 
-  const [step, setStep] = useState(0);
+  const isResumeTest = questions.some((q) => q.source === "ai");
+  const isActiveTest = !isResumeTest;
 
   const testDuration = Number(localStorage.getItem("duration") ?? 0);
-  const [secondsLeft, setSecondsLeft] = useState(testDuration * 60);
 
-  useEffect(() => {
-    if (!secondsLeft) {
-      submit();
-      return;
-    }
+  const { data: secondsLeft = testDuration * 60 } = useQuery({
+    queryKey: ["test-timer"],
+    queryFn: async () => {
+      const prev = queryClient.getQueryData<number>(["test-timer"]);
+      return (prev ?? testDuration * 60) - 1;
+    },
+    refetchInterval: 1000,
+    enabled: isActiveTest && testDuration > 0,
+  });
 
-    const interval = setInterval(() => {
-      setSecondsLeft((sec) => sec - 1);
-    }, 1000);
+  if (isActiveTest && secondsLeft <= 0) submit();
 
-    return () => clearInterval(interval);
-  }, [secondsLeft]);
-
-  const timerDisplay = () => {
-    const m = Math.floor(secondsLeft / 60);
-    const s = secondsLeft % 60;
-    return `${m}:${s < 10 ? "0" : ""}${s}`;
-  };
-
-  const [answers, setAnswers] = useState<CandidateAnswer[]>(
-    questions.length > 0 ? Array(questions.length).fill({}) : []
-  );
+  const [step, setStep] = useState(0);
+  const [text, setText] = useState("");
+  const [code, setCode] = useState("");
+  const [answers, setAnswers] = useState<CandidateAnswer[]>([]);
 
   const current = questions[step];
   const isMCQ = Array.isArray((current as MCQQuestion)?.options);
-
-  const [text, setText] = useState("");
-  const [code, setCode] = useState("");
 
   const progress = questions.length
     ? ((step + 1) / questions.length) * 100
@@ -106,12 +96,6 @@ export default function UniversalInterviewPage() {
 
   const prevent = (e: any) => e.preventDefault();
 
-  const keyBlock = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((e.ctrlKey || e.metaKey) && ["c", "v", "x"].includes(e.key)) {
-      e.preventDefault();
-    }
-  };
-
   const save = () => {
     setAnswers((prev) => {
       const updated = [...prev];
@@ -122,42 +106,24 @@ export default function UniversalInterviewPage() {
 
   const next = () => {
     save();
-
-    if (step < questions.length - 1) {
-      const n = step + 1;
-      setStep(n);
-      const ans = answers[n];
-      setText(ans?.text ?? "");
-      setCode(ans?.code ?? "");
-    } else {
-      submit();
-    }
+    step < questions.length - 1 ? setStep(step + 1) : submit();
   };
 
   const prev = () => {
     save();
-
-    if (step > 0) {
-      const n = step - 1;
-      setStep(n);
-      const ans = answers[n];
-      setText(ans?.text ?? "");
-      setCode(ans?.code ?? "");
-    }
+    if (step > 0) setStep(step - 1);
   };
 
   const submit = async () => {
     const aiQ: string[] = [];
     const aiA: string[] = [];
     const fullAiAns: CandidateAnswer[] = [];
-
     const tq: string[] = [];
     const ta: ApiAnswer[] = [];
 
     questions.forEach((q, i) => {
-      const ans = answers[i];
+      const ans = answers[i] || {};
       const primary = ans.text || ans.code || "";
-
       if (q.source === "ai") {
         aiQ.push(q.question);
         aiA.push(primary);
@@ -168,7 +134,7 @@ export default function UniversalInterviewPage() {
       }
     });
 
-    if (aiQ.length > 0) {
+    if (aiQ.length) {
       const res = await evaluateMutation.mutateAsync({
         questions: aiQ,
         answers: aiA,
@@ -185,7 +151,8 @@ export default function UniversalInterviewPage() {
         })
       );
 
-      return router.push("/candidate/ai-test/result");
+      router.push("/candidate/ai-test/result");
+      return;
     }
 
     submitMutation.mutate(
@@ -203,24 +170,15 @@ export default function UniversalInterviewPage() {
         endTime: new Date().toISOString(),
         durationTaken: testDuration * 60 - secondsLeft,
       },
-      {
-        onSuccess: () => router.push("/candidate/ai-test/submitted"),
-      }
+      { onSuccess: () => router.push("/candidate/ai-test/submitted") }
     );
   };
 
-  const startDrag = useCallback(() => {
-    setDragging(true);
-    document.body.style.cursor = "col-resize";
-  }, []);
-
-  const stopDrag = useCallback(() => {
-    setDragging(false);
-    document.body.style.cursor = "default";
-  }, []);
+  const startDrag = useCallback(() => setDragging(true), []);
+  const stopDrag = useCallback(() => setDragging(false), []);
 
   const onDrag = useCallback(
-    (e: MouseEvent) => {
+    (e: React.MouseEvent) => {
       if (!dragging || !ref.current) return;
       const rect = ref.current.getBoundingClientRect();
       const w = ((e.clientX - rect.left) / rect.width) * 100;
@@ -229,146 +187,92 @@ export default function UniversalInterviewPage() {
     [dragging]
   );
 
-  if (typeof window !== "undefined") {
-    window.onmouseup = stopDrag;
-    window.onmousemove = (e) => dragging && onDrag(e);
-  }
-
-  if (isLoading)
-    return <p className="text-center p-6 text-lg">Preparing questions...</p>;
-
-  if (!questions.length)
-    return <p className="text-center p-6 text-lg">No questions found.</p>;
+  if (isLoading) return <p className="p-8 text-center">Preparing questions…</p>;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#dfe7ff] to-white">
-      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b shadow-sm">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-white">
+      <div className="sticky top-0 bg-white/90 backdrop-blur border-b">
         <div className="h-1 bg-gray-200">
-          <div
-            className="h-full bg-blue-600 transition-all"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="h-full bg-indigo-600" style={{ width: `${progress}%` }} />
         </div>
 
         <div className="px-6 py-4 flex items-center justify-between relative">
-          <button
-            onClick={prev}
-            disabled={step === 0}
-            className="w-12 h-12 rounded-full border bg-white flex items-center justify-center disabled:opacity-40 hover:bg-gray-100 transition"
-          >
+          <button onClick={prev} disabled={step === 0} className="p-2 rounded-full hover:bg-gray-100">
             <ChevronLeft />
           </button>
 
-          <div className="absolute left-1/2 -translate-x-1/2 text-center">
-            <div className="text-[13px] text-gray-500 tracking-wide">
-              Time Remaining
+          {isActiveTest && (
+            <div className="absolute left-1/2 -translate-x-1/2 font-semibold text-indigo-700">
+              ⏳ {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}
             </div>
-            <div
-              className={`font-bold text-2xl ${
-                secondsLeft < 60
-                  ? "text-red-600 animate-pulse"
-                  : "text-blue-700"
-              }`}
-            >
-              ⏳ {timerDisplay()}
-            </div>
-          </div>
+          )}
 
-          <button
-            onClick={next}
-            className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition"
-          >
+          <button onClick={next} className="p-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700">
             {step === questions.length - 1 ? <Send /> : <ChevronRight />}
           </button>
         </div>
 
-        <div className="px-6 pb-3 text-center text-gray-800 font-medium text-lg line-clamp-2">
+        <div className="px-6 pb-3 text-center font-medium text-gray-800">
           Q{step + 1}. {current.question}
         </div>
       </div>
 
-      <div className="flex-1 p-6 max-w-7xl mx-auto w-full">
-        <div
-          ref={ref}
-          className="bg-white shadow-xl border rounded-2xl flex min-h-[70vh]"
-        >
+      <div className="p-6 max-w-7xl mx-auto">
+        <div ref={ref} className="flex min-h-[70vh] bg-white rounded-2xl shadow-lg overflow-hidden">
           {isMCQ ? (
-            <div className="p-10 w-full flex justify-center">
-              <div className="space-y-4 max-w-xl w-full">
-                {(current as MCQQuestion).options.map((opt, i) => (
-                  <label
-                    key={i}
-                    onClick={() => setText(opt)}
-                    className={`block p-4 pl-12 rounded-xl border cursor-pointer relative transition-all ${
-                      text === opt
-                        ? "border-blue-600 bg-blue-50 ring-2 ring-blue-300"
-                        : "border-gray-300 hover:bg-blue-50"
-                    }`}
-                  >
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                      {text === opt ? (
-                        <CheckCircle2 className="text-blue-600" />
-                      ) : (
-                        <Circle className="text-gray-400" />
-                      )}
-                    </div>
-                    <span className="text-gray-700">{opt}</span>
-                  </label>
-                ))}
-              </div>
+            <div className="w-full p-10 grid gap-4 max-w-xl mx-auto">
+              {(current as MCQQuestion).options.map((opt, i) => (
+                <button
+                  key={i}
+                  onClick={() => setText(opt)}
+                  className={`flex items-center gap-3 p-4 rounded-xl border text-left transition ${
+                    text === opt
+                      ? "border-indigo-600 bg-indigo-50"
+                      : "border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  {text === opt ? (
+                    <CheckCircle2 className="text-indigo-600" />
+                  ) : (
+                    <Circle className="text-gray-400" />
+                  )}
+                  {opt}
+                </button>
+              ))}
             </div>
           ) : (
             <>
-              <div
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onPaste={prevent}
+                onCopy={prevent}
+                onCut={prevent}
+                className="p-6 text-sm outline-none resize-none bg-gray-50"
                 style={{ width: `${width}%` }}
-                className="border-r bg-gray-50 flex flex-col"
-              >
-                <textarea
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  onPaste={prevent}
-                  onCopy={prevent}
-                  onCut={prevent}
-                  onKeyDown={keyBlock}
-                  placeholder="Explain your thought process..."
-                  className="flex-1 p-6 outline-none resize-none bg-transparent"
-                />
-              </div>
+              />
 
               <div
-                className="w-2 bg-gray-200 hover:bg-blue-400 cursor-col-resize relative"
+                className="w-2 bg-gray-200 hover:bg-indigo-400 cursor-col-resize flex items-center justify-center"
                 onMouseDown={startDrag}
+                onMouseUp={stopDrag}
+                onMouseMove={onDrag}
               >
-                <GripVertical className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
+                <GripVertical className="text-gray-600" />
               </div>
 
-              <div
-                style={{ width: `${100 - width}%` }}
-                className="bg-gray-900 flex flex-col"
-              >
-                <div className="p-3 bg-gray-800 border-b border-gray-700">
-                  <h2 className="text-white text-sm font-semibold tracking-wide">
-                    Write your code here
-                  </h2>
-                </div>
-
+              <div style={{ width: `${100 - width}%` }}>
                 <Editor
                   height="100%"
                   defaultLanguage="javascript"
                   value={code}
-                  onChange={(v) => setCode(v ?? "")}
                   theme="vs-dark"
-                  onMount={(editor: monaco.editor.IStandaloneCodeEditor) => {
-                    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyV, () => {});
+                  onChange={(v) => setCode(v ?? "")}
+                  onMount={(editor) => {
                     editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyC, () => {});
+                    editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyV, () => {});
                     editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyX, () => {});
                     editor.updateOptions({ contextmenu: false });
-                    editor.getDomNode()?.addEventListener("paste", prevent);
-                  }}
-                  options={{
-                    minimap: { enabled: false },
-                    wordWrap: "on",
-                    fontSize: 15,
                   }}
                 />
               </div>
