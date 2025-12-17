@@ -25,9 +25,11 @@ const Sidebar: React.FC<SidebarProps> = () => {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
-    if (href === "/admin/dashboard") {
-      return pathname === "/admin" || pathname.startsWith("/admin/dashboard");
-    }
+    //for dashboard
+    if (href === "/admin") {
+    return pathname === "/admin";
+  }
+  //for other routes
     return pathname.startsWith(href);
   };
 
