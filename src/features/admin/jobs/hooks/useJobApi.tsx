@@ -13,12 +13,13 @@ export const useGetJobs = () => {
   });
 };
 
-export const useGetJob = (jobId: string) => {
-  return useQuery({
+
+export const useGetJob  = (jobId?: string) => {
+  return useQuery<Job>({
     queryKey: ["job", jobId],
-    queryFn: () => api.getJobs(jobId),
-    retry: 0,
+    queryFn: () => api.getJobById(jobId!),
     enabled: !!jobId,
+    retry: 0,
   });
 };
 
@@ -54,15 +55,6 @@ export const useGetJobsByCategory = (categoryId: string | null) => {
     
     queryFn: () => categoryId ? api.getJobsByCategory(categoryId) : Promise.resolve([]),
     enabled: !!categoryId,
-    retry: 0,
-  });
-};
-
-export const useGetJobById = (id?: string) => {
-  return useQuery<Job, Error>({
-    queryKey: ["job", id],
-    queryFn: () => getJobById(id!),
-    enabled: !!id, // only fetch if id exists
     retry: 0,
   });
 };
