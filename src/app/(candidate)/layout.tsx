@@ -1,4 +1,4 @@
-import Navbar from "@/components/Navbar";
+// import Navbar from "@/components/Navbar";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import React from "react";
@@ -17,7 +17,7 @@ const CandidateLayout = async ({ children }: { children: React.ReactNode }) => {
   }
   return (
     <div>
-      <Navbar />
+      {/* <Navbar /> */}
       {children}
     </div>
   );

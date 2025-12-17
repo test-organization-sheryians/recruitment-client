@@ -4,6 +4,47 @@ import { useRouter } from "next/navigation";
 import JobForm from "../../categories/components/JobForm";
 import { useGetJob, useUpdateJob } from "@/features/admin/jobs/hooks/useJobApi";
 
+<<<<<<< HEAD
+=======
+export default function UpdateJob({ jobId, onJobUpdated }: { jobId: string; onJobUpdated?: () => void }) {
+  const router = useRouter();
+  const [job, setJob] = useState<Job>();
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchJob();
+  },);
+
+  const fetchJob = async () => {
+    const res = await getJobs(jobId);
+    if (res.success) setJob(res.data);
+  };
+
+  const handleSubmit = async (data: { [key: string]: string | string[] }) => {
+    setLoading(true);
+
+    const formDataObj = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (key === "skills") {
+        (value as string[]).forEach((id: string) =>
+          formDataObj.append("skills[]", id)
+        );
+      } else {
+        formDataObj.append(key, value as string);
+      }
+    });
+
+    const res = await updateJob(jobId, formDataObj);
+    setLoading(false);
+
+    if (res.success) {
+      onJobUpdated?.();
+      router.refresh();
+    }
+  };
+
+  if (!job) return <p className="p-4">Loading...</p>;
+>>>>>>> hoja/yr
 interface Skill {
   _id: string;
   name: string;

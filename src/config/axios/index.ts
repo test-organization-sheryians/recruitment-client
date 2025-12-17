@@ -1,81 +1,115 @@
 // config/axios.ts
 import axios from "axios";
 import Cookies from "js-cookie";
+import { toast } from "react-toastify";
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const publicRoutes = ["/login", "/register", "/"] as const;
+const publicRoutes = ["/", "/login", "/register"];
 
-// Updated: Check if path starts with these instead of exact match
 const isPublicRoute = (path: string) => {
   if (!path) return false;
 
   return (
+<<<<<<< HEAD
     publicRoutes.includes(path as typeof publicRoutes[number]) ||
     path.includes("/user-verification/") ||
+=======
+    publicRoutes.includes(path) ||
+>>>>>>> hoja/yr
     path.includes("/user-verification")
   );
 };
 
 const api = axios.create({
   baseURL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
   withCredentials: true,
   validateStatus: (status) => status >= 200 && status < 300,
 });
 
 api.interceptors.response.use(
   (response) => response,
+
   (error) => {
+<<<<<<< HEAD
     const status = error.response?.status;
     const responseData = error.response?.data;
     const currentPath =
       typeof window !== "undefined" ? window.location.pathname : "";
+=======
+    const status = error?.response?.status;
+    const data = error?.response?.data;
+
+    const path =
+      typeof window !== "undefined" ? window.location.pathname : "/";
+>>>>>>> hoja/yr
 
     let message = "Something went wrong";
 
-    if (responseData) {
-      if (typeof responseData === "string") {
-        message = responseData.slice(0, 200);
-      } else if (responseData.message) {
-        message = responseData.message;
-      } else if (responseData.error) {
-        message = responseData.error;
-      }
+    if (data) {
+      message =
+        typeof data === "string"
+          ? data.slice(0, 200)
+          : data.message || data.error || message;
     }
 
+<<<<<<< HEAD
     // ✅ Keep the GOOD version
     const publicRoute = isPublicRoute(currentPath);
     console.log(publicRoute, currentPath);
+=======
+    const isPublic = isPublicRoute(path);
+
+   
+    if (status === 403 && message.toLowerCase().includes("not enrolled")) {
+      toast.error("❌ You are not enrolled for this test.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+
+      return Promise.reject(new Error("You are not enrolled for this test."));
+    }
+
+>>>>>>> hoja/yr
 
     if (
-      !publicRoute &&
-      (status === 401 ||
-        status === 403 ||
-        (message &&
-          (message.toLowerCase().includes("unauthorized") ||
-            message.toLowerCase().includes("token expired") ||
-            message.toLowerCase().includes("unauthenticated") ||
-            message.toLowerCase().includes("invalid token"))))
+      !isPublic &&
+      status === 401 &&
+      ["unauthorized", "token expired", "invalid token", "unauthenticated"]
+        .some((key) => message.toLowerCase().includes(key))
     ) {
-      Cookies.remove("refreshToken");
       Cookies.remove("accessToken");
+<<<<<<< HEAD
 
       if (typeof window !== "undefined") {
         // window.location.href = "/login";
       }
+=======
+      Cookies.remove("refreshToken");
+
+      toast.error("🔒 Session expired. Please login again.", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 2000);
+>>>>>>> hoja/yr
 
       return Promise.reject(
         new Error("Session expired. Redirecting to login...")
       );
     }
 
-    if (error.response) {
-      error.message = message;
-    }
+   
+    toast.error(message, {
+      position: "top-right",
+      autoClose: 3000,
+    });
 
+    error.message = message;
     return Promise.reject(error);
   }
 );

@@ -1,5 +1,5 @@
 import { QueryClient, useMutation, useQuery, useQueryClient  } from "@tanstack/react-query";
-import * as api from "@/api";
+import * as api from "@/api/index"
 
 export const useGetAllSkills = () => {
   return useQuery({
@@ -17,7 +17,7 @@ export const useGetSkill = (id?: string) => {
     retry: 0,
   });
 };
-
+ 
 const invalidateSkills = (queryClient:QueryClient) => {
   queryClient.invalidateQueries({ queryKey: ["skills"] });
   queryClient.invalidateQueries({ queryKey: ["skill"] });
