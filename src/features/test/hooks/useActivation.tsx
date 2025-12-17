@@ -1,9 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import * as api from "@/api";
 
-export const useActiveQuestions = () =>
-  useQuery<api.RawQuestion[]>({
+export const useActiveQuestions = () => {
+  return useQuery({
     queryKey: ["active-questions"],
-    queryFn: () => [],
+
+  
+    queryFn: async () => {
+      return [];
+    },
+
+
+    staleTime: Infinity,
     enabled: false,
   });
+};

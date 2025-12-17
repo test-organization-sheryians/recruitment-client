@@ -19,22 +19,27 @@ import {
   GripVertical,
 } from "lucide-react";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+
+/* ================= TYPES ================= */
 
 interface BaseQuestion {
   question: string;
+  difficulty?: string;
+  explanation?: string;
   source?: "ai" | "test";
 }
 
 interface MCQQuestion extends BaseQuestion {
   options: string[];
+  correct?: number;
 }
 
-interface CodeTextQuestion extends BaseQuestion {
+interface TextQuestion extends BaseQuestion {
   options?: never;
 }
 
-type Question = MCQQuestion | CodeTextQuestion;
+type Question = MCQQuestion | TextQuestion;
 
 interface CandidateAnswer {
   text?: string;
@@ -45,9 +50,18 @@ interface ApiAnswer {
   text: string;
 }
 
+/* ================= CONSTANTS ================= */
+
 const MIN = 25;
 const MAX = 75;
 const INIT = 50;
+
+/* ================= HELPERS ================= */
+
+const isMCQ = (q?: Question): q is MCQQuestion =>
+  !!q && Array.isArray((q as MCQQuestion).options);
+
+/* ================= PAGE ================= */
 
 export default function UniversalInterviewPage() {
   const router = useRouter();
@@ -59,12 +73,26 @@ export default function UniversalInterviewPage() {
   };
 
   const evaluateMutation = useEvaluateAnswers();
-  const submitMutation = useSubmitResult() as any;
+  const submitMutation = useSubmitResult();
+
+  const [step, setStep] = useState(0);
+  const [text, setText] = useState("");
+  const [code, setCode] = useState("");
+  const [answers, setAnswers] = useState<CandidateAnswer[]>([]);
+
+  const current = questions[step];
+
+  /* ================= TEST TYPE ================= */
 
   const isResumeTest = questions.some((q) => q.source === "ai");
   const isActiveTest = !isResumeTest;
 
-  const testDuration = Number(localStorage.getItem("duration") ?? 0);
+  /* ================= TIMER ================= */
+
+  const testDuration =
+    typeof window !== "undefined"
+      ? Number(localStorage.getItem("duration") ?? 0)
+      : 0;
 
   const { data: secondsLeft = testDuration * 60 } = useQuery({
     queryKey: ["test-timer"],
@@ -76,31 +104,26 @@ export default function UniversalInterviewPage() {
     enabled: isActiveTest && testDuration > 0,
   });
 
-  if (isActiveTest && secondsLeft <= 0) submit();
+  /* ⛔ NEVER submit inside render */
+  useEffect(() => {
+    if (isActiveTest && secondsLeft <= 0) submit();
+  }, [secondsLeft]);
 
-  const [step, setStep] = useState(0);
-  const [text, setText] = useState("");
-  const [code, setCode] = useState("");
-  const [answers, setAnswers] = useState<CandidateAnswer[]>([]);
+  /* ================= RESTORE ANSWER ================= */
 
-  const current = questions[step];
-  const isMCQ = Array.isArray((current as MCQQuestion)?.options);
+  useEffect(() => {
+    const prev = answers[step];
+    setText(prev?.text ?? "");
+    setCode(prev?.code ?? "");
+  }, [step]);
 
-  const progress = questions.length
-    ? ((step + 1) / questions.length) * 100
-    : 0;
-
-  const ref = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(INIT);
-  const [dragging, setDragging] = useState(false);
-
-  const prevent = (e: any) => e.preventDefault();
+  /* ================= SAVE ================= */
 
   const save = () => {
     setAnswers((prev) => {
-      const updated = [...prev];
-      updated[step] = isMCQ ? { text } : { text, code };
-      return updated;
+      const copy = [...prev];
+      copy[step] = isMCQ(current) ? { text } : { text, code };
+      return copy;
     });
   };
 
@@ -114,6 +137,8 @@ export default function UniversalInterviewPage() {
     if (step > 0) setStep(step - 1);
   };
 
+
+
   const submit = async () => {
     const aiQ: string[] = [];
     const aiA: string[] = [];
@@ -123,17 +148,19 @@ export default function UniversalInterviewPage() {
 
     questions.forEach((q, i) => {
       const ans = answers[i] || {};
-      const primary = ans.text || ans.code || "";
+      const value = ans.text || ans.code || "";
+
       if (q.source === "ai") {
         aiQ.push(q.question);
-        aiA.push(primary);
+        aiA.push(value);
         fullAiAns.push(ans);
       } else {
         tq.push(q.question);
-        ta.push({ text: primary });
+        ta.push({ text: value });
       }
     });
 
+    /* AI TEST */
     if (aiQ.length) {
       const res = await evaluateMutation.mutateAsync({
         questions: aiQ,
@@ -155,6 +182,7 @@ export default function UniversalInterviewPage() {
       return;
     }
 
+  
     submitMutation.mutate(
       {
         attemptId: localStorage.getItem("attemptId") ?? "",
@@ -170,12 +198,25 @@ export default function UniversalInterviewPage() {
         endTime: new Date().toISOString(),
         durationTaken: testDuration * 60 - secondsLeft,
       },
-      { onSuccess: () => router.push("/candidate/ai-test/submitted") }
+      {
+        onSuccess: () => router.push("/candidate/ai-test/submitted"),
+      }
     );
   };
 
-  const startDrag = useCallback(() => setDragging(true), []);
-  const stopDrag = useCallback(() => setDragging(false), []);
+
+
+  if (isLoading)
+    return <p className="p-8 text-center">Preparing questions…</p>;
+
+  if (!current)
+    return <p className="p-8 text-center">No questions found</p>;
+
+  const progress = ((step + 1) / questions.length) * 100;
+
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(INIT);
+  const [dragging, setDragging] = useState(false);
 
   const onDrag = useCallback(
     (e: React.MouseEvent) => {
@@ -187,55 +228,55 @@ export default function UniversalInterviewPage() {
     [dragging]
   );
 
-  if (isLoading) return <p className="p-8 text-center">Preparing questions…</p>;
+  const prevent = (e: any) => e.preventDefault();
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-white">
       <div className="sticky top-0 bg-white/90 backdrop-blur border-b">
         <div className="h-1 bg-gray-200">
-          <div className="h-full bg-indigo-600" style={{ width: `${progress}%` }} />
+          <div
+            className="h-full bg-indigo-600"
+            style={{ width: `${progress}%` }}
+          />
         </div>
 
         <div className="px-6 py-4 flex items-center justify-between relative">
-          <button onClick={prev} disabled={step === 0} className="p-2 rounded-full hover:bg-gray-100">
+          <button onClick={prev} disabled={step === 0}>
             <ChevronLeft />
           </button>
 
           {isActiveTest && (
-            <div className="absolute left-1/2 -translate-x-1/2 font-semibold text-indigo-700">
-              ⏳ {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}
+            <div className="absolute left-1/2 -translate-x-1/2 font-semibold">
+              ⏳ {Math.floor(secondsLeft / 60)}:
+              {String(secondsLeft % 60).padStart(2, "0")}
             </div>
           )}
 
-          <button onClick={next} className="p-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700">
+          <button onClick={next}>
             {step === questions.length - 1 ? <Send /> : <ChevronRight />}
           </button>
         </div>
 
-        <div className="px-6 pb-3 text-center font-medium text-gray-800">
+        <div className="px-6 pb-3 text-center font-medium">
           Q{step + 1}. {current.question}
         </div>
       </div>
 
       <div className="p-6 max-w-7xl mx-auto">
-        <div ref={ref} className="flex min-h-[70vh] bg-white rounded-2xl shadow-lg overflow-hidden">
-          {isMCQ ? (
+        <div ref={ref} className="flex min-h-[70vh] bg-white rounded-2xl shadow">
+          {isMCQ(current) ? (
             <div className="w-full p-10 grid gap-4 max-w-xl mx-auto">
-              {(current as MCQQuestion).options.map((opt, i) => (
+              {current.options.map((opt, i) => (
                 <button
                   key={i}
                   onClick={() => setText(opt)}
-                  className={`flex items-center gap-3 p-4 rounded-xl border text-left transition ${
-                    text === opt
-                      ? "border-indigo-600 bg-indigo-50"
-                      : "border-gray-300 hover:bg-gray-50"
+                  className={`p-4 border rounded-xl flex gap-3 ${
+                    text === opt ? "border-indigo-600 bg-indigo-50" : ""
                   }`}
                 >
-                  {text === opt ? (
-                    <CheckCircle2 className="text-indigo-600" />
-                  ) : (
-                    <Circle className="text-gray-400" />
-                  )}
+                  {text === opt ? <CheckCircle2 /> : <Circle />}
                   {opt}
                 </button>
               ))}
@@ -248,17 +289,17 @@ export default function UniversalInterviewPage() {
                 onPaste={prevent}
                 onCopy={prevent}
                 onCut={prevent}
-                className="p-6 text-sm outline-none resize-none bg-gray-50"
                 style={{ width: `${width}%` }}
+                className="p-6 resize-none bg-gray-50"
               />
 
               <div
-                className="w-2 bg-gray-200 hover:bg-indigo-400 cursor-col-resize flex items-center justify-center"
-                onMouseDown={startDrag}
-                onMouseUp={stopDrag}
+                className="w-2 cursor-col-resize"
+                onMouseDown={() => setDragging(true)}
+                onMouseUp={() => setDragging(false)}
                 onMouseMove={onDrag}
               >
-                <GripVertical className="text-gray-600" />
+                <GripVertical />
               </div>
 
               <div style={{ width: `${100 - width}%` }}>
