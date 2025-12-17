@@ -54,7 +54,10 @@ const Navbar = () => {
 
   return (
     <nav className="w-full border-b bg-white px-6 py-4 flex items-center justify-between relative">
-      <h1 className="text-2xl font-bold tracking-wide">HRECT.</h1>
+      {/* FIX 1: Wrapped Logo in Link */}
+      <Link href="/">
+        <h1 className="text-2xl font-bold tracking-wide cursor-pointer">HRECT.</h1>
+      </Link>
 
       <div className="hidden md:flex items-center gap-6">
         <button className="relative" onClick={() => setOpenNotif(!openNotif)}>
@@ -88,8 +91,10 @@ const Navbar = () => {
               </div>
 
               <ul className="mt-3 space-y-3">
+                {/* FIX 2: Added onClick to close popup */}
                 <Link
                   href="/profile"
+                  onClick={() => setOpenProfile(false)}
                   className="flex items-center gap-3 text-gray-700 hover:text-black"
                 >
                   <User size={18} /> My Profile
@@ -144,7 +149,12 @@ const Navbar = () => {
           </div>
 
           <div className="flex flex-col gap-3 text-gray-700">
-            <Link href="/profile" className="flex items-center gap-2">
+             {/* Optional Fix: Close mobile menu on click too */}
+            <Link 
+                href="/profile" 
+                onClick={() => setOpenMenu(false)}
+                className="flex items-center gap-2"
+            >
               <User size={18} /> My Profile
             </Link>
 
