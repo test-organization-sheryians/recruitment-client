@@ -11,12 +11,9 @@ const isPublicRoute = (path: string) => {
   if (!path) return false;
 
   return (
-<<<<<<< HEAD
     publicRoutes.includes(path as typeof publicRoutes[number]) ||
     path.includes("/user-verification/") ||
-=======
     publicRoutes.includes(path) ||
->>>>>>> hoja/yr
     path.includes("/user-verification")
   );
 };
@@ -32,18 +29,15 @@ api.interceptors.response.use(
   (response) => response,
 
   (error) => {
-<<<<<<< HEAD
-    const status = error.response?.status;
+    // const status = error.response?.status;
     const responseData = error.response?.data;
     const currentPath =
       typeof window !== "undefined" ? window.location.pathname : "";
-=======
     const status = error?.response?.status;
     const data = error?.response?.data;
 
     const path =
       typeof window !== "undefined" ? window.location.pathname : "/";
->>>>>>> hoja/yr
 
     let message = "Something went wrong";
 
@@ -54,11 +48,9 @@ api.interceptors.response.use(
           : data.message || data.error || message;
     }
 
-<<<<<<< HEAD
     // ✅ Keep the GOOD version
     const publicRoute = isPublicRoute(currentPath);
     console.log(publicRoute, currentPath);
-=======
     const isPublic = isPublicRoute(path);
 
    
@@ -71,7 +63,6 @@ api.interceptors.response.use(
       return Promise.reject(new Error("You are not enrolled for this test."));
     }
 
->>>>>>> hoja/yr
 
     if (
       !isPublic &&
@@ -80,12 +71,10 @@ api.interceptors.response.use(
         .some((key) => message.toLowerCase().includes(key))
     ) {
       Cookies.remove("accessToken");
-<<<<<<< HEAD
 
       if (typeof window !== "undefined") {
         // window.location.href = "/login";
       }
-=======
       Cookies.remove("refreshToken");
 
       toast.error("🔒 Session expired. Please login again.", {
@@ -96,7 +85,6 @@ api.interceptors.response.use(
       setTimeout(() => {
         window.location.href = "/login";
       }, 2000);
->>>>>>> hoja/yr
 
       return Promise.reject(
         new Error("Session expired. Redirecting to login...")

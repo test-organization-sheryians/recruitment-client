@@ -27,12 +27,9 @@ export * from "./experience/deleteExperience"
 export * from "./experience/getCandidateExperience"
 export * from "./experience/getSingleExperience"
 export * from "./experience/updateExperience"
-<<<<<<< HEAD
 export * from "./resumeExtract"
-=======
 export * from "./AITest/evaluteAns"
 export * from "./AITest/questionGen"
->>>>>>> hoja/yr
 export * from "./users/getAllUsers";
 export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
