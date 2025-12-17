@@ -32,9 +32,10 @@ export interface Job {
 
 interface JobCardProps {
   job: Job;
+
 }
 
-export default function JobCard({ job }: JobCardProps) {
+export default function JobCard({ job  }: JobCardProps) {
   const router = useRouter();
   const applyJobMutation = useApplyJob();
   const toast = useToast();
@@ -80,6 +81,9 @@ export default function JobCard({ job }: JobCardProps) {
     }
   );
 };
+
+
+
 
 
   return (
@@ -161,12 +165,7 @@ export default function JobCard({ job }: JobCardProps) {
     e.stopPropagation();
     handleApply();
   }}
-  className={`px-6 py-2.5 text-white font-medium text-sm rounded-lg ${
-    isExpired
-      ? "bg-gray-400 cursor-not-allowed"
-      : job.applied
-      ? "bg-gray-400 cursor-not-allowed"
-      : "bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+  className={`px-6 py-2.5 text-white font-medium text-sm rounded-lg ${isExpired? "bg-gray-400 cursor-not-allowed": job.applied? "bg-gray-400 cursor-not-allowed": "bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
   }`}
 >
   {job.applied
