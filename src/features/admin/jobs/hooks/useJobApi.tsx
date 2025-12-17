@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as api from "@/api";
 import { Job } from "@/types/Job";
-import { getJobById } from "@/api";
+// import { getJobById } from "@/api";
 
     
 
@@ -14,14 +14,15 @@ export const useGetJobs = () => {
 };
 
 
-export const useGetJob  = (jobId?: string) => {
-  return useQuery<Job>({
-    queryKey: ["job", jobId],
-    queryFn: () => api.getJobById(jobId!),
-    enabled: !!jobId,
+export const useGetJobById = (id?: string) => {
+  return useQuery<Job, Error>({
+    queryKey: ["job", id],
+    queryFn: () => api.getJobById(id!),
+    enabled: !!id,
     retry: 0,
   });
 };
+
 
 export const useCreateJob = () => {
   return useMutation({

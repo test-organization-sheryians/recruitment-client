@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import JobForm from "../../categories/components/JobForm"
-import { useGetJob, useUpdateJob } from "@/features/admin/jobs/hooks/useJobApi"
+import { useGetJobById, useUpdateJob } from "@/features/admin/jobs/hooks/useJobApi"
 
 interface Skill {
   _id: string
@@ -36,7 +36,7 @@ export default function UpdateJob({
   const router = useRouter()
 
   // Fetch single job by ID
-  const { data: job, isLoading, isError } = useGetJob(jobId)
+  const { data: job, isLoading, isError } = useGetJobById(jobId)
 
   // 🔥 Mutation using your centralized "useUpdateJob"
   const { mutate: updateJob, isPending } = useUpdateJob()
