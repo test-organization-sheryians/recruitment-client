@@ -1,6 +1,6 @@
 import api from "@/config/axios";
 
-export const enRolltest = async (data: any) => {
+export const enRolltest = async (data: object) => {
   const response = await api.post("/api/enrollments", data);
   return response.data;
 }
