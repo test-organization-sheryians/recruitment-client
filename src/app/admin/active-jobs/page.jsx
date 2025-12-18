@@ -1,5 +1,5 @@
 "use client"
-import ActiveJobs from "@/components/admin/ActiveJobs"
+import ActiveJobs from "@/features/admin/jobStatus/components/ActiveJobs"
 
 export default function page() {
   return <ActiveJobs/>

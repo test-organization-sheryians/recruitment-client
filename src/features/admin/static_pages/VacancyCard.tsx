@@ -7,7 +7,13 @@ export type JobData = {
   education: string;
   skills: any[];
   salary: string;
-  location: string;
+  location: {
+    city: string;
+    state: string;
+    country: string;
+    pincode?: string;
+    _id?: string;
+  };
   applicantsCount: number;
   createdAt?: string;
 };
@@ -55,7 +61,7 @@ export default function VacancyCard({ data }: VacancyCardProps) {
         </div>
         <div className='px-2 py-1 rounded-lg bg-[#F5F7FA] text-gray-700'>
           <span className='block text-[10px] text-gray-500'>Location</span>
-          {data.location || "Remote"}
+          {data.location?.city}, {data.location?.state}
         </div>
         <div className='px-2 py-1 rounded-lg bg-[#F5F7FA] text-gray-700'>
           <span className='block text-[10px] text-gray-500'>Applied</span>

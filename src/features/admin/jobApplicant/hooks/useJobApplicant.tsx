@@ -1,5 +1,8 @@
 import * as api from "@/api";
 import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+
 
 export const useJobApplicant = (id: string) => {
     return useQuery({
@@ -9,3 +12,25 @@ export const useJobApplicant = (id: string) => {
         retry: 0,
     });
 };
+
+
+
+
+export const useBulkUpdateApplicants = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: api.BulkUpdatePayload) =>
+      api.bulkUpadteData(payload),
+
+    onSuccess: () => {
+      // 🔁 refetch applicants after update
+      queryClient.invalidateQueries({
+        queryKey: ["jobApplicant"],
+      });
+    },
+
+    retry: 0,
+  });
+
+}

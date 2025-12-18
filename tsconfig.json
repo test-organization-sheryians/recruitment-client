@@ -34,7 +34,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/app/loading"
-, "src/api/i"  ],
+, "src/api/i", "src/app/admin/active-jobs/page.jsx"  ],
   "exclude": [
     "node_modules"
   ]

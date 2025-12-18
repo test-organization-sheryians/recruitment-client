@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useJobApplicant } from "../hooks/useJobApplicant";
+import { useBulkUpdateApplicants, useJobApplicant } from "../hooks/useJobApplicant";
 import { useParams } from "next/navigation";
+import api from "@/config/axios";
+import { useToast } from "@/components/ui/Toast";
+
 
 type Size = number | string;
 
@@ -12,7 +15,6 @@ type ApplicantsListProps = {
   className?: string;
 };
 
-// Status colors map
 const statusColors: Record<string, string> = {
   applied: "bg-blue-100 text-blue-700",
   shortlisted: "bg-yellow-100 text-yellow-700",
@@ -22,7 +24,6 @@ const statusColors: Record<string, string> = {
   hired: "bg-green-100 text-green-700",
 };
 
-// Tabs list
 const tabs = [
   "all",
   "applied",
@@ -33,6 +34,8 @@ const tabs = [
   "hired",
 ];
 
+
+
 export default function ApplicantsList({
   height = 520,
   width = 840,
@@ -42,15 +45,10 @@ export default function ApplicantsList({
   const w = typeof width === "number" ? `${width}px` : width;
 
   const { id } = useParams();
-  const { data, isLoading } = useJobApplicant(id as string);
+  const { data } = useJobApplicant(id as string);
 
-  // Selected applicant IDs
   const [selectedApplicants, setSelectedApplicants] = useState<string[]>([]);
-
-  // Bulk status dropdown
   const [bulkStatus, setBulkStatus] = useState("applied");
-
-  // Active tab (default: all)
   const [activeTab, setActiveTab] = useState("all");
 
   const toggleSelect = (id: string) => {
@@ -59,7 +57,6 @@ export default function ApplicantsList({
     );
   };
 
-  // Transform backend API data
   const applicants =
     data?.applicants?.map((a: any) => ({
       id: a._id,
@@ -72,82 +69,104 @@ export default function ApplicantsList({
         day: "numeric",
       }),
       experience: `${a.totalExperienceYears}-${a.jobDetails.requiredExperience} years`,
-
-      // Keep lowercase to match backend + filters + colors
       status: a.status.toLowerCase(),
-
       resume: a.resumeUrl,
     })) || [];
 
-  // Filter applicants by tab
   const filteredApplicants =
     activeTab === "all"
       ? applicants
       : applicants.filter((a: any) => a.status === activeTab);
 
-  // Submit bulk update
+const { mutate, isPending, isError } = useBulkUpdateApplicants();
+const { success, error } = useToast();
+
   const handleSubmit = () => {
-    const payload = {
+  if (selectedApplicants.length === 0) {
+    error("Please select at least one applicant");
+    return;
+  }
+
+  // loading("Updating applicant status...");
+
+  mutate(
+    {
       applicationIds: selectedApplicants,
       status: bulkStatus,
-    };
+    },
+    {
+      onSuccess: () => {
+        success("Applicants status updated successfully");
 
-    console.log("Submitting to backend:", payload);
+        // ✅ UNCHECK ALL CHECKBOXES
+        setSelectedApplicants([]);
+      },
+      onError: () => {
+        error("Failed to update applicant status");
+      },
+    }
+  );
 
   };
 
   return (
     <div
-      className={`h-[var(--h)] w-[var(--w)] bg-white rounded-2xl shadow-md p-4 flex flex-col overflow-hidden ${className}`}
-      style={
-        {
-          ["--h"]: h,
-          ["--w"]: w,
-        } as React.CSSProperties
-      }
+      className={`bg-white rounded-2xl shadow-lg border border-gray-100 p-5 flex flex-col overflow-hidden ${className}`}
+      style={{ ["--h"]: h, ["--w"]: w } as React.CSSProperties}
     >
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 mb-4">
-        <span className="text-lg font-semibold text-gray-900">
-          Applicants Lists
-        </span>
+<div className="flex items-center justify-between gap-3 mb-4">
+  <span className="text-lg font-semibold text-gray-900">
+    Applicants Lists
+  </span>
 
-        {/* Bulk Status + Submit */}
-        <div className="flex items-center gap-3">
-          {/* Bulk Status Dropdown */}
-          <select
-            value={bulkStatus}
-            onChange={(e) => setBulkStatus(e.target.value)}
-            className="border rounded px-2 py-1"
-          >
-            <option value="applied">Applied</option>
-            <option value="shortlisted">Shortlisted</option>
-            <option value="rejected">Rejected</option>
-            <option value="forwareded">Forwareded</option>
-            <option value="interview">Interview</option>
-            <option value="hired">Hired</option>
-          </select>
+  {/* Bulk Status + Submit */}
+  <div className="flex items-center gap-3">
+    {selectedApplicants.length > 0 && (
+      <>
+        <select
+          value={bulkStatus}
+          onChange={(e) => setBulkStatus(e.target.value)}
+          className="border rounded-xl px-2 py-1"
+        >
+          <option value="applied">Applied</option>
+          <option value="shortlisted">Shortlisted</option>
+          <option value="rejected">Rejected</option>
+          <option value="forwareded">Forwareded</option>
+          <option value="interview">Interview</option>
+          <option value="hired">Hired</option>
+        </select>
 
-          {/* Submit Button */}
-          <button
-            className="rounded-xl border border-gray-200 bg-blue-600 text-white px-3 py-2 text-sm font-semibold"
-            onClick={handleSubmit}
-            disabled={selectedApplicants.length === 0}
-          >
-            Submit Selected ({selectedApplicants.length})
-          </button>
-        </div>
-      </div>
+       <button
+  className={`rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-white ${
+    isPending
+      ? "bg-blue-400 cursor-not-allowed"
+      : "bg-blue-600 hover:bg-blue-700"
+  }`}
+  onClick={handleSubmit}
+  disabled={isPending}
+>
+  {isPending
+    ? "Updating..."
+    : `Submit Selected (${selectedApplicants.length})`}
+</button>
+
+      </>
+    )}
+  </div>
+</div>
 
       {/* Tabs */}
-      <div className="flex gap-3 mb-4">
+      <div className="flex gap-2 mb-4 flex-wrap">
         {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-3 py-1 rounded-full text-sm border ${activeTab === tab
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700"
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition
+              ${
+                activeTab === tab
+                  ? "bg-blue-600 text-white shadow"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -156,11 +175,11 @@ export default function ApplicantsList({
       </div>
 
       {/* Table */}
-      <div className="overflow-y-auto border border-gray-200 rounded-xl flex-1">
+      <div className="flex-1 overflow-y-auto rounded-xl border border-gray-200">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-gray-50">
-            <tr className="grid grid-cols-[0.4fr_1.6fr_1.1fr_1fr_1fr_1fr_1fr] text-xs font-semibold text-gray-500 px-4 py-2">
-              <th>Select</th>
+          <thead className="sticky top-0 bg-gray-50 border-b">
+            <tr className="grid grid-cols-[0.4fr_1.6fr_1.1fr_1fr_1fr_1fr_1fr] px-4 py-3 text-xs font-semibold text-gray-500">
+              <th className="text-center">Select</th>
               <th>Name</th>
               <th>Role</th>
               <th>Date</th>
@@ -170,52 +189,43 @@ export default function ApplicantsList({
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y">
             {filteredApplicants.map((a: any) => (
               <tr
                 key={a.id}
-                className="grid grid-cols-[0.4fr_1.6fr_1.1fr_1fr_1fr_1fr_1fr] items-center px-4 py-3"
+                className="grid grid-cols-[0.4fr_1.6fr_1.1fr_1fr_1fr_1fr_1fr] px-4 py-3 items-center hover:bg-gray-50 transition"
               >
-                {/* Checkbox */}
                 <td className="flex justify-center">
                   <input
                     type="checkbox"
                     checked={selectedApplicants.includes(a.id)}
                     onChange={() => toggleSelect(a.id)}
-                    className="h-4 w-4 text-blue-600"
+                    className="h-4 w-4 accent-blue-600"
                   />
                 </td>
 
-                {/* Name */}
                 <td>
-                  <div className="font-semibold text-gray-900">{a.name}</div>
-                  <div className="text-xs text-gray-500">{a.email}</div>
+                  <p className="font-semibold text-gray-900">{a.name}</p>
+                  <p className="text-xs text-gray-500">{a.email}</p>
                 </td>
 
-                {/* Role */}
-                <td className="text-gray-900">{a.role}</td>
+                <td>{a.role}</td>
+                <td>{a.date}</td>
+                <td>{a.experience}</td>
 
-                {/* Date */}
-                <td className="text-gray-900">{a.date}</td>
-
-                {/* Experience */}
-                <td className="text-gray-900">{a.experience}</td>
-
-                {/* Resume */}
                 <td>
                   <a
                     href={a.resume}
                     target="_blank"
-                    className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-900"
+                    className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium hover:bg-gray-100"
                   >
                     📄 Resume
                   </a>
                 </td>
 
-                {/* Status Badge */}
                 <td>
                   <span
-                    className={`px-2 py-1 rounded font-medium ${statusColors[a.status]}`}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusColors[a.status]}`}
                   >
                     {a.status}
                   </span>
@@ -226,7 +236,7 @@ export default function ApplicantsList({
         </table>
 
         {filteredApplicants.length === 0 && (
-          <div className="text-center py-10 text-gray-500 text-sm">
+          <div className="py-12 text-center text-sm text-gray-500">
             No applicants found.
           </div>
         )}
