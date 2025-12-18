@@ -1,5 +1,10 @@
 import { QueryClient, useMutation, useQuery, useQueryClient  } from "@tanstack/react-query";
-import * as api from "@/api/index"
+import { createSkill } from "@/api/skills/createSkill";
+import { getAllSkills } from "@/api/skills/getAllSkills"
+import { deleteSkill } from "@/api/skills/deleteSkill"
+import api from "@/config/axios";
+
+
 
 export const useGetAllSkills = () => {
   return useQuery({
@@ -12,9 +17,9 @@ export const useGetAllSkills = () => {
 export const useGetSkill = (id?: string) => {
   return useQuery({
     queryKey: ["skill", id],
-    queryFn: () => api.getSkill(id!),
+    queryFn: () => api.getSkill(\id!),
     enabled: !!id,
-    retry: 0,
+    retry: 0
   });
 };
  

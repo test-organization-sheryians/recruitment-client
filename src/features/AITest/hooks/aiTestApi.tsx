@@ -5,7 +5,7 @@ import { evaluateAnswersAPI } from "@/api/AITest/evaluteAns";
 import { parseResumeAPI } from "@/api/AITest/parseResume.";
 import { generateQuestionsAPI } from "@/api/AITest/questionGen";
 
-// ---------- TYPES ----------
+
 export type GenerateQuestionsPayload  = string
 
 export interface EvaluateAnswersPayload {
@@ -13,7 +13,7 @@ export interface EvaluateAnswersPayload {
   answers: string[];
 }
 
-// ---------- HOOKS ----------
+
 
 // Parse Resume
 export const useParseResume = () => {
