@@ -36,5 +36,6 @@ export * from "./users/deleteUser";
 export * from "./tests/startTest"
 export * from "./tests/testAttempts"
 
+export * from "./tests/testInfo"
 
 

@@ -2,9 +2,11 @@
 
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useStartTest } from "@/features/test/hooks/useStartsTest";
 import { useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
+
+import { useStartTest } from "@/features/test/hooks/useStartsTest";
+import { useTestInfo } from "@/features/test/hooks/testInfo";
 
 import {
   Clock,
@@ -16,23 +18,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 
-interface TestQuestion {
-  question: string;
-  options?: string[];
-}
-
-interface StartTestResponse {
-  attemptId: string;
-  email: string;
-  testId: string;
-  startTime: string;
-  questions: {
-    test: {
-      questions: TestQuestion[];
-      duration?: number;
-    };
-  };
-}
+/* ================= PAGE ================= */
 
 export default function StartTestPage() {
   const router = useRouter();
@@ -42,22 +28,27 @@ export default function StartTestPage() {
   const queryClient = useQueryClient();
   const { mutate, isPending } = useStartTest();
 
+  /* 🔥 FETCH TEST INFO */
+  const {
+    data: test,
+    isLoading,
+    isError,
+  } = useTestInfo(testId);
+
+  /* ================= START TEST ================= */
+
   const handleStart = () => {
     const token = Cookies.get("access");
 
     if (!token) {
-      router.push("/login"); 
+      router.push("/login");
       return;
     }
-
-    localStorage.setItem("testId", testId);
 
     mutate(
       { testId },
       {
-        onSuccess: (data: unknown, variables: { testId: string }) => {
-          const response = data as StartTestResponse;
-
+        onSuccess: (response: any) => {
           localStorage.setItem("attemptId", response.attemptId);
           localStorage.setItem("email", response.email);
           localStorage.setItem("testId", response.testId);
@@ -67,40 +58,45 @@ export default function StartTestPage() {
           localStorage.setItem("duration", String(duration));
 
           const formattedQuestions =
-            response.questions?.test?.questions?.map((q) => ({
+            response.questions?.test?.questions?.map((q: any) => ({
               question: q.question.trim(),
-              options: q.options ?? null,
+              options: q.options?.length ? q.options : undefined,
               source: "test",
             })) || [];
 
-          queryClient.setQueryData(["active-questions"], formattedQuestions);
+          queryClient.setQueryData(
+            ["active-questions"],
+            formattedQuestions
+          );
 
           router.push("/candidate/ai-test/questining");
-        },
-
-        onError: () => {
-          
         },
       }
     );
   };
 
-  const test = {
-    title: "Full-Stack Developer Assessment 2025",
-    summary:
-      "This exam evaluates your skills in React, Node.js, MongoDB, TypeScript & problem-solving.",
-    category: "Technical Interview",
-    duration: 90,
-    passingScore: 75,
-    showResults: true,
-    createdBy: { name: "Sarah Johnson" },
-    createdAt: "2025-03-15T10:30:00.000Z",
-    prompt:
-      "You have 90 minutes to complete this test. Timer will not pause. Auto-saving is enabled.",
-  };
+  /* ================= UI STATES ================= */
+
+  if (isLoading) {
+    return (
+      <p className="p-10 text-center text-gray-600">
+        Loading test details…
+      </p>
+    );
+  }
+
+  if (isError || !test) {
+    return (
+      <p className="p-10 text-center text-red-500">
+        Failed to load test information
+      </p>
+    );
+  }
+
+  /* ================= HELPERS ================= */
 
   const formatDuration = (m: number) =>
-    m >= 60 ? `1h ${m - 60}m` : `${m}m`;
+    m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`;
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("en-US", {
@@ -109,80 +105,73 @@ export default function StartTestPage() {
       year: "numeric",
     });
 
+  const creatorName = test.createdBy?.name ?? "Unknown";
+  const creatorInitials = creatorName.slice(0, 2).toUpperCase();
+
+  /* ================= RENDER ================= */
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 bg-white rounded-3xl shadow-lg border overflow-hidden">
-        
         {/* LEFT SECTION */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-10 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <span className="px-4 py-1.5 bg-white rounded-full text-xs font-semibold text-blue-700">
-                {test.category}
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-10">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="px-4 py-1.5 bg-white rounded-full text-xs font-semibold text-blue-700">
+              {test.category}
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-green-700">
+              <CheckCircle className="w-3.5 h-3.5" /> Active
+            </span>
+          </div>
+
+          <h1 className="text-3xl font-bold mb-3">{test.title}</h1>
+          <p className="text-gray-700 mb-6">{test.summary}</p>
+
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            <Stat
+              icon={<Clock className="w-7 h-7 text-blue-600 mx-auto" />}
+              label="Duration"
+              value={formatDuration(test.duration)}
+            />
+            <Stat
+              icon={<Target className="w-7 h-7 text-emerald-600 mx-auto" />}
+              label="Passing"
+              value={`${test.passingScore}%`}
+            />
+            <Stat
+              icon={<Trophy className="w-7 h-7 text-purple-600 mx-auto" />}
+              label="Results"
+              value={ "Later"}
+            />
+          </div>
+
+          <div className="flex items-center gap-4 text-sm text-gray-600">
+            {/* <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
+              {creatorInitials}
+            </div> */}
+
+            {/* <div>
+              <p className="text-xs text-gray-500">Created by</p>
+              <p className="font-semibold">{creatorName}</p>
+            </div> */}
+
+            <div className="ml-auto flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-gray-500" />
+              <span className="text-xs">
+                {formatDate(test.createdAt)}
               </span>
-              <span className="flex items-center gap-1.5 text-xs text-green-700">
-                <CheckCircle className="w-3.5 h-3.5" /> Active
-              </span>
-            </div>
-
-            <h1 className="text-3xl font-bold text-gray-900 mb-3">
-              {test.title}
-            </h1>
-            <p className="text-gray-700 mb-6">{test.summary}</p>
-
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="bg-white rounded-xl p-4 text-center shadow-sm">
-                <Clock className="w-7 h-7 text-blue-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">Duration</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {formatDuration(test.duration)}
-                </p>
-              </div>
-
-              <div className="bg-white rounded-xl p-4 text-center shadow-sm">
-                <Target className="w-7 h-7 text-emerald-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">Passing</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {test.passingScore}%
-                </p>
-              </div>
-
-              <div className="bg-white rounded-xl p-4 text-center shadow-sm">
-                <Trophy className="w-7 h-7 text-purple-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">Results</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {test.showResults ? "Instant" : "Later"}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 text-sm text-gray-600">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
-                {test.createdBy.name.slice(0, 2).toUpperCase()}
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-500">Created by</p>
-                <p className="font-semibold">{test.createdBy.name}</p>
-              </div>
-
-              <div className="ml-auto flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-500" />
-                <span className="text-xs">{formatDate(test.createdAt)}</span>
-              </div>
             </div>
           </div>
         </div>
 
         {/* RIGHT SECTION */}
         <div className="p-10 flex flex-col justify-center">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="p-3 bg-amber-100 rounded-xl">
-              <AlertCircle className="w-6 h-6 text-amber-600" />
-            </div>
-
+          <div className="flex gap-4 mb-6">
+            <AlertCircle className="w-6 h-6 text-amber-600" />
             <div>
-              <h2 className="text-xl font-bold mb-2">Before You Begin</h2>
+              <h2 className="text-xl font-bold mb-2">
+                Before You Begin
+              </h2>
               <p className="text-gray-700">{test.prompt}</p>
             </div>
           </div>
@@ -203,10 +192,10 @@ export default function StartTestPage() {
             <button
               onClick={handleStart}
               disabled={isPending}
-              className={`inline-flex items-center gap-3 px-10 py-4 text-white font-bold text-lg rounded-xl shadow-lg transition-all ${
+              className={`px-10 py-4 text-white font-bold text-lg rounded-xl ${
                 isPending
                   ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:-translate-y-1"
+                  : "bg-indigo-600 hover:bg-indigo-700"
               }`}
             >
               {isPending ? "Starting..." : "Start Assessment →"}
@@ -217,3 +206,21 @@ export default function StartTestPage() {
     </div>
   );
 }
+
+/* ================= SMALL COMPONENT ================= */
+
+const Stat = ({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) => (
+  <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+    {icon}
+    <p className="text-sm text-gray-600 mt-1">{label}</p>
+    <p className="text-lg font-bold text-gray-900">{value}</p>
+  </div>
+);

@@ -338,7 +338,7 @@ export default function UniversalInterviewPage() {
               className="flex flex-col bg-gray-900"
             >
               <div className="px-4 py-2 bg-gray-800 text-gray-200 text-sm font-medium border-b border-gray-700">
-                 Code Editor
+                -m Code Editor
               </div>
 
               <Editor
