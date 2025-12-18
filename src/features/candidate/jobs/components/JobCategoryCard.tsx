@@ -58,7 +58,7 @@ export default function JobCard({ job }: JobCardProps) {
 
   const { data: profile, isLoading: profileLoading } = useGetProfile();  
 
- const handleApply = () => {
+ const handleApply = () => {        // ----------------------------------------------
   if (!job._id || isExpired) return;
 
   if (profileLoading) {

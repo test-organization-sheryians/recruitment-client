@@ -163,7 +163,7 @@ export default function JobDashboardPage() {
                   key={job._id}
                   className="py-5 first:pt-0 hover:bg-gray-50/70 transition-colors duration-150"
                 >
-                  <JobCard job={job} />
+                  <JobCard job={job}/>
                 </div>
               ))}
             </div>
