@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useGetTest } from "@/features/admin/test/hooks/useTest";
 import AttemptsSection from "./AttemptsSection";
 
@@ -35,7 +35,7 @@ interface Attempt extends Enrollment {
 
 interface TestDetailsProps {
   testId: string;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export default function TestDetails({ testId, onClose }: TestDetailsProps) {
@@ -81,7 +81,7 @@ export default function TestDetails({ testId, onClose }: TestDetailsProps) {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-2xl shadow-xl w-[950px] max-h-[90vh] overflow-y-auto relative">
+      <div className="bg-white p-6 rounded-2xl shadow-xl w-[70vw] max-h-[90vh] overflow-y-auto relative">
 
         {/* SAME CLOSE BUTTON */}
         <button

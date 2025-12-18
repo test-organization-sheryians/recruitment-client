@@ -1,18 +1,8 @@
 import * as api from "@/api";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { Test } from "@/types/Test";
+import { Test, TestFormValues } from "@/types/Test"; 
 import { searchUserTest } from "@/api";
 
-type TestFormValues = {
-  title: string;
-  description: string;
-  duration: number;
-  summury: string;
-  showResults : boolean
-  category: string;
-  passingScore: number;
-  prompt: string;
-};
 
 export const useCreateTest = () => {
   const queryClient = useQueryClient();
@@ -20,7 +10,6 @@ export const useCreateTest = () => {
   return useMutation({
     mutationKey: ["createTest"],
     mutationFn: (data: TestFormValues) => api.createTest(data),
-    retry: 0,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tests"] });
     },
@@ -30,9 +19,8 @@ export const useCreateTest = () => {
 export const useGetAllTests = () => {
   return useQuery({
     queryKey: ["tests"],
-    queryFn: () => api.getTest(),
+    queryFn: api.getTest,
     staleTime: 5 * 60 * 1000,
-    retry: 0,
   });
 };
 
@@ -42,34 +30,37 @@ export const useGetTest = (id: string) => {
     queryFn: () => api.getTestDetails(id),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
-    retry: 0,
   });
 };
 
-export const useEnRollTest = (id: string) => {
-  return useMutation({
-    mutationKey: ["enRollTest",id],
-    mutationFn: (data) => api.enRolltest(data),
-    retry: 0,
-  });
-}
+type UpdatePayload = {
+  id: string;
+  data: TestFormValues;
+};
 
 export const useUpdateTest = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationKey: ["updateTest"],
+    mutationFn: ({ id, data }: UpdatePayload) =>
+      api.updateTest({ id, ...data }), // Merge id into data object
 
-    // FIXED: id MUST be included
-    mutationFn: (data: Partial<TestFormValues> & { id: string }) =>
-      api.updateTest(data),
-
-    retry: 0,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tests"] });
     },
   });
 };
+
+export const useEnRollTest = () => {
+  return useMutation({
+    mutationKey: ["enRollTest"],
+    mutationFn: (data: { testId: string }) =>
+      api.enRolltest(data),
+    retry: 0,
+  });
+};
+
 
 export const useEnrollTestuser = () => {
   return useMutation({
@@ -82,17 +73,11 @@ export const useEnrollTestuser = () => {
 
 
 export const useSearchUserTest = (query: string) => {
-  return useQuery({
+  return useQuery<string[]>({
     queryKey: ["search-users", query],
     queryFn: async () => {
       const res = await searchUserTest(query);
-
-      // ⚠️ data is users list → we return only emails
-      if (res?.data) {
-        return res.data.map((user: { email: string }) => user.email);
-      }
-
-      return [];
+      return res?.data?.map((u: { email: string }) => u.email) ?? [];
     },
     enabled: query.trim().length > 1,
     staleTime: 5000,
@@ -101,11 +86,10 @@ export const useSearchUserTest = (query: string) => {
 };
 
 
-export const useGetUserAttempts = (id : string) => {
+export const useGetUserAttempts = (id: string) => {
   return useQuery({
-        queryKey: ["getUserAttempts" , id],
-        queryFn: () => api.getUserAttempts(id),
-        retry: 0,
-  })
-}
-
+    queryKey: ["getUserAttempts", id],
+    queryFn: () => api.getUserAttempts(id),
+    retry: 0,
+  });
+};

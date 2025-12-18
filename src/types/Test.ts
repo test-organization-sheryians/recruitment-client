@@ -47,3 +47,49 @@ export interface Attempt {
   createdAt: string;
   updatedAt: string;
 }
+
+export type TestFormValues = {
+  title: string;
+  description: string;
+  duration: number;
+  summury: string;
+  category: string;
+  passingScore: number;
+  prompt: string;
+  showResults: boolean; // ✅ ADD THIS
+  id?: string;         // ✅ OPTIONAL (needed for update)
+};
+
+
+export interface TestFormPayload {
+  id?: string;
+  title: string;
+  summury: string;
+  description: string;
+  category: string;
+  duration: number;
+  passingScore: number;
+  prompt: string;
+  showResults: boolean;
+}
+
+export interface Test {
+  _id: string;
+  title: string;
+  category: string;
+  duration: number;
+  passingScore: number;
+  showResults: boolean;
+}
+
+export interface TestFormPayload {
+  id?: string;
+  title: string;
+  summary: string;
+  description: string;
+  category: string;
+  duration: number;
+  passingScore: number;
+  prompt: string;
+  showResults: boolean;
+}

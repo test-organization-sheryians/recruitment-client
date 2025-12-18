@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import TestList from "@/features/admin/test/components/TestList";
-import CreateTestModal from "@/features/admin/test/components/CreateTestModal";
+import CreateTestModal from "@/features/admin/test/components/CreateTestForm";
 import { Button } from "@/components/ui/button";
 
 export default function TestsPage() {
