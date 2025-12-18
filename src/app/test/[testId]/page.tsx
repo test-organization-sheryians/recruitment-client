@@ -8,7 +8,6 @@ import Cookies from "js-cookie";
 
 import { useStartTest } from "@/features/test/hooks/useStartsTest";
 import { useTestInfo } from "@/features/test/hooks/testInfo";
-import type { StartTestResponse, TestQuestion } from "@/api/tests/startTest";
 
 import {
   Clock,
@@ -30,14 +29,14 @@ export default function StartTestPage() {
   const queryClient = useQueryClient();
   const { mutate, isPending } = useStartTest();
 
-  /* 🔥 FETCH TEST INFO */
+  /* ---------- FETCH TEST INFO ---------- */
+
   const { data: test, isLoading, isError } = useTestInfo(testId);
 
-  /* ================= START TEST ================= */
+  /* ---------- START TEST ---------- */
 
   const handleStart = () => {
     const token = Cookies.get("access");
-
     if (!token) {
       router.push("/login");
       return;
@@ -46,29 +45,20 @@ export default function StartTestPage() {
     mutate(
       { testId },
       {
-        onSuccess: (response: StartTestResponse) => {
-          localStorage.setItem("attemptId", response.attemptId);
+        onSuccess: (response) => {
+          // ✅ SAFE extraction (no typing issues)
+          const questions = Array.isArray(response?.questions)
+            ? response.questions
+            : [];
 
-          if (response.email) {
-            localStorage.setItem("email", response.email);
-          }
-
-          localStorage.setItem("testId", response.testId);
-          localStorage.setItem("startTime", response.startTime);
-
-          const duration = response.duration ?? 0;
-          localStorage.setItem("duration", String(duration));
-
-          const formattedQuestions =
-            response.questions?.map((q: TestQuestion) => ({
-              question: q.question.trim(),
-              options: q.options?.length ? q.options : undefined,
-              source: "test" as const,
-            })) || [];
-
+          // store questions for questioning page
           queryClient.setQueryData(
             ["active-questions"],
-            formattedQuestions
+            questions.map((q) => ({
+              question: q.question,
+              options: q.options,
+              source: "test",
+            }))
           );
 
           router.push("/candidate/ai-test/questining");
@@ -77,7 +67,7 @@ export default function StartTestPage() {
     );
   };
 
-  /* ================= UI STATES ================= */
+  /* ---------- UI STATES ---------- */
 
   if (isLoading) {
     return (
@@ -95,7 +85,7 @@ export default function StartTestPage() {
     );
   }
 
-  /* ================= HELPERS ================= */
+  /* ---------- HELPERS ---------- */
 
   const formatDuration = (m: number) =>
     m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`;
@@ -107,12 +97,12 @@ export default function StartTestPage() {
       year: "numeric",
     });
 
-  /* ================= RENDER ================= */
+  /* ---------- RENDER ---------- */
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 bg-white rounded-3xl shadow-lg border overflow-hidden">
-        {/* LEFT SECTION */}
+        {/* ================= LEFT ================= */}
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-10">
           <div className="flex items-center gap-3 mb-4">
             <span className="px-4 py-1.5 bg-white rounded-full text-xs font-semibold text-blue-700">
@@ -144,17 +134,13 @@ export default function StartTestPage() {
             />
           </div>
 
-          <div className="flex items-center gap-4 text-sm text-gray-600">
-            <div className="ml-auto flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-gray-500" />
-              <span className="text-xs">
-                {formatDate(test.createdAt)}
-              </span>
-            </div>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Calendar className="w-4 h-4" />
+            <span>{formatDate(test.createdAt)}</span>
           </div>
         </div>
 
-        {/* RIGHT SECTION */}
+        {/* ================= RIGHT ================= */}
         <div className="p-10 flex flex-col justify-center">
           <div className="flex gap-4 mb-6">
             <AlertCircle className="w-6 h-6 text-amber-600" />
@@ -182,7 +168,7 @@ export default function StartTestPage() {
             <button
               onClick={handleStart}
               disabled={isPending}
-              className={`px-10 py-4 text-white font-bold text-lg rounded-xl ${
+              className={`px-10 py-4 text-white font-bold text-lg rounded-xl transition ${
                 isPending
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-indigo-600 hover:bg-indigo-700"
