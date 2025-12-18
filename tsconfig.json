@@ -35,6 +35,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
+    "src/app/loading",
+    "src/api/i",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
