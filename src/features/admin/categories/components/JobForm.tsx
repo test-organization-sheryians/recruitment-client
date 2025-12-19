@@ -26,22 +26,30 @@ interface Category {
   name: string;
 }
 
-interface JobFormData {
+interface Location {
+  city: string;
+  state: string;
+  pincode: string;
+  country: string
+}
+
+export interface JobFormData {
   _id?: string;
   title: string;
   description: string;
   education: string;
   requiredExperience: string;
-  category: Category;
-  skills: Skill[];
+  category: string;
+  skills: string[];
   expiry: string;
   clientId: string;
+  location: Location; // added Location
 }
 
 interface JobFormProps {
   mode: "create" | "update";
   initialData?: Partial<JobFormData>;
-  onSubmit: (data: { [key: string]: string | string[] }) => Promise<void>;
+  onSubmit: (data: JobFormData) => Promise<void>;
   loading?: boolean;
 }
 
@@ -60,10 +68,22 @@ export default function JobForm({
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     requiredExperience: initialData?.requiredExperience || "",
-    category: (initialData?.category as Category)?._id || "",
+    category: typeof initialData?.category === 'string' 
+    ? initialData.category 
+    : (initialData?.category as unknown as Category)?._id || "",
     education: initialData?.education || "",
     description: initialData?.description || "",
-    skills: initialData?.skills?.map((s: { _id: string }) => s._id) || [],
+    location: {
+      city: initialData?.location?.city || "",
+      state: initialData?.location?.state || "",
+      pincode: initialData?.location?.pincode || "",
+      country: initialData?.location?.country || "",
+    },       // added Location 
+    skills: Array.isArray(initialData?.skills)
+  ? (initialData.skills as (string | Skill)[]).map((s) =>
+      typeof s === "string" ? s : s._id
+    )
+  : [],
     expiry: initialData?.expiry
       ? new Date(initialData.expiry).toISOString().split("T")[0]
       : "",
@@ -91,51 +111,80 @@ export default function JobForm({
     }));
   };
 
-  const handleSubmit = async () => {
-    setError("");
+  const handleLocationChange = (key: keyof Location, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        [key]: value,
+      },
+    }));
+  };
 
-    // Validate all required fields
-    const requiredFields = [
-      "title",
-      "description",
-      "education",
-      "requiredExperience",
-      "expiry",
-      "category",
-      "skills",
-    ];
 
-    const missingFields = requiredFields.filter((field) => {
-      const value = formData[field as keyof typeof formData];
-      return !value || (Array.isArray(value) && value.length === 0);
-    });
+const handleSubmit = async () => {
+  setError("");
 
-    if (missingFields.length > 0) {
-      setError(`Please fill all required fields: ${missingFields.join(", ")}`);
-      if (step === 1) {
-        const step1Fields = [
-          "title",
-          "description",
-          "education",
-          "requiredExperience",
-          "expiry",
-        ];
-        const step1Missing = missingFields.filter((field) =>
-          step1Fields.includes(field as string)
+  const isLocationValid = Object.values(formData.location).every(Boolean);
+
+  const requiredFields = [
+    "title",
+    "description",
+    "education",
+    "requiredExperience",
+    "expiry",
+    "category",
+    "skills",
+  ];
+
+  const missingFields = requiredFields.filter((field) => {
+    const value = formData[field as keyof typeof formData];
+    return !value || (Array.isArray(value) && value.length === 0);
+  });
+
+  if (!isLocationValid) {
+    setError("Please fill all location fields");
+    return;
+  }
+
+  if (missingFields.length > 0) {
+    if (step === 1) {
+      const step1Fields = [
+        "title",
+        "description",
+        "education",
+        "requiredExperience",
+        "expiry",
+      ];
+
+      const step1Missing = missingFields.filter((field) =>
+        step1Fields.includes(field)
+      );
+
+      if (step1Missing.length > 0) {
+        setError(
+          `Please fill all required fields: ${step1Missing.join(", ")}`
         );
-        if (step1Missing.length > 0) {
-          setError(
-            `Please fill all required fields: ${step1Missing.join(", ")}`
-          );
-          return;
-        }
-      } else {
         return;
       }
+    } else {
+      setError(`Please fill all required fields: ${missingFields.join(", ")}`);
+      return;
     }
-
+  }
+try {
+    console.log("Submitting Payload:", formData); 
     await onSubmit(formData);
+  } catch (err: unknown) {
+    const error = err as{ 
+    response?: { data?: { message?: string } }; 
+    message?: string 
   };
+    const msg = error.response?.data?.message || error.message || "Update failed";
+    setError(msg);
+  }
+};
+
 
   const getMinDate = () =>
     new Date(Date.now() + 86400000).toISOString().split("T")[0];
@@ -145,13 +194,17 @@ export default function JobForm({
     formData.description &&
     formData.education &&
     formData.expiry &&
-    formData.requiredExperience;
+    formData.requiredExperience &&
+    formData.location.city &&
+    formData.location.state && 
+    formData.location.pincode && 
+    formData.location.country;
 
   return (
     <div className="w-full h-full py-3 rounded-md mb-2">
       <div className="w-full mx-auto">
         {/* Form Card */}
-        <div className="bg-white rounded-3xl shadow-xl p-2 border border-gray-100">
+        <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100 max-h-[85vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {error && (
             <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
               <p className="text-red-700 font-medium">{error}</p>
@@ -226,7 +279,6 @@ export default function JobForm({
                       className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                     />
                   </div>
-
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                       <Clock className="w-4 h-4 text-blue-600" />
@@ -240,6 +292,45 @@ export default function JobForm({
                       className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                     />
                   </div>
+
+                  {/* {/* Location Added */}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                      Location Required *
+                    </label>
+
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      <input
+                        placeholder="City"
+                        value={formData.location.city}
+                        onChange={(e) => handleLocationChange("city", e.target.value)}
+                        className="w-full border-2 border-gray-100 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+
+                      <input
+                        placeholder="State"
+                        value={formData.location.state}
+                        onChange={(e) => handleLocationChange("state", e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+
+                      <input
+                        placeholder="Pincode"
+                        value={formData.location.pincode}
+                        onChange={(e) => handleLocationChange("pincode", e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+
+                      <input
+                        placeholder="Country"
+                        value={formData.location.country}
+                        onChange={(e) => handleLocationChange("country", e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
                 </div>
 
                 <div className="flex justify-end pt-4">

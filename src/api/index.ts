@@ -47,20 +47,9 @@ export * from "./resumeExtract";
 export * from "./users/getAllUsers";
 export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
-export * from "./profile/index"
 
 /* ================= TESTS ================= */
 export * from "./tests/startTest";
 export * from "./tests/testAttempts";
 export * from "./tests/testInfo";
 
-
-
-export * from "./tests/createTest";
-export * from "./tests/getTest";
-export * from "./tests/getTestDetails";
-export * from "./tests/enRolltest";
-export * from "./tests/updateTest";
-export * from "./tests/neRolluser";
-export * from "./tests/searchUsertest";
-export * from "./tests/getUserAttempts";

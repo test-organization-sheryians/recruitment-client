@@ -1,9 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as api from "@/api";
 import { Job } from "@/types/Job";
-// import { getJobById } from "@/api";
 
-    
+export type JobUpdatePayload = Record<string, unknown>;
 
 export const useGetJobs = () => {
   return useQuery({
@@ -27,7 +26,7 @@ export const useGetJobById = (id?: string) => {
 export const useCreateJob = () => {
   return useMutation({
     mutationKey: ["createJob"],
-    mutationFn: (data: FormData) => api.createJob(data),
+    mutationFn: (data: JobUpdatePayload) => api.createJob(data),
     retry: 0,
   });
 };
@@ -35,7 +34,7 @@ export const useCreateJob = () => {
 export const useUpdateJob = () => {
   return useMutation({
     mutationKey: ["updateJob"],
-    mutationFn: ({ id, formData }: { id: string; formData: FormData }) => 
+    mutationFn: ({ id, formData }: { id: string; formData: JobUpdatePayload }) => 
       api.updateJob(id, formData),
     retry: 0,
   });
