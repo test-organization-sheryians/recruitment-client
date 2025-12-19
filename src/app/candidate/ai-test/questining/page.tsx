@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -7,8 +8,9 @@ import { useActiveQuestions } from "@/features/test/hooks/useActivation";
 import { useEvaluateAnswers } from "@/features/AITest/hooks/aiTestApi";
 import { useSubmitResult } from "@/features/test/hooks/useResultTest";
 
-import Editor from "@monaco-editor/react";
-import { KeyMod, KeyCode } from "monaco-editor";
+const Editor = dynamic(() => import("@monaco-editor/react"), {
+  ssr: false,
+});
 
 import {
   ChevronLeft,
@@ -19,7 +21,6 @@ import {
 } from "lucide-react";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-
 
 interface Question {
   question: string;
@@ -36,14 +37,11 @@ interface ApiAnswer {
   text: string;
 }
 
-
 const MIN = 25;
 const MAX = 75;
 const INIT = 50;
 
-const isMCQ = (q?: Question): q is Question =>
-  !!q && Array.isArray(q.options);
-
+const isMCQ = (q?: Question): q is Question => !!q && Array.isArray(q.options);
 
 export default function UniversalInterviewPage() {
   const router = useRouter();
@@ -209,21 +207,17 @@ export default function UniversalInterviewPage() {
         durationTaken: testDuration * 60 - secondsLeft,
       },
       {
-        onSuccess: () =>
-          router.push("/candidate/ai-test/submitted"),
+        onSuccess: () => router.push("/candidate/ai-test/submitted"),
       }
     );
   };
 
-  if (isLoading)
-    return <p className="p-8 text-center">Preparing questions…</p>;
+  if (isLoading) return <p className="p-8 text-center">Preparing questions…</p>;
 
   if (!activeQuestion)
     return <p className="p-8 text-center">No questions found</p>;
 
-  const progress =
-    ((step + 1) / finalQuestions.length) * 100;
-
+  const progress = ((step + 1) / finalQuestions.length) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-indigo-50">
@@ -256,11 +250,7 @@ export default function UniversalInterviewPage() {
             onClick={next}
             className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
           >
-            {step === finalQuestions.length - 1 ? (
-              <Send />
-            ) : (
-              <ChevronRight />
-            )}
+            {step === finalQuestions.length - 1 ? <Send /> : <ChevronRight />}
           </button>
         </div>
 
@@ -268,9 +258,7 @@ export default function UniversalInterviewPage() {
           <p className="text-xs text-gray-500">
             Question {step + 1} of {finalQuestions.length}
           </p>
-          <h2 className="font-semibold">
-            {activeQuestion.question}
-          </h2>
+          <h2 className="font-semibold">{activeQuestion.question}</h2>
         </div>
       </div>
 
@@ -298,60 +286,65 @@ export default function UniversalInterviewPage() {
               ))}
             </div>
           ) : (
-           <>
-  <div
-    style={{ width: `${width}%` }}
-    className="flex flex-col bg-gray-50 border-r"
-  >
-    <div className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold border-b">
-       Your Answer
-    </div>
+            <>
+              <div
+                style={{ width: `${width}%` }}
+                className="flex flex-col bg-gray-50 border-r"
+              >
+                <div className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold border-b">
+                  Your Answer
+                </div>
 
-    <textarea
-      value={text}
-      onChange={(e) => setText(e.target.value)}
-      onPaste={prevent}
-      onCopy={prevent}
-      onCut={prevent}
-      className="flex-1 p-5 resize-none outline-none bg-gray-50 text-gray-800 text-sm"
-      placeholder="Write your answer here..."
-    />
-  </div>
+                <textarea
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  onPaste={prevent}
+                  onCopy={prevent}
+                  onCut={prevent}
+                  className="flex-1 p-5 resize-none outline-none bg-gray-50 text-gray-800 text-sm"
+                  placeholder="Write your answer here..."
+                />
+              </div>
 
- 
-  <div
-    className="w-3 bg-gray-100 hover:bg-indigo-100 cursor-col-resize flex items-center justify-center"
-    onMouseDown={() => setDragging(true)}
-    onMouseUp={() => setDragging(false)}
-    onMouseLeave={() => setDragging(false)}
-    onMouseMove={onDrag}
-  >
-    <GripVertical className="text-gray-400" />
-  </div>
+              <div
+                className="w-3 bg-gray-100 hover:bg-indigo-100 cursor-col-resize flex items-center justify-center"
+                onMouseDown={() => setDragging(true)}
+                onMouseUp={() => setDragging(false)}
+                onMouseLeave={() => setDragging(false)}
+                onMouseMove={onDrag}
+              >
+                <GripVertical className="text-gray-400" />
+              </div>
 
-  <div
-    style={{ width: `${100 - width}%` }}
-    className="flex flex-col bg-gray-900"
-  >
-    <div className="px-4 py-2 bg-gray-800 text-gray-200 text-sm font-semibold border-b border-gray-700">
-       Code Editor
-    </div>
+              <div
+                style={{ width: `${100 - width}%` }}
+                className="flex flex-col bg-gray-900"
+              >
+                <div className="px-4 py-2 bg-gray-800 text-gray-200 text-sm font-semibold border-b border-gray-700">
+                  Code Editor
+                </div>
 
-    <Editor
-      height="100%"
-      defaultLanguage="javascript"
-      value={code}
-      theme="vs-dark"
-      onChange={(v) => setCode(v ?? "")}
-      onMount={(editor) => {
-        editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyC, () => {});
-        editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyV, () => {});
-        editor.updateOptions({ contextmenu: false });
-      }}
-    />
-  </div>
-</>
-
+                <Editor
+                  height="100%"
+                  defaultLanguage="javascript"
+                  value={code}
+                  theme="vs-dark"
+                  onChange={(v) => setCode(v ?? "")}
+                  onMount={(editor, monaco) => {
+                    if (!monaco) return;
+                    editor.addCommand(
+                      monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC,
+                      () => {}
+                    );
+                    editor.addCommand(
+                      monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV,
+                      () => {}
+                    );
+                    editor.updateOptions({ contextmenu: false });
+                  }}
+                />
+              </div>
+            </>
           )}
         </div>
       </div>
