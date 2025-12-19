@@ -17,6 +17,7 @@ export * from "./jobs/jobCategory";
 export * from "./activeJobs/getJobsByStatus";
 export * from "./activeJobs/updateJobStatus";
 export * from "./jobs/getActiveJob";
+export * from "./jobs/getJobId"
 
  
 export * from "./skills/createSkill"
@@ -35,5 +36,16 @@ export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
 export * from "./applicant/applyJob";
 export * from "./applicant/bulkUpdate";
+export * from "./profile/index"
 
 
+
+
+export * from "./tests/createTest";
+export * from "./tests/getTest";
+export * from "./tests/getTestDetails";
+export * from "./tests/enRolltest";
+export * from "./tests/updateTest";
+export * from "./tests/neRolluser";
+export * from "./tests/searchUsertest";
+export * from "./tests/getUserAttempts";

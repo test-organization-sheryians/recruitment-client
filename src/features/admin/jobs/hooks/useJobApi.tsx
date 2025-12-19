@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as api from "@/api";
-
+import { Job } from "@/types/Job";
+// import { getJobById } from "@/api";
 
     
 
@@ -11,6 +12,17 @@ export const useGetJobs = () => {
     retry: 0,
   });
 };
+
+
+export const useGetJobById = (id?: string) => {
+  return useQuery<Job, Error>({
+    queryKey: ["job", id],
+    queryFn: () => api.getJobById(id!),
+    enabled: !!id,
+    retry: 0,
+  });
+};
+
 
 export const useCreateJob = () => {
   return useMutation({
