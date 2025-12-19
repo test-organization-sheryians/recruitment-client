@@ -50,7 +50,13 @@ console.log("side bar selection job ===>",selectedCategory)
 const { data: allJobs, isLoading: allJobsLoading } = useGetJobs();
 
   const isCategoryMode = !!selectedCategory;
-const isSearchMode = !selectedCategory && query.q.trim().length > 0;
+// const isSearchMode = !selectedCategory && query.q.trim().length > 0;
+
+const isSearchMode =
+  !selectedCategory &&
+  (query.q.trim().length > 0 || query.location.trim().length > 0);
+
+
 
 let jobsData: Job[] = [];
 
