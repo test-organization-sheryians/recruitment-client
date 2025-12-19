@@ -1,4 +1,9 @@
-import { QueryClient, useMutation, useQuery, useQueryClient  } from "@tanstack/react-query";
+import {
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import * as api from "@/api";
 
 export const useGetAllSkills = () => {
@@ -18,7 +23,7 @@ export const useGetSkill = (id?: string) => {
   });
 };
 
-const invalidateSkills = (queryClient:QueryClient) => {
+const invalidateSkills = (queryClient: QueryClient) => {
   queryClient.invalidateQueries({ queryKey: ["skills"] });
   queryClient.invalidateQueries({ queryKey: ["skill"] });
 };

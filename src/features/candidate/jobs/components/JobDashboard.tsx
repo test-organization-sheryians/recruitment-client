@@ -10,6 +10,7 @@ import {
   useGetJobs,
   useGetJobsByCategory,
 } from "@/features/admin/jobs/hooks/useJobApi";
+import { log } from "console";
 
 interface Category {
   _id: string;
@@ -22,6 +23,16 @@ export default function JobDashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+// const { data: profileCalInfo } = useProfileQuery();
+
+// const completion = profileCalInfo?.data ?? 0;
+// const isProfileCompleted = completion < 60;
+
+// console.log(isProfileCompleted);
+  
+
+  
 
   const { data: categories, isLoading: categoriesLoading } =
     useGetJobCategories();
@@ -163,7 +174,7 @@ export default function JobDashboardPage() {
                   key={job._id}
                   className="py-5 first:pt-0 hover:bg-gray-50/70 transition-colors duration-150"
                 >
-                  <JobCard job={job} />
+                  <JobCard job={job}/>
                 </div>
               ))}
             </div>
