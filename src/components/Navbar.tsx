@@ -112,7 +112,7 @@ const Navbar = () => {
                   <Bookmark size={18} /> Saved Jobs
                 </Link>
 
-                <button className="flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg">
+                <button type="button" className="flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg">
                   <Settings size={18} /> Settings
                 </button>
               </div>
