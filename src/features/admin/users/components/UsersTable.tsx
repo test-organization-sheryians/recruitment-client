@@ -2,16 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { Pencil, Trash2, Loader2 } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useQueryClient } from "@tanstack/react-query";
 
 import {
-  useGetUsers,
-  useDeleteUser,
-  useUpdateUserRole,
+  useGetUsers, useDeleteUser, useUpdateUserRole,
 } from "@/features/admin/users/hooks/useUser";
 import { useToast } from "@/components/ui/Toast";
+import { useSearchParams, useRouter } from "next/navigation";
 
 interface Role {
   name: string;
@@ -27,12 +24,20 @@ interface User {
 }
 
 export default function UsersTable() {
-  const { data: users = [], isLoading, isError } = useGetUsers();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const queryFromUrl = searchParams.get("query") || "";
+
+  // 🔹 pass query to backend
+  const { data: users = [], isLoading, isError } = useGetUsers(queryFromUrl);
+
   const deleteUser = useDeleteUser();
   const updateUserRole = useUpdateUserRole();
+
   const [localUsers, setLocalUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(queryFromUrl);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -40,45 +45,35 @@ export default function UsersTable() {
 
   const [openDeleteMenu, setOpenDeleteMenu] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const queryClient = useQueryClient();
 
+  const queryClient = useQueryClient();
   const { success, error } = useToast();
 
-  // Load users
+  // 🔹 Update users when API data changes
   useEffect(() => {
     setLocalUsers(users);
     setFilteredUsers(users);
   }, [users]);
 
-  // Search filter effect  
-  useEffect(() => {
-    const query = searchQuery.toLowerCase();
-
-    const result = localUsers.filter((u) => {
-      const fullName = `${u.firstName} ${u.lastName}`.toLowerCase();
-      return fullName.includes(query);
-    });
-
-    setFilteredUsers(result);
-  }, [searchQuery, localUsers]);
-
   if (isLoading) return <p className="text-center py-4">Loading users...</p>;
-  if (isError) return <p className="text-center py-4 text-red-500">Failed to load users.</p>;
+  if (isError)
+    return (
+      <p className="text-center py-4 text-red-500">
+        Failed to load users.
+      </p>
+    );
 
   const openModal = (user: User) => {
     setSelectedUserId(user._id);
     setSelectedRole(user.role?.name || "");
     setIsModalOpen(true);
   };
-
   const handleSaveRole = () => {
     if (!selectedUserId || !selectedRole) {
       error("Please select a role");
       return;
     }
-
     setIsSaving(true);
-
     updateUserRole.mutate(
       { userId: selectedUserId, role: selectedRole },
       {
@@ -95,7 +90,6 @@ export default function UsersTable() {
       }
     );
   };
-
   const handleDeleteUser = (userId: string) => {
     deleteUser.mutate(
       { userId },
@@ -114,17 +108,31 @@ export default function UsersTable() {
 
   return (
     <>
-     
+      {/* 🔍 Search */}
       <div className="w-full flex justify-end mb-4">
         <input
           type="text"
-          placeholder="Search by name..."
+          placeholder="Search by name or email..."
           className="px-4 py-2 border rounded-lg w-64 shadow-sm"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            const value = e.target.value;
+            setSearchQuery(value);
+
+            const params = new URLSearchParams(searchParams.toString());
+
+            if (value) {
+              params.set("query", value);
+            } else {
+              params.delete("query");
+            }
+
+            router.push(`?${params.toString()}`);
+          }}
         />
       </div>
 
+      {/* 🔧 Update Role Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg w-80">
@@ -153,14 +161,18 @@ export default function UsersTable() {
                 onClick={handleSaveRole}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2"
               >
-                {isSaving ? <Loader2 className="animate-spin w-4 h-4" /> : "Save"}
+                {isSaving ? (
+                  <Loader2 className="animate-spin w-4 h-4" />
+                ) : (
+                  "Save"
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Users Table */}
+      {/* 📋 Users Table */}
       <table className="min-w-full bg-white border rounded-lg shadow">
         <thead>
           <tr className="bg-gray-100">
@@ -175,7 +187,10 @@ export default function UsersTable() {
         <tbody>
           {filteredUsers.length === 0 ? (
             <tr>
-              <td colSpan={5} className="text-center py-4 text-gray-500 border-b">
+              <td
+                colSpan={5}
+                className="text-center py-4 text-gray-500 border-b"
+              >
                 No users found
               </td>
             </tr>
@@ -186,7 +201,9 @@ export default function UsersTable() {
                   {user.firstName} {user.lastName}
                 </td>
                 <td className="px-6 py-3 border-b">{user.email}</td>
-                <td className="px-6 py-3 border-b">{user.phoneNumber || "N/A"}</td>
+                <td className="px-6 py-3 border-b">
+                  {user.phoneNumber || "N/A"}
+                </td>
                 <td className="px-6 py-3 border-b">
                   <span className="px-2 py-1 rounded bg-blue-100 text-blue-700 text-sm">
                     {user.role?.name || "No Role"}
@@ -204,7 +221,9 @@ export default function UsersTable() {
                       <Trash2
                         className="text-red-600 cursor-pointer"
                         onClick={() =>
-                          setOpenDeleteMenu(openDeleteMenu === user._id ? null : user._id)
+                          setOpenDeleteMenu(
+                            openDeleteMenu === user._id ? null : user._id
+                          )
                         }
                       />
 

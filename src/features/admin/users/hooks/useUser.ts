@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as api from "@/api";
 
+
 export interface Role {
   name: string;
 }
@@ -17,13 +18,14 @@ export interface User {
 /* ============================
    GET USERS
 ============================ */
-export const useGetUsers = () =>
+export const useGetUsers = (searchQuery: string = "") =>
   useQuery<User[], Error>({
-    queryKey: ["users"],
+    queryKey: ["users", searchQuery],
     queryFn: async () => {
-      const users = await api.getAllUsers();
+      const users = await api.getAllUsers(searchQuery);  // pass query to backend
       return Array.isArray(users) ? users : [];
     },
+    keepPreviousData: true, // keeps old data while fetching
     retry: 0,
   });
 
