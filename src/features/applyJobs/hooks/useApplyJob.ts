@@ -18,13 +18,11 @@ export function useApplyJob() {
 
       const jobId = variables.jobId
 
-      // ✅ 1. Update job detail cache
       queryClient.setQueryData<Job>(
         ["job", jobId],
         (old) => (old ? { ...old, applied: true } : old)
       )
 
-      // ✅ 2. Update ALL jobs list cache
       queryClient.setQueryData<Job[]>(
         ["jobs"],
         (old) =>
@@ -33,10 +31,8 @@ export function useApplyJob() {
           )
       )
 
-      // ✅ 3. Update category-based job lists (SAFE)
       queryClient.invalidateQueries({ queryKey: ["jobsByCategory"] })
 
-      // ✅ 4. Background refetch for safety
       queryClient.invalidateQueries({ queryKey: ["job", jobId] })
     },
 

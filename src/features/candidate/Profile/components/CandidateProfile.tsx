@@ -12,14 +12,19 @@ import ExperienceSection from "./ExperienceSection";
 import ResumeSection from "./ResumeSection";
 import SocialLinksSection from "./SocialLinksSection";
 import AvailabilitySection from "./AvailabilitySection";
+import ProfileCompletion from "./ProfileCompletion";
 
 
 export default function CandidateProfile() {
   const user = useSelector((state: RootState) => state.auth.user);
 
+
+  
+
   const { data: profile, isLoading, isError, refetch } = useGetProfile();
   const createProfileMutation = useCreateProfile();
   console.log(profile, "this is profile ")
+  const completion = profile?.completion ?? 0;
   useEffect(() => {
     if (isError && user?.id) {
       createProfileMutation.mutate(user.id, {
@@ -34,12 +39,17 @@ export default function CandidateProfile() {
     <div className="min-h-screen bg-gray-50 px-3 py-2 sm:px-6 sm:py-6 md:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
 
-
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">
             Candidate Profile
           </h1>
         </div>
+
+        <div >
+          {/* <ProfileCompletion completion={profile?.completion??0}/> */}
+          {completion<100&&(<ProfileCompletion completion={profile?.completion??0}/>)}
+        </div>
+
 
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <PersonalInfoSection
@@ -62,7 +72,7 @@ export default function CandidateProfile() {
           </div>
 
           {/* Resume */}
-          <div className="bg-white bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white rounded-2xl shadow-sm p-6">
             {/* <h2 className="text-lg font-semibold mb-4">Resume</h2> */}
             <ResumeSection resumefile= {profile?.resumeFile}  />
           </div>
