@@ -33,13 +33,7 @@ const VacanciesSection: React.FC<{
             {Array.isArray(activeJob) ? activeJob.length : 0}
           </span>
         </div>
-        <div className='flex items-center gap-3'>
-          <select className='text-sm border rounded-lg px-2 py-1'>
-            <option>Popular</option>
-            <option>Recent</option>
-          </select>
-          <button className='text-sm underline'>See All</button>
-        </div>
+        
       </div>
 
       <div className='grid md:grid-cols-2 gap-4 overflow-y-auto flex-1 pr-2'>
