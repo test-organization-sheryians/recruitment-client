@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as api from "@/api";
 import { Job } from "@/types/Job";
-import { getJobById } from "@/api";
+// import { getJobById } from "@/api";
 
     
 
@@ -13,14 +13,16 @@ export const useGetJobs = () => {
   });
 };
 
-export const useGetJob = (jobId: string) => {
-  return useQuery({
-    queryKey: ["job", jobId],
-    queryFn: () => api.getJobs(jobId),
+
+export const useGetJobById = (id?: string) => {
+  return useQuery<Job, Error>({
+    queryKey: ["job", id],
+    queryFn: () => api.getJobById(id!),
+    enabled: !!id,
     retry: 0,
-    enabled: !!jobId,
   });
 };
+
 
 export const useCreateJob = () => {
   return useMutation({
@@ -54,15 +56,6 @@ export const useGetJobsByCategory = (categoryId: string | null) => {
     
     queryFn: () => categoryId ? api.getJobsByCategory(categoryId) : Promise.resolve([]),
     enabled: !!categoryId,
-    retry: 0,
-  });
-};
-
-export const useGetJobById = (id?: string) => {
-  return useQuery<Job, Error>({
-    queryKey: ["job", id],
-    queryFn: () => getJobById(id!),
-    enabled: !!id, // only fetch if id exists
     retry: 0,
   });
 };
