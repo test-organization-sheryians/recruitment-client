@@ -4,12 +4,16 @@ interface HeroSectionProps {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
   onSearch?: () => void;
+  searchLocation: string;
+  setSearchLocation: (value: string) => void;
 }
 
 export default function HeroSection({
   searchTerm,
   setSearchTerm,
   onSearch,
+  searchLocation,
+  setSearchLocation
 }: HeroSectionProps) {
   return (
     <div
@@ -66,6 +70,8 @@ export default function HeroSection({
                   className="w-full pl-12 pr-4 py-4 text-base text-gray-800 bg-gray-50 rounded-xl
                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white
                              transition-all duration-200 placeholder:text-gray-500"
+                  value={searchLocation}
+                  onChange={(e)=>setSearchLocation(e.target.value)}
                 />
               </div>
 
