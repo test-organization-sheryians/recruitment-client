@@ -12,17 +12,36 @@ import {
 } from "@/features/admin/jobs/hooks/useJobApi";
 import { log } from "console";
 
+import { useSearchJobs } from "../jobSearch/hooks/hook";
+
 interface Category {
   _id: string;
   name: string;
 }
 
+const normalizeJobs = (data: any): Job[] => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+};
 
+type SearchQuery = {
+  q: string;
+  location: string;
+};
 
 export default function JobDashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchLocation,setSearchLocation] = useState("")
+
+const [query, setQuery] = useState<SearchQuery>({
+  q: "",
+  location: "",
+});
+const {  data: searchedJobs, isLoading: searchLoading  } = useSearchJobs(query.q, query.location);
+
 
 // const { data: profileCalInfo } = useProfileQuery();
 
@@ -37,34 +56,39 @@ export default function JobDashboardPage() {
   const { data: categories, isLoading: categoriesLoading } =
     useGetJobCategories();
   const jobsByCategory = useGetJobsByCategory(selectedCategory || "");
-  const allJobs = useGetJobs();
 
-  const jobsData = selectedCategory ? jobsByCategory.data : allJobs.data;
-  const jobsLoading = selectedCategory
+const { data: allJobs, isLoading: allJobsLoading } = useGetJobs();
+
+  const isCategoryMode = !!selectedCategory;
+const isSearchMode = !selectedCategory && query.q.trim().length > 0;
+
+let jobsData: Job[] = [];
+
+if (isCategoryMode) {
+  jobsData = normalizeJobs(jobsByCategory.data);
+} else if (isSearchMode) {
+  jobsData = normalizeJobs(searchedJobs);
+} else {
+  jobsData = normalizeJobs(allJobs);
+}
+
+  const jobsLoading =
+  isCategoryMode
     ? jobsByCategory.isLoading
-    : allJobs.isLoading;
-  const jobs: Job[] = Array.isArray(jobsData) ? jobsData : [];
+    : isSearchMode
+    ? searchLoading
+    : allJobsLoading;
 
-  const term = searchTerm.toLowerCase();
-
-  const filteredJobs = jobs.filter((job) => {
-    const title = job.title?.toLowerCase() || "";
-    const department = job.department?.toLowerCase() || "";
-    const skills =
-      job.skills
-        ?.map((s) => (typeof s === "string" ? s : s.name || ""))
-        .join(" ")
-        .toLowerCase() || "";
-
-    return (
-      title.includes(term) || department.includes(term) || skills.includes(term)
-    );
+  const searchHandler = ()=>{
+ setQuery({
+    q: searchTerm,
+    location: searchLocation,
   });
-
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero with search */}
-      <HeroSection searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      <HeroSection searchTerm={searchTerm} setSearchTerm={setSearchTerm}  onSearch={searchHandler} searchLocation={searchLocation} setSearchLocation={setSearchLocation} />
 
       {/* Mobile Filter Bar */}
       <div className="md:hidden sticky top-0 z-30 bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
@@ -75,7 +99,7 @@ export default function JobDashboardPage() {
           <Menu size={18} className="text-gray-700" />
         </button>
         <span className="text-sm font-medium text-gray-800">
-          {selectedCategory ? "Filtered" : "All Jobs"} • {filteredJobs.length}{" "}
+          {selectedCategory ? "Filtered" : "All Jobs"} • {jobsData.length}{" "}
           found
         </span>
       </div>
@@ -134,7 +158,7 @@ export default function JobDashboardPage() {
                   {selectedCategory ? "Category Jobs" : "All Jobs"}
                 </h2>
                 <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-                  {filteredJobs.length} jobs
+                  {jobsData.length} jobs
                 </span>
               </div>
               {selectedCategory && (
@@ -156,7 +180,7 @@ export default function JobDashboardPage() {
             )}
 
             {/* Empty State */}
-            {!jobsLoading && filteredJobs.length === 0 && (
+            {!jobsLoading && jobsData.length === 0 && (
               <div className="p-12 text-center">
                 <p className="text-sm text-gray-500">
                   No jobs match your search.
@@ -169,7 +193,7 @@ export default function JobDashboardPage() {
 
             {/* Job Cards */}
             <div className="divide-y divide-transparent p-2">
-              {filteredJobs.map((job) => (
+              {jobsData?.map((job) => (
                 <div
                   key={job._id}
                   className="py-5 first:pt-0 hover:bg-gray-50/70 transition-colors duration-150"

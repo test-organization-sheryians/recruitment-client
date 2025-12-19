@@ -25,6 +25,7 @@ export * from "./jobs/updateJob";
 export * from "./jobs/deleteJob";
 export * from "./jobs/jobCategory";
 export * from "./jobs/getJobId";
+export * from "./jobs/searchJobs";
 
 /* ================= SKILLS ================= */
 export * from "./skills/createSkill";
@@ -64,3 +65,4 @@ export * from "./tests/updateTest";
 export * from "./tests/neRolluser";
 export * from "./tests/searchUsertest";
 export * from "./tests/getUserAttempts";
+
