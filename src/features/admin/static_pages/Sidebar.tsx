@@ -18,15 +18,18 @@ const navItems = [
   { name: "Skill", href: "/admin/skills" },
   { name: "Categories", href: "/admin/categories" },
   { name: "Users", href: "/admin/users" }, // ✅ New Users item
+  { name: "Tests", href: "/admin/tests" },
 ];
 
 const Sidebar: React.FC<SidebarProps> = () => {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
-    if (href === "/admin/dashboard") {
-      return pathname === "/admin" || pathname.startsWith("/admin/dashboard");
-    }
+    //for dashboard
+    if (href === "/admin") {
+    return pathname === "/admin";
+  }
+  //for other routes
     return pathname.startsWith(href);
   };
 
