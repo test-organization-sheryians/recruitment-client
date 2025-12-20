@@ -1,49 +1,90 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
 import JobCard, { Job } from "./JobCategoryCard";
 import HeroSection from "./HeroSection";
 import { Menu, X } from "lucide-react";
-import { useGetJobCategories } from "@/features/admin/categories/hooks/useJobCategoryApi";
+import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
 import {
-  useGetJobs,
-  useGetJobsByCategory,
-} from "@/features/admin/jobs/hooks/useJobApi";
-import { log } from "console";
+  useInfiniteJobs,
+  useInfiniteJobsByCategory,
+} from "@/features/candidate/jobs/hooks/useInfiniteJobs";
 
 interface Category {
   _id: string;
   name: string;
 }
 
-
-
 export default function JobDashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-// const { data: profileCalInfo } = useProfileQuery();
+  // const { data: profileCalInfo } = useProfileQuery();
 
-// const completion = profileCalInfo?.data ?? 0;
-// const isProfileCompleted = completion < 60;
+  // const completion = profileCalInfo?.data ?? 0;
+  // const isProfileCompleted = completion < 60;
 
-// console.log(isProfileCompleted);
-  
+  // console.log(isProfileCompleted);
 
-  
+  const {
+    data: categoryPages,
+    isLoading: categoriesLoading,
+    fetchNextPage: fetchNextCategories,
+    hasNextPage: hasMoreCategories,
+    isFetchingNextPage: isFetchingMoreCategories,
+  } = useInfiniteJobCategories();
 
-  const { data: categories, isLoading: categoriesLoading } =
-    useGetJobCategories();
-  const jobsByCategory = useGetJobsByCategory(selectedCategory || "");
-  const allJobs = useGetJobs();
+  const categories = (categoryPages?.pages ?? []).flatMap(
+    (p: any) => p.data ?? []
+  );
 
-  const jobsData = selectedCategory ? jobsByCategory.data : allJobs.data;
-  const jobsLoading = selectedCategory
-    ? jobsByCategory.isLoading
-    : allJobs.isLoading;
-  const jobs: Job[] = Array.isArray(jobsData) ? jobsData : [];
+  const jobsInfinite = selectedCategory
+    ? useInfiniteJobsByCategory(selectedCategory)
+    : useInfiniteJobs();
+
+  const jobsPages = jobsInfinite.data?.pages ?? [];
+  const jobsLoading = jobsInfinite.isLoading;
+  const hasMoreJobs = jobsInfinite.hasNextPage;
+  const fetchNextJobs = jobsInfinite.fetchNextPage;
+  const isFetchingMoreJobs = jobsInfinite.isFetchingNextPage;
+
+  const jobs: Job[] = jobsPages.flatMap((p: any) => p.data ?? []);
+
+  // Infinite scroll sentinels
+  const categoriesLoadMoreRef = useRef<HTMLDivElement | null>(null);
+  const jobsLoadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = categoriesLoadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (
+        entry.isIntersecting &&
+        hasMoreCategories &&
+        !isFetchingMoreCategories
+      ) {
+        fetchNextCategories();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMoreCategories, isFetchingMoreCategories, fetchNextCategories]);
+
+  useEffect(() => {
+    const el = jobsLoadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (entry.isIntersecting && hasMoreJobs && !isFetchingMoreJobs) {
+        fetchNextJobs();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMoreJobs, isFetchingMoreJobs, fetchNextJobs, selectedCategory]);
 
   const term = searchTerm.toLowerCase();
 
@@ -102,6 +143,7 @@ export default function JobDashboardPage() {
               }}
               categories={categories || []}
               isLoading={categoriesLoading}
+              loadMoreRef={categoriesLoadMoreRef}
             />
           </div>
         </div>
@@ -120,6 +162,7 @@ export default function JobDashboardPage() {
               onSelect={setSelectedCategory}
               categories={categories || []}
               isLoading={categoriesLoading}
+              loadMoreRef={categoriesLoadMoreRef}
             />
           </div>
         </div>
@@ -174,9 +217,16 @@ export default function JobDashboardPage() {
                   key={job._id}
                   className="py-5 first:pt-0 hover:bg-gray-50/70 transition-colors duration-150"
                 >
-                  <JobCard job={job}/>
+                  <JobCard job={job} />
                 </div>
               ))}
+              {/* Infinite scroll sentinel for jobs */}
+              <div ref={jobsLoadMoreRef} className="h-1" />
+              {isFetchingMoreJobs && (
+                <div className="p-4 text-center text-xs text-gray-500">
+                  Loading more…
+                </div>
+              )}
             </div>
           </div>
         </div>
