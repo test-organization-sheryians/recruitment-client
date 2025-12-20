@@ -61,6 +61,7 @@ export default function JobForm({
 }: JobFormProps) {
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: categories = [] } = useGetJobCategories();
   const { data: skillsResponse = [] } = useGetAllSkills();
@@ -68,9 +69,9 @@ export default function JobForm({
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     requiredExperience: initialData?.requiredExperience || "",
-    category: typeof initialData?.category === 'string' 
-    ? initialData.category 
-    : (initialData?.category as unknown as Category)?._id || "",
+    category: typeof initialData?.category === 'string'
+      ? initialData.category
+      : (initialData?.category as unknown as Category)?._id || "",
     education: initialData?.education || "",
     description: initialData?.description || "",
     location: {
@@ -80,10 +81,10 @@ export default function JobForm({
       country: initialData?.location?.country || "",
     },       // added Location 
     skills: Array.isArray(initialData?.skills)
-  ? (initialData.skills as (string | Skill)[]).map((s) =>
-      typeof s === "string" ? s : s._id
-    )
-  : [],
+      ? (initialData.skills as (string | Skill)[]).map((s) =>
+        typeof s === "string" ? s : s._id
+      )
+      : [],
     expiry: initialData?.expiry
       ? new Date(initialData.expiry).toISOString().split("T")[0]
       : "",
@@ -122,68 +123,68 @@ export default function JobForm({
   };
 
 
-const handleSubmit = async () => {
-  setError("");
+  const handleSubmit = async () => {
+    setError("");
 
-  const isLocationValid = Object.values(formData.location).every(Boolean);
+    const isLocationValid = Object.values(formData.location).every(Boolean);
 
-  const requiredFields = [
-    "title",
-    "description",
-    "education",
-    "requiredExperience",
-    "expiry",
-    "category",
-    "skills",
-  ];
+    const requiredFields = [
+      "title",
+      "description",
+      "education",
+      "requiredExperience",
+      "expiry",
+      "category",
+      "skills",
+    ];
 
-  const missingFields = requiredFields.filter((field) => {
-    const value = formData[field as keyof typeof formData];
-    return !value || (Array.isArray(value) && value.length === 0);
-  });
+    const missingFields = requiredFields.filter((field) => {
+      const value = formData[field as keyof typeof formData];
+      return !value || (Array.isArray(value) && value.length === 0);
+    });
 
-  if (!isLocationValid) {
-    setError("Please fill all location fields");
-    return;
-  }
-
-  if (missingFields.length > 0) {
-    if (step === 1) {
-      const step1Fields = [
-        "title",
-        "description",
-        "education",
-        "requiredExperience",
-        "expiry",
-      ];
-
-      const step1Missing = missingFields.filter((field) =>
-        step1Fields.includes(field)
-      );
-
-      if (step1Missing.length > 0) {
-        setError(
-          `Please fill all required fields: ${step1Missing.join(", ")}`
-        );
-        return;
-      }
-    } else {
-      setError(`Please fill all required fields: ${missingFields.join(", ")}`);
+    if (!isLocationValid) {
+      setError("Please fill all location fields");
       return;
     }
-  }
-try {
-    console.log("Submitting Payload:", formData); 
-    await onSubmit(formData);
-  } catch (err: unknown) {
-    const error = err as{ 
-    response?: { data?: { message?: string } }; 
-    message?: string 
+
+    if (missingFields.length > 0) {
+      if (step === 1) {
+        const step1Fields = [
+          "title",
+          "description",
+          "education",
+          "requiredExperience",
+          "expiry",
+        ];
+
+        const step1Missing = missingFields.filter((field) =>
+          step1Fields.includes(field)
+        );
+
+        if (step1Missing.length > 0) {
+          setError(
+            `Please fill all required fields: ${step1Missing.join(", ")}`
+          );
+          return;
+        }
+      } else {
+        setError(`Please fill all required fields: ${missingFields.join(", ")}`);
+        return;
+      }
+    }
+    try {
+      console.log("Submitting Payload:", formData);
+      await onSubmit(formData);
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string
+      };
+      const msg = error.response?.data?.message || error.message || "Update failed";
+      setError(msg);
+    }
   };
-    const msg = error.response?.data?.message || error.message || "Update failed";
-    setError(msg);
-  }
-};
 
 
   const getMinDate = () =>
@@ -196,8 +197,8 @@ try {
     formData.expiry &&
     formData.requiredExperience &&
     formData.location.city &&
-    formData.location.state && 
-    formData.location.pincode && 
+    formData.location.state &&
+    formData.location.pincode &&
     formData.location.country;
 
   return (
@@ -372,32 +373,58 @@ try {
                     Required Skills *
                   </label>
 
-                  <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
-                    {skillsResponse.map((skill: { _id: string; name: string }) => (
-                      <label
-                        key={skill._id}
-                        className="group flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-white transition-all border-2 border-transparent hover:border-blue-200"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.skills.includes(skill._id)}
-                          onChange={() => handleSkillToggle(skill._id)}
-                          className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                        />
-                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                          {skill.name}
-                        </span>
-                      </label>
-                    ))}
+                  {/* 1. Search Bar */}
+                  <input
+                    type="text"
+                    placeholder="Search and add skills (e.g. React, Node...)"
+                    className="w-full border-2 border-gray-100 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    onChange={(e) => setSearchTerm(e.target.value)} // You'll need to add a [searchTerm, setSearchTerm] state
+                  />
+
+                  {/* 2. Search Results */}
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2">
+                    {skillsResponse
+                      .filter(s =>
+                        s.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+                        !formData.skills.includes(s._id)
+                      )
+                      .slice(0, 10)
+                      .map((skill) => (
+                        <button
+                          key={skill._id}
+                          type="button"
+                          onClick={() => {
+                            handleSkillToggle(skill._id);
+                            setSearchTerm(""); 
+                          }}
+                          className="px-3 py-1 rounded-full text-xs font-medium border bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all"
+                        >
+                          + {skill.name}
+                        </button>
+                      ))}
                   </div>
 
+                  {/* 3. Selected Skills Display (The "Tags" view) */}
                   {formData.skills.length > 0 && (
-                    <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <CheckCircle2 className="w-5 h-5 text-blue-600" />
-                      <p className="text-sm font-semibold text-blue-700">
-                        {formData.skills.length} skill
-                        {formData.skills.length !== 1 ? "s" : ""} selected
-                      </p>
+                    <div className="mt-4">
+                      <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Selected Skills:</p>
+                      <div className="flex flex-wrap gap-2 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
+                        {formData.skills.map((skillId) => {
+                          const skillName = skillsResponse.find(s => s._id === skillId)?.name;
+                          return (
+                            <span key={skillId} className="flex items-center gap-1 bg-white text-blue-700 px-3 py-1 rounded-full text-sm border border-blue-200 shadow-sm">
+                              {skillName}
+                              <button
+                                type="button"
+                                onClick={() => handleSkillToggle(skillId)}
+                                className="hover:text-red-500 font-bold ml-1"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
