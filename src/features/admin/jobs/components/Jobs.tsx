@@ -230,7 +230,7 @@ export default function Jobs() {
                             key={index}
                             className="px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
                           >
-                            {skill.name}
+                            {typeof skill === "string" ? skill : skill.name}
                           </span>
                         ))}
                         {job.skills.length > 4 && (
@@ -259,8 +259,12 @@ export default function Jobs() {
                       </svg>
                       <span className="text-gray-600">
                         {Array.isArray(job.category)
-                          ? job.category.map((c) => c.name).join(", ")
-                          : job.category.name}
+                          ? job.category
+                              .map((c) => (typeof c === "string" ? c : c.name))
+                              .join(", ")
+                          : typeof job.category === "string"
+                          ? job.category
+                          : job.category?.name}
                       </span>
                     </div>
                   )}

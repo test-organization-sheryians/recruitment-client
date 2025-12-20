@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
-import JobCard, { Job } from "./JobCategoryCard";
+import JobCard, { Job as CardJob } from "./JobCategoryCard";
 import HeroSection from "./HeroSection";
 import { Menu, X } from "lucide-react";
 import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
@@ -10,11 +10,7 @@ import {
   useInfiniteJobs,
   useInfiniteJobsByCategory,
 } from "@/features/candidate/jobs/hooks/useInfiniteJobs";
-
-interface Category {
-  _id: string;
-  name: string;
-}
+import type { CategoryItem } from "@/api/category/getCategoriesPaginated";
 
 export default function JobDashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -36,21 +32,32 @@ export default function JobDashboardPage() {
     isFetchingNextPage: isFetchingMoreCategories,
   } = useInfiniteJobCategories();
 
-  const categories = (categoryPages?.pages ?? []).flatMap(
-    (p: any) => p.data ?? []
+  const categories: CategoryItem[] = (categoryPages?.pages ?? []).flatMap(
+    (p) => p.data ?? []
   );
 
-  const jobsInfinite = selectedCategory
-    ? useInfiniteJobsByCategory(selectedCategory)
-    : useInfiniteJobs();
+  const allJobsQuery = useInfiniteJobs();
+  const jobsByCategoryQuery = useInfiniteJobsByCategory(selectedCategory);
 
-  const jobsPages = jobsInfinite.data?.pages ?? [];
-  const jobsLoading = jobsInfinite.isLoading;
-  const hasMoreJobs = jobsInfinite.hasNextPage;
-  const fetchNextJobs = jobsInfinite.fetchNextPage;
-  const isFetchingMoreJobs = jobsInfinite.isFetchingNextPage;
+  const activeJobsQuery = selectedCategory ? jobsByCategoryQuery : allJobsQuery;
 
-  const jobs: Job[] = jobsPages.flatMap((p: any) => p.data ?? []);
+  const jobsPages = activeJobsQuery.data?.pages ?? [];
+  const jobsLoading = activeJobsQuery.isLoading;
+  const hasMoreJobs = activeJobsQuery.hasNextPage;
+  const fetchNextJobs = activeJobsQuery.fetchNextPage;
+  const isFetchingMoreJobs = activeJobsQuery.isFetchingNextPage;
+
+  const jobs: CardJob[] = jobsPages
+    .flatMap((p) => p.data ?? [])
+    .map((job) => ({
+      ...job,
+      salary: typeof job.salary === "number" ? String(job.salary) : job.salary,
+      skills: job.skills?.map((s) =>
+        typeof s === "string"
+          ? { _id: s, name: s }
+          : { _id: s._id ?? s.name, name: s.name }
+      ),
+    }));
 
   // Infinite scroll sentinels
   const categoriesLoadMoreRef = useRef<HTMLDivElement | null>(null);
