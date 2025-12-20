@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Pencil, Trash2, Loader2 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useQueryClient } from "@tanstack/react-query";
 
 import {
-  useGetUsers,
+  useInfiniteUsers,
   useDeleteUser,
   useUpdateUserRole,
 } from "@/features/admin/users/hooks/useUser";
@@ -27,7 +27,15 @@ interface User {
 }
 
 export default function UsersTable() {
-  const { data: users = [], isLoading, isError } = useGetUsers();
+  const {
+    data: userPages,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteUsers();
+  const users = (userPages?.pages ?? []).flatMap((p) => p.data ?? []);
   const deleteUser = useDeleteUser();
   const updateUserRole = useUpdateUserRole();
   const [localUsers, setLocalUsers] = useState<User[]>([]);
@@ -42,6 +50,9 @@ export default function UsersTable() {
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
 
+  // Infinite scroll sentinel
+  const loadMoreRef = useRef<HTMLTableRowElement | null>(null);
+
   const { success, error } = useToast();
 
   // Load users
@@ -50,7 +61,7 @@ export default function UsersTable() {
     setFilteredUsers(users);
   }, [users]);
 
-  // Search filter effect  
+  // Search filter effect
   useEffect(() => {
     const query = searchQuery.toLowerCase();
 
@@ -62,8 +73,25 @@ export default function UsersTable() {
     setFilteredUsers(result);
   }, [searchQuery, localUsers]);
 
+  // Infinite scroll observer
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   if (isLoading) return <p className="text-center py-4">Loading users...</p>;
-  if (isError) return <p className="text-center py-4 text-red-500">Failed to load users.</p>;
+  if (isError)
+    return (
+      <p className="text-center py-4 text-red-500">Failed to load users.</p>
+    );
 
   const openModal = (user: User) => {
     setSelectedUserId(user._id);
@@ -114,7 +142,6 @@ export default function UsersTable() {
 
   return (
     <>
-     
       <div className="w-full flex justify-end mb-4">
         <input
           type="text"
@@ -153,7 +180,11 @@ export default function UsersTable() {
                 onClick={handleSaveRole}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2"
               >
-                {isSaving ? <Loader2 className="animate-spin w-4 h-4" /> : "Save"}
+                {isSaving ? (
+                  <Loader2 className="animate-spin w-4 h-4" />
+                ) : (
+                  "Save"
+                )}
               </button>
             </div>
           </div>
@@ -175,7 +206,10 @@ export default function UsersTable() {
         <tbody>
           {filteredUsers.length === 0 ? (
             <tr>
-              <td colSpan={5} className="text-center py-4 text-gray-500 border-b">
+              <td
+                colSpan={5}
+                className="text-center py-4 text-gray-500 border-b"
+              >
                 No users found
               </td>
             </tr>
@@ -186,7 +220,9 @@ export default function UsersTable() {
                   {user.firstName} {user.lastName}
                 </td>
                 <td className="px-6 py-3 border-b">{user.email}</td>
-                <td className="px-6 py-3 border-b">{user.phoneNumber || "N/A"}</td>
+                <td className="px-6 py-3 border-b">
+                  {user.phoneNumber || "N/A"}
+                </td>
                 <td className="px-6 py-3 border-b">
                   <span className="px-2 py-1 rounded bg-blue-100 text-blue-700 text-sm">
                     {user.role?.name || "No Role"}
@@ -204,7 +240,9 @@ export default function UsersTable() {
                       <Trash2
                         className="text-red-600 cursor-pointer"
                         onClick={() =>
-                          setOpenDeleteMenu(openDeleteMenu === user._id ? null : user._id)
+                          setOpenDeleteMenu(
+                            openDeleteMenu === user._id ? null : user._id
+                          )
                         }
                       />
 
@@ -229,6 +267,19 @@ export default function UsersTable() {
                 </td>
               </tr>
             ))
+          )}
+
+          {/* Infinite scroll sentinel */}
+          <tr ref={loadMoreRef}>
+            <td colSpan={5} className="p-0" />
+          </tr>
+
+          {isFetchingNextPage && (
+            <tr>
+              <td colSpan={5} className="text-center py-4 text-gray-500">
+                Loading more users...
+              </td>
+            </tr>
           )}
         </tbody>
       </table>
