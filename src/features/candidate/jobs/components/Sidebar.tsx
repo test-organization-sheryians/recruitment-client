@@ -10,7 +10,7 @@ interface SidebarProps {
   onSelect?: (id: string) => void;
   categories?: Category[];
   isLoading?: boolean;
-  loadMoreRef?: React.RefObject<HTMLDivElement>;
+  loadMoreRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
