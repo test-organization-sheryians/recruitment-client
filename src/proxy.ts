@@ -4,7 +4,6 @@ import type { NextRequest } from "next/server";
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // ✅ 1. IGNORE NEXT INTERNAL FILES & ASSETS
 
   if (
     pathname.startsWith("/_next") ||
@@ -37,7 +36,7 @@ export function proxy(req: NextRequest) {
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 
-  // 🔴 ADMIN ROUTES
+  // ADMIN ROUTES
   if (pathname.startsWith("/admin")) {
     if (!token) {
       const loginUrl = new URL("/login", req.url);
@@ -52,7 +51,7 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // 🔐 PROTECTED ROUTES
+  //  PROTECTED ROUTES
   if (!token && !isPublic) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("redirect", pathname);
