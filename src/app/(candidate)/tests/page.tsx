@@ -7,6 +7,7 @@ import { useCandidateEnrollments } from "@/features/candidate/tests/hooks/useTes
 import TestDetails from "@/features/candidate/tests/components/TestDetails";
 import { Loader2, AlertCircle } from "lucide-react";
 
+
 export default function TestsPage() {
   const { user } = useSelector((state: RootState) => state.auth);
   const userEmail = user?.email || "";
