@@ -49,13 +49,12 @@ export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
 
 /* ================= TESTS ================= */
-/* ================= TESTS ================= */
 export * from "./tests/createTest";
 export * from "./tests/enRolltest";
 export * from "./tests/getTest";
 export * from "./tests/getTestDetails";
 export * from "./tests/getUserAttempts";
-export * from "./tests/neRolluser";     // Check if this is a typo for enrollUser
+export * from "./tests/neRolluser";  
 export * from "./tests/searchUsertest";
 export * from "./tests/startTest";
 export * from "./tests/testAttempts";
