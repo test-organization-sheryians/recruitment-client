@@ -1,32 +1,49 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Bookmark } from "lucide-react";
 
-import {
-  useGetSavedJobs,
-  useUnsaveJob,
-} from "@/features/candidate/jobs/hooks";
+import { useUnsaveJob } from "@/features/candidate/jobs/hooks";
+import { useInfiniteSavedJobs } from "@/features/candidate/jobs/hooks/useInfiniteSavedJobs";
 import { SavedJob } from "@/types/Job";
-
 
 export default function SavedJobsPage() {
   const router = useRouter();
 
   const {
-    data: savedJobs,
+    data: savedJobsPages,
     isLoading,
     isError,
-  } = useGetSavedJobs();
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteSavedJobs();
+
+  const savedJobs = (savedJobsPages?.pages ?? []).flatMap((p) => p.data ?? []);
 
   const { mutate: unsaveJob, isPending } = useUnsaveJob();
+
+  // Infinite scroll sentinel
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   /* -------------------- States -------------------- */
   if (isLoading) {
     return (
-      <p className="mt-10 text-center text-gray-500">
-        Loading saved jobs...
-      </p>
+      <p className="mt-10 text-center text-gray-500">Loading saved jobs...</p>
     );
   }
 
@@ -71,9 +88,7 @@ export default function SavedJobsPage() {
                 {/* Title + Unsave */}
                 <div className="flex items-start justify-between">
                   <h2
-                    onClick={() =>
-                      router.push(`/job-details?id=${jobId._id}`)
-                    }
+                    onClick={() => router.push(`/job-details?id=${jobId._id}`)}
                     className="cursor-pointer text-lg font-semibold text-gray-900"
                   >
                     {jobId.title}
@@ -110,6 +125,16 @@ export default function SavedJobsPage() {
               </div>
             );
           })}
+
+          {/* Infinite scroll sentinel */}
+          <div ref={loadMoreRef} className="h-1" />
+
+          {/* Loading indicator */}
+          {isFetchingNextPage && (
+            <div className="p-4 text-center text-sm text-gray-500">
+              Loading more saved jobs...
+            </div>
+          )}
         </div>
       </div>
     </div>
