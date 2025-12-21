@@ -234,7 +234,12 @@ export default function UniversalInterviewPage() {
           <button
             onClick={prev}
             disabled={step === 0}
-            className="px-4 py-2 bg-indigo-50 rounded-lg"
+            className="px-4 py-2 min-w-[110px] bg-indigo-50  rounded-lg
+            flex items-center justify-center gap-2
+            font-medium
+            hover:bg-indigo-60
+            transition-all duration-200
+            active:scale"
           >
             <ChevronLeft />
           </button>
@@ -248,17 +253,26 @@ export default function UniversalInterviewPage() {
 
           <button
             onClick={next}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
+            className="
+            px-4 py-2 min-w-[110px] bg-indigo-600 text-white rounded-lg
+            flex items-center justify-center gap-2
+            font-medium
+            hover:bg-indigo-700
+            transition-all duration-200
+            active:scale"
           >
-            {step === finalQuestions.length - 1 ? <Send /> : <ChevronRight />}
+            {step === finalQuestions.length - 1 ? <>
+              <span className="font-medium">Submit</span>
+              <Send size={16} />
+            </> : <ChevronRight />}
           </button>
         </div>
 
         <div className="px-6 text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-800">
             Question {step + 1} of {finalQuestions.length}
           </p>
-          <h2 className="font-semibold">{activeQuestion.question}</h2>
+          <h2 className="font-semibold text-l py-3">{activeQuestion.question}</h2>
         </div>
       </div>
 
@@ -274,11 +288,10 @@ export default function UniversalInterviewPage() {
                 <button
                   key={i}
                   onClick={() => setText(opt)}
-                  className={`p-4 border rounded-xl ${
-                    text === opt
-                      ? "border-indigo-600 bg-indigo-50"
-                      : "border-gray-300"
-                  }`}
+                  className={`group flex items-center gap-4 p-5 border-2 rounded-2xl transition-all duration-200 text-left ${text === opt
+                    ? "border-indigo-600 bg-indigo-50/50 shadow-sm"
+                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                    }`}
                 >
                   <CheckCircle2 />
                   {opt}
@@ -334,11 +347,11 @@ export default function UniversalInterviewPage() {
                     if (!monaco) return;
                     editor.addCommand(
                       monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC,
-                      () => {}
+                      () => { }
                     );
                     editor.addCommand(
                       monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV,
-                      () => {}
+                      () => { }
                     );
                     editor.updateOptions({ contextmenu: false });
                   }}
