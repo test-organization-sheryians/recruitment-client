@@ -133,7 +133,7 @@ export default function TestList() {
                         setOpenMenu(null);
                       }}
                     >
-                      Enrolled
+                      Enroll
                     </button>
 
                     <button
