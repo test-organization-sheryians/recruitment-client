@@ -35,7 +35,7 @@ export interface Test {
   updatedAt: string;
 
   questionCount?: number; 
-  questionType?: "MCQ" | "THEORY" | "BOTH";
+  questionType?: "MCQ" | "THEORY";
 
   enrollments: Enrollment[];
   enrolledUsers: EnrolledUser[];
@@ -63,7 +63,7 @@ export type TestFormValues = {
   showResults: boolean; // ✅ ADD THIS
   id?: string;         // ✅ OPTIONAL (needed for update)
   questionCount: number; // added 
-  questionType: "MCQ" | "THEORY" | "BOTH"; // added
+  questionType: "MCQ" | "THEORY"; // added
   skills: string[]
 };
 

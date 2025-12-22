@@ -20,7 +20,7 @@ interface FormData {
   passingScore: string;
   aiPrompt: string;
   questionCount: number; // Number of Questions 
-  questionType: string; // MCQ/Theory/Both
+  questionType: string; // MCQ/Theory
   skills : string[];
 }
 
@@ -52,32 +52,34 @@ export default function CreateTestModal({
     passingScore: "",
     aiPrompt: "",
     questionCount: 10, // Default to 10
-    questionType: "MCQ", // Default to MCQ
+    questionType: "THEORY", // Default to MCQ
     skills: []
   });
 
   /* ---------- PREFILL ---------- */
   useEffect(() => {
+    if (data && formData.title === "" && !testId) return;
     if (!data) return;
 
     setFormData({
-      title: data.title ?? "",
-      summary: data.summury ?? "",
-      category: data.category ?? "",
-      duration: String(data.duration ?? ""),
-      passingScore: String(data.passingScore ?? ""),
-      aiPrompt: data.prompt ?? "",
-     questionCount: data.questionCount ?? 10,
-    questionType: (data.questionType as "MCQ" | "THEORY" | "BOTH") ?? "MCQ",
+    title: data.title ?? "",
+    summary: data.summury ?? "",
+    category: data.category ?? "",
+    duration: String(data.duration ?? ""),
+    passingScore: String(data.passingScore ?? ""),
+    aiPrompt: data.prompt ?? "",
+    questionCount: data.questionCount ?? 10,
+    questionType: (data.questionType as string)?.toUpperCase() === "THEORY" ? "THEORY" : "MCQ",
     skills: data.skills ?? []
-    });
-  }, [data]);
+  });
+  }, [data , testId]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     let finalValue: string | number = value;
+    
     if (name === "duration") {
       if (Number(value) > 120) { finalValue = "120"; }
     }
@@ -87,7 +89,12 @@ export default function CreateTestModal({
    if (name === "questionCount") {
     finalValue = Number(value);
   }
-    setFormData(prev => ({ ...prev, [name]: finalValue }as unknown as FormData));
+
+  if (name === "questionType") {
+    finalValue = value.toUpperCase(); 
+  }
+
+    setFormData(prev => ({ ...prev, [name]: finalValue }));
   };
 
   /* ---------- SKILL LOGIC ---------- */
@@ -105,6 +112,7 @@ export default function CreateTestModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    
     const durationNum = Number(formData.duration);
     const scoreNum = Number(formData.passingScore);
 
@@ -112,7 +120,16 @@ export default function CreateTestModal({
     if (durationNum > 120) return error("Duration cannot be more than 120 minutes.");
     if (scoreNum > 100) return error("Passing score cannot exceed 100%.");
 
-    const enhancedPrompt = `${formData.aiPrompt}\n\nStrict Requirements:\n- Number of questions: ${formData.questionCount}\n- Question format: ${formData.questionType}`;
+    const formatInstruction = formData.questionType === "THEORY" 
+      ? "GENERATE OPEN-ENDED THEORY QUESTIONS ONLY. DO NOT PROVIDE MULTIPLE CHOICE OPTIONS OR A/B/C/D ANSWERS." 
+      : "GENERATE MULTIPLE CHOICE QUESTIONS (MCQ) WITH 4 OPTIONS EACH AND ONE CORRECT ANSWER.";
+
+    const enhancedPrompt = `${formData.aiPrompt}
+  
+  STRICT REQUIREMENTS:
+- Format: ${formData.questionType}
+- Question Count: ${formData.questionCount}
+- Instructions: ${formatInstruction}`;
 
     const payload : TestFormValues = {
       title: formData.title,
@@ -124,7 +141,7 @@ export default function CreateTestModal({
       prompt: enhancedPrompt,
       showResults: true,
       questionCount: formData.questionCount, // added question no.
-      questionType: formData.questionType as "MCQ" | "THEORY" | "BOTH", // added Types
+      questionType: formData.questionType as "MCQ" | "THEORY", // added Types
       skills: formData.skills, // Add skills to payload
     };
 
@@ -338,11 +355,10 @@ export default function CreateTestModal({
         name="questionType"
         value={formData.questionType}
         onChange={handleChange} 
-        className="mt-1 w-full border rounded-lg p-3 bg-white"
+        className="mt-1 w-full border rounded-lg p-3 bg-white text-gray-900 font-medium"
       >
         <option value="MCQ">Multiple Choice (MCQ)</option>
         <option value="THEORY">Theory / Written</option>
-        <option value="BOTH">Mixed (MCQ & Theory)</option>
       </select>
     </div>
 
