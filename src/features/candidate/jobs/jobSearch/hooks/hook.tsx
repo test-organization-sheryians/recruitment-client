@@ -4,7 +4,7 @@ import { PaginatedJobsResponse } from "@/types/Job";
 
 
 export const useSearchJobs = (q: string, location: string, page: number,
-  limit = 10) => {
+  limit = 2) => {
   return useQuery<PaginatedJobsResponse>({
     queryKey: ["search-jobs", q, location,page],
     queryFn: () => api.searchJob({ q, location,page,limit }),

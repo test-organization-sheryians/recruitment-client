@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Sidebar from "./Sidebar";
 import JobCard, { Job } from "./JobCategoryCard";
 import HeroSection from "./HeroSection";
@@ -41,9 +41,71 @@ const [query, setQuery] = useState<SearchQuery>({
   location: "",
 });
 const [page, setPage] = useState(1);
-const limit = 10;
+const limit = 2;
+
+const isCategoryMode = !!selectedCategory;
+const isSearchMode =
+  !selectedCategory &&
+  (query.q.trim().length > 0 || query.location.trim().length > 0);
 
 const {  data: searchedJobs, isLoading: searchLoading , isFetching: searchFetching } = useSearchJobs(query.q, query.location, page, limit);
+
+  // accumulated search results for infinite scroll
+  const [accumulatedJobs, setAccumulatedJobs] = useState<Job[]>([]);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // reset accumulated results when query changes
+  useEffect(() => {
+    if (!isSearchMode) return;
+    setAccumulatedJobs([]);
+    setTotalPages(1);
+    setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query.q, query.location, selectedCategory]);
+
+  // append fetched page to accumulated list
+  useEffect(() => {
+    if (!isSearchMode) return;
+    const pageData = searchedJobs?.data ?? [];
+    const tp = searchedJobs?.totalPage ?? 1;
+    setTotalPages(tp);
+
+    if (page === 1) {
+      setAccumulatedJobs(pageData);
+    } else if (pageData.length > 0) {
+      setAccumulatedJobs((prev) => {
+        const ids = new Set(prev.map((j) => j._id));
+        const appended = pageData.filter((j: Job) => !ids.has(j._id));
+        return [...prev, ...appended];
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchedJobs]);
+
+  // infinite scroll observer
+  useEffect(() => {
+    if (!isSearchMode) return;
+    if (!sentinelRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (
+          first.isIntersecting &&
+          !searchFetching &&
+          page < (totalPages ?? 1)
+        ) {
+          setPage((p) => p + 1);
+        }
+      },
+      { root: null, rootMargin: "200px", threshold: 0.1 }
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSearchMode, sentinelRef.current, searchFetching, page, totalPages]);
 
 // const totalPages = searchedJobs?.totalPages ?? 1;
 // const { data: profileCalInfo } = useProfileQuery();
@@ -62,12 +124,6 @@ const {  data: searchedJobs, isLoading: searchLoading , isFetching: searchFetchi
 
 const { data: allJobs, isLoading: allJobsLoading } = useGetJobs();
 
-  const isCategoryMode = !!selectedCategory;
-// const isSearchMode = !selectedCategory && query.q.trim().length > 0;
-
-const isSearchMode =
-  !selectedCategory &&
-  (query.q.trim().length > 0 || query.location.trim().length > 0);
 
 
 
@@ -76,7 +132,7 @@ let jobsData: Job[] = [];
 if (isCategoryMode) {
   jobsData = normalizeJobs(jobsByCategory.data);
 } else if (isSearchMode) {
-  jobsData = normalizeJobs(searchedJobs);
+  jobsData = accumulatedJobs;
 } else {
   jobsData = normalizeJobs(allJobs);
 }
@@ -213,34 +269,18 @@ if (isCategoryMode) {
               ))}
             </div>
           </div>
-
-              {isSearchMode && (searchedJobs?.totalPage ?? 0) > 1 && (
-  <div className="flex items-center justify-center gap-4 py-6">
-    <button
-      disabled={page === 1}
-      onClick={() => setPage((p) => p - 1)}
-      className="px-4 py-2 text-sm border rounded disabled:opacity-50"
-    >
-      Prev
-    </button>
-
-    <span className="text-sm text-gray-600">
-      Page {page} of  {searchedJobs?.totalPage ?? 1}
-    </span>
-
-    <button
-      disabled={page >= (searchedJobs?.totalPage ?? 1)}
-      onClick={() => setPage((p) => p + 1)}
-      className="px-4 py-2 text-sm border rounded disabled:opacity-50"
-    >
-      Next
-    </button>
-
-    {searchFetching && (
-      <span className="text-xs text-gray-400">Loading...</span>
-    )}
-  </div>
-)}
+            {/* Infinite scroll sentinel for search mode */}
+            {isSearchMode && (
+              <div className="flex flex-col items-center py-6">
+                <div ref={sentinelRef} />
+                {searchFetching && (
+                  <span className="text-xs text-gray-400">Loading more...</span>
+                )}
+                {!searchFetching && page >= (totalPages ?? 1) && (
+                  <span className="text-sm text-gray-600">End of results</span>
+                )}
+              </div>
+            )}
 
 
 
