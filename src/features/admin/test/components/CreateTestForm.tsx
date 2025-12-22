@@ -241,7 +241,7 @@ export default function CreateTestModal({
                   </div>
                 </div>
 
-                <div>
+                {/* <div>
                   <label className="text-sm font-medium">Description</label>
                   <textarea
                     name="summary"
@@ -252,7 +252,7 @@ export default function CreateTestModal({
                     placeholder="Enter Description"
                     required
                   />
-                </div>
+                </div> */}
               </div>
 
 
