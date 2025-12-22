@@ -16,9 +16,15 @@ interface Category {
 }
 
 // Skill can be an object or string
-interface Skill {
+export interface Skill {
   _id?: string;
   name: string;
+}
+
+
+export interface SavedJob {
+  _id: string;
+  jobId: Job;
 }
 
 export interface JobFormValues {

@@ -1,49 +1,97 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
-import JobCard, { Job } from "./JobCategoryCard";
+import JobCard, { Job as CardJob } from "./JobCategoryCard";
 import HeroSection from "./HeroSection";
 import { Menu, X } from "lucide-react";
-import { useGetJobCategories } from "@/features/admin/categories/hooks/useJobCategoryApi";
+import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
 import {
-  useGetJobs,
-  useGetJobsByCategory,
-} from "@/features/admin/jobs/hooks/useJobApi";
-import { log } from "console";
-
-interface Category {
-  _id: string;
-  name: string;
-}
-
-
+  useInfiniteJobs,
+  useInfiniteJobsByCategory,
+} from "@/features/candidate/jobs/hooks/useInfiniteJobs";
+import type { CategoryItem } from "@/api/category/getCategoriesPaginated";
 
 export default function JobDashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-// const { data: profileCalInfo } = useProfileQuery();
+  // const { data: profileCalInfo } = useProfileQuery();
 
-// const completion = profileCalInfo?.data ?? 0;
-// const isProfileCompleted = completion < 60;
+  // const completion = profileCalInfo?.data ?? 0;
+  // const isProfileCompleted = completion < 60;
 
-// console.log(isProfileCompleted);
-  
+  // console.log(isProfileCompleted);
 
-  
+  const {
+    data: categoryPages,
+    isLoading: categoriesLoading,
+    fetchNextPage: fetchNextCategories,
+    hasNextPage: hasMoreCategories,
+    isFetchingNextPage: isFetchingMoreCategories,
+  } = useInfiniteJobCategories();
 
-  const { data: categories, isLoading: categoriesLoading } =
-    useGetJobCategories();
-  const jobsByCategory = useGetJobsByCategory(selectedCategory || "");
-  const allJobs = useGetJobs();
+  const categories: CategoryItem[] = (categoryPages?.pages ?? []).flatMap(
+    (p) => p.data ?? []
+  );
 
-  const jobsData = selectedCategory ? jobsByCategory.data : allJobs.data;
-  const jobsLoading = selectedCategory
-    ? jobsByCategory.isLoading
-    : allJobs.isLoading;
-  const jobs: Job[] = Array.isArray(jobsData) ? jobsData : [];
+  const allJobsQuery = useInfiniteJobs();
+  const jobsByCategoryQuery = useInfiniteJobsByCategory(selectedCategory);
+
+  const activeJobsQuery = selectedCategory ? jobsByCategoryQuery : allJobsQuery;
+
+  const jobsPages = activeJobsQuery.data?.pages ?? [];
+  const jobsLoading = activeJobsQuery.isLoading;
+  const hasMoreJobs = activeJobsQuery.hasNextPage;
+  const fetchNextJobs = activeJobsQuery.fetchNextPage;
+  const isFetchingMoreJobs = activeJobsQuery.isFetchingNextPage;
+
+  const jobs: CardJob[] = jobsPages
+    .flatMap((p) => p.data ?? [])
+    .map((job) => ({
+      ...job,
+      salary: typeof job.salary === "number" ? String(job.salary) : job.salary,
+      skills: job.skills?.map((s) =>
+        typeof s === "string"
+          ? { _id: s, name: s }
+          : { _id: s._id ?? s.name, name: s.name }
+      ),
+    }));
+
+  // Infinite scroll sentinels
+  const categoriesLoadMoreRef = useRef<HTMLDivElement | null>(null);
+  const jobsLoadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = categoriesLoadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (
+        entry.isIntersecting &&
+        hasMoreCategories &&
+        !isFetchingMoreCategories
+      ) {
+        fetchNextCategories();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMoreCategories, isFetchingMoreCategories, fetchNextCategories]);
+
+  useEffect(() => {
+    const el = jobsLoadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (entry.isIntersecting && hasMoreJobs && !isFetchingMoreJobs) {
+        fetchNextJobs();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMoreJobs, isFetchingMoreJobs, fetchNextJobs, selectedCategory]);
 
   const term = searchTerm.toLowerCase();
 
@@ -102,6 +150,7 @@ export default function JobDashboardPage() {
               }}
               categories={categories || []}
               isLoading={categoriesLoading}
+              loadMoreRef={categoriesLoadMoreRef}
             />
           </div>
         </div>
@@ -120,6 +169,7 @@ export default function JobDashboardPage() {
               onSelect={setSelectedCategory}
               categories={categories || []}
               isLoading={categoriesLoading}
+              loadMoreRef={categoriesLoadMoreRef}
             />
           </div>
         </div>
@@ -174,9 +224,16 @@ export default function JobDashboardPage() {
                   key={job._id}
                   className="py-5 first:pt-0 hover:bg-gray-50/70 transition-colors duration-150"
                 >
-                  <JobCard job={job}/>
+                  <JobCard job={job} />
                 </div>
               ))}
+              {/* Infinite scroll sentinel for jobs */}
+              <div ref={jobsLoadMoreRef} className="h-1" />
+              {isFetchingMoreJobs && (
+                <div className="p-4 text-center text-xs text-gray-500">
+                  Loading more…
+                </div>
+              )}
             </div>
           </div>
         </div>
