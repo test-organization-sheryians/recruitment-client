@@ -45,3 +45,12 @@ export interface JobFormValues {
     isRemote: boolean;
     isFeatured: boolean;
 }
+
+export interface PaginatedJobsResponse {
+  success: boolean;
+  data: Job[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPage: number;
+}

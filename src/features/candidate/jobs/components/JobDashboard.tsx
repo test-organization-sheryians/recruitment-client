@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import JobCard, { Job } from "./JobCategoryCard";
 import HeroSection from "./HeroSection";
@@ -40,9 +40,12 @@ const [query, setQuery] = useState<SearchQuery>({
   q: "",
   location: "",
 });
-const {  data: searchedJobs, isLoading: searchLoading  } = useSearchJobs(query.q, query.location);
+const [page, setPage] = useState(1);
+const limit = 10;
 
+const {  data: searchedJobs, isLoading: searchLoading , isFetching: searchFetching } = useSearchJobs(query.q, query.location, page, limit);
 
+// const totalPages = searchedJobs?.totalPages ?? 1;
 // const { data: profileCalInfo } = useProfileQuery();
 
 // const completion = profileCalInfo?.data ?? 0;
@@ -50,7 +53,7 @@ const {  data: searchedJobs, isLoading: searchLoading  } = useSearchJobs(query.q
 
 // console.log(isProfileCompleted);
   
-
+ console.log("data form backend to check page 2==>",searchedJobs)
   
 
   const { data: categories, isLoading: categoriesLoading } =
@@ -86,6 +89,7 @@ if (isCategoryMode) {
     : allJobsLoading;
 
   const searchHandler = ()=>{
+    setPage(1)
  setQuery({
     q: searchTerm,
     location: searchLocation,
@@ -209,6 +213,37 @@ if (isCategoryMode) {
               ))}
             </div>
           </div>
+
+              {isSearchMode && (searchedJobs?.totalPage ?? 0) > 1 && (
+  <div className="flex items-center justify-center gap-4 py-6">
+    <button
+      disabled={page === 1}
+      onClick={() => setPage((p) => p - 1)}
+      className="px-4 py-2 text-sm border rounded disabled:opacity-50"
+    >
+      Prev
+    </button>
+
+    <span className="text-sm text-gray-600">
+      Page {page} of  {searchedJobs?.totalPage ?? 1}
+    </span>
+
+    <button
+      disabled={page >= (searchedJobs?.totalPage ?? 1)}
+      onClick={() => setPage((p) => p + 1)}
+      className="px-4 py-2 text-sm border rounded disabled:opacity-50"
+    >
+      Next
+    </button>
+
+    {searchFetching && (
+      <span className="text-xs text-gray-400">Loading...</span>
+    )}
+  </div>
+)}
+
+
+
         </div>
       </div>
 
