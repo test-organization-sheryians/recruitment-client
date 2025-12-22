@@ -9,6 +9,19 @@ export interface EnrolledUser {
   role?: string;
 }
 
+export interface TestAttempt {
+  _id: string;
+  testId: string;
+  email: string;
+  score: number;
+  percentage: number;
+  isPassed: boolean;
+  status: "Started" | "Graded"; // ✅ MATCH BACKEND
+  createdAt: string;
+  updatedAt: string;
+}
+
+
 // 2. The Core Test Object
 export interface Test {
   _id: string;
@@ -28,7 +41,10 @@ export interface Test {
   // ✅ OPTIONAL FIELDS (Required for Admin Panel to work)
   enrollments?: Enrollment[];     
   enrolledUsers?: EnrolledUser[]; 
-  enrolledCount?: number;         
+  enrolledCount?: number; 
+  
+  // ✅ ADD THIS (FOR CANDIDATE TEST STATUS)
+  attempt?: TestAttempt;
 }
 
 // 3. The Enrollment Wrapper (Matches Candidate API Response)
@@ -66,3 +82,5 @@ export type TestFormValues = {
   prompt: string;
   showResults: boolean;
 };
+
+

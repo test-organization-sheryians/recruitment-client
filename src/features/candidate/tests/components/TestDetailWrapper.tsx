@@ -1,18 +1,33 @@
 "use client";
 
 import React from "react";
-import { useCandidateTestDetail } from "@/features/candidate/tests/hooks/useTest";
+import { useSelector } from "react-redux";
+import { RootState } from "@/config/store";
+import { useCandidateTestDetail, useCandidateAttempts } from "@/features/candidate/tests/hooks/useTest";
 import SingleTestDetail from "@/features/candidate/tests/components/SingleTestDetail";
 import { Loader2, AlertCircle } from "lucide-react";
 
 export default function TestDetailWrapper({ testId }: { testId: string }) {
-  const { data: test, isLoading, isError, error } = useCandidateTestDetail(testId);
+  // Logged-in user
+  const { user } = useSelector((state: RootState) => state.auth);
 
-  // --- DEBUGGING LOG ---
-  // Open your browser console (F12) to see this!
-  console.log("🔥 API RESPONSE FOR TEST ID:", testId, test);
+  // Fetch test details
+  const {
+    data: test,
+    isLoading: testLoading,
+    isError: testError,
+    error,
+  } = useCandidateTestDetail(testId);
 
-  if (isLoading) {
+  // Fetch ALL attempts of user
+  const { data: attempts } = useCandidateAttempts(user?.id || "");
+
+  // Find attempt for THIS test
+  const attemptForThisTest = attempts?.find(
+    (attempt: any) => attempt.testId === testId
+  );
+
+  if (testLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <Loader2 className="animate-spin h-10 w-10 text-blue-600" />
@@ -20,7 +35,7 @@ export default function TestDetailWrapper({ testId }: { testId: string }) {
     );
   }
 
-  if (isError || !test) {
+  if (testError || !test) {
     return (
       <div className="flex flex-col justify-center items-center h-screen text-red-500">
         <AlertCircle className="h-10 w-10 mb-2" />
@@ -29,5 +44,13 @@ export default function TestDetailWrapper({ testId }: { testId: string }) {
     );
   }
 
-  return <SingleTestDetail test={test} />;
+  // 🔑 Pass attempt along with test (NO existing logic broken)
+  return (
+    <SingleTestDetail
+      test={{
+        ...test,
+        attempt: attemptForThisTest,
+      }}
+    />
+  );
 }
