@@ -5,6 +5,8 @@ import api from "@/config/axios";
 // }
 
 export const getUserAttempts = async (id: string) => {
-  const response = await api.get(`api/test-attempts/user/${id}`); 
-  return response.data;
+  const response = await api.get(`api/test-attempts/user/${id}`);
+
+  
+  return response.data.data;
 };

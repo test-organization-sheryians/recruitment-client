@@ -16,17 +16,17 @@ export interface TestAttempt {
   score: number;
   percentage: number;
   isPassed: boolean;
-  status: "Started" | "Graded"; // ✅ MATCH BACKEND
+  status: "Started" | "Graded"; 
   createdAt: string;
   updatedAt: string;
+  test: Test; // ✅ Added: This contains the Test Details (Title, Summary, etc.)
 }
-
 
 // 2. The Core Test Object
 export interface Test {
   _id: string;
   title: string;
-  summury: string; // ✅ Matches backend spelling
+  summury: string; 
   description?: string;
   showResults: boolean;
   createdBy?: string;
@@ -38,22 +38,22 @@ export interface Test {
   createdAt: string;
   updatedAt: string;
 
-  // ✅ OPTIONAL FIELDS (Required for Admin Panel to work)
+  // ✅ OPTIONAL FIELDS
   enrollments?: Enrollment[];     
   enrolledUsers?: EnrolledUser[]; 
   enrolledCount?: number; 
   
-  // ✅ ADD THIS (FOR CANDIDATE TEST STATUS)
+  // ✅ For Candidate Status
   attempt?: TestAttempt;
 }
 
-// 3. The Enrollment Wrapper (Matches Candidate API Response)
+// 3. The Enrollment Wrapper
 export interface Enrollment {
   _id: string;
   testId: string;
   email: string;
   status: string;
-  test: Test; // ✅ The actual Test object is nested here
+  test: Test; 
   createdAt: string;
   updatedAt: string;
 }
@@ -70,7 +70,7 @@ export interface Attempt {
   updatedAt: string;
 }
 
-// 5. Form Values for Admin Create/Update
+// 5. Form Values
 export type TestFormValues = {
   id?: string;
   title: string;
@@ -82,5 +82,3 @@ export type TestFormValues = {
   prompt: string;
   showResults: boolean;
 };
-
-

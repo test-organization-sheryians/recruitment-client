@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { getTestDetails } from "@/api/tests/getTestDetails";
 import { getUserAttempts } from "@/api/tests/getUserAttempts";
 import { getUserEnrollments } from "@/api/tests/getUserEnrollments";
-import { Test, Enrollment } from "@/types/Test"; // ✅ Import Enrollment
+import { Enrollment } from "@/types/Test";
 
 export const useCandidateAttempts = (userId: string) => {
   return useQuery({
@@ -12,15 +11,8 @@ export const useCandidateAttempts = (userId: string) => {
   });
 };
 
-export const useCandidateTestDetail = (testId: string) => {
-  return useQuery<Test>({
-    queryKey: ["test", "detail", testId],
-    queryFn: () => getTestDetails(testId),
-    enabled: !!testId,
-  });
-};
+// ❌ Removed useCandidateTestDetail (No longer needed)
 
-// ✅ Updated to use Enrollment[]
 export const useCandidateEnrollments = (email: string) => {
   return useQuery<Enrollment[]>({
     queryKey: ["candidate", "enrollments", email],

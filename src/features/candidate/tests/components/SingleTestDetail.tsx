@@ -1,8 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Test } from "@/types/Test";
-import { Clock, CheckCircle, Calendar, ArrowLeft, Award } from "lucide-react";
+import {
+  Clock,
+  CheckCircle,
+  Calendar,
+  ArrowLeft,
+  Award,
+} from "lucide-react";
 import Link from "next/link";
 
 interface Props {
@@ -12,7 +18,7 @@ interface Props {
 const SingleTestDetail = ({ test }: Props) => {
   const attempt = test.attempt;
 
-  const renderStatus = () => {
+  const statusBadge = useMemo(() => {
     if (!attempt) {
       return (
         <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
@@ -44,7 +50,7 @@ const SingleTestDetail = ({ test }: Props) => {
     }
 
     return null;
-  };
+  }, [attempt]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -58,12 +64,13 @@ const SingleTestDetail = ({ test }: Props) => {
         </Link>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
+          {/* HEADER */}
           <div className="p-8 border-b">
             <div className="flex justify-between items-center mb-4">
               <h1 className="text-3xl font-bold text-gray-900">
                 {test.title}
               </h1>
-              {renderStatus()}
+              {statusBadge}
             </div>
 
             <p className="text-gray-600">
@@ -71,11 +78,12 @@ const SingleTestDetail = ({ test }: Props) => {
             </p>
           </div>
 
+          {/* META */}
           <div className="grid grid-cols-3 divide-x bg-gray-50">
             <div className="p-6 text-center">
               <Clock className="mx-auto mb-2 text-blue-500" />
               <div className="font-bold">
-                {test.duration > 1000 ? "Unlimited" : test.duration} min
+                {test.duration > 0 ? `${test.duration} min` : "Unlimited"}
               </div>
             </div>
 
@@ -87,12 +95,14 @@ const SingleTestDetail = ({ test }: Props) => {
             <div className="p-6 text-center">
               <Calendar className="mx-auto mb-2 text-orange-500" />
               <div className="font-bold">
-                {new Date(test.createdAt).toLocaleDateString()}
+                {test.createdAt
+                  ? new Date(test.createdAt).toLocaleDateString()
+                  : "—"}
               </div>
             </div>
           </div>
 
-          {/* RESULT SECTION */}
+          {/* RESULT */}
           {attempt?.status === "Graded" && test.showResults && (
             <div className="p-8 border-t bg-green-50">
               <h3 className="flex items-center gap-2 text-lg font-bold mb-2">
