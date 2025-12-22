@@ -79,8 +79,8 @@ const SigninForm = () => {
   };
 
   return (
-    <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-10 px-[20%] flex flex-col justify-center">
-      <h1 className="text-3xl font-semibold text-center text-gray-800 mb-8">
+    <div className="w-full h-full font-[satoshi] bg-white rounded-2xl md:py-10 md:px-[20%] px-[6%] flex flex-col justify-center">
+      <h1 className="text-3xl font-semibold text-center text-gray-800 md:mb-8 mb-5">
         Sign in to Your Account
       </h1>
 
@@ -93,7 +93,7 @@ const SigninForm = () => {
         </div>
       )}
 
-      <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+      <form className="md:mt-8 mt-5 space-y-6" onSubmit={handleSubmit(onSubmit)}>
         <LabelInput
           label="Email"
           placeholder="your email"

@@ -90,24 +90,30 @@ const SignupForm = () => {
   };
 
   return (
-    <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-5 px-[20%] flex flex-col justify-center">
-      <h1 className="text-3xl font-semibold text-center text-gray-800 mb-6">
+    <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-5 md:px-[4%] px-[3%] flex flex-col justify-center">
+      <h1 className="text-3xl font-semibold text-center text-gray-800 mb-5 ">
         Sign-up Account
       </h1>
 
-      <form className="mt-5 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-        <LabelInput
-          label="First Name"
-          placeholder="your first name"
-          type="text"
-          {...register("firstName", { required: true })}
-        />
-        <LabelInput
-          label="Last Name"
-          placeholder="your last name"
-          type="text"
-          {...register("lastName")}
-        />
+      <form className="md:mt-5 mt-4 space-y-4" onSubmit={handleSubmit(onSubmit)}>
+      <div className="w-full flex items-center justify-between">
+        <div className="w-[49%]">
+          <LabelInput
+            label="First Name"
+            placeholder="your first name"
+            type="text"
+            //{...register("firstName", { required: true })}
+          />
+        </div>
+        <div className="w-[49%]">
+          <LabelInput
+            label="Last Name"
+            placeholder="your last name"
+            type="text"
+            // {...register("lastName")}
+          />
+        </div>
+      </div>
         <LabelInput
           label="Phone Number"
           placeholder="your phone number"
@@ -179,6 +185,7 @@ const SignupForm = () => {
         </a>
       </p>
     </div>
+    
   );
 };
 
