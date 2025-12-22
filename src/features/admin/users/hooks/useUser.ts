@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as api from "@/api";
 
 export interface Role {
+  _id: string;
   name: string;
 }
 
@@ -17,15 +18,29 @@ export interface User {
 /* ============================
    GET USERS
 ============================ */
-export const useGetUsers = () =>
+// export const useGetUsers = () =>
+//   useQuery<User[], Error>({
+//     queryKey: ["users",role], // role is added 
+//     queryFn: async () => {
+//       const users = await api.getAllUsers();
+//       return Array.isArray(users) ? users : [];
+//     },
+//     retry: 0,
+//   });
+
+
+// my code 
+
+export const useGetUsers = (role?: string) =>
   useQuery<User[], Error>({
-    queryKey: ["users"],
+    queryKey: ["users", role], // ✅ now role is defined
     queryFn: async () => {
-      const users = await api.getAllUsers();
+      const users = await api.getAllUsers(role); // ✅ pass role
       return Array.isArray(users) ? users : [];
     },
     retry: 0,
   });
+
 
 
 interface UpdateRolePayload {

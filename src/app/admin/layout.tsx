@@ -33,7 +33,7 @@ if (!user) {
         </aside>
 
         <div className="flex-1 md:ml-72">
-          <div className="p-4 md:p-6 max-w-[1400px] mx-auto">
+          <div className="p-2 md:p-2 max-w-[1400px] mx-auto">
             <div className="mb-6">
                <Navbar />
             </div>
