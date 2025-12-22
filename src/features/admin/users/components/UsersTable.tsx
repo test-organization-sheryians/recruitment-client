@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Pencil, Trash2, Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-
 import {
   useInfiniteUsers,
   useDeleteUser,
@@ -104,12 +103,12 @@ export default function UsersTable() {
         onSuccess: () => {
           setIsSaving(false);
           setIsModalOpen(false);
-          success("Role updated successfully!");
+          success("Role updated successfully");
           queryClient.invalidateQueries({ queryKey: ["users"] });
         },
         onError: () => {
           setIsSaving(false);
-          error("Failed to update role. Try again!");
+          error("Failed to update role");
         },
       }
     );
@@ -127,6 +126,7 @@ export default function UsersTable() {
         onError: () => {
           error("Failed to delete user!");
         },
+        onError: () => error("Failed to delete user"),
       }
     );
   };

@@ -24,6 +24,10 @@ export * from "./jobs/createJob";
 export * from "./jobs/updateJob";
 export * from "./jobs/deleteJob";
 export * from "./jobs/jobCategory";
+export * from "./activeJobs/getJobsByStatus";
+export * from "./activeJobs/updateJobStatus";
+export * from "./jobs/getActiveJob";
+export * from "./jobs/getJobId"
 export * from "./jobs/getJobId";
 
 /* ================= SKILLS ================= */
@@ -47,6 +51,8 @@ export * from "./resumeExtract";
 export * from "./users/getAllUsers";
 export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
+export * from "./applicant/applyJob";
+export * from "./applicant/bulkUpdate";
 export * from "./profile/index"
 
 

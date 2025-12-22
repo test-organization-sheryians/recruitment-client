@@ -19,7 +19,7 @@ export default function DashboardPage() {
         </aside>
 
         <section className="col-span-12 lg:col-span-8">
-          <ApplicantsSection width={720} />
+          {/* <ApplicantsSection width={720} /> */}
         </section>
 
         <section className="col-span-12 lg:col-span-4">
