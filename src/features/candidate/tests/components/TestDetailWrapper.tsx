@@ -3,9 +3,13 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/config/store";
-import { useCandidateTestDetail, useCandidateAttempts } from "@/features/candidate/tests/hooks/useTest";
+import {
+  useCandidateTestDetail,
+  useCandidateAttempts,
+} from "@/features/candidate/tests/hooks/useTest";
 import SingleTestDetail from "@/features/candidate/tests/components/SingleTestDetail";
 import { Loader2, AlertCircle } from "lucide-react";
+import { TestAttempt } from "@/types/Test";
 
 export default function TestDetailWrapper({ testId }: { testId: string }) {
   // Logged-in user
@@ -24,7 +28,7 @@ export default function TestDetailWrapper({ testId }: { testId: string }) {
 
   // Find attempt for THIS test
   const attemptForThisTest = attempts?.find(
-    (attempt: any) => attempt.testId === testId
+    (attempt: TestAttempt) => attempt.testId === testId
   );
 
   if (testLoading) {

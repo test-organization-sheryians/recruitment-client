@@ -9,8 +9,18 @@ import {
 } from "@/features/candidate/tests/hooks/useTest";
 import TestDetails from "@/features/candidate/tests/components/TestDetails";
 import { Loader2, AlertCircle } from "lucide-react";
+import { Enrollment, TestAttempt } from "@/types/Test";
 
 type FilterType = "ALL" | "ENROLLED" | "ATTEMPTED";
+
+/**
+ * Local derived type
+ * (does NOT change backend or global types)
+ */
+type EnrollmentWithAttempts = Enrollment & {
+  attemptCount: number;
+  lastAttemptStatus?: TestAttempt["status"];
+};
 
 export default function TestsPage() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -24,23 +34,23 @@ export default function TestsPage() {
 
   const [filter, setFilter] = useState<FilterType>("ALL");
 
-  const filteredTests = useMemo(() => {
+  const filteredTests: EnrollmentWithAttempts[] = useMemo(() => {
     if (!enrollments) return [];
 
     return enrollments
-      .map((enrollment: any) => {
+      .map((enrollment: Enrollment) => {
         const testAttempts =
           attempts?.filter(
-            (a: any) => a.testId === enrollment.test._id
+            (a: TestAttempt) => a.testId === enrollment.test._id
           ) || [];
 
         return {
           ...enrollment,
-          attemptCount: testAttempts.length, // ✅ COUNT HERE
+          attemptCount: testAttempts.length,
           lastAttemptStatus: testAttempts[0]?.status,
         };
       })
-      .filter((item: any) => {
+      .filter((item: EnrollmentWithAttempts) => {
         if (filter === "ATTEMPTED") return item.attemptCount > 0;
         if (filter === "ENROLLED") return item.attemptCount === 0;
         return true;
