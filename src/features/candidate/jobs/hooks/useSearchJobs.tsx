@@ -1,21 +1,3 @@
-// import { useQuery } from "@tanstack/react-query";
-// import * as api from "@/api";
-// import { PaginatedJobsResponse } from "@/types/Job";
-
-// export const useSearchJobs = (
-//   q: string,
-//   location: string,
- 
-// ) => {
-//   return useQuery<PaginatedJobsResponse>({
-//     queryKey: ["search-jobs", q, location, page, limit],
-//     queryFn: () => api.searchJob({ q, location, page, limit }),
-//     enabled: Boolean(q || location),
-//     retry: 0,
-
-//      placeholderData: (previousData) => previousData,
-//   });
-// };
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { Job } from "@/types/Job";
