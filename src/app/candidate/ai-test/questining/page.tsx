@@ -275,6 +275,7 @@ export default function UniversalInterviewPage() {
           </button>
         </div>
 
+
         <div className="px-6 text-center">
           <p className="text-xs text-gray-800">
             Question {step + 1} of {finalQuestions.length}
