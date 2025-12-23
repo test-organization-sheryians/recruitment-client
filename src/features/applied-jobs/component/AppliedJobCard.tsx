@@ -1,12 +1,14 @@
 "use client";
 
 import { Calendar, MapPin } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { AppliedJob } from "../types/appliedjobs.types";
 
 interface Props {
   job: AppliedJob;
 }
 
+/* ❌ hired removed */
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   applied: {
     label: "Applied",
@@ -28,22 +30,34 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
     label: "Interview",
     className: "bg-amber-100 text-amber-700 border-amber-200",
   },
-  hired: {
-    label: "Hired",
-    className: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  },
 };
 
 export default function AppliedJobCard({ job }: Props) {
-  const status = STATUS_CONFIG[job.status];
+  const router = useRouter();
+
+ 
+  const status =
+    STATUS_CONFIG[job.status] ?? {
+      label: job.status || "Not specified",
+      className: "bg-gray-100 text-gray-700 border-gray-200",
+    };
 
   return (
-    <div className="w-full">
-      <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
-        
+    <div
+      onClick={() => {
+       
+        if (job.jobId) {
+          router.push(`/job-details?id=${job.jobId}`);
+        }
+      }}
+      className="w-full cursor-pointer"
+    >
+      <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm hover:shadow-md hover:border-gray-300 transition-all">
+
+        {/* HEADER */}
         <div className="flex justify-between items-start gap-2 mb-4">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-            {job.jobTitle}
+            {job.jobTitle || "Not specified"}
           </h3>
 
           <span
@@ -58,25 +72,26 @@ export default function AppliedJobCard({ job }: Props) {
           <div className="flex items-start gap-2">
             <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
             <span className="leading-snug">
-             {
-              job.location?`${job.location.city}, ${job.location.state}, ${job.location.country} - ${job.location.pincode}`:"Not Specified"
-             }
-           
-         
+              {job.location
+                ? `${job.location.city}, ${job.location.state}, ${job.location.country} - ${job.location.pincode}`
+                : "Not specified"}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 shrink-0" />
             <span>
-              {new Date(job.createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
+              {job.createdAt
+                ? new Date(job.createdAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : "Not specified"}
             </span>
           </div>
         </div>
+
       </div>
     </div>
   );
