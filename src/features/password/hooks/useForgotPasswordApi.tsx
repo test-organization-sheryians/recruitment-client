@@ -1,4 +1,5 @@
 import * as api from "@/api"; 
+import { ForgotPasswordPayload, ResetPasswordPayload } from "@/types/auth";
 import { useMutation } from "@tanstack/react-query";
 
 

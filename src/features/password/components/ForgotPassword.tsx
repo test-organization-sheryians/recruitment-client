@@ -30,9 +30,11 @@ export default function ForgotPassword() {
         router.push("/login")
       },
       onError: (error: unknown) => {
-        const message =
-          error?.response?.data?.message ||
-          "Failed to send reset password email";
+        let message = "Failed to send reset password email"
+
+      if (axios.isAxiosError(error)) {
+        message = error.response?.data?.message || message
+      }
         toast.error(message);
       },
     }

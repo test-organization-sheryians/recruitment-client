@@ -1,11 +1,5 @@
 import api from "@/config/axios";
-
-interface ResetPasswordPayload {
-  token: string;
-  username: string;
-  newPassword: string;
-  confirmPassword: string;
-}
+import { ResetPasswordPayload } from "@/types/auth";
 
 export const resetPassword = async (payload: ResetPasswordPayload) => {
 

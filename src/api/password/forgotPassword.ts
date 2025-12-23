@@ -1,4 +1,5 @@
 import api from "@/config/axios";
+import { ForgotPasswordPayload } from "@/types/auth";
 
 export const forgotPassword = async (data: ForgotPasswordPayload) => {
     const response = await api.post("/api/password/forgot-password", data);

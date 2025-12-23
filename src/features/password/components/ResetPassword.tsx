@@ -47,11 +47,12 @@ export default function ResetPassword() {
           router.push("/login")
         },
         onError: (error: unknown) => {
-          const message =
-            axios.isAxiosError(error)
-              ? error.response?.data?.message
-              : "Failed to reset password"
-          toast.error(message || "Failed to reset password")
+          let message = "Failed to reset password"
+
+      if (axios.isAxiosError(error)) {
+        message = error.response?.data?.message || message
+      }
+          toast.error(message )
         },
       }
     )
