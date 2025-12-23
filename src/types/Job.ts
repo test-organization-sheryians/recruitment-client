@@ -55,3 +55,22 @@ export interface JobFormValues {
     isRemote: boolean;
     isFeatured: boolean;
 }
+
+
+// export interface PaginatedJobsResponse {
+//    "success": true,
+//   "data": {
+//     "data": [Job],
+//     "pagination": {
+//       "totalRecords": number,
+//       "totalPages": number,
+//       "currentPage": number,
+//       "limit": number
+//     }
+//   }
+// }
+
+export type SearchQuery = {
+  q: string;
+  location: string;
+};

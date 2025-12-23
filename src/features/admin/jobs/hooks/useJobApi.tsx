@@ -1,8 +1,14 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import * as api from "@/api";
 import { Job } from "@/types/Job";
 
 export type JobUpdatePayload = Record<string, unknown>;
+
+import {
+  getJobsPaginated,
+  type BackendPaginatedResponse,
+} from "@/api/jobs/getJobsPaginated";
+// import { getJobById } from "@/api";
 
 export const useGetJobs = () => {
   return useQuery({
@@ -12,6 +18,24 @@ export const useGetJobs = () => {
   });
 };
 
+const DEFAULT_LIMIT = 10;
+
+export const useInfiniteJobsAdmin = (limit: number = DEFAULT_LIMIT) => {
+  return useInfiniteQuery<BackendPaginatedResponse<Job>>({
+    queryKey: ["admin-jobs", { limit }],
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) => {
+      const res = await getJobsPaginated(pageParam as number, limit);
+      return res;
+    },
+    getNextPageParam: (lastPage) => {
+      const { pagination } = lastPage;
+      if (!pagination) return undefined;
+      const next = (pagination.currentPage ?? 1) + 1;
+      return next <= (pagination.totalPages ?? 0) ? next : undefined;
+    },
+  });
+};
 
 export const useGetJobById = (id?: string) => {
   return useQuery<Job, Error>({
@@ -21,7 +45,6 @@ export const useGetJobById = (id?: string) => {
     retry: 0,
   });
 };
-
 
 export const useCreateJob = () => {
   return useMutation({
@@ -52,8 +75,8 @@ export const useGetJobsByCategory = (categoryId: string | null) => {
   return useQuery({
     queryKey: ["jobsByCategory", categoryId],
 
-    
-    queryFn: () => categoryId ? api.getJobsByCategory(categoryId) : Promise.resolve([]),
+    queryFn: () =>
+      categoryId ? api.getJobsByCategory(categoryId) : Promise.resolve([]),
     enabled: !!categoryId,
     retry: 0,
   });
