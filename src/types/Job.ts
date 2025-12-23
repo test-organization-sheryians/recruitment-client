@@ -1,12 +1,4 @@
 export interface Job {
-    id: string;
-    title: string;
-    location: string;
-    salary: number;
-    isRemote: boolean;
-    isFeatured: boolean;
-    createdAt: string;
-    updatedAt: string;
     _id: string;
     requiredExperience?: string;
     category?: Category | string;

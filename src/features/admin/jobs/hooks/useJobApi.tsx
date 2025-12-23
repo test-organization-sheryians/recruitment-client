@@ -78,3 +78,11 @@ export const useGetJobsByCategory = (categoryId: string | null) => {
     retry: 0,
   });
 };
+
+export const useGetActiveJob = () => {
+  return useQuery({
+    queryKey: ["activeJob"],
+    queryFn: () => api.getActiveJob(),
+    retry: 0,
+  });
+};
