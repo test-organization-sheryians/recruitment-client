@@ -54,6 +54,10 @@ export * from "./tests/startTest";
 export * from "./tests/testAttempts";
 export * from "./tests/testInfo";
 
+export * from "./password/forgotPassword";
+export * from "./password/resetPassword";
+
+
 
 
 export * from "./tests/createTest";
