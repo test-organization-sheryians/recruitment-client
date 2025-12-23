@@ -21,7 +21,7 @@ export interface AppliedJob {
 
   createdAt: string;
 
-  // 🔽 OPTIONAL (JobDetails me use honge)
+  
   category?: string;
   experience?: string;
   education?: string;
