@@ -1,8 +1,7 @@
-import React from "react";
-import PasswordResetOTP from "../../../features/auth/components/PasswordResetOtpInput";
+import ForgotPassword from "@/features/password/components/ForgotPassword";
 
-const page = () => {
-  return <PasswordResetOTP />;
+const Page = () => {
+  return <ForgotPassword />;
 };
 
-export default page;
+export default Page;
