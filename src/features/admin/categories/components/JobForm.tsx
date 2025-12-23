@@ -395,7 +395,7 @@ export default function JobForm({
                           type="button"
                           onClick={() => {
                             handleSkillToggle(skill._id);
-                            setSearchTerm(""); 
+                            setSearchTerm("");
                           }}
                           className="px-3 py-1 rounded-full text-xs font-medium border bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all"
                         >
@@ -410,7 +410,11 @@ export default function JobForm({
                       <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Selected Skills:</p>
                       <div className="flex flex-wrap gap-2 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
                         {formData.skills.map((skillId) => {
-                          const skillName = skillsResponse.find(s => s._id === skillId)?.name;
+                          // ADD THE ARRAY CHECK HERE
+                          const skillName = Array.isArray(skillsResponse)
+                            ? skillsResponse.find(s => s._id === skillId)?.name
+                            : "Loading..."; // Fallback if data isn't an array yet
+
                           return (
                             <span key={skillId} className="flex items-center gap-1 bg-white text-blue-700 px-3 py-1 rounded-full text-sm border border-blue-200 shadow-sm">
                               {skillName}
