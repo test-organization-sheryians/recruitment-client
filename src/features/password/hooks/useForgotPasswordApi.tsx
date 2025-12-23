@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 
 export const useForgotPassword = () => {
   return useMutation({
-    mutationKey: ["register"],
+    mutationKey: ["forgot-password"],
     mutationFn: (data: ForgotPasswordPayload) => api.forgotPassword(data),
     retry: 0,
   });
@@ -13,7 +13,7 @@ export const useForgotPassword = () => {
 
 export const useResetPassword = () => {
   return useMutation({
-    mutationKey: ["register"],
+    mutationKey: ["reset-password"],
     mutationFn: (data: ResetPasswordPayload) => api.resetPassword(data),
     retry: 0,
   });
