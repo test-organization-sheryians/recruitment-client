@@ -12,6 +12,7 @@ import {
 import { useToast } from "@/components/ui/Toast";
 
 interface Role {
+  _id: string;
   name: string;
 }
 
@@ -39,11 +40,6 @@ export default function UsersTable() {
     [userPages]
   );
 
-  const deleteUser = useDeleteUser();
-  const updateUserRole = useUpdateUserRole();
-  const queryClient = useQueryClient();
-  const { success, error } = useToast();
-
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -53,17 +49,41 @@ export default function UsersTable() {
 
   const loadMoreRef = useRef<HTMLTableRowElement | null>(null);
 
-  // Filter users based on search query
+  const deleteUser = useDeleteUser();
+  const updateUserRole = useUpdateUserRole();
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+
+  /* ---------------- URL SYNC (NO RELOAD, NO INVALIDATION) ---------------- */
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+
+      if (searchQuery) params.set("query", searchQuery);
+      else params.delete("query");
+
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}?${params.toString()}`
+      );
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
+
+  /* ---------------- CLIENT-SIDE FILTER (FAST) ---------------- */
   const filteredUsers = useMemo(() => {
     if (!searchQuery.trim()) return users;
-    const query = searchQuery.toLowerCase();
-    return users.filter((user) => {
-      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-      return fullName.includes(query) || user.email.toLowerCase().includes(query);
+
+    const q = searchQuery.toLowerCase();
+    return users.filter((u) => {
+      const name = `${u.firstName} ${u.lastName}`.toLowerCase();
+      return name.includes(q) || u.email.toLowerCase().includes(q);
     });
   }, [users, searchQuery]);
 
-  // Infinite scroll observer
+  /* ---------------- INFINITE SCROLL (FAST, NO RESET) ---------------- */
   useEffect(() => {
     const el = loadMoreRef.current;
     if (!el) return;
@@ -81,9 +101,10 @@ export default function UsersTable() {
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  /* ---------------- ACTIONS ---------------- */
   const openModal = (user: User) => {
     setSelectedUserId(user._id);
-    setSelectedRole(user.role?.name || "");
+    setSelectedRole(user.role?._id || "");
     setIsModalOpen(true);
   };
 
@@ -105,7 +126,7 @@ export default function UsersTable() {
         },
         onError: () => {
           setIsSaving(false);
-          error("Failed to update role. Try again!");
+          error("Failed to update role");
         },
       }
     );
@@ -120,40 +141,40 @@ export default function UsersTable() {
           success("User deleted successfully!");
           queryClient.invalidateQueries({ queryKey: ["users"] });
         },
-        onError: () => {
-          error("Failed to delete user!");
-        },
+        onError: () => error("Failed to delete user"),
       }
     );
   };
 
   if (isLoading) return <p className="text-center py-8">Loading users...</p>;
   if (isError)
-    return <p className="text-center py-8 text-red-500">Failed to load users.</p>;
+    return (
+      <p className="text-center py-8 text-red-500">Failed to load users</p>
+    );
 
   return (
     <>
-      {/* Search Input */}
-      <div className="w-full flex justify-end mb-6">
+      {/* SEARCH */}
+      <div className="flex justify-end mb-6">
         <input
           type="text"
           placeholder="Search by name or email..."
-          className="px-4 py-2 border rounded-lg w-64 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 border rounded-lg w-64"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
 
-      {/* Role Update Modal */}
+      {/* MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg w-80">
-            <h2 className="text-lg font-semibold mb-4">Update Role</h2>
+          <div className="bg-white p-6 rounded-lg w-80">
+            <h2 className="font-semibold mb-4">Update Role</h2>
 
             <select
-              className="w-full p-2 border rounded-lg bg-gray-50"
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
+              className="w-full border p-2 rounded"
             >
               <option value="">Select Role</option>
               <option value="6915a17ed8d70e9b7ce70ec7">Admin</option>
@@ -162,105 +183,109 @@ export default function UsersTable() {
             </select>
 
             <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
-              >
-                Cancel
-              </button>
+              <button onClick={() => setIsModalOpen(false)}>Cancel</button>
               <button
                 onClick={handleSaveRole}
                 disabled={isSaving}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 disabled:opacity-70"
+                className="bg-blue-600 text-white px-4 py-2 rounded"
               >
-                {isSaving ? <Loader2 className="animate-spin w-4 h-4" /> : "Save"}
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Users Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border rounded-lg shadow">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">Name</th>
-              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">Email</th>
-              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">Phone</th>
-              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">Role</th>
-              <th className="px-6 py-3 border-b text-center text-sm font-medium text-gray-700">Actions</th>
-            </tr>
-          </thead>
+      {/* TABLE */}
+      <table className="min-w-full bg-white border rounded">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="p-3 text-left">Name</th>
+            <th className="p-3 text-left">Email</th>
+            <th className="p-3 text-left">Phone</th>
+            <th className="p-3 text-left">Role</th>
+            <th className="p-3 text-center">Actions</th>
+          </tr>
+        </thead>
 
-          <tbody>
-            {filteredUsers.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="text-center py-8 text-gray-500 border-b">
-                  {searchQuery ? "No users match your search" : "No users found"}
+        <tbody>
+          {filteredUsers.length === 0 ? (
+            <tr>
+              <td
+                colSpan={5}
+                className="text-center py-8 text-gray-500 border-b"
+              >
+                {searchQuery ? "No matches found" : "No users found"}
+              </td>
+            </tr>
+          ) : (
+            filteredUsers.map((user) => (
+              <tr key={user._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 border-b">
+                  {user.firstName} {user.lastName}
                 </td>
-              </tr>
-            ) : (
-              filteredUsers.map((user) => (
-                <tr key={user._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 border-b">{user.firstName} {user.lastName}</td>
-                  <td className="px-6 py-4 border-b">{user.email}</td>
-                  <td className="px-6 py-4 border-b">{user.phoneNumber || "N/A"}</td>
-                  <td className="px-6 py-4 border-b">
-                    <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm">
-                      {user.role?.name || "No Role"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 border-b">
-                    <div className="flex gap-4 justify-center items-center">
-                      <Pencil
-                        className="w-5 h-5 text-blue-600 cursor-pointer hover:text-blue-800"
-                        onClick={() => openModal(user)}
+                <td className="px-6 py-4 border-b">{user.email}</td>
+                <td className="px-6 py-4 border-b">
+                  {user.phoneNumber || "N/A"}
+                </td>
+                <td className="px-6 py-4 border-b">
+                  <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm">
+                    {user.role?.name || "No Role"}
+                  </span>
+                </td>
+                <td className="px-6 py-4 border-b">
+                  <div className="flex gap-4 justify-center items-center">
+                    <Pencil
+                      className="w-5 h-5 text-blue-600 cursor-pointer hover:text-blue-800"
+                      onClick={() => openModal(user)}
+                    />
+                    <div className="relative">
+                      <Trash2
+                        className="w-5 h-5 text-red-600 cursor-pointer hover:text-red-800"
+                        onClick={() =>
+                          setOpenDeleteMenu(
+                            openDeleteMenu === user._id ? null : user._id
+                          )
+                        }
                       />
-                      <div className="relative">
-                        <Trash2
-                          className="w-5 h-5 text-red-600 cursor-pointer hover:text-red-800"
-                          onClick={() => setOpenDeleteMenu(openDeleteMenu === user._id ? null : user._id)}
-                        />
-                        {openDeleteMenu === user._id && (
-                          <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg w-32 z-20">
-                            <button
-                              onClick={() => handleDeleteUser(user._id)}
-                              className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
-                            >
-                              Delete
-                            </button>
-                            <button
-                              onClick={() => setOpenDeleteMenu(null)}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      {openDeleteMenu === user._id && (
+                        <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg w-32 z-20">
+                          <button
+                            onClick={() => handleDeleteUser(user._id)}
+                            className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
+                          >
+                            Delete
+                          </button>
+                          <button
+                            onClick={() => setOpenDeleteMenu(null)}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  </td>
-                </tr>
-              ))
-            )}
-
-            {/* Infinite scroll sentinel */}
-            <tr ref={loadMoreRef}>
-              <td colSpan={5} className="p-0 h-4" />
-            </tr>
-
-            {isFetchingNextPage && (
-              <tr>
-                <td colSpan={5} className="text-center py-6 text-gray-500">
-                  <Loader2 className="animate-spin w-5 h-5 mx-auto" />
-                  <span className="ml-2">Loading more users...</span>
+                  </div>
                 </td>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            ))
+          )}
+
+          {/* Infinite scroll sentinel */}
+          <tr ref={loadMoreRef}>
+            <td colSpan={5} className="p-0 h-4" />
+          </tr>
+
+          {isFetchingNextPage && (
+            <tr>
+              <td colSpan={5} className="text-center py-6 text-gray-500">
+                Loading more users...
+              </td>
+            </tr>
+          )}
+        </tbody>
+
+      </table>
     </>
   );
 }
