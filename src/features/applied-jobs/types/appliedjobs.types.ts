@@ -19,9 +19,7 @@ export interface AppliedJob {
     | "hired"
     | string;
 
-  createdAt: string;
-
-  
+  createdAt: string;  
   category?: string;
   experience?: string;
   education?: string;
