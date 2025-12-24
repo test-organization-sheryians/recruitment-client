@@ -14,16 +14,25 @@ interface Category {
   name: string
 }
 
+interface Location {
+  city: string;
+  state: string;
+  pincode: string;
+  country: string
+}
+
+
 interface JobFormData {
   _id?: string
   title: string
   description: string
   education: string
   requiredExperience: string
-  category: Category
-  skills: Skill[]
+  category: string
+  skills: string[]
   expiry: string
   clientId: string
+  location: Location
 }
 
 export default function UpdateJob({
@@ -41,19 +50,11 @@ export default function UpdateJob({
   // 🔥 Mutation using your centralized "useUpdateJob"
   const { mutate: updateJob, isPending } = useUpdateJob()
 
-  const handleSubmit = async (data: { [key: string]: string | string[] }): Promise<void> => {
-    const formDataObj = new FormData()
+  const handleSubmit = async (data: JobFormData): Promise<void> => {
 
-    Object.entries(data).forEach(([key, value]) => {
-      if (key === "skills") {
-        ;(value as string[]).forEach((id) => formDataObj.append("skills[]", id))
-      } else {
-        formDataObj.append(key, value as string)
-      }
-    })
     return new Promise((resolve, reject) => {
       updateJob(
-        { id: jobId, formData: formDataObj },
+        { id: jobId, formData: data as unknown as Record<string, unknown> },
         {
           onSuccess: (res) => {
             if (res.success) {
@@ -80,7 +81,7 @@ export default function UpdateJob({
   return (
     <JobForm
       mode="update"
-      initialData={job as Partial<JobFormData>}
+      initialData={job as unknown as Partial<JobFormData>}
       onSubmit={handleSubmit}
       loading={isPending}
     />
