@@ -45,11 +45,12 @@ export default function AppliedJobCard({ job }: Props) {
   return (
     <div
       onClick={() => {
-       
-        if (job.jobId) {
+        console.log("Navigating to job details for jobId:", job.jobId);
+        if (job._id) {
           router.push(`/job-details?id=${job.jobId}`);
         }
       }}
+      
       className="w-full cursor-pointer"
     >
       <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm hover:shadow-md hover:border-gray-300 transition-all">

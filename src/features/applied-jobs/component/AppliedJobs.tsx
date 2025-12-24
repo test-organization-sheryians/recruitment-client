@@ -149,11 +149,17 @@ function StatusBox({
   return (
     <button
       onClick={onClick}
-      className={`
-        flex items-center justify-between rounded-lg p-4 border
-        transition-all
-        ${active ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white"}
-      `}
+     className={`
+  flex items-center justify-between rounded-lg p-4 border
+  transition-all duration-200 cursor-pointer
+
+  ${
+    active
+      ? "border-blue-400 bg-blue-50 shadow-sm"
+      : "border-gray-200 bg-white hover:border-blue-400 hover:bg-blue-50"
+  }
+`}
+
     >
      
       <div className="flex flex-col text-left">
