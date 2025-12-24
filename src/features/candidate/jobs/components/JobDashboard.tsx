@@ -1,70 +1,137 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
-import JobCard, { Job } from "./JobCategoryCard";
+import JobCard, { Job as CardJob } from "./JobCategoryCard";
 import HeroSection from "./HeroSection";
 import { Menu, X } from "lucide-react";
-import { useGetJobCategories } from "@/features/admin/categories/hooks/useJobCategoryApi";
+import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
 import {
-  useGetJobs,
-  useGetJobsByCategory,
-} from "@/features/admin/jobs/hooks/useJobApi";
-import { log } from "console";
-
-interface Category {
-  _id: string;
-  name: string;
-}
-
-
+  useInfiniteJobs,
+  useInfiniteJobsByCategory,
+} from "@/features/candidate/jobs/hooks/useInfiniteJobs";
+import type { CategoryItem } from "@/api/category/getCategoriesPaginated";
+import { SearchQuery } from "@/types/Job";
+import { useInfiniteSearchJobs } from "@/features/candidate/jobs/hooks/useSearchJobs";
 
 export default function JobDashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+ const [searchLocation,setSearchLocation] = useState("")
+ const [query, setQuery] = useState<SearchQuery>({q: "", location: "",});
+  // const { data: profileCalInfo } = useProfileQuery();
 
-// const { data: profileCalInfo } = useProfileQuery();
+  // const completion = profileCalInfo?.data ?? 0;
+  // const isProfileCompleted = completion < 60;
 
-// const completion = profileCalInfo?.data ?? 0;
-// const isProfileCompleted = completion < 60;
+  // console.log(isProfileCompleted);
 
-// console.log(isProfileCompleted);
-  
+  const {
+    data: categoryPages,
+    isLoading: categoriesLoading,
+    fetchNextPage: fetchNextCategories,
+    hasNextPage: hasMoreCategories,
+    isFetchingNextPage: isFetchingMoreCategories,
+  } = useInfiniteJobCategories();
 
-  
+  const categories: CategoryItem[] = (categoryPages?.pages ?? []).flatMap(
+    (p) => p.data ?? []
+  );
 
-  const { data: categories, isLoading: categoriesLoading } =
-    useGetJobCategories();
-  const jobsByCategory = useGetJobsByCategory(selectedCategory || "");
-  const allJobs = useGetJobs();
+  const allJobsQuery = useInfiniteJobs();
+  const jobsByCategoryQuery = useInfiniteJobsByCategory(selectedCategory);
+const searchJobsQuery = useInfiniteSearchJobs({
+  q: query.q,
+  location: query.location,
+});
 
-  const jobsData = selectedCategory ? jobsByCategory.data : allJobs.data;
-  const jobsLoading = selectedCategory
-    ? jobsByCategory.isLoading
-    : allJobs.isLoading;
-  const jobs: Job[] = Array.isArray(jobsData) ? jobsData : [];
+console.log("Search Jobs Query final response ===>:", searchJobsQuery);
+const isSearchActive = Boolean(query.q || query.location);
+const activeJobsQuery = isSearchActive
+  ? searchJobsQuery
+  : selectedCategory
+  ? jobsByCategoryQuery
+  : allJobsQuery;
 
-  const term = searchTerm.toLowerCase();
+  const jobsPages = activeJobsQuery.data?.pages ?? [];
+  const jobsLoading = activeJobsQuery.isLoading;
+  const hasMoreJobs = activeJobsQuery.hasNextPage;
+  const fetchNextJobs = activeJobsQuery.fetchNextPage;
+  const isFetchingMoreJobs = activeJobsQuery.isFetchingNextPage;
 
-  const filteredJobs = jobs.filter((job) => {
-    const title = job.title?.toLowerCase() || "";
-    const department = job.department?.toLowerCase() || "";
-    const skills =
-      job.skills
-        ?.map((s) => (typeof s === "string" ? s : s.name || ""))
-        .join(" ")
-        .toLowerCase() || "";
+console.log("Jobs Pages data check ===>:", jobsPages);
+console.log("total job count check ===>:", jobsPages?.[0]?.pagination.totalRecords);
+const jobsCount = jobsPages?.[0]?.pagination.totalRecords || 0;
 
-    return (
-      title.includes(term) || department.includes(term) || skills.includes(term)
-    );
-  });
+  const jobs: CardJob[] = jobsPages
+    .flatMap((p) => p.data ?? [])
+    .map((job) => ({
+      ...job,
+      salary: typeof job.salary === "number" ? String(job.salary) : job.salary,
+      skills: job.skills?.map((s) =>
+        typeof s === "string"
+          ? { _id: s, name: s }
+          : { _id: s._id ?? s.name, name: s.name }
+      ),
+    }));
+console.log("Jobs to be displayed on dashboard ===>:", jobs);
+  // Infinite scroll sentinels
+  const categoriesLoadMoreRef = useRef<HTMLDivElement | null>(null);
+  const jobsLoadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = categoriesLoadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (
+        entry.isIntersecting &&
+        hasMoreCategories &&
+        !isFetchingMoreCategories
+      ) {
+        fetchNextCategories();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMoreCategories, isFetchingMoreCategories, fetchNextCategories]);
+
+  useEffect(() => {
+    const el = jobsLoadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (entry.isIntersecting && hasMoreJobs && !isFetchingMoreJobs) {
+        fetchNextJobs();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMoreJobs, isFetchingMoreJobs, fetchNextJobs, selectedCategory]);
+
+ 
+
+  // search button handler
+    const searchHandler = ()=>{
+      
+  console.log("Searching result (seaerhTerm,location) ===>:", searchTerm, searchLocation);
+    const q = searchTerm.trim();
+  const location = searchLocation.trim();
+
+  // if (!q ) return;
+
+  setQuery({ q, location });
+  setSelectedCategory(null);
+  setSearchTerm("");
+  setSearchLocation("");
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero with search */}
-      <HeroSection searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      <HeroSection searchTerm={searchTerm} setSearchTerm={setSearchTerm}  onSearch={searchHandler} 
+     searchLocation={searchLocation} setSearchLocation={setSearchLocation} />
 
       {/* Mobile Filter Bar */}
       <div className="md:hidden sticky top-0 z-30 bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
@@ -75,7 +142,7 @@ export default function JobDashboardPage() {
           <Menu size={18} className="text-gray-700" />
         </button>
         <span className="text-sm font-medium text-gray-800">
-          {selectedCategory ? "Filtered" : "All Jobs"} • {filteredJobs.length}{" "}
+          {selectedCategory ? "Filtered" : "All Jobs"} • {jobsCount}{" "}
           found
         </span>
       </div>
@@ -99,9 +166,12 @@ export default function JobDashboardPage() {
               onSelect={(id) => {
                 setSelectedCategory(id);
                 setIsSidebarOpen(false);
+                setQuery({ q: "", location: "" })
               }}
+              //  onSelect={setSelectedCategory}
               categories={categories || []}
               isLoading={categoriesLoading}
+              loadMoreRef={categoriesLoadMoreRef}
             />
           </div>
         </div>
@@ -120,6 +190,8 @@ export default function JobDashboardPage() {
               onSelect={setSelectedCategory}
               categories={categories || []}
               isLoading={categoriesLoading}
+              loadMoreRef={categoriesLoadMoreRef}
+             
             />
           </div>
         </div>
@@ -134,7 +206,7 @@ export default function JobDashboardPage() {
                   {selectedCategory ? "Category Jobs" : "All Jobs"}
                 </h2>
                 <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-                  {filteredJobs.length} jobs
+                  {jobsCount} jobs
                 </span>
               </div>
               {selectedCategory && (
@@ -156,7 +228,7 @@ export default function JobDashboardPage() {
             )}
 
             {/* Empty State */}
-            {!jobsLoading && filteredJobs.length === 0 && (
+            {!jobsLoading && jobsCount === 0 && (
               <div className="p-12 text-center">
                 <p className="text-sm text-gray-500">
                   No jobs match your search.
@@ -169,14 +241,21 @@ export default function JobDashboardPage() {
 
             {/* Job Cards */}
             <div className="divide-y divide-transparent p-2">
-              {filteredJobs.map((job) => (
+              {jobs.map((job) => (
                 <div
                   key={job._id}
                   className="py-5 first:pt-0 hover:bg-gray-50/70 transition-colors duration-150"
                 >
-                  <JobCard job={job}/>
+                  <JobCard job={job} />
                 </div>
               ))}
+              {/* Infinite scroll sentinel for jobs */}
+              <div ref={jobsLoadMoreRef} className="h-1" />
+              {isFetchingMoreJobs && (
+                <div className="p-4 text-center text-xs text-gray-500">
+                  Loading more…
+                </div>
+              )}
             </div>
           </div>
         </div>

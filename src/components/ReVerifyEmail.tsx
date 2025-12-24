@@ -2,7 +2,7 @@
 
 import { Mail, RefreshCw } from "lucide-react";
 import { useResendVerification } from "@/features/resendMail/useResendMailApi";
-import { AxiosError } from "axios";
+// import { AxiosError } from "axios";
 
 interface Props {
   email: string;

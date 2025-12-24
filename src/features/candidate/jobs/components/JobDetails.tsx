@@ -1,107 +1,161 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Bookmark, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Bookmark } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { useGetJobById } from "@/features/admin/jobs/hooks/useJobApi";
 import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
+import {
+  useSaveJob,
+  useUnsaveJob,
+  useGetSavedJobs,
+} from "@/features/candidate/jobs/hooks";
+
 import { useToast } from "@/components/ui/Toast";
 import { useGetProfile } from "../../Profile/hooks/useProfileApi";
 
+import type { SavedJob, Skill } from "@/types/Job";
+
 export default function JobDetails() {
-  const searchParams = useSearchParams();
-  const jobId = searchParams.get("id");
   const router = useRouter();
-  const applyJobMutation = useApplyJob();
+  const searchParams = useSearchParams();
+  const jobId = searchParams.get("id") ?? undefined;
+
   const toast = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: job, isLoading, error } = useGetJobById(jobId || undefined);
-  const { data: profile, isLoading: profileLoading } = useGetProfile();  
+  /* -------------------- Queries -------------------- */
+  const { data: job, isLoading, error } = useGetJobById(jobId);
+  const { data: profile } = useGetProfile();
+  const { data: savedJobs } = useGetSavedJobs();
 
+  /* -------------------- Mutations -------------------- */
+  const applyJobMutation = useApplyJob();
+  const saveJobMutation = useSaveJob();
+  const unsaveJobMutation = useUnsaveJob();
 
-  if (isLoading)
+  /* -------------------- Guards -------------------- */
+  if (isLoading) {
     return (
-      <p className="text-center mt-10 text-gray-500">
+      <p className="mt-10 text-center text-gray-500">
         Fetching job details...
       </p>
     );
+  }
 
-  if (error || !job)
+  if (error || !job) {
     return (
-      <p className="text-center mt-10 text-red-500">
+      <p className="mt-10 text-center text-red-500">
         Failed to load job details
       </p>
     );
-
-     const isExpired = job.expiry ? new Date(job.expiry) < new Date() : false;
-
-
- const handleApply = () => {
-  if (!job._id || isExpired) return;
-
-
-  if (!profile?.resumeFile) {
-    toast.error("Please upload your resume before applying.");
-    return;
   }
 
-  // Only call mutation once
-  applyJobMutation.mutate(
-    {
+  const isExpired = job.expiry
+    ? new Date(job.expiry) < new Date()
+    : false;
+
+  /* -------------------- Saved State (TYPE SAFE) -------------------- */
+  const isSaved =
+    savedJobs?.some((saved: SavedJob) =>
+      typeof saved.jobId === "string"
+        ? saved.jobId === job._id
+        : saved.jobId?._id === job._id
+    ) ?? false;
+
+  /* -------------------- Handlers -------------------- */
+  const handleApply = () => {
+    if (isExpired || job.applied) return;
+
+    if (!profile?.resumeFile) {
+      toast.error("Please upload your resume before applying.");
+      return;
+    }
+
+    applyJobMutation.mutate({
       jobId: job._id,
       message: "Excited to apply!",
       resumeUrl: profile.resumeFile,
-    }
-  );
-};
-    
+    });
+  };
 
+  const handleBookmarkToggle = () => {
+    if (isExpired || !job._id) return;
+    if (saveJobMutation.isPending || unsaveJobMutation.isPending) return;
+
+    if (!isSaved) {
+      saveJobMutation.mutate(job._id, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
+        },
+        onError: (err: unknown) => {
+          if ((err as { status?: number })?.status !== 409) {
+            toast.error("Failed to save job");
+          }
+        },
+      });
+    } else {
+      unsaveJobMutation.mutate(job._id, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
+        },
+        onError: () => toast.error("Failed to remove saved job"),
+      });
+    }
+  };
+
+  /* -------------------- UI -------------------- */
   return (
-    <div className="min-h-screen bg-gray-50 flex justify-center items-center p-6">
-      <div className="bg-white w-full max-w-2xl shadow-lg rounded-2xl p-6 space-y-5 relative">
-        {/* Back Button */}
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-6">
+      <div className="relative w-full max-w-2xl space-y-6 rounded-2xl bg-white p-6 shadow-lg">
+
+        {/* Back */}
         <button
           onClick={() => router.back()}
-          className="absolute top-4 left-4 flex items-center gap-2 text-gray-700 hover:text-gray-900"
+          className="absolute left-4 top-4 flex items-center gap-2 text-gray-700 hover:text-gray-900"
         >
           <ArrowLeft size={18} />
           <span className="text-sm font-medium">Back</span>
         </button>
 
-        {/* Job Title */}
-        <h1 className="text-2xl font-bold mt-6">{job.title}</h1>
+        {/* Title */}
+        <h1 className="mt-6 text-2xl font-bold">{job.title}</h1>
 
-        {/* Save & Apply */}
-        <div className="flex gap-3">
-          <button className="p-2 border border-gray-300 rounded-md hover:bg-gray-100 transition">
-            <Bookmark size={20} className="text-gray-600" />
+        {/* Actions */}
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleBookmarkToggle}
+            className="rounded-md border border-gray-300 p-2 hover:bg-gray-100"
+          >
+            <Bookmark
+              size={20}
+              className={
+                isSaved
+                  ? "fill-blue-600 text-blue-600"
+                  : "text-gray-600"
+              }
+            />
           </button>
 
-<button
-  disabled={isExpired || job.applied || applyJobMutation.isPending}
-  onClick={(e) => {
-    e.stopPropagation();
-    handleApply();
-  }}
-  className={`px-6 py-2.5 text-white font-medium text-sm rounded-lg ${
-    isExpired
-      ? "bg-gray-400 cursor-not-allowed"
-      : job.applied
-      ? "bg-gray-400 cursor-not-allowed"
-      : "bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
-  }`}
->
-  {job.applied
-    ? "Applied"
-    : applyJobMutation.isPending
-    ? "Applying..."
-    : isExpired
-    ? "Expired"
-    : "Apply Now"}
-</button>
-
+          <button
+            onClick={handleApply}
+            disabled={isExpired || job.applied}
+            className={`rounded-lg px-6 py-2.5 text-sm font-medium text-white ${
+              isExpired || job.applied
+                ? "cursor-not-allowed bg-gray-400"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            {job.applied
+              ? "Applied"
+              : isExpired
+              ? "Expired"
+              : "Apply Now"}
+          </button>
         </div>
 
-        {/* Job Meta Info */}
+        {/* Meta */}
         <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
           {job.category && (
             <p>
@@ -111,25 +165,15 @@ export default function JobDetails() {
                 : job.category.name}
             </p>
           )}
-          {job.salary && (
-            <p>
-              <strong>Salary:</strong> {job.salary}
-            </p>
-          )}
+          {job.salary && <p><strong>Salary:</strong> {job.salary}</p>}
           {job.department && (
-            <p>
-              <strong>Department:</strong> {job.department}
-            </p>
+            <p><strong>Department:</strong> {job.department}</p>
           )}
           {job.requiredExperience && (
-            <p>
-              <strong>Experience:</strong> {job.requiredExperience}
-            </p>
+            <p><strong>Experience:</strong> {job.requiredExperience}</p>
           )}
           {job.education && (
-            <p>
-              <strong>Education:</strong> {job.education}
-            </p>
+            <p><strong>Education:</strong> {job.education}</p>
           )}
           {job.expiry && (
             <p>
@@ -142,8 +186,10 @@ export default function JobDetails() {
         {/* Description */}
         {job.description && (
           <div>
-            <h2 className="font-semibold text-gray-800 mb-1">Description</h2>
-            <p className="text-gray-600 text-sm leading-relaxed">
+            <h2 className="mb-1 font-semibold text-gray-800">
+              Description
+            </h2>
+            <p className="text-sm leading-relaxed text-gray-600">
               {job.description}
             </p>
           </div>
@@ -152,12 +198,14 @@ export default function JobDetails() {
         {/* Skills */}
         {(job.skills ?? []).length > 0 && (
           <div>
-            <h2 className="font-semibold text-gray-800 mb-2">Skills Required</h2>
+            <h2 className="mb-2 font-semibold text-gray-800">
+              Skills Required
+            </h2>
             <div className="flex flex-wrap gap-2">
-              {(job.skills ?? []).map((skill, i) => (
+              {job.skills!.map((skill: Skill | string, index: number) => (
                 <span
-                  key={i}
-                  className="px-3 py-1 bg-gray-100 rounded-md text-xs text-gray-700"
+                  key={index}
+                  className="rounded-md bg-gray-100 px-3 py-1 text-xs text-gray-700"
                 >
                   {typeof skill === "string" ? skill : skill.name}
                 </span>

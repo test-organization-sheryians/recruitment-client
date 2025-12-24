@@ -24,9 +24,15 @@ interface Category {
 }
 
 // Skill can be an object or string
-interface Skill {
+export interface Skill {
   _id?: string;
   name: string;
+}
+
+
+export interface SavedJob {
+  _id: string;
+  jobId: Job;
 }
 
 export interface JobFormValues {
@@ -39,3 +45,22 @@ export interface JobFormValues {
     isRemote: boolean;
     isFeatured: boolean;
 }
+
+
+// export interface PaginatedJobsResponse {
+//    "success": true,
+//   "data": {
+//     "data": [Job],
+//     "pagination": {
+//       "totalRecords": number,
+//       "totalPages": number,
+//       "currentPage": number,
+//       "limit": number
+//     }
+//   }
+// }
+
+export type SearchQuery = {
+  q: string;
+  location: string;
+};
