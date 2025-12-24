@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useBulkUpdateApplicants, useJobApplicant } from "../hooks/useJobApplicant";
+import {
+  useBulkUpdateApplicants,
+  useJobApplicant,
+} from "../hooks/useJobApplicant";
 import { useParams } from "next/navigation";
-import api from "@/config/axios";
 import { useToast } from "@/components/ui/Toast";
+
+/* ================= TYPES ================= */
 
 type Size = number | string;
 
@@ -14,7 +18,53 @@ type ApplicantsListProps = {
   className?: string;
 };
 
-const statusColors: Record<string, string> = {
+type ApplicantStatus =
+  | "applied"
+  | "shortlisted"
+  | "rejected"
+  | "forwareded"
+  | "interview"
+  | "hired";
+
+interface CandidateDetails {
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+interface JobDetails {
+  title: string;
+  requiredExperience: number;
+}
+
+interface ApplicantApi {
+  _id: string;
+  candidateDetails: CandidateDetails;
+  jobDetails: JobDetails;
+  appliedAt: string;
+  totalExperienceYears: number;
+  status: ApplicantStatus;
+  resumeUrl: string;
+}
+
+interface ApplicantsApiResponse {
+  applicants: ApplicantApi[];
+}
+
+interface ApplicantRow {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  date: string;
+  experience: string;
+  status: ApplicantStatus;
+  resume: string;
+}
+
+/* ================= CONSTANTS ================= */
+
+const statusColors: Record<ApplicantStatus, string> = {
   applied: "bg-blue-100 text-blue-700",
   shortlisted: "bg-yellow-100 text-yellow-700",
   rejected: "bg-red-100 text-red-700",
@@ -23,7 +73,7 @@ const statusColors: Record<string, string> = {
   hired: "bg-green-100 text-green-700",
 };
 
-const tabs = [
+const tabs: Array<"all" | ApplicantStatus> = [
   "all",
   "applied",
   "shortlisted",
@@ -32,6 +82,8 @@ const tabs = [
   "interview",
   "hired",
 ];
+
+/* ================= COMPONENT ================= */
 
 export default function ApplicantsList({
   height = 520,
@@ -42,20 +94,27 @@ export default function ApplicantsList({
   const w = typeof width === "number" ? `${width}px` : width;
 
   const { id } = useParams();
-  const { data } = useJobApplicant(id as string);
+
+  const { data } = useJobApplicant(id as string) as {
+    data?: ApplicantsApiResponse;
+  };
 
   const [selectedApplicants, setSelectedApplicants] = useState<string[]>([]);
-  const [bulkStatus, setBulkStatus] = useState("applied");
-  const [activeTab, setActiveTab] = useState("all");
+  const [bulkStatus, setBulkStatus] = useState<ApplicantStatus>("applied");
+  const [activeTab, setActiveTab] = useState<"all" | ApplicantStatus>("all");
 
-  const toggleSelect = (id: string) => {
+  const toggleSelect = (appId: string) => {
     setSelectedApplicants((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.includes(appId)
+        ? prev.filter((x) => x !== appId)
+        : [...prev, appId]
     );
   };
 
-  const applicants =
-    data?.applicants?.map((a: any) => ({
+  /* ================= DATA MAPPING ================= */
+
+  const applicants: ApplicantRow[] =
+    data?.applicants?.map((a) => ({
       id: a._id,
       name: `${a.candidateDetails.firstName} ${a.candidateDetails.lastName}`,
       email: a.candidateDetails.email,
@@ -66,16 +125,18 @@ export default function ApplicantsList({
         day: "numeric",
       }),
       experience: `${a.totalExperienceYears}-${a.jobDetails.requiredExperience} years`,
-      status: a.status.toLowerCase(),
+      status: a.status,
       resume: a.resumeUrl,
-    })) || [];
+    })) ?? [];
 
-  const filteredApplicants =
+  const filteredApplicants: ApplicantRow[] =
     activeTab === "all"
       ? applicants
-      : applicants.filter((a: any) => a.status === activeTab);
+      : applicants.filter((a) => a.status === activeTab);
 
-  const { mutate, isPending, isError } = useBulkUpdateApplicants();
+  /* ================= MUTATION ================= */
+
+  const { mutate, isPending } = useBulkUpdateApplicants();
   const { success, error } = useToast();
 
   const handleSubmit = () => {
@@ -101,6 +162,8 @@ export default function ApplicantsList({
     );
   };
 
+  /* ================= UI ================= */
+
   return (
     <div
       className={`bg-white rounded-2xl shadow-lg border border-gray-100 p-5 flex flex-col overflow-hidden ${className}`}
@@ -112,39 +175,39 @@ export default function ApplicantsList({
           Applicants Lists
         </span>
 
-        {/* Bulk Status + Submit */}
-        <div className="flex items-center gap-3">
-          {selectedApplicants.length > 0 && (
-            <>
-              <select
-                value={bulkStatus}
-                onChange={(e) => setBulkStatus(e.target.value)}
-                className="border rounded-xl px-2 py-1"
-              >
-                <option value="applied">Applied</option>
-                <option value="shortlisted">Shortlisted</option>
-                <option value="rejected">Rejected</option>
-                <option value="forwareded">Forwareded</option>
-                <option value="interview">Interview</option>
-                <option value="hired">Hired</option>
-              </select>
+        {selectedApplicants.length > 0 && (
+          <div className="flex items-center gap-3">
+            <select
+              value={bulkStatus}
+              onChange={(e) =>
+                setBulkStatus(e.target.value as ApplicantStatus)
+              }
+              className="border rounded-xl px-2 py-1"
+            >
+              {tabs
+                .filter((t) => t !== "all")
+                .map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+            </select>
 
-              <button
-                className={`rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-white ${
-                  isPending
-                    ? "bg-blue-400 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700"
-                }`}
-                onClick={handleSubmit}
-                disabled={isPending}
-              >
-                {isPending
-                  ? "Updating..."
-                  : `Submit Selected (${selectedApplicants.length})`}
-              </button>
-            </>
-          )}
-        </div>
+            <button
+              onClick={handleSubmit}
+              disabled={isPending}
+              className={`rounded-xl px-3 py-2 text-sm font-semibold text-white ${
+                isPending
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              {isPending
+                ? "Updating..."
+                : `Submit Selected (${selectedApplicants.length})`}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
@@ -153,12 +216,11 @@ export default function ApplicantsList({
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition
-              ${
-                activeTab === tab
-                  ? "bg-blue-600 text-white shadow"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
+              activeTab === tab
+                ? "bg-blue-600 text-white shadow"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
@@ -181,7 +243,7 @@ export default function ApplicantsList({
           </thead>
 
           <tbody className="divide-y">
-            {filteredApplicants.map((a: any) => (
+            {filteredApplicants.map((a) => (
               <tr
                 key={a.id}
                 className="grid grid-cols-[0.4fr_1.6fr_1.1fr_1fr_1fr_1fr_1fr] px-4 py-3 items-center hover:bg-gray-50 transition"
@@ -196,7 +258,7 @@ export default function ApplicantsList({
                 </td>
 
                 <td>
-                  <p className="font-semibold text-gray-900">{a.name}</p>
+                  <p className="font-semibold">{a.name}</p>
                   <p className="text-xs text-gray-500">{a.email}</p>
                 </td>
 
@@ -208,7 +270,7 @@ export default function ApplicantsList({
                   <a
                     href={a.resume}
                     target="_blank"
-                    className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium hover:bg-gray-100"
+                    className="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-100"
                   >
                     📄 Resume
                   </a>

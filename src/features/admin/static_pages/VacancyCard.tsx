@@ -8,9 +8,9 @@ import { useRouter } from "next/navigation";
 type Skill =
   | string
   | {
-      _id?: string;
-      name?: string;
-    };
+    _id?: string;
+    name?: string;
+  };
 
 type Location = {
   city?: string;
@@ -98,10 +98,10 @@ export default function VacancyCard({ data }: VacancyCardProps) {
         <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 font-medium whitespace-nowrap">
           {data.createdAt
             ? new Date(data.createdAt).toLocaleDateString(undefined, {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
             : "Recent"}
         </span>
       </div>
@@ -162,12 +162,25 @@ export default function VacancyCard({ data }: VacancyCardProps) {
 
       {/* ================= APPLICANTS COUNT ================= */}
       <div className="mt-4">
-        <div className="rounded-xl bg-gray-50 px-4 py-2.5 text-center">
-          <span className="block text-[10px] text-gray-500">👥 Applicants</span>
-          <span className="font-semibold text-gray-800 tabular-nums">
+        <div className="
+  flex items-center justify-between
+  rounded-xl bg-gray-50 px-4 py-3
+  border border-gray-200
+">
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <span className="text-sm">👥</span>
+            Applicants
+          </div>
+
+          <span className="
+    rounded-full bg-white px-3 py-1
+    text-sm font-semibold text-gray-800
+    shadow-sm tabular-nums
+  ">
             {data.applicantsCount ?? 0}
           </span>
         </div>
+
       </div>
     </div>
   );
