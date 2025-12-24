@@ -38,6 +38,7 @@ interface VacancyCardProps {
 /* ===================== COMPONENT ===================== */
 
 export default function VacancyCard({ data }: VacancyCardProps) {
+  console.log("VacancyCard data:", data)
   /* 🔴 VERY IMPORTANT: guard */
   if (!data) return null;
 
