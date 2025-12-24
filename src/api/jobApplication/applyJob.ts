@@ -12,6 +12,17 @@ export const getAllApplicant = async (id: string) => {
   }
 };
 
+export const getApplicantsByJobId = async (id: string) => {
+  try {
+    const response = await api.get(`/api/job-apply/applicants/${id}`);
+    console.log("Fetched applicants:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching applicants:", error);
+    throw error;
+  }
+};
+
 // Optionally, also export applyJob function
 export const applyJob = async (payload: {
   jobId: string;
