@@ -10,17 +10,22 @@ import { setUser } from "../slice";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useRegister } from "../hooks/useAuthApi";
+import { FiEye, FiEyeOff } from "react-icons/fi";
+
 
 const SignupForm = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { register, handleSubmit } = useForm<{
+  const { register, handleSubmit, watch } = useForm<{
     firstName: string;
     lastName?: string;
     phoneNumber?: string;
     email: string;
     password: string;
   }>();
+
+  const passwordValue = watch("password");
+  const [showPassword, setShowPassword] = useState(false);
 
   // This is the clean, modern way
   const {
@@ -126,12 +131,36 @@ const SignupForm = () => {
           type="email"
           {...register("email", { required: true })}
         />
-        <LabelInput
-          label="Password"
-          placeholder="8+ characters"
-          type="password"
-          {...register("password", { required: true })}
-        />
+        <div className="relative">
+  <LabelInput
+    label="Password"
+    placeholder="8+ characters"
+    type={showPassword && passwordValue ? "text" : "password"}
+    {...register("password", { required: true })}
+  />
+
+  <button
+    type="button"
+    disabled={!passwordValue}
+    onClick={() => {
+      if (!passwordValue) return;
+      setShowPassword((prev) => !prev);
+    }}
+    className={`absolute right-4 top-[42px] transition-colors
+      ${
+        passwordValue
+          ? "text-gray-500 hover:text-gray-700"
+          : "text-gray-300 cursor-not-allowed"
+      }`}
+  >
+    {showPassword && passwordValue ? (
+      <FiEyeOff size={18} />
+    ) : (
+      <FiEye size={18} />
+    )}
+  </button>
+</div>
+
 
         {(isError || serverError) && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">

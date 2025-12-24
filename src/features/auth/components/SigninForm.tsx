@@ -11,16 +11,20 @@ import { useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { useLogin } from "../hooks/useAuthApi";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 const SigninForm = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  const { register, handleSubmit } = useForm<{
+  const { register, handleSubmit, watch } = useForm<{
     email: string;
     password: string;
   }>();
+
+  const passwordValue = watch("password");
 
   const { mutate: loginUser, isPending: isLoggingIn, error } = useLogin();
 
@@ -101,12 +105,44 @@ const SigninForm = () => {
           {...register("email", { required: true })}
         />
 
-        <LabelInput
+        {/*<LabelInput
           label="Password"
           placeholder="8+ characters"
           type="password"
           {...register("password", { required: true })}
-        />
+        />*/}
+
+<div className="relative">
+  <LabelInput
+    label="Password"
+    placeholder="8+ characters"
+    type={showPassword && passwordValue ? "text" : "password"}
+    {...register("password", { required: true })}
+  />
+
+  <button
+    type="button"
+    disabled={!passwordValue}
+    onClick={() => {
+      if (!passwordValue) return;
+      setShowPassword((prev) => !prev);
+    }}
+    className={`absolute right-4 top-[42px] transition-colors
+      ${
+        passwordValue
+          ? "text-gray-500 hover:text-gray-700"
+          : "text-gray-300 cursor-not-allowed"
+      }`}
+  >
+    {showPassword && passwordValue ? (
+      <FiEyeOff size={18} />
+    ) : (
+      <FiEye size={18} />
+    )}
+  </button>
+</div>
+
+
 
         <p className="text-right -mt-4">
           <a
