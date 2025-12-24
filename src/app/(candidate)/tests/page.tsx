@@ -13,6 +13,7 @@ export default function EnrolledTestsPage() {
   const email = user?.email;
 
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"ALL" | "ATTEMPTED">("ALL");
 
   const { data: enrollments, isLoading: isEnrollmentsLoading } =
     useCandidateEnrollments(email);
@@ -26,6 +27,12 @@ export default function EnrolledTestsPage() {
     return <div className="p-10 text-center">Loading tests...</div>;
   }
 
+  // Filter enrollments based on selected filter
+  const filteredEnrollments =
+    filter === "ATTEMPTED"
+      ? enrollments?.filter(e => e.hasAttempt)
+      : enrollments;
+
   const selectedEnrollment = enrollments?.find(
     e => e.test._id === selectedTestId
   );
@@ -35,9 +42,30 @@ export default function EnrolledTestsPage() {
       <div className="max-w-7xl mx-auto">
         <h1 className="text-2xl font-medium mb-6">My Enrolled Tests</h1>
 
+        {/* FILTER BUTTONS */}
+        <div className="flex gap-4 mb-6">
+          <button
+            onClick={() => setFilter("ALL")}
+            className={`px-4 py-2 rounded ${
+              filter === "ALL" ? "bg-blue-600 text-white" : "bg-gray-200"
+            }`}
+          >
+            All
+          </button>
+
+          <button
+            onClick={() => setFilter("ATTEMPTED")}
+            className={`px-4 py-2 rounded ${
+              filter === "ATTEMPTED" ? "bg-blue-600 text-white" : "bg-gray-200"
+            }`}
+          >
+            Attempted
+          </button>
+        </div>
+
         {/* TEST CARDS */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {enrollments?.map(e => (
+          {filteredEnrollments?.map(e => (
             <TestCard
               key={e._id}
               enrollment={e}

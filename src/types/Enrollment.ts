@@ -11,6 +11,7 @@ export interface Enrollment {
     passingScore: number;
     showResults: boolean;
   };
+  hasAttempt: boolean;
 }
 
 export interface TestAttempt {
