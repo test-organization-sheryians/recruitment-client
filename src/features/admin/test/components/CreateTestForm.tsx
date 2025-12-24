@@ -164,21 +164,21 @@ export default function CreateTestModal({
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm" />
+      <div className="fixed inset-0 bg-black/50  z-50 backdrop-blur-sm" />
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-10">
-        <div className="w-full max-w-6xl bg-[#121212] border border-gray-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="w-full max-w-6xl bg-white border border-gray-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
 
 
           {/* ---------- HEADER ---------- */}
-          <div className="sticky top-0 z-20 bg-[#121212] p-6 border-b border-gray-800 flex items-start justify-between shrink-0 rounded-t-2xl">
+          <div className="sticky top-0 z-20 bg-white p-6 border-b border-gray-800 flex items-start justify-between shrink-0 rounded-t-2xl">
             <div className="flex gap-3">
               <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
                 <BookOpen className="text-emerald-600" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-white">
+                <h1 className="text-xl font-semibold text-black">
                   {testId ? "Update Assessment" : "Create New Assessment"}
                 </h1>
                 <p className="text-sm text-gray-500">
