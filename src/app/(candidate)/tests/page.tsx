@@ -18,23 +18,25 @@ export default function EnrolledTestsPage() {
   const { data: enrollments, isLoading: isEnrollmentsLoading } =
     useCandidateEnrollments(email);
 
-  // Fetch attempts for selected test (for modal only)
   const { data: selectedTestAttempts } =
     useCandidateAttempts(selectedTestId || undefined);
 
-  // Loading state
   if (isEnrollmentsLoading || !email) {
     return <div className="p-10 text-center">Loading tests...</div>;
   }
 
-  // Filter enrollments based on selected filter
+  // ✅ Only include enrollments that have valid test
+  const validEnrollments = enrollments?.filter(e => e.test) || [];
+
+  // Filter based on "ATTEMPTED" or "ALL"
   const filteredEnrollments =
     filter === "ATTEMPTED"
-      ? enrollments?.filter(e => e.hasAttempt)
-      : enrollments;
+      ? validEnrollments.filter(e => e.hasAttempt)
+      : validEnrollments;
 
-  const selectedEnrollment = enrollments?.find(
-    e => e.test._id === selectedTestId
+  // Selected enrollment for modal (safely)
+  const selectedEnrollment = validEnrollments.find(
+    e => e.test?._id === selectedTestId
   );
 
   return (
@@ -44,33 +46,24 @@ export default function EnrolledTestsPage() {
 
         {/* FILTER BUTTONS */}
         <div className="mb-6 flex w-fit rounded-lg border border-gray-200 bg-gray-100 p-1 shadow-sm">
-          <button
-            onClick={() => setFilter("ALL")}
-            className={`px-5 py-2 text-sm font-medium rounded-md transition-all duration-200
-      ${filter === "ALL"
-                ? "bg-blue-600 text-white shadow"
-                : "text-gray-600 hover:bg-gray-200"
+          {["ALL", "ATTEMPTED"].map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f as "ALL" | "ATTEMPTED")}
+              className={`px-5 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                filter === f
+                  ? "bg-blue-600 text-white shadow"
+                  : "text-gray-600 hover:bg-gray-200"
               }`}
-          >
-            All
-          </button>
-
-          <button
-            onClick={() => setFilter("ATTEMPTED")}
-            className={`px-5 py-2 text-sm font-medium rounded-md transition-all duration-200
-      ${filter === "ATTEMPTED"
-                ? "bg-blue-600 text-white shadow"
-                : "text-gray-600 hover:bg-gray-200"
-              }`}
-          >
-            Attempted
-          </button>
+            >
+              {f === "ALL" ? "All" : "Attempted"}
+            </button>
+          ))}
         </div>
-
 
         {/* TEST CARDS */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredEnrollments?.map(e => (
+          {filteredEnrollments.map(e => (
             <TestCard
               key={e._id}
               enrollment={e}
@@ -80,7 +73,7 @@ export default function EnrolledTestsPage() {
         </div>
 
         {/* MODAL */}
-        {selectedEnrollment && (
+        {selectedEnrollment && selectedEnrollment.test && (
           <TestModal
             enrollment={selectedEnrollment}
             attempts={selectedTestAttempts}

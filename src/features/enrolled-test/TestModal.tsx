@@ -11,6 +11,10 @@ interface Props {
 }
 
 export const TestModal: React.FC<Props> = ({ enrollment, attempts, onClose }) => {
+  if (!enrollment.test) return null; // ✅ safeguard if test is missing
+
+  const { title, summury, category, duration, passingScore, showResults } = enrollment.test;
+
   const latestAttempt = attempts?.[0];
   const attemptsCount = attempts?.length ?? 0;
 
@@ -20,27 +24,25 @@ export const TestModal: React.FC<Props> = ({ enrollment, attempts, onClose }) =>
       <div className="relative bg-white max-w-lg w-full rounded-3xl shadow-2xl">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-bold">Test Details</h2>
-          <button onClick={onClose}>
-            <X />
-          </button>
+          <button onClick={onClose}><X /></button>
         </div>
 
         <div className="p-6 space-y-6">
           <div>
-            <h3 className="font-medium text-lg">{enrollment.test.title}</h3>
-            <p className="text-sm text-slate-500">{enrollment.test.summury}</p>
+            <h3 className="font-medium text-lg">{title}</h3>
+            <p className="text-sm text-slate-500">{summury}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <DetailRow icon={<Hash size={16} />} label="Category" value={enrollment.test.category} />
-            <DetailRow icon={<Clock size={16} />} label="Duration" value={`${enrollment.test.duration} Min`} />
-            <DetailRow icon={<Trophy size={16} />} label="Pass Score" value={enrollment.test.passingScore} />
-            <DetailRow icon={<Activity size={16} />} label="Results" value={enrollment.test.showResults ? "Enabled" : "Disabled"} />
+            <DetailRow icon={<Hash size={16} />} label="Category" value={category} />
+            <DetailRow icon={<Clock size={16} />} label="Duration" value={`${duration} Min`} />
+            <DetailRow icon={<Trophy size={16} />} label="Pass Score" value={passingScore} />
+            <DetailRow icon={<Activity size={16} />} label="Results" value={showResults ? "Enabled" : "Disabled"} />
           </div>
 
           <div className="text-sm text-slate-500 font-medium mt-4">Attempts made: {attemptsCount}</div>
 
-          {latestAttempt && enrollment.test.showResults && (
+          {latestAttempt && showResults && (
             <div className="rounded-2xl border bg-slate-50 p-4 mt-2">
               <div className="flex justify-between mb-3">
                 <p className="text-xs font-medium text-slate-400 uppercase">Attempt Summary</p>
