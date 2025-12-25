@@ -187,7 +187,11 @@ console.log("Jobs to be displayed on dashboard ===>:", jobs);
             </h3>
             <Sidebar
               selected={selectedCategory}
-              onSelect={setSelectedCategory}
+             onSelect={(id) => {
+                setSelectedCategory(id);
+                setIsSidebarOpen(false);
+                setQuery({ q: "", location: "" })
+              }}
               categories={categories || []}
               isLoading={categoriesLoading}
               loadMoreRef={categoriesLoadMoreRef}

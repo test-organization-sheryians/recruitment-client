@@ -13,28 +13,47 @@ export function useApplyJob() {
   return useMutation({
     mutationFn: applyJob,
 
+    
     onSuccess: (data, variables) => {
-      toast.success(data.message || "Application submitted!")
+  const jobId = variables.jobId;
+  toast.success(data.message || "Application submitted!");
 
-      const jobId = variables.jobId
+  
+  queryClient.setQueryData(
+    ["job", jobId],
+    (old: any) => (old ? { ...old, applied: true } : old)
+  );
 
-      queryClient.setQueryData<Job>(
-        ["job", jobId],
-        (old) => (old ? { ...old, applied: true } : old)
-      )
 
-      queryClient.setQueryData<Job[]>(
-        ["jobs"],
-        (old) =>
-          old?.map((job) =>
-            job._id === jobId ? { ...job, applied: true } : job
-          )
-      )
-
-      queryClient.invalidateQueries({ queryKey: ["jobsByCategory"] })
-
-      queryClient.invalidateQueries({ queryKey: ["job", jobId] })
+  queryClient.setQueriesData(
+    {
+      predicate: (query) => {
+        const key = query.queryKey[0];
+        return (
+          key === "jobs" ||
+          key === "jobsByCategory" ||
+          key === "jobsSearch"
+        );
+      },
     },
+    (old: any) => {
+      if (!old?.pages) return old;
+
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          data: page.data.map((job: any) =>
+            job._id === jobId
+              ? { ...job, applied: true }
+              : job
+          ),
+        })),
+      };
+    }
+  );
+},
+
 
     onError: (error: unknown) => {
       let msg = "Failed to apply"
