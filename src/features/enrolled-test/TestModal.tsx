@@ -19,7 +19,7 @@ export const TestModal: React.FC<Props> = ({ enrollment, attempts, onClose }) =>
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white max-w-lg w-full rounded-3xl shadow-2xl">
         <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-extrabold">Test Details</h2>
+          <h2 className="text-xl font-bold">Test Details</h2>
           <button onClick={onClose}>
             <X />
           </button>
@@ -27,7 +27,7 @@ export const TestModal: React.FC<Props> = ({ enrollment, attempts, onClose }) =>
 
         <div className="p-6 space-y-6">
           <div>
-            <h3 className="font-bold text-lg">{enrollment.test.title}</h3>
+            <h3 className="font-medium text-lg">{enrollment.test.title}</h3>
             <p className="text-sm text-slate-500">{enrollment.test.summury}</p>
           </div>
 
@@ -38,13 +38,13 @@ export const TestModal: React.FC<Props> = ({ enrollment, attempts, onClose }) =>
             <DetailRow icon={<Activity size={16} />} label="Results" value={enrollment.test.showResults ? "Enabled" : "Disabled"} />
           </div>
 
-          <div className="text-sm text-slate-500 font-bold mt-4">Attempts made: {attemptsCount}</div>
+          <div className="text-sm text-slate-500 font-medium mt-4">Attempts made: {attemptsCount}</div>
 
           {latestAttempt && enrollment.test.showResults && (
             <div className="rounded-2xl border bg-slate-50 p-4 mt-2">
               <div className="flex justify-between mb-3">
-                <p className="text-xs font-bold text-slate-400 uppercase">Attempt Summary</p>
-                <span className={`text-xs font-bold px-3 py-1 rounded-full ${latestAttempt.isPassed ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                <p className="text-xs font-medium text-slate-400 uppercase">Attempt Summary</p>
+                <span className={`text-xs font-medium px-3 py-1 rounded-full ${latestAttempt.isPassed ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                   {latestAttempt.isPassed ? "Passed" : "Failed"}
                 </span>
               </div>

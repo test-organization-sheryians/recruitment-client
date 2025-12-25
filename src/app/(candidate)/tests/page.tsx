@@ -43,25 +43,30 @@ export default function EnrolledTestsPage() {
         <h1 className="text-2xl font-medium mb-6">My Enrolled Tests</h1>
 
         {/* FILTER BUTTONS */}
-        <div className="flex gap-4 mb-6">
+        <div className="mb-6 flex w-fit rounded-lg border border-gray-200 bg-gray-100 p-1 shadow-sm">
           <button
             onClick={() => setFilter("ALL")}
-            className={`px-4 py-2 rounded ${
-              filter === "ALL" ? "bg-blue-600 text-white" : "bg-gray-200"
-            }`}
+            className={`px-5 py-2 text-sm font-medium rounded-md transition-all duration-200
+      ${filter === "ALL"
+                ? "bg-blue-600 text-white shadow"
+                : "text-gray-600 hover:bg-gray-200"
+              }`}
           >
             All
           </button>
 
           <button
             onClick={() => setFilter("ATTEMPTED")}
-            className={`px-4 py-2 rounded ${
-              filter === "ATTEMPTED" ? "bg-blue-600 text-white" : "bg-gray-200"
-            }`}
+            className={`px-5 py-2 text-sm font-medium rounded-md transition-all duration-200
+      ${filter === "ATTEMPTED"
+                ? "bg-blue-600 text-white shadow"
+                : "text-gray-600 hover:bg-gray-200"
+              }`}
           >
             Attempted
           </button>
         </div>
+
 
         {/* TEST CARDS */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
