@@ -162,21 +162,13 @@ export default function VacancyCard({ data }: VacancyCardProps) {
 
       {/* ================= APPLICANTS COUNT ================= */}
       <div className="mt-4">
-        <div className="
-  flex items-center justify-between
-  rounded-xl bg-gray-50 px-4 py-3
-  border border-gray-200
-">
+        <div className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3 border border-gray-200">
           <div className="flex items-center gap-2 text-xs text-gray-500">
             <span className="text-sm">👥</span>
             Applicants
           </div>
 
-          <span className="
-    rounded-full bg-white px-3 py-1
-    text-sm font-semibold text-gray-800
-    shadow-sm tabular-nums
-  ">
+          <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-gray-800 shadow-sm tabular-nums">
             {data.applicantsCount ?? 0}
           </span>
         </div>
