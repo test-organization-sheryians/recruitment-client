@@ -24,7 +24,7 @@ export function useApplyJob() {
     (old: any) => (old ? { ...old, applied: true } : old)
   );
 
-
+//change applied status in all jobs lists in the cache
   queryClient.setQueriesData(
     {
       predicate: (query) => {
