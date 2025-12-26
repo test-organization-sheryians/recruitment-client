@@ -1,6 +1,5 @@
 // app/admin/layout.tsx
-import Navbar from "@/components/Navbar";
-import Sidebar from "@/features/admin/static_pages/Sidebar";
+import  Sidebar  from "@/features/admin/static_pages/Sidebar";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
@@ -33,8 +32,7 @@ if (!user) {
         </aside>
 
         <div className="flex-1 md:ml-72">
-          <div className="p-4 md:p-6 max-w-[1400px] mx-auto">
-       
+          <div className="p-4 md:p-6 max-w-350 mx-auto">
             <main>{children}</main>
           </div>
         </div>
