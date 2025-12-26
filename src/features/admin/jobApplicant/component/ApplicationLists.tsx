@@ -83,6 +83,24 @@ const tabs: Array<"all" | ApplicantStatus> = [
   "hired",
 ];
 
+// Reusable 3-dots Icon Component
+const ThreeDotsIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-6 h-6 text-gray-500 hover:text-gray-800"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM17.25 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
+    />
+  </svg>
+);
+
 /* ================= COMPONENT ================= */
 
 export default function ApplicantsList({
@@ -102,6 +120,9 @@ export default function ApplicantsList({
   const [selectedApplicants, setSelectedApplicants] = useState<string[]>([]);
   const [bulkStatus, setBulkStatus] = useState<ApplicantStatus>("applied");
   const [activeTab, setActiveTab] = useState<"all" | ApplicantStatus>("all");
+  
+  // NEW: State to track which action menu is open
+  const [activeActionId, setActiveActionId] = useState<string | null>(null);
 
   const toggleSelect = (appId: string) => {
     setSelectedApplicants((prev) =>
@@ -109,6 +130,12 @@ export default function ApplicantsList({
         ? prev.filter((x) => x !== appId)
         : [...prev, appId]
     );
+  };
+
+  const handleScheduleInterview = (applicantId: string) => {
+    // Add your logic here to open a modal or navigate
+    console.log("Schedule interview for:", applicantId);
+    setActiveActionId(null); // Close menu after clicking
   };
 
   /* ================= DATA MAPPING ================= */
@@ -164,10 +191,15 @@ export default function ApplicantsList({
 
   /* ================= UI ================= */
 
+  // MODIFIED: Added 0.5fr at the end of the grid definition
+  const gridClass = "grid grid-cols-[0.4fr_1.6fr_1.1fr_1fr_1fr_1fr_1fr_0.5fr]";
+
   return (
     <div
       className={`bg-white rounded-2xl shadow-lg border border-gray-100 p-5 flex flex-col overflow-hidden ${className}`}
       style={{ ["--h"]: h, ["--w"]: w } as React.CSSProperties}
+      // Close menu if clicking anywhere else in the container
+      onClick={() => setActiveActionId(null)} 
     >
       {/* Header */}
       <div className="flex items-center justify-between gap-3 mb-4">
@@ -183,6 +215,7 @@ export default function ApplicantsList({
                 setBulkStatus(e.target.value as ApplicantStatus)
               }
               className="border rounded-xl px-2 py-1"
+              onClick={(e) => e.stopPropagation()}
             >
               {tabs
                 .filter((t) => t !== "all")
@@ -194,7 +227,10 @@ export default function ApplicantsList({
             </select>
 
             <button
-              onClick={handleSubmit}
+              onClick={(e) => {
+                  e.stopPropagation();
+                  handleSubmit();
+              }}
               disabled={isPending}
               className={`rounded-xl px-3 py-2 text-sm font-semibold text-white ${
                 isPending
@@ -228,10 +264,10 @@ export default function ApplicantsList({
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-y-auto rounded-xl border border-gray-200">
+      <div className="flex-1 overflow-y-auto rounded-xl border border-gray-200 pb-20"> {/* Added pb-20 to allow scroll for dropdown */}
         <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-gray-50 border-b">
-            <tr className="grid grid-cols-[0.4fr_1.6fr_1.1fr_1fr_1fr_1fr_1fr] px-4 py-3 text-xs font-semibold text-gray-500">
+          <thead className="sticky top-0 bg-gray-50 border-b z-10">
+            <tr className={`${gridClass} px-4 py-3 text-xs font-semibold text-gray-500`}>
               <th className="text-center">Select</th>
               <th>Name</th>
               <th>Role</th>
@@ -239,6 +275,7 @@ export default function ApplicantsList({
               <th>Experience</th>
               <th>Resume</th>
               <th>Status</th>
+              <th className="text-center">Action</th>
             </tr>
           </thead>
 
@@ -246,7 +283,7 @@ export default function ApplicantsList({
             {filteredApplicants.map((a) => (
               <tr
                 key={a.id}
-                className="grid grid-cols-[0.4fr_1.6fr_1.1fr_1fr_1fr_1fr_1fr] px-4 py-3 items-center hover:bg-gray-50 transition"
+                className={`${gridClass} px-4 py-3 items-center hover:bg-gray-50 transition`}
               >
                 <td className="flex justify-center">
                   <input
@@ -254,6 +291,7 @@ export default function ApplicantsList({
                     checked={selectedApplicants.includes(a.id)}
                     onChange={() => toggleSelect(a.id)}
                     className="h-4 w-4 accent-blue-600"
+                    onClick={(e) => e.stopPropagation()}
                   />
                 </td>
 
@@ -271,6 +309,7 @@ export default function ApplicantsList({
                     href={a.resume}
                     target="_blank"
                     className="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-100"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     📄 Resume
                   </a>
@@ -282,6 +321,35 @@ export default function ApplicantsList({
                   >
                     {a.status}
                   </span>
+                </td>
+
+                {/* NEW ACTION COLUMN */}
+                <td className="relative flex justify-center">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent row click or container click
+                      setActiveActionId(activeActionId === a.id ? null : a.id);
+                    }}
+                    className="p-1 rounded-full hover:bg-gray-200 transition"
+                  >
+                    <ThreeDotsIcon />
+                  </button>
+
+                  {/* DROPDOWN MENU */}
+                  {activeActionId === a.id && (
+                    <div className="absolute right-8 top-1/2 -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleScheduleInterview(a.id);
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2"
+                      >
+                        Schedule Interview
+                      </button>
+                      {/* You can add more options here like 'Reject' or 'View Profile' */}
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
