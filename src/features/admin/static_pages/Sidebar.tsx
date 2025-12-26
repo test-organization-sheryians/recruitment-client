@@ -63,8 +63,8 @@ const Sidebar: React.FC = () => {
   }, []);
 
   const isActive = (href: string) => {
-    if (href === "/admin") return pathname === "/admin";
-    return pathname.startsWith(href);
+    if (!pathname) return false;
+    return pathname === href || pathname.includes(href);
   };
 
   return (
