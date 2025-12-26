@@ -29,7 +29,7 @@ export * from "./activeJobs/updateJobStatus";
 export * from "./jobs/getActiveJob";
 export * from "./jobs/getJobId"
 export * from "./jobs/getJobId";
-
+// export * from "./jobs/searchJob"
 /* ================= SKILLS ================= */
 export * from "./skills/createSkill";
 export * from "./skills/deleteSkill";
@@ -51,15 +51,29 @@ export * from "./resumeExtract";
 export * from "./users/getAllUsers";
 export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
+<<<<<<< HEAD
 export * from "./applicant/applyJob";
 export * from "./applicant/bulkUpdate";
 export * from "./profile/index"
+=======
+export * from "./profile/index";
+export * from "./jobApplication/applyJob";
+export * from "./jobApplication/bulkUpdate";
+>>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
 
 
 /* ================= TESTS ================= */
+export * from "./tests/createTest";
+export * from "./tests/enRolltest";
+export * from "./tests/getTest";
+export * from "./tests/getTestDetails";
+export * from "./tests/getUserAttempts";
+export * from "./tests/neRolluser";  
+export * from "./tests/searchUsertest";
 export * from "./tests/startTest";
 export * from "./tests/testAttempts";
 export * from "./tests/testInfo";
+<<<<<<< HEAD
 
 
 
@@ -68,7 +82,10 @@ export * from "./tests/createTest";
 export * from "./tests/getTest";
 export * from "./tests/getTestDetails";
 export * from "./tests/enRolltest";
+=======
+>>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
 export * from "./tests/updateTest";
-export * from "./tests/neRolluser";
-export * from "./tests/searchUsertest";
-export * from "./tests/getUserAttempts";
+
+
+export * from "./password/forgotPassword";
+export * from "./password/resetPassword";

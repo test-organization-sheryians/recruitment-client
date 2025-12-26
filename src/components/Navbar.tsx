@@ -5,7 +5,6 @@ import {
   Menu,
   X,
   UserIcon,
-  Settings,
   User,
   ChevronRight,
   Bookmark,
@@ -111,10 +110,6 @@ const Navbar = () => {
                 >
                   <Bookmark size={18} /> Saved Jobs
                 </Link>
-
-                <button type="button" className="flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg">
-                  <Settings size={18} /> Settings
-                </button>
               </div>
 
               {/* Logout */}
@@ -177,13 +172,6 @@ const Navbar = () => {
               </div>
               <ChevronRight size={16} />
             </Link>
-
-            <button className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50 w-full">
-              <div className="flex gap-3">
-                <Settings size={20} /> Settings
-              </div>
-              <ChevronRight size={16} />
-            </button>
           </div>
 
           {/* Logout */}
