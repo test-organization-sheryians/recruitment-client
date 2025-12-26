@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useUpdateAvailability } from "../hooks/useProfileApi";
-import { FaPlus } from "react-icons/fa";
+// import { FaPlus } from "react-icons/fa";
 import Modal from "@/components/ui/Modal";
 
 type AvailabilityOption = "immediate" | "1_week" | "2_weeks" | "1_month" | "not_looking";

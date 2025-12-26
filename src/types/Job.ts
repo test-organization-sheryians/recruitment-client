@@ -1,7 +1,12 @@
 export interface Job {
     id: string;
     title: string;
-    location: string;
+    location: {
+      city: string;
+      state: string;
+      pincode: string;
+      country: string;
+    };
     salary: number;
     isRemote: boolean;
     isFeatured: boolean;
@@ -24,18 +29,48 @@ interface Category {
 }
 
 // Skill can be an object or string
-interface Skill {
+export interface Skill {
   _id?: string;
   name: string;
+}
+
+
+export interface SavedJob {
+  _id: string;
+  jobId: Job;
 }
 
 export interface JobFormValues {
     title: string;
     description: string;
-    location: string;
+    location: {
+      city: string;
+      state: string;
+      pincode: string;
+      country: string;
+    };
     salary: number;
     category: string;
     skills: string[];
     isRemote: boolean;
     isFeatured: boolean;
 }
+
+
+// export interface PaginatedJobsResponse {
+//    "success": true,
+//   "data": {
+//     "data": [Job],
+//     "pagination": {
+//       "totalRecords": number,
+//       "totalPages": number,
+//       "currentPage": number,
+//       "limit": number
+//     }
+//   }
+// }
+
+export type SearchQuery = {
+  q: string;
+  location: string;
+};

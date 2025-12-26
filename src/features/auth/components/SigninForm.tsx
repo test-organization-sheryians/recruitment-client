@@ -11,12 +11,22 @@ import { useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { useLogin } from "../hooks/useAuthApi";
+
+import { useSearchParams } from "next/navigation"; //smart redirect
+
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
 const SigninForm = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState("");
+
+  const searchParams = useSearchParams();             //smart redirect
+  const redirect = searchParams.get("redirect");
+
+   const safeRedirect =
+    redirect && redirect.startsWith("/") ? redirect : null;
+
   const [showPassword, setShowPassword] = useState(false);
 
   const { register, handleSubmit, watch } = useForm<{
@@ -50,6 +60,8 @@ const SigninForm = () => {
         };
       }) => {
         Cookies.set("access", res.data.token);
+        Cookies.set("role", res.data.user?.role?.name || "user");
+
 
         dispatch(
           setUser({
@@ -63,10 +75,12 @@ const SigninForm = () => {
         );
 
         if (res.data.user?.role?.name === "admin") {
-          router.push("/admin");
+          router.push(safeRedirect || "/admin");
         } else {
-          router.push("/candidate/resume");
+          router.push(safeRedirect || "/");
         }
+
+
       },
 
       onError: (err: {
@@ -81,6 +95,7 @@ const SigninForm = () => {
       },
     });
   };
+  
 
   return (
     <div className="w-full h-full font-[satoshi] bg-white rounded-2xl md:py-10 md:px-[20%] px-[6%] flex flex-col justify-center">
@@ -105,12 +120,7 @@ const SigninForm = () => {
           {...register("email", { required: true })}
         />
 
-        {/*<LabelInput
-          label="Password"
-          placeholder="8+ characters"
-          type="password"
-          {...register("password", { required: true })}
-        />*/}
+        
 
 <div className="relative">
   <LabelInput

@@ -10,6 +10,7 @@ interface SidebarProps {
   onSelect?: (id: string) => void;
   categories?: Category[];
   isLoading?: boolean;
+  loadMoreRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -17,6 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onSelect,
   categories = [],
   isLoading = false,
+  loadMoreRef,
 }) => {
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
@@ -67,15 +69,19 @@ const Sidebar: React.FC<SidebarProps> = ({
               )}
             </button>
           ))}
+
+        {/* Infinite scroll sentinel */}
+        {!isLoading && <div ref={loadMoreRef} className="h-1" />}
       </nav>
 
       {/* Optional: All Jobs Button */}
       <button
         onClick={() => onSelect?.("")}
         className={`mt-6 w-full py-3 px-4 rounded-lg text-sm font-medium transition-all
-          ${selected === null || selected === ""
-            ? "bg-blue-50 text-blue-700 border border-blue-300"
-            : "text-gray-600 hover:bg-gray-50 border border-gray-200"
+          ${
+            selected === null || selected === ""
+              ? "bg-blue-50 text-blue-700 border border-blue-300"
+              : "text-gray-600 hover:bg-gray-50 border border-gray-200"
           }`}
       >
         All Jobs
