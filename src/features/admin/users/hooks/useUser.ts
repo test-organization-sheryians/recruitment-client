@@ -42,12 +42,12 @@ export const useGetUsers = () =>
 
 const DEFAULT_LIMIT = 10;
 
-export const useInfiniteUsers = (limit: number = DEFAULT_LIMIT) =>
+export const useInfiniteUsers = (limit: number = DEFAULT_LIMIT, role?: string) =>
   useInfiniteQuery<BackendPaginatedResponse<User>>({
-    queryKey: ["users", { limit }],
+    queryKey: ["users", { limit, role }],
     initialPageParam: 1,
     queryFn: async ({ pageParam }) =>
-      getUsersPaginated(pageParam as number, limit),
+      getUsersPaginated(pageParam as number, limit, role),
     getNextPageParam: (lastPage) => {
       const { pagination } = lastPage;
       if (!pagination) return undefined;

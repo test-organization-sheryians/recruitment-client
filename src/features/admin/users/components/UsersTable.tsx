@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Pencil, Trash2, Loader2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
+import { FiEdit } from "react-icons/fi";
 import { useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -10,6 +11,7 @@ import {
   useUpdateUserRole,
 } from "@/features/admin/users/hooks/useUser";
 import { useToast } from "@/components/ui/Toast";
+import Table, { Column } from "@/components/ui/Table";
 
 interface Role {
   name: string;
@@ -25,6 +27,7 @@ interface User {
 }
 
 export default function UsersTable() {
+  const [roleFilter, setRoleFilter] = useState<string>("");
   const {
     data: userPages,
     isLoading,
@@ -32,7 +35,7 @@ export default function UsersTable() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteUsers();
+  } = useInfiniteUsers(undefined, roleFilter);
 
   const users = useMemo(
     () => (userPages?.pages ?? []).flatMap((p) => p.data ?? []),
@@ -65,6 +68,19 @@ export default function UsersTable() {
     });
   }, [users, searchQuery]);
 
+  // Helper for role badge color classes
+  const getRoleBadgeClass = (roleName?: string | null) => {
+    const name = (roleName || "").toLowerCase();
+
+    if (!name) return "bg-red-100 text-red-700"; // No role -> red
+    if (name === "admin") return "bg-green-100 text-green-700"; // Admin -> green
+    if (name === "candidate") return "bg-blue-100 text-blue-700"; // Candidate -> blue
+    if (name === "client") return "bg-yellow-100 text-yellow-700"; // Client -> yellow
+
+    // Default badge
+    return "bg-gray-100 text-gray-700";
+  };
+
   // Infinite scroll observer
   useEffect(() => {
     const el = loadMoreRef.current;
@@ -89,6 +105,76 @@ export default function UsersTable() {
     setSelectedRole(user.role?.name || "");
     setIsModalOpen(true);
   };
+
+  // Table column definitions (re-usable)
+  const columns: Column<User>[] = [
+    {
+      header: "Name",
+      render: (u) => (
+        <>
+          {u.firstName} {u.lastName}
+        </>
+      ),
+    },
+    {
+      header: "Email",
+      accessor: "email",
+    },
+    {
+      header: "Phone",
+      render: (u) => u.phoneNumber || "N/A",
+    },
+    {
+      header: "Role",
+      render: (u) => (
+        <span
+          className={`px-3 py-1 rounded-full text-sm ${getRoleBadgeClass(u.role?.name)}`}
+          title={u.role?.name || "No Role"}
+        >
+          {u.role?.name || "No Role"}
+        </span>
+      ),
+    },
+    {
+      header: "Actions",
+      align: "center",
+      render: (u) => (
+        <div className="flex items-center gap-4 justify-center">
+          <button onClick={() => openModal(u)} className="p-1">
+            <FiEdit className="w-4 h-4 text-blue-600 hover:text-blue-800" />
+          </button>
+
+          <div className="relative">
+            <button
+              onClick={() =>
+                setOpenDeleteMenu(openDeleteMenu === u._id ? null : u._id)
+              }
+              className="p-1"
+            >
+              <Trash2 className="w-4 h-4 text-red-600 hover:text-red-800" />
+            </button>
+
+            {openDeleteMenu === u._id && (
+              <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg w-32 z-20">
+                <button
+                  onClick={() => handleDeleteUser(u._id)}
+                  className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={() => setOpenDeleteMenu(null)}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      ),
+    },
+  ];
 
   const handleSaveRole = () => {
     if (!selectedUserId || !selectedRole) {
@@ -138,9 +224,20 @@ export default function UsersTable() {
     );
 
   return (
-    <>
-      {/* Search Input */}
-      <div className="w-full flex justify-end mb-6">
+    <div className="-mx-6">
+      {/* Search Input & Role Filter */}
+      <div className="w-full flex justify-end items-center gap-4 mb-6">
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+          className="px-3 py-2 border rounded-lg bg-white shadow-sm focus:outline-none"
+        >
+          <option value="">All Roles</option>
+          <option value="Admin">Admin</option>
+          <option value="Client">Client</option>
+          <option value="Candidate">Candidate</option>
+        </select>
+
         <input
           type="text"
           placeholder="Search by name..."
@@ -191,110 +288,15 @@ export default function UsersTable() {
         </div>
       )}
 
-      {/* Users Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border rounded-lg shadow">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">
-                Name
-              </th>
-              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">
-                Email
-              </th>
-              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">
-                Phone
-              </th>
-              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">
-                Role
-              </th>
-              <th className="px-6 py-3 border-b text-center text-sm font-medium text-gray-700">
-                Actions
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredUsers.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="text-center py-8 text-gray-500 border-b"
-                >
-                  {searchQuery ? "No users match your search" : "No users found"}
-                </td>
-              </tr>
-            ) : (
-              filteredUsers.map((user) => (
-                <tr key={user._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 border-b">
-                    {user.firstName} {user.lastName}
-                  </td>
-                  <td className="px-6 py-4 border-b">{user.email}</td>
-                  <td className="px-6 py-4 border-b">
-                    {user.phoneNumber || "N/A"}
-                  </td>
-                  <td className="px-6 py-4 border-b">
-                    <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm">
-                      {user.role?.name || "No Role"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 border-b">
-                    <div className="flex gap-4 justify-center items-center">
-                      <Pencil
-                        className="w-5 h-5 text-blue-600 cursor-pointer hover:text-blue-800"
-                        onClick={() => openModal(user)}
-                      />
-
-                      <div className="relative">
-                        <Trash2
-                          className="w-5 h-5 text-red-600 cursor-pointer hover:text-red-800"
-                          onClick={() =>
-                            setOpenDeleteMenu(
-                              openDeleteMenu === user._id ? null : user._id
-                            )
-                          }
-                        />
-
-                        {openDeleteMenu === user._id && (
-                          <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg w-32 z-20">
-                            <button
-                              onClick={() => handleDeleteUser(user._id)}
-                              className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
-                            >
-                              Delete
-                            </button>
-                            <button
-                              onClick={() => setOpenDeleteMenu(null)}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-
-            {/* Infinite scroll sentinel */}
-            <tr ref={loadMoreRef}>
-              <td colSpan={5} className="p-0 h-4" />
-            </tr>
-
-            {isFetchingNextPage && (
-              <tr>
-                <td colSpan={5} className="text-center py-6 text-gray-500">
-                  <Loader2 className="animate-spin w-5 h-5 mx-auto" />
-                  <span className="ml-2">Loading more users...</span>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </>
+      {/* Users Table: replaced with reusable `Table` component */}
+      <Table<User>
+        columns={columns}
+        data={filteredUsers}
+        rowKey={(u: User) => u._id}
+        loadMoreRef={loadMoreRef}
+        isFetchingNextPage={isFetchingNextPage}
+        emptyMessage={searchQuery ? "No users match your search" : "No users found"}
+      />
+    </div>
   );
 }
