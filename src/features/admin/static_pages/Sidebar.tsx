@@ -62,9 +62,23 @@ const Sidebar: React.FC = () => {
     loadUser();
   }, []);
 
+  // Determine the single most-specific active nav item (longest matching href).
+  const activeHref = useMemo(() => {
+    if (!pathname) return null;
+    let bestMatch: string | null = null;
+    for (const item of NAV_ITEMS) {
+      const href = item.href;
+      if (pathname === href || pathname.startsWith(href + "/")) {
+        if (!bestMatch || href.length > bestMatch.length) {
+          bestMatch = href;
+        }
+      }
+    }
+    return bestMatch;
+  }, [pathname]);
+
   const isActive = (href: string) => {
-    if (!pathname) return false;
-    return pathname === href || pathname.includes(href);
+    return activeHref === href;
   };
 
   return (
