@@ -28,6 +28,9 @@ export default function EnrolledTestsPage() {
   // ✅ Only include enrollments that have valid test
   const validEnrollments = enrollments?.filter(e => e.test) || [];
 
+  // 👇 ADD-ON (only new logic)
+  const noTestsFound = validEnrollments.length === 0;
+
   // Filter based on "ATTEMPTED" or "ALL"
   const filteredEnrollments =
     filter === "ATTEMPTED"
@@ -61,16 +64,32 @@ export default function EnrolledTestsPage() {
           ))}
         </div>
 
+        {/* EMPTY STATE */}
+        {noTestsFound && (
+          <div className="flex items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white p-10 text-center">
+            <div>
+              <h2 className="text-lg font-medium text-gray-700">
+                You are not enrolled in any tests
+              </h2>
+              <p className="mt-2 text-sm text-gray-500">
+                Please wait for test assignment.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* TEST CARDS */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredEnrollments.map(e => (
-            <TestCard
-              key={e._id}
-              enrollment={e}
-              onViewDetails={setSelectedTestId}
-            />
-          ))}
-        </div>
+        {!noTestsFound && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredEnrollments.map(e => (
+              <TestCard
+                key={e._id}
+                enrollment={e}
+                onViewDetails={setSelectedTestId}
+              />
+            ))}
+          </div>
+        )}
 
         {/* MODAL */}
         {selectedEnrollment && selectedEnrollment.test && (
