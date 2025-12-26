@@ -9,7 +9,7 @@ import {
   ChevronRight,
   Bookmark,
 } from "lucide-react";
-
+//updated
 import Link from "next/link";
 import { useSelector } from "react-redux";
 import { RootState } from "@/config/store";
