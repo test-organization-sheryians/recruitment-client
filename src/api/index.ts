@@ -47,24 +47,23 @@ export * from "./resumeExtract";
 export * from "./users/getAllUsers";
 export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
-export * from "./profile/index"
+export * from "./profile/index";
+export * from "./jobApplication/applyJob";
+export * from "./jobApplication/bulkUpdate";
 
 /* ================= TESTS ================= */
+export * from "./tests/createTest";
+export * from "./tests/enRolltest";
+export * from "./tests/getTest";
+export * from "./tests/getTestDetails";
+export * from "./tests/getUserAttempts";
+export * from "./tests/neRolluser";  
+export * from "./tests/searchUsertest";
 export * from "./tests/startTest";
 export * from "./tests/testAttempts";
 export * from "./tests/testInfo";
+export * from "./tests/updateTest";
+
 
 export * from "./password/forgotPassword";
 export * from "./password/resetPassword";
-
-
-
-
-export * from "./tests/createTest";
-export * from "./tests/getTest";
-export * from "./tests/getTestDetails";
-export * from "./tests/enRolltest";
-export * from "./tests/updateTest";
-export * from "./tests/neRolluser";
-export * from "./tests/searchUsertest";
-export * from "./tests/getUserAttempts";
