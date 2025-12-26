@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-
-import React, { use } from "react";
-import VacancyCard from "./VacancyCard";
-import { useGetActiveJob } from "../jobs/hooks/useJobApi";
-
-const getStyleValue = (value: string | number | undefined) => {
-=======
 "use client";
 
 import React from "react";
@@ -15,7 +7,6 @@ import { useGetJobs } from "../jobs/hooks/useJobApi";
 /* ===================== UTILS ===================== */
 
 const getStyleValue = (value?: string | number) => {
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
   if (value === undefined) return undefined;
   return typeof value === "number" ? `${value}px` : value;
 
@@ -26,13 +17,6 @@ const getStyleValue = (value?: string | number) => {
 type VacanciesSectionProps = {
   width?: string | number;
   height?: string | number;
-<<<<<<< HEAD
-}> = ({ width, height }) => {
-
-  const { data: activeJob, isLoading, error } = useGetActiveJob();
-
-  console.log(activeJob, isLoading, error);
-=======
 };
 
 /* ===================== COMPONENT ===================== */
@@ -60,7 +44,6 @@ const VacanciesSection: React.FC<VacanciesSectionProps> = ({
   }
 
   const jobs: JobData[] = Array.isArray(activeJobs) ? activeJobs : [];
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
 
   return (
     <div
@@ -68,26 +51,6 @@ const VacanciesSection: React.FC<VacanciesSectionProps> = ({
         width: getStyleValue(width),
         height: getStyleValue(height),
       }}
-<<<<<<< HEAD
-      className='rounded-2xl bg-white p-4 border border-gray-200 flex flex-col'
-    >
-      <div className='mb-4 flex items-center justify-between'>
-        <div className='flex items-center gap-2'>
-          <h3 className='text-lg font-semibold'>Current Vacancies</h3>
-          <span className='text-xs px-2 py-0.5 rounded-full bg-[#E9EFF7] text-[#1270B0]'>
-            {Array.isArray(activeJob) ? activeJob.length : 0}
-          </span>
-        </div>
-        
-      </div>
-
-      <div className='grid md:grid-cols-2 gap-4 overflow-y-auto flex-1 pr-2'>
-        {Array.isArray(activeJob) && activeJob.map((job: any) => (
-          <VacancyCard
-            key={job._id}
-            data={job}
-          />
-=======
       className="rounded-2xl bg-white p-4 border border-gray-200 flex flex-col"
     >
       {/* Header */}
@@ -104,7 +67,6 @@ const VacanciesSection: React.FC<VacanciesSectionProps> = ({
       <div className="grid md:grid-cols-2 gap-4 overflow-y-auto flex-1 pr-2">
         {jobs.map((job) => (
           <VacancyCard key={job._id} data={job} />
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
         ))}
 
         {jobs.length === 0 && (

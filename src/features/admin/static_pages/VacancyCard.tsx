@@ -8,16 +8,6 @@ import { useRouter } from "next/navigation";
 type Skill =
   | string
   | {
-<<<<<<< HEAD
-      _id?: string;
-      name: string;
-    };
-
-type Location = {
-  city: string;
-  state: string;
-  country: string;
-=======
     _id?: string;
     name?: string;
   };
@@ -26,21 +16,11 @@ type Location = {
   city?: string;
   state?: string;
   country?: string;
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
   pincode?: string;
   _id?: string;
 };
 
 export type JobData = {
-<<<<<<< HEAD
-  _id: string;
-  title: string;
-  education: string;
-  skills: Skill[];
-  salary: string;
-  location: Location;
-  applicantsCount: number;
-=======
   _id?: string;
   title?: string;
   education?: string;
@@ -48,34 +28,16 @@ export type JobData = {
   salary?: string;
   location?: Location;
   applicantsCount?: number;
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
   createdAt?: string;
 };
 
 interface VacancyCardProps {
-<<<<<<< HEAD
-  data: JobData;
-=======
   data?: JobData;
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
 }
 
 /* ===================== COMPONENT ===================== */
 
 export default function VacancyCard({ data }: VacancyCardProps) {
-<<<<<<< HEAD
-  const router = useRouter();
-  const [showAllSkills, setShowAllSkills] = useState(false);
-
-  /* ---------- Normalize skills ---------- */
-  const skillNames = useMemo(
-    () =>
-      (data.skills || []).map((s) =>
-        typeof s === "string" ? s : s.name
-      ),
-    [data.skills]
-  );
-=======
   // ✅ All hooks must be called unconditionally at the top
   const router = useRouter();
   const [showAllSkills, setShowAllSkills] = useState(false);
@@ -97,16 +59,10 @@ export default function VacancyCard({ data }: VacancyCardProps) {
   if (!data) {
     return null;
   }
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
 
   const visibleSkills = skillNames.slice(0, 3);
   const hiddenSkills = skillNames.slice(3);
 
-<<<<<<< HEAD
-  return (
-  <div
-      onClick={() => router.push(`/admin/applicants/${data._id}`)}
-=======
   const handleCardClick = () => {
     if (data._id) {
       router.push(`/admin/applicants/${data._id}`);
@@ -121,35 +77,15 @@ export default function VacancyCard({ data }: VacancyCardProps) {
   return (
     <div
       onClick={handleCardClick}
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
       className="
         group rounded-2xl border border-gray-200 bg-white p-4
         cursor-pointer transition-all duration-300
         hover:shadow-lg hover:-translate-y-0.5
-<<<<<<< HEAD
-=======
         select-none
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
       "
     >
       {/* ================= HEADER ================= */}
       <div className="flex items-start justify-between gap-3">
-<<<<<<< HEAD
-        <div className="flex items-center gap-3">
-          
-
-          <div>
-            <h4 className="text-sm font-semibold text-gray-900">
-              {data.title}
-            </h4>
-            <p className="text-xs text-gray-500">{data.education}</p>
-          </div>
-        </div>
-
-        <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 font-medium">
-          {data.createdAt
-            ? new Date(data.createdAt).toLocaleDateString()
-=======
         <div className="flex-1">
           <h4 className="text-sm font-semibold text-gray-900 line-clamp-2">
             {data.title ?? "Untitled Job"}
@@ -166,65 +102,11 @@ export default function VacancyCard({ data }: VacancyCardProps) {
               month: "short",
               year: "numeric",
             })
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
             : "Recent"}
         </span>
       </div>
 
       {/* ================= SKILLS ================= */}
-<<<<<<< HEAD
-      <div className="mt-3 flex flex-wrap gap-2">
-        {visibleSkills.map((skill) => (
-          <span
-            key={skill}
-            className="
-              text-[11px] px-2.5 py-1 rounded-full
-              bg-gray-100 text-gray-700
-              group-hover:bg-blue-50 group-hover:text-blue-700
-              transition
-            "
-          >
-            {skill}
-          </span>
-        ))}
-
-        {hiddenSkills.length > 0 && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation(); // 🚫 prevent card navigation
-              setShowAllSkills((prev) => !prev);
-            }}
-            className="
-              text-[11px] px-2.5 py-1 rounded-full
-              bg-blue-100 text-blue-700 font-semibold
-              hover:bg-blue-200 transition
-            "
-          >
-            {showAllSkills ? "− Less" : `+${hiddenSkills.length}`}
-          </button>
-        )}
-      </div>
-
-      {/* ================= SLIDE-DOWN SKILLS ================= */}
-      <div
-        className={`
-          overflow-hidden transition-all duration-300 ease-in-out
-          ${showAllSkills ? "max-h-40 opacity-100 mt-2" : "max-h-0 opacity-0"}
-        `}
-      >
-        <div className="flex flex-wrap gap-2 pt-1">
-          {hiddenSkills.map((skill) => (
-            <span
-              key={skill}
-              className="
-                text-[11px] px-2.5 py-1 rounded-full
-                bg-blue-50 text-blue-700
-              "
-            >
-              {skill}
-            </span>
-          ))}
-=======
       {skillNames.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {visibleSkills.map((skill, idx) => (
@@ -297,7 +179,6 @@ export default function VacancyCard({ data }: VacancyCardProps) {
   ">
             {data.applicantsCount ?? 0}
           </span>
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
         </div>
 
       </div>

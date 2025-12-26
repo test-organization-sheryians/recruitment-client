@@ -51,15 +51,8 @@ export * from "./resumeExtract";
 export * from "./users/getAllUsers";
 export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
-<<<<<<< HEAD
-export * from "./applicant/applyJob";
-export * from "./applicant/bulkUpdate";
-export * from "./profile/index"
-=======
-export * from "./profile/index";
 export * from "./jobApplication/applyJob";
 export * from "./jobApplication/bulkUpdate";
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
 
 
 /* ================= TESTS ================= */
@@ -73,17 +66,7 @@ export * from "./tests/searchUsertest";
 export * from "./tests/startTest";
 export * from "./tests/testAttempts";
 export * from "./tests/testInfo";
-<<<<<<< HEAD
 
-
-
-
-export * from "./tests/createTest";
-export * from "./tests/getTest";
-export * from "./tests/getTestDetails";
-export * from "./tests/enRolltest";
-=======
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
 export * from "./tests/updateTest";
 
 

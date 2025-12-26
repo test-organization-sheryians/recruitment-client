@@ -15,20 +15,12 @@ export const useJobApplicant = (id: string) => {
 
 
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
 export const useBulkUpdateApplicants = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (payload: api.BulkUpdatePayload) =>
-<<<<<<< HEAD
-      api.bulkUpadteData(payload),
-=======
       api.bulkUpdateData(payload),
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
 
     onSuccess: () => {
       // 🔁 refetch applicants after update
@@ -40,8 +32,4 @@ export const useBulkUpdateApplicants = () => {
     retry: 0,
   });
 
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 052aaa9e5bdfd3cb1cbe6dac7d9c6ea8ec25d984
