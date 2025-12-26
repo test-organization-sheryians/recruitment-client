@@ -34,9 +34,7 @@ if (!user) {
 
         <div className="flex-1 md:ml-72">
           <div className="p-4 md:p-6 max-w-[1400px] mx-auto">
-            <div className="mb-6">
-               <Navbar />
-            </div>
+       
             <main>{children}</main>
           </div>
         </div>

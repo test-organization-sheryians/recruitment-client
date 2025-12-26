@@ -33,10 +33,12 @@ export default function TestList() {
 
   const { data, isLoading, isError } = useGetAllTests();
 
-  const tests: Test[] = useMemo(
-    () => (Array.isArray(data) ? data : []),
-    [data]
-  );
+  const tests: Test[] = useMemo(() => {
+    if (!Array.isArray(data)) return [];
+    return [...data].sort((a, b) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [data]); // Added the latest on the top
 
   const filteredTests = useMemo(() => {
     if (!searchTerm) return tests;
@@ -66,7 +68,7 @@ export default function TestList() {
     );
   }
 
-  const handleDiscloseResult = (test: Test) => { 
+  const handleDiscloseResult = (test: Test) => {
     alert(`Results for "${test.title}" have been disclosed to candidates.`);
     setOpenMenu(null);
   };
