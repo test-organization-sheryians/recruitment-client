@@ -7,6 +7,12 @@ import {
 } from "../hooks/useJobApplicant";
 import { useParams } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
+import PopupForm from "./PopupForm"; 
+import { 
+  ApplicantStatus, 
+  ApplicantRow, 
+  ApplicantsApiResponse 
+} from "@/types/applicant"; // Import the types
 
 /* ================= TYPES ================= */
 
@@ -17,50 +23,6 @@ type ApplicantsListProps = {
   width?: Size;
   className?: string;
 };
-
-type ApplicantStatus =
-  | "applied"
-  | "shortlisted"
-  | "rejected"
-  | "forwareded"
-  | "interview"
-  | "hired";
-
-interface CandidateDetails {
-  firstName: string;
-  lastName: string;
-  email: string;
-}
-
-interface JobDetails {
-  title: string;
-  requiredExperience: number;
-}
-
-interface ApplicantApi {
-  _id: string;
-  candidateDetails: CandidateDetails;
-  jobDetails: JobDetails;
-  appliedAt: string;
-  totalExperienceYears: number;
-  status: ApplicantStatus;
-  resumeUrl: string;
-}
-
-interface ApplicantsApiResponse {
-  applicants: ApplicantApi[];
-}
-
-interface ApplicantRow {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  date: string;
-  experience: string;
-  status: ApplicantStatus;
-  resume: string;
-}
 
 /* ================= CONSTANTS ================= */
 
@@ -112,8 +74,9 @@ export default function ApplicantsList({
   const w = typeof width === "number" ? `${width}px` : width;
 
   const { id } = useParams();
+  const jobId = id as string;
 
-  const { data } = useJobApplicant(id as string) as {
+  const { data } = useJobApplicant(jobId) as {
     data?: ApplicantsApiResponse;
   };
 
@@ -121,8 +84,9 @@ export default function ApplicantsList({
   const [bulkStatus, setBulkStatus] = useState<ApplicantStatus>("applied");
   const [activeTab, setActiveTab] = useState<"all" | ApplicantStatus>("all");
   
-  // NEW: State to track which action menu is open
   const [activeActionId, setActiveActionId] = useState<string | null>(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [scheduleApplicantId, setScheduleApplicantId] = useState<string | null>(null);
 
   const toggleSelect = (appId: string) => {
     setSelectedApplicants((prev) =>
@@ -133,9 +97,9 @@ export default function ApplicantsList({
   };
 
   const handleScheduleInterview = (applicantId: string) => {
-    // Add your logic here to open a modal or navigate
-    console.log("Schedule interview for:", applicantId);
-    setActiveActionId(null); // Close menu after clicking
+    setScheduleApplicantId(applicantId);
+    setIsPopupOpen(true);
+    setActiveActionId(null);
   };
 
   /* ================= DATA MAPPING ================= */
@@ -191,14 +155,12 @@ export default function ApplicantsList({
 
   /* ================= UI ================= */
 
-  // MODIFIED: Added 0.5fr at the end of the grid definition
   const gridClass = "grid grid-cols-[0.4fr_1.6fr_1.1fr_1fr_1fr_1fr_1fr_0.5fr]";
 
   return (
     <div
       className={`bg-white rounded-2xl shadow-lg border border-gray-100 p-5 flex flex-col overflow-hidden ${className}`}
       style={{ ["--h"]: h, ["--w"]: w } as React.CSSProperties}
-      // Close menu if clicking anywhere else in the container
       onClick={() => setActiveActionId(null)} 
     >
       {/* Header */}
@@ -264,7 +226,7 @@ export default function ApplicantsList({
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-y-auto rounded-xl border border-gray-200 pb-20"> {/* Added pb-20 to allow scroll for dropdown */}
+      <div className="flex-1 overflow-y-auto rounded-xl border border-gray-200 pb-20">
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-gray-50 border-b z-10">
             <tr className={`${gridClass} px-4 py-3 text-xs font-semibold text-gray-500`}>
@@ -323,32 +285,33 @@ export default function ApplicantsList({
                   </span>
                 </td>
 
-                {/* NEW ACTION COLUMN */}
                 <td className="relative flex justify-center">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent row click or container click
-                      setActiveActionId(activeActionId === a.id ? null : a.id);
-                    }}
-                    className="p-1 rounded-full hover:bg-gray-200 transition"
-                  >
-                    <ThreeDotsIcon />
-                  </button>
-
-                  {/* DROPDOWN MENU */}
-                  {activeActionId === a.id && (
-                    <div className="absolute right-8 top-1/2 -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+                  {a.status === "shortlisted" && (
+                    <>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleScheduleInterview(a.id);
+                          setActiveActionId(activeActionId === a.id ? null : a.id);
                         }}
-                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2"
+                        className="p-1 rounded-full hover:bg-gray-200 transition"
                       >
-                        Schedule Interview
+                        <ThreeDotsIcon />
                       </button>
-                      {/* You can add more options here like 'Reject' or 'View Profile' */}
-                    </div>
+
+                      {activeActionId === a.id && (
+                        <div className="absolute right-8 top-1/2 -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleScheduleInterview(a.id);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2"
+                          >
+                            Schedule Interview
+                          </button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </td>
               </tr>
@@ -362,6 +325,13 @@ export default function ApplicantsList({
           </div>
         )}
       </div>
+      
+      <PopupForm 
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        candidateId={scheduleApplicantId}
+        jobId={jobId}
+      />
     </div>
   );
 }

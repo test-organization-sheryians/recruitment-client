@@ -8,18 +8,20 @@ import { Button } from "@/components/ui/button";
 interface PopupFormProps {
   isOpen: boolean;
   onClose: () => void;
-  applicantId: string | null;
+  candidateId: string | null;
+  jobId: string; // Added jobId prop
 }
 
 export default function PopupForm({
   isOpen,
   onClose,
-  applicantId,
+  candidateId,
+  jobId,
 }: PopupFormProps) {
   const [formData, setFormData] = useState({
     interviewDate: "",
     interviewTime: "",
-    interviewerName: "",
+    interviewerEmail: "", // Changed to email to match backend
     meetingLink: "",
   });
 
@@ -32,16 +34,38 @@ export default function PopupForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!candidateId || !jobId) return;
+
     setIsLoading(true);
 
-    // Simulate API call
-    console.log("Scheduling interview for applicant:", applicantId);
-    console.log("Form Data:", formData);
+    // 1. Combine Date and Time into a single 'timing' string (ISO format)
+    const dateTimeString = `${formData.interviewDate}T${formData.interviewTime}`;
+    const timing = new Date(dateTimeString).toISOString();
+
+    // 2. Construct the payload matching your Backend Service's 'data' argument
+    const payload = {
+      candidateId: candidateId,
+      jobId: jobId,
+      interviewerEmail: formData.interviewerEmail,
+      meetingLink: formData.meetingLink,
+      timing: timing,
+    };
+
+    console.log("Submitting Payload to Backend:", payload);
+
+    // TODO: Replace with your actual API call
+    // await scheduleInterviewApi.createInterview(payload);
 
     setTimeout(() => {
       setIsLoading(false);
       onClose();
-      // Reset form or show success toast here
+      // Optional: Reset form
+      setFormData({
+        interviewDate: "",
+        interviewTime: "",
+        interviewerEmail: "",
+        meetingLink: "",
+      });
     }, 1000);
   };
 
@@ -78,13 +102,13 @@ export default function PopupForm({
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-gray-700">
-            Interviewer Name
+            Interviewer Email
           </label>
           <Input
-            type="text"
-            name="interviewerName"
-            placeholder="e.g. John Doe"
-            value={formData.interviewerName}
+            type="email"
+            name="interviewerEmail"
+            placeholder="interviewer@company.com"
+            value={formData.interviewerEmail}
             onChange={handleChange}
             required
           />
@@ -100,6 +124,7 @@ export default function PopupForm({
             placeholder="https://meet.google.com/..."
             value={formData.meetingLink}
             onChange={handleChange}
+            required
           />
         </div>
 
