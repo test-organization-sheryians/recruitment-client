@@ -185,7 +185,7 @@ const Navbar = () => {
             </Link>
 
             <Link
-              href="/jobs-savedjob"
+              href="/jobs/saved-job"
               onClick={() => setOpenMenu(false)}
               className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
             >
