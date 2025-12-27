@@ -16,14 +16,45 @@ const Logout = () => {
     logoutUser(undefined, {
       onSuccess: () => {
         Cookies.remove("access");
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch {}
         dispatch(logoutSlice());
-        router.push("/login");
+        router.replace("/login");
+        setTimeout(() => {
+          try {
+            // try to close window in environments that allow it (electron, opened windows)
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            window.open('', '_self');
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            window.close();
+          } catch {}
+          window.location.href = '/login';
+        }, 50);
       },
       onError: (error) => {
         console.error("Logout failed:", error);
         Cookies.remove("access");
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch {}
         dispatch(logoutSlice());
-        router.push("/login");
+        router.replace("/login");
+        setTimeout(() => {
+          try {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            window.open('', '_self');
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            window.close();
+          } catch {}
+          window.location.href = '/login';
+        }, 50);
       },
     });
   };

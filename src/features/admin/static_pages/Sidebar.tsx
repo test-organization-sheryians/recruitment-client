@@ -82,7 +82,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="h-[calc(100vh-32px)] w-72 rounded-3xl bg-gradient-to-b from-white to-slate-50 shadow-[0_20px_50px_rgba(15,23,42,0.08)] flex flex-col border border-slate-200">
+    <aside className="h-[calc(100vh-32px)] w-72 rounded-3xl bg-linear-to-b from-white to-slate-50 shadow-[0_20px_50px_rgba(15,23,42,0.08)] flex flex-col border border-slate-200">
       {/* Brand */}
       <div className="px-6 pt-6 pb-4">
         <div className="text-xl font-extrabold tracking-tight text-slate-900">
@@ -106,7 +106,7 @@ const Sidebar: React.FC = () => {
           <p className="text-xs font-semibold text-slate-800 truncate">
             {user?.email || "admin@example.com"}
           </p>
-          <span className="inline-flex items-center gap-1 mt-0.5 rounded-full bg-blue-50 px-2 py-[2px] text-[10px] font-semibold text-blue-700">
+          <span className="inline-flex items-center gap-1 mt-0.5 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
             ● Administrator
           </span>
         </div>
@@ -123,7 +123,7 @@ const Sidebar: React.FC = () => {
               className={clsx(
                 "group relative flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
                 active
-                  ? "bg-gradient-to-r from-blue-50 to-white text-blue-700 shadow-sm"
+                  ? "bg-linear-to-r from-blue-50 to-white text-blue-700 shadow-sm"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
               )}
             >
