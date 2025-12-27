@@ -9,6 +9,7 @@ export type ApplicantStatus =
   | "hired";
 
 export interface CandidateDetails {
+  _id: string; // <--- ADDED: TypeScript now knows this exists
   firstName: string;
   lastName: string;
   email: string;
@@ -22,6 +23,7 @@ export interface JobDetails {
 export interface ApplicantApi {
   _id: string;
   candidateDetails: CandidateDetails;
+  candidateId?: string; // <--- ADDED: Optional fallback
   jobDetails: JobDetails;
   appliedAt: string;
   totalExperienceYears: number;
@@ -35,6 +37,7 @@ export interface ApplicantsApiResponse {
 
 export interface ApplicantRow {
   id: string;
+  candidateUserId: string; // We use this in the UI
   name: string;
   email: string;
   role: string;

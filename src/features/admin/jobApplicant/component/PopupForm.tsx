@@ -4,12 +4,14 @@ import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useScheduleInterview } from "../hooks/useJobApplicant";
+import { useToast } from "@/components/ui/Toast";
 
 interface PopupFormProps {
   isOpen: boolean;
   onClose: () => void;
-  candidateId: string | null;
-  jobId: string; // Added jobId prop
+  candidateId: string | null; // This must be the User ID
+  jobId: string;
 }
 
 export default function PopupForm({
@@ -21,52 +23,57 @@ export default function PopupForm({
   const [formData, setFormData] = useState({
     interviewDate: "",
     interviewTime: "",
-    interviewerEmail: "", // Changed to email to match backend
+    interviewerEmail: "",
     meetingLink: "",
   });
 
-  const [isLoading, setIsLoading] = useState(false);
+  const { mutate: scheduleInterview, isPending } = useScheduleInterview();
+  const { success, error } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!candidateId || !jobId) return;
+    if (!candidateId || !jobId) {
+      error("Missing candidate or job information");
+      return;
+    }
 
-    setIsLoading(true);
-
-    // 1. Combine Date and Time into a single 'timing' string (ISO format)
+    // 1. Combine Date and Time
     const dateTimeString = `${formData.interviewDate}T${formData.interviewTime}`;
     const timing = new Date(dateTimeString).toISOString();
 
-    // 2. Construct the payload matching your Backend Service's 'data' argument
+    // 2. Construct Payload (FIXED SYNTAX HERE)
     const payload = {
       candidateId: candidateId,
       jobId: jobId,
       interviewerEmail: formData.interviewerEmail,
       meetingLink: formData.meetingLink,
       timing: timing,
+      status: "Scheduled" as const, // <--- Fixed line
     };
 
-    console.log("Submitting Payload to Backend:", payload);
-
-    // TODO: Replace with your actual API call
-    // await scheduleInterviewApi.createInterview(payload);
-
-    setTimeout(() => {
-      setIsLoading(false);
-      onClose();
-      // Optional: Reset form
-      setFormData({
-        interviewDate: "",
-        interviewTime: "",
-        interviewerEmail: "",
-        meetingLink: "",
-      });
-    }, 1000);
+    // 3. Call API
+    scheduleInterview(payload, {
+      onSuccess: () => {
+        success("Interview scheduled successfully!");
+        onClose();
+        // Reset form
+        setFormData({
+          interviewDate: "",
+          interviewTime: "",
+          interviewerEmail: "",
+          meetingLink: "",
+        });
+      },
+      onError: (err: Error) => {
+        const msg = err.message || "Failed to schedule interview.";
+        error(msg);
+      },
+    });
   };
 
   return (
@@ -133,12 +140,12 @@ export default function PopupForm({
             type="button"
             variant="outline"
             onClick={onClose}
-            disabled={isLoading}
+            disabled={isPending}
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Scheduling..." : "Schedule Interview"}
+          <Button type="submit" disabled={isPending}>
+            {isPending ? "Scheduling..." : "Schedule Interview"}
           </Button>
         </div>
       </form>
