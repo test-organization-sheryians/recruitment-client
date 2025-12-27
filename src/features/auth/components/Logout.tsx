@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import Cookies from "js-cookie";
 import { logout as logoutSlice } from "../slice";
 import { useLogout } from "../hooks/useAuthApi";
+import { cookies } from "next/headers";
 
 const Logout = () => {
   const router = useRouter();
@@ -15,7 +16,10 @@ const Logout = () => {
   const handleLogout = () => {
     logoutUser(undefined, {
       onSuccess: () => {
-        Cookies.remove("access");
+        Cookies.remove("accessToken", { path: '/' });
+        Cookies.remove("refreshToken", { path: '/' });
+        Cookies.remove("role", { path: '/' });
+        Cookies.remove("access", { path: '/' });
         try {
           localStorage.clear();
           sessionStorage.clear();
@@ -37,7 +41,10 @@ const Logout = () => {
       },
       onError: (error) => {
         console.error("Logout failed:", error);
-        Cookies.remove("access");
+        Cookies.remove("accessToken", { path: '/' });
+        Cookies.remove("refreshToken", { path: '/' });
+        Cookies.remove("role", { path: '/' });
+        Cookies.remove("access", { path: '/' });
         try {
           localStorage.clear();
           sessionStorage.clear();

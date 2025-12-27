@@ -21,7 +21,10 @@ export default function LogoutButton() {
       });
 
       try {
-        Cookies.remove('access');
+        Cookies.remove('accessToken', { path: '/' });
+        Cookies.remove('refreshToken', { path: '/' });
+        Cookies.remove('role', { path: '/' });
+        Cookies.remove('access', { path: '/' });
       } catch {}
       try {
         localStorage.clear();
