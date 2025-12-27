@@ -2,6 +2,7 @@ import * as api from "@/api";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Test, TestFormValues } from "@/types/Test"; 
 import { searchUserTest } from "@/api";
+import toast from "react-hot-toast";
 
 
 export const useCreateTest = () => {
@@ -93,3 +94,26 @@ export const useGetUserAttempts = (id: string) => {
     retry: 0,
   });
 };
+
+export const usePublishTestResult = ()=>{
+  const queryClient=useQueryClient();
+  return useMutation({
+    mutationKey:["PublishTest"],
+    mutationFn:api.publishResult,
+    onSuccess:(testId)=>{
+            toast.success("Results published successfully");
+        queryClient.invalidateQueries({
+        queryKey: ["tests"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["testAttempts", testId],
+      });
+
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message || "Failed to publish results"
+      );
+    },
+  })
+}

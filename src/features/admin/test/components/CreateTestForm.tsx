@@ -139,7 +139,7 @@ export default function CreateTestModal({
       duration: durationNum,
       passingScore: scoreNum,
       prompt: enhancedPrompt,
-      showResults: true,
+      showResults: false,
       questionCount: formData.questionCount, // added question no.
       questionType: formData.questionType as "MCQ" | "THEORY", // added Types
       skills: formData.skills, // Add skills to payload

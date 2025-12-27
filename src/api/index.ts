@@ -63,6 +63,7 @@ export * from "./tests/startTest";
 export * from "./tests/testAttempts";
 export * from "./tests/testInfo";
 export * from "./tests/updateTest";
+export * from "./tests/publishResult"
 
 
 export * from "./password/forgotPassword";
