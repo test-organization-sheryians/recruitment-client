@@ -19,14 +19,16 @@ interface Category {
   name: string;
 }
 
-const normalizeJobs = (data: any): Job[] => {
+const normalizeJobs = (data: Job[] | { data: Job[] }): Job[] => {
   if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.data)) return data.data;
+  if ("data" in data && Array.isArray(data.data)) return data.data;
   return [];
 };
 
+
 type SearchQuery = {
   q: string;
+  
   location: string;
 };
 
