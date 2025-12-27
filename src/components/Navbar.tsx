@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Bookmark,
   BookCheck,
+  Briefcase,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -104,6 +105,15 @@ const Navbar = () => {
                   <User size={18} /> My Profile
                 </Link>
 
+                {/* ✅ Applied Jobs */}
+                <Link
+                  href="/appliedjobs"
+                  onClick={() => setOpenProfile(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
+                >
+                  <Briefcase size={18} /> Applied Jobs
+                </Link>
+
                 <Link
                   href="/jobs/saved-job"
                   onClick={() => setOpenProfile(false)}
@@ -167,6 +177,18 @@ const Navbar = () => {
             >
               <div className="flex gap-3">
                 <User size={20} /> My Profile
+              </div>
+              <ChevronRight size={16} />
+            </Link>
+
+            {/* ✅ Applied Jobs */}
+            <Link
+              href="/appliedjobs"
+              onClick={() => setOpenMenu(false)}
+              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
+            >
+              <div className="flex gap-3">
+                <Briefcase size={20} /> Applied Jobs
               </div>
               <ChevronRight size={16} />
             </Link>

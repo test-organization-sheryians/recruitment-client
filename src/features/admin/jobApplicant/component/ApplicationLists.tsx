@@ -1,65 +1,56 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import {
-  useBulkUpdateApplicants,
-  useJobApplicant,
-} from "../hooks/useJobApplicant";
-import { useParams } from "next/navigation";
-import { useToast } from "@/components/ui/Toast";
+import { useState } from "react"
+import { useBulkUpdateApplicants, useJobApplicant } from "../hooks/useJobApplicant"
+import { useParams } from "next/navigation"
+import { useToast } from "@/components/ui/Toast"
 
 /* ================= TYPES ================= */
 
-type Size = number | string;
+type Size = number | string
 
 type ApplicantsListProps = {
-  height?: Size;
-  width?: Size;
-  className?: string;
-};
+  height?: Size
+  width?: Size
+  className?: string
+}
 
-type ApplicantStatus =
-  | "applied"
-  | "shortlisted"
-  | "rejected"
-  | "forwareded"
-  | "interview"
-  | "hired";
+type ApplicantStatus = "applied" | "shortlisted" | "rejected" | "forwarded" | "interview" | "hired"
 
 interface CandidateDetails {
-  firstName: string;
-  lastName: string;
-  email: string;
+  firstName: string
+  lastName: string
+  email: string
 }
 
 interface JobDetails {
-  title: string;
-  requiredExperience: number;
+  title: string
+  requiredExperience: number
 }
 
 interface ApplicantApi {
-  _id: string;
-  candidateDetails: CandidateDetails;
-  jobDetails: JobDetails;
-  appliedAt: string;
-  totalExperienceYears: number;
-  status: ApplicantStatus;
-  resumeUrl: string;
+  _id: string
+  candidateDetails: CandidateDetails
+  jobDetails: JobDetails
+  appliedAt: string
+  totalExperienceYears: number
+  status: ApplicantStatus
+  resumeUrl: string
 }
 
 interface ApplicantsApiResponse {
-  applicants: ApplicantApi[];
+  applicants: ApplicantApi[]
 }
 
 interface ApplicantRow {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  date: string;
-  experience: string;
-  status: ApplicantStatus;
-  resume: string;
+  id: string
+  name: string
+  email: string
+  role: string
+  date: string
+  experience: string
+  status: ApplicantStatus
+  resume: string
 }
 
 /* ================= CONSTANTS ================= */
@@ -68,20 +59,22 @@ const statusColors: Record<ApplicantStatus, string> = {
   applied: "bg-blue-100 text-blue-700",
   shortlisted: "bg-yellow-100 text-yellow-700",
   rejected: "bg-red-100 text-red-700",
-  forwareded: "bg-purple-100 text-purple-700",
+  forwarded: "bg-purple-100 text-purple-700",
   interview: "bg-orange-100 text-orange-700",
   hired: "bg-green-100 text-green-700",
-};
+}
 
 const tabs: Array<"all" | ApplicantStatus> = [
   "all",
   "applied",
   "shortlisted",
   "rejected",
-  "forwareded",
+  "forwarded",
   "interview",
   "hired",
-];
+]
+
+const TABLE_GRID = "grid grid-cols-[48px_1.6fr_1.1fr_1fr_1fr_1fr_1fr]"
 
 /* ================= COMPONENT ================= */
 
@@ -90,26 +83,24 @@ export default function ApplicantsList({
   width = 840,
   className = "",
 }: ApplicantsListProps) {
-  const h = typeof height === "number" ? `${height}px` : height;
-  const w = typeof width === "number" ? `${width}px` : width;
+  const h = typeof height === "number" ? `${height}px` : height
+  const w = typeof width === "number" ? `${width}px` : width
 
-  const { id } = useParams();
+  const { id } = useParams()
 
   const { data } = useJobApplicant(id as string) as {
-    data?: ApplicantsApiResponse;
-  };
+    data?: ApplicantsApiResponse
+  }
 
-  const [selectedApplicants, setSelectedApplicants] = useState<string[]>([]);
-  const [bulkStatus, setBulkStatus] = useState<ApplicantStatus>("applied");
-  const [activeTab, setActiveTab] = useState<"all" | ApplicantStatus>("all");
+  const [selectedApplicants, setSelectedApplicants] = useState<string[]>([])
+  const [bulkStatus, setBulkStatus] = useState<ApplicantStatus>("applied")
+  const [activeTab, setActiveTab] = useState<"all" | ApplicantStatus>("all")
 
   const toggleSelect = (appId: string) => {
     setSelectedApplicants((prev) =>
-      prev.includes(appId)
-        ? prev.filter((x) => x !== appId)
-        : [...prev, appId]
-    );
-  };
+      prev.includes(appId) ? prev.filter((x) => x !== appId) : [...prev, appId]
+    )
+  }
 
   /* ================= DATA MAPPING ================= */
 
@@ -124,25 +115,23 @@ export default function ApplicantsList({
         month: "short",
         day: "numeric",
       }),
-      experience: `${a.totalExperienceYears}-${a.jobDetails.requiredExperience} years`,
+      experience: `${a.jobDetails.requiredExperience}`,
       status: a.status,
       resume: a.resumeUrl,
-    })) ?? [];
+    })) ?? []
 
   const filteredApplicants: ApplicantRow[] =
-    activeTab === "all"
-      ? applicants
-      : applicants.filter((a) => a.status === activeTab);
+    activeTab === "all" ? applicants : applicants.filter((a) => a.status === activeTab)
 
   /* ================= MUTATION ================= */
 
-  const { mutate, isPending } = useBulkUpdateApplicants();
-  const { success, error } = useToast();
+  const { mutate, isPending } = useBulkUpdateApplicants()
+  const { success, error } = useToast()
 
   const handleSubmit = () => {
     if (selectedApplicants.length === 0) {
-      error("Please select at least one applicant");
-      return;
+      error("Please select at least one applicant")
+      return
     }
 
     mutate(
@@ -152,15 +141,15 @@ export default function ApplicantsList({
       },
       {
         onSuccess: () => {
-          success("Applicants status updated successfully");
-          setSelectedApplicants([]);
+          success("Applicants status updated successfully")
+          setSelectedApplicants([])
         },
         onError: () => {
-          error("Failed to update applicant status");
+          error("Failed to update applicant status")
         },
       }
-    );
-  };
+    )
+  }
 
   /* ================= UI ================= */
 
@@ -171,23 +160,22 @@ export default function ApplicantsList({
     >
       {/* Header */}
       <div className="flex items-center justify-between gap-3 mb-4">
-        <span className="text-lg font-semibold text-gray-900">
-          Applicants Lists
-        </span>
+        <span className="text-lg font-semibold text-gray-900">Applicants Lists</span>
 
         {selectedApplicants.length > 0 && (
           <div className="flex items-center gap-3">
             <select
               value={bulkStatus}
-              onChange={(e) =>
-                setBulkStatus(e.target.value as ApplicantStatus)
-              }
+              onChange={(e) => setBulkStatus(e.target.value as ApplicantStatus)}
               className="border rounded-xl px-2 py-1"
             >
               {tabs
                 .filter((t) => t !== "all")
                 .map((t) => (
-                  <option key={t} value={t}>
+                  <option
+                    key={t}
+                    value={t}
+                  >
                     {t}
                   </option>
                 ))}
@@ -197,14 +185,10 @@ export default function ApplicantsList({
               onClick={handleSubmit}
               disabled={isPending}
               className={`rounded-xl px-3 py-2 text-sm font-semibold text-white ${
-                isPending
-                  ? "bg-blue-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
+                isPending ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
-              {isPending
-                ? "Updating..."
-                : `Submit Selected (${selectedApplicants.length})`}
+              {isPending ? "Updating..." : `Submit Selected (${selectedApplicants.length})`}
             </button>
           </div>
         )}
@@ -227,73 +211,72 @@ export default function ApplicantsList({
         ))}
       </div>
 
-      {/* Table */}
-      <div className="flex-1 overflow-y-auto rounded-xl border border-gray-200">
-        <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-gray-50 border-b">
-            <tr className="grid grid-cols-[0.4fr_1.6fr_1.1fr_1fr_1fr_1fr_1fr] px-4 py-3 text-xs font-semibold text-gray-500">
-              <th className="text-center">Select</th>
-              <th>Name</th>
-              <th>Role</th>
-              <th>Date</th>
-              <th>Experience</th>
-              <th>Resume</th>
-              <th>Status</th>
-            </tr>
-          </thead>
+      {/* Table Header */}
+      <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div className="sticky top-0 bg-gray-50 border-b">
+          <div className={`${TABLE_GRID} px-4 py-3 text-xs font-semibold text-gray-500`}>
+            <div className="flex justify-center">Select</div>
+            <div className="pl-2">Name</div>
+            <div>Role</div>
+            <div>Date</div>
+            <div>Experience</div>
+            <div>Resume</div>
+            <div>Status</div>
+          </div>
+        </div>
 
-          <tbody className="divide-y">
-            {filteredApplicants.map((a) => (
-              <tr
-                key={a.id}
-                className="grid grid-cols-[0.4fr_1.6fr_1.1fr_1fr_1fr_1fr_1fr] px-4 py-3 items-center hover:bg-gray-50 transition"
-              >
-                <td className="flex justify-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedApplicants.includes(a.id)}
-                    onChange={() => toggleSelect(a.id)}
-                    className="h-4 w-4 accent-blue-600"
-                  />
-                </td>
+        {/* Table Body */}
+        <div className="divide-y">
+          {filteredApplicants.map((a) => (
+            <div
+              key={a.id}
+              className={`${TABLE_GRID} px-4 py-3 items-center hover:bg-gray-50 transition`}
+            >
+              <div className="flex justify-center">
+                <input
+                  type="checkbox"
+                  checked={selectedApplicants.includes(a.id)}
+                  onChange={() => toggleSelect(a.id)}
+                  className="h-4 w-4 accent-blue-600"
+                />
+              </div>
 
-                <td>
-                  <p className="font-semibold">{a.name}</p>
-                  <p className="text-xs text-gray-500">{a.email}</p>
-                </td>
+              <div>
+                <p className="font-semibold">{a.name}</p>
+                <p className="text-xs text-gray-500">{a.email}</p>
+              </div>
 
-                <td>{a.role}</td>
-                <td>{a.date}</td>
-                <td>{a.experience}</td>
+              <div>{a.role}</div>
+              <div>{a.date}</div>
+              <div>{a.experience}</div>
 
-                <td>
-                  <a
-                    href={a.resume}
-                    target="_blank"
-                    className="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-100"
-                  >
-                    📄 Resume
-                  </a>
-                </td>
+              <div>
+                <a
+                  href={a.resume}
+                  target="_blank"
+                  className="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-100"
+                >
+                  📄 Resume
+                </a>
+              </div>
 
-                <td>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusColors[a.status]}`}
-                  >
-                    {a.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+              <div>
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${
+                    statusColors[a.status]
+                  }`}
+                >
+                  {a.status}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
 
         {filteredApplicants.length === 0 && (
-          <div className="py-12 text-center text-sm text-gray-500">
-            No applicants found.
-          </div>
+          <div className="py-12 text-center text-sm text-gray-500">No applicants found.</div>
         )}
       </div>
     </div>
-  );
+  )
 }
