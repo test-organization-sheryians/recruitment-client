@@ -203,6 +203,17 @@ const Navbar = () => {
               </div>
               <ChevronRight size={16} />
             </Link>
+
+            <Link
+              href="/tests"
+              onClick={() => setOpenMenu(false)}
+              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
+            >
+              <div className="flex gap-3">
+                <BookCheck size={20} /> Test
+              </div>
+              <ChevronRight size={16} />
+            </Link>
           </div>
 
           {/* Logout */}
