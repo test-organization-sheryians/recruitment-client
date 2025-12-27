@@ -1,13 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Pencil, Trash2, Loader2 } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useQueryClient } from "@tanstack/react-query";
 
 import {
-  useGetUsers,
+  useInfiniteUsers,
   useDeleteUser,
   useUpdateUserRole,
 } from "@/features/admin/users/hooks/useUser";
@@ -27,43 +25,64 @@ interface User {
 }
 
 export default function UsersTable() {
-  const { data: users = [], isLoading, isError } = useGetUsers();
+  const {
+    data: userPages,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteUsers();
+
+  const users = useMemo(
+    () => (userPages?.pages ?? []).flatMap((p) => p.data ?? []),
+    [userPages]
+  );
+
   const deleteUser = useDeleteUser();
   const updateUserRole = useUpdateUserRole();
-  const [localUsers, setLocalUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
 
+  const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("");
-
   const [openDeleteMenu, setOpenDeleteMenu] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const queryClient = useQueryClient();
 
-  const { success, error } = useToast();
+  // Infinite scroll sentinel ref
+  const loadMoreRef = useRef<HTMLTableRowElement | null>(null);
 
-  // Load users
-  useEffect(() => {
-    setLocalUsers(users);
-    setFilteredUsers(users);
-  }, [users]);
+  // Filter users based on search query
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) return users;
 
-  // Search filter effect  
-  useEffect(() => {
     const query = searchQuery.toLowerCase();
-
-    const result = localUsers.filter((u) => {
-      const fullName = `${u.firstName} ${u.lastName}`.toLowerCase();
+    return users.filter((user) => {
+      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
       return fullName.includes(query);
     });
+  }, [users, searchQuery]);
 
-    setFilteredUsers(result);
-  }, [searchQuery, localUsers]);
+  // Infinite scroll observer
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
 
-  if (isLoading) return <p className="text-center py-4">Loading users...</p>;
-  if (isError) return <p className="text-center py-4 text-red-500">Failed to load users.</p>;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const openModal = (user: User) => {
     setSelectedUserId(user._id);
@@ -102,8 +121,8 @@ export default function UsersTable() {
       {
         onSuccess: () => {
           setOpenDeleteMenu(null);
-          setLocalUsers((prev) => prev.filter((u) => u._id !== userId));
           success("User deleted successfully!");
+          queryClient.invalidateQueries({ queryKey: ["users"] });
         },
         onError: () => {
           error("Failed to delete user!");
@@ -112,26 +131,33 @@ export default function UsersTable() {
     );
   };
 
+  if (isLoading) return <p className="text-center py-8">Loading users...</p>;
+  if (isError)
+    return (
+      <p className="text-center py-8 text-red-500">Failed to load users.</p>
+    );
+
   return (
     <>
-     
-      <div className="w-full flex justify-end mb-4">
+      {/* Search Input */}
+      <div className="w-full flex justify-end mb-6">
         <input
           type="text"
           placeholder="Search by name..."
-          className="px-4 py-2 border rounded-lg w-64 shadow-sm"
+          className="px-4 py-2 border rounded-lg w-64 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
 
+      {/* Role Update Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg w-80">
             <h2 className="text-lg font-semibold mb-4">Update Role</h2>
 
             <select
-              className="w-full p-2 border rounded-lg bg-gray-100"
+              className="w-full p-2 border rounded-lg bg-gray-50"
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
             >
@@ -141,19 +167,24 @@ export default function UsersTable() {
               <option value="6915ab309788ad1e00990866">Candidate</option>
             </select>
 
-            <div className="flex justify-end gap-3 mt-5">
+            <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 bg-gray-300 rounded-lg"
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
               >
                 Cancel
               </button>
 
               <button
                 onClick={handleSaveRole}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2"
+                disabled={isSaving}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 disabled:opacity-70"
               >
-                {isSaving ? <Loader2 className="animate-spin w-4 h-4" /> : "Save"}
+                {isSaving ? (
+                  <Loader2 className="animate-spin w-4 h-4" />
+                ) : (
+                  "Save"
+                )}
               </button>
             </div>
           </div>
@@ -161,77 +192,109 @@ export default function UsersTable() {
       )}
 
       {/* Users Table */}
-      <table className="min-w-full bg-white border rounded-lg shadow">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="px-6 py-3 border-b text-left">Name</th>
-            <th className="px-6 py-3 border-b text-left">Email</th>
-            <th className="px-6 py-3 border-b text-left">Phone</th>
-            <th className="px-6 py-3 border-b text-left">Role</th>
-            <th className="px-6 py-3 border-b">Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {filteredUsers.length === 0 ? (
-            <tr>
-              <td colSpan={5} className="text-center py-4 text-gray-500 border-b">
-                No users found
-              </td>
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border rounded-lg shadow">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">
+                Name
+              </th>
+              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">
+                Email
+              </th>
+              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">
+                Phone
+              </th>
+              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">
+                Role
+              </th>
+              <th className="px-6 py-3 border-b text-center text-sm font-medium text-gray-700">
+                Actions
+              </th>
             </tr>
-          ) : (
-            filteredUsers.map((user) => (
-              <tr key={user._id} className="hover:bg-gray-50">
-                <td className="px-6 py-3 border-b">
-                  {user.firstName} {user.lastName}
-                </td>
-                <td className="px-6 py-3 border-b">{user.email}</td>
-                <td className="px-6 py-3 border-b">{user.phoneNumber || "N/A"}</td>
-                <td className="px-6 py-3 border-b">
-                  <span className="px-2 py-1 rounded bg-blue-100 text-blue-700 text-sm">
-                    {user.role?.name || "No Role"}
-                  </span>
-                </td>
+          </thead>
 
-                <td className="px-6 py-3 border-b relative">
-                  <div className="flex gap-3 justify-center">
-                    <Pencil
-                      className="text-blue-600 cursor-pointer"
-                      onClick={() => openModal(user)}
-                    />
-
-                    <div className="relative">
-                      <Trash2
-                        className="text-red-600 cursor-pointer"
-                        onClick={() =>
-                          setOpenDeleteMenu(openDeleteMenu === user._id ? null : user._id)
-                        }
-                      />
-
-                      {openDeleteMenu === user._id && (
-                        <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg w-32 z-20">
-                          <button
-                            onClick={() => handleDeleteUser(user._id)}
-                            className="w-full text-left px-4 py-2 hover:bg-red-100 text-red-600"
-                          >
-                            Delete
-                          </button>
-                          <button
-                            onClick={() => setOpenDeleteMenu(null)}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+          <tbody>
+            {filteredUsers.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={5}
+                  className="text-center py-8 text-gray-500 border-b"
+                >
+                  {searchQuery ? "No users match your search" : "No users found"}
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              filteredUsers.map((user) => (
+                <tr key={user._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 border-b">
+                    {user.firstName} {user.lastName}
+                  </td>
+                  <td className="px-6 py-4 border-b">{user.email}</td>
+                  <td className="px-6 py-4 border-b">
+                    {user.phoneNumber || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 border-b">
+                    <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm">
+                      {user.role?.name || "No Role"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 border-b">
+                    <div className="flex gap-4 justify-center items-center">
+                      <Pencil
+                        className="w-5 h-5 text-blue-600 cursor-pointer hover:text-blue-800"
+                        onClick={() => openModal(user)}
+                      />
+
+                      <div className="relative">
+                        <Trash2
+                          className="w-5 h-5 text-red-600 cursor-pointer hover:text-red-800"
+                          onClick={() =>
+                            setOpenDeleteMenu(
+                              openDeleteMenu === user._id ? null : user._id
+                            )
+                          }
+                        />
+
+                        {openDeleteMenu === user._id && (
+                          <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg w-32 z-20">
+                            <button
+                              onClick={() => handleDeleteUser(user._id)}
+                              className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
+                            >
+                              Delete
+                            </button>
+                            <button
+                              onClick={() => setOpenDeleteMenu(null)}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+
+            {/* Infinite scroll sentinel */}
+            <tr ref={loadMoreRef}>
+              <td colSpan={5} className="p-0 h-4" />
+            </tr>
+
+            {isFetchingNextPage && (
+              <tr>
+                <td colSpan={5} className="text-center py-6 text-gray-500">
+                  <Loader2 className="animate-spin w-5 h-5 mx-auto" />
+                  <span className="ml-2">Loading more users...</span>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 }

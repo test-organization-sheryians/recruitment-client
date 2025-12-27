@@ -13,8 +13,10 @@ export interface CandidateProfile {
   githubUrl?: string;
   portfolioUrl?: string;
   availability: "immediate" | "1_week" | "2_weeks" | "1_month" | "not_looking";
+  completion?:number
 }
 
 export interface AddSkillsPayload {
   skills: string[];
 }
+
