@@ -5,7 +5,8 @@ import { useDispatch } from "react-redux";
 import Cookies from "js-cookie";
 import { logout as logoutSlice } from "../slice";
 import { useLogout } from "../hooks/useAuthApi";
-import { cookies } from "next/headers";
+
+
 
 const Logout = () => {
   const router = useRouter();
