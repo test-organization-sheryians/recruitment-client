@@ -4,15 +4,9 @@ import { useRouter } from "next/navigation"
 import JobForm from "../../categories/components/JobForm"
 import { useGetJobById, useUpdateJob } from "@/features/admin/jobs/hooks/useJobApi"
 
-interface Skill {
-  _id: string
-  name: string
-}
 
-interface Category {
-  _id: string
-  name: string
-}
+
+
 
 interface Location {
   city: string;

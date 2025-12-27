@@ -91,7 +91,7 @@ export default function TestList() {
           setDisclosingTestId(null);
         }, 2000);
       },
-      onError: (error) => {
+      onError: () => {
         setPublishStatus('error');
         setTimeout(() => setPublishStatus('idle'), 3000);
       }

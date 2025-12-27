@@ -32,7 +32,7 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
   const user = useSelector((state: RootState) => state.auth.user);
   const userId = user?.id
 
-  const { data: allSkills, isLoading: loadingSkills } = useGetAllSkills();
+  const { data, isLoading: loadingSkills } = useGetAllSkills();
   const { mutate: updateProfile, isPending } = useUpdateProfile1();
 
   // Extract skill IDs that user already has
