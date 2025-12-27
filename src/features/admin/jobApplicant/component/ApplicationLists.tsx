@@ -142,7 +142,8 @@ export default function ApplicantsList({
       {
         onSuccess: () => {
           success("Applicants status updated successfully")
-          setSelectedApplicants([])
+          setSelectedApplicants([]);
+          setActiveTab(bulkStatus);
         },
         onError: () => {
           error("Failed to update applicant status")
