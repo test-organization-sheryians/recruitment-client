@@ -4,13 +4,13 @@ import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useScheduleInterview } from "../hooks/useJobApplicant";
+import { useCreateInterview } from "../hooks/useJobApplicant";
 import { useToast } from "@/components/ui/Toast";
 
 interface PopupFormProps {
   isOpen: boolean;
   onClose: () => void;
-  candidateId: string | null; // This must be the User ID
+  candidateId: string | null;
   jobId: string;
 }
 
@@ -27,7 +27,7 @@ export default function PopupForm({
     meetingLink: "",
   });
 
-  const { mutate: scheduleInterview, isPending } = useScheduleInterview();
+  const { mutate: scheduleInterview, isPending } = useCreateInterview();
   const { success, error } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,31 +37,34 @@ export default function PopupForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!candidateId || !jobId) {
+
+    const normalizedCandidateId =
+      typeof candidateId === "string" && candidateId.trim().length > 0
+        ? candidateId
+        : null;
+
+    if (!normalizedCandidateId || !jobId) {
       error("Missing candidate or job information");
       return;
     }
 
-    // 1. Combine Date and Time
-    const dateTimeString = `${formData.interviewDate}T${formData.interviewTime}`;
-    const timing = new Date(dateTimeString).toISOString();
+    const timing = new Date(
+      `${formData.interviewDate}T${formData.interviewTime}`
+    ).toISOString();
 
-    // 2. Construct Payload (FIXED SYNTAX HERE)
     const payload = {
-      candidateId: candidateId,
-      jobId: jobId,
+      candidateId: normalizedCandidateId,
+      jobId,
       interviewerEmail: formData.interviewerEmail,
       meetingLink: formData.meetingLink,
-      timing: timing,
-      status: "Scheduled" as const, // <--- Fixed line
+      timing,
+      status: "Scheduled" as const,
     };
 
-    // 3. Call API
     scheduleInterview(payload, {
       onSuccess: () => {
         success("Interview scheduled successfully!");
         onClose();
-        // Reset form
         setFormData({
           interviewDate: "",
           interviewTime: "",
@@ -70,8 +73,7 @@ export default function PopupForm({
         });
       },
       onError: (err: Error) => {
-        const msg = err.message || "Failed to schedule interview.";
-        error(msg);
+        error(err.message || "Failed to schedule interview");
       },
     });
   };
@@ -95,6 +97,7 @@ export default function PopupForm({
               required
             />
           </div>
+
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-gray-700">Time</label>
             <Input
@@ -114,7 +117,6 @@ export default function PopupForm({
           <Input
             type="email"
             name="interviewerEmail"
-            placeholder="interviewer@company.com"
             value={formData.interviewerEmail}
             onChange={handleChange}
             required
@@ -128,7 +130,6 @@ export default function PopupForm({
           <Input
             type="url"
             name="meetingLink"
-            placeholder="https://meet.google.com/..."
             value={formData.meetingLink}
             onChange={handleChange}
             required

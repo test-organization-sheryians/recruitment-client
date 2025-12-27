@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import {
   useBulkUpdateApplicants,
   useJobApplicant,
-  useJobInterviews,
+  useInterviewsByJob,
 } from "../hooks/useJobApplicant";
 import { useParams } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
@@ -113,9 +113,8 @@ export default function ApplicantsList({
 
   // 2. Fetch Interviews (Only when tab is 'interview')
   const [activeTab, setActiveTab] = useState<"all" | ApplicantStatus>("all");
-  const { data: interviewResponse, isLoading: isInterviewsLoading } = useJobInterviews(
-    jobId, 
-    activeTab === "interview"
+  const { data: interviewResponse, isLoading: isInterviewsLoading } = useInterviewsByJob(
+    jobId
   );
 
   const [selectedApplicants, setSelectedApplicants] = useState<string[]>([]);
