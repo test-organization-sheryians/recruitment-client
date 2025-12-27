@@ -41,6 +41,7 @@ export default function UsersTable() {
   );
 
   const [searchQuery, setSearchQuery] = useState("");
+ 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("");
@@ -287,5 +288,5 @@ export default function UsersTable() {
 
       </table>
     </>
-  );
+  );  
 }

@@ -11,6 +11,7 @@ import {
 } from "@/api/users/getUsersPaginated";
 
 export interface Role {
+    _id: string;
   name: string;
 }
 
@@ -40,22 +41,31 @@ export const useGetUsers = () =>
    INFINITE USERS
 ============================ */
 
-const DEFAULT_LIMIT = 10;
+  const DEFAULT_LIMIT = 10;
 
-export const useInfiniteUsers = (limit: number = DEFAULT_LIMIT) =>
+export const useInfiniteUsers = (
+  limit: number = DEFAULT_LIMIT,
+  query: string = ""  // <-- add query here
+) =>
   useInfiniteQuery<BackendPaginatedResponse<User>>({
-    queryKey: ["users", { limit }],
+    queryKey: ["users", { limit, query }], // <-- include query in key
     initialPageParam: 1,
+
     queryFn: async ({ pageParam }) =>
-      getUsersPaginated(pageParam as number, limit),
+      getUsersPaginated(pageParam as number, limit, query), // <-- pass query to API
+
     getNextPageParam: (lastPage) => {
       const { pagination } = lastPage;
       if (!pagination) return undefined;
       const next = (pagination.currentPage ?? 1) + 1;
       return next <= (pagination.totalPages ?? 0) ? next : undefined;
     },
+
     retry: 0,
   });
+
+
+  
 
 interface UpdateRolePayload {
   userId: string;
