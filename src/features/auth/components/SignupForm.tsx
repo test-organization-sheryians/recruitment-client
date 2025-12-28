@@ -54,7 +54,19 @@ const SignupForm = () => {
     formData.append("password", data.password);
 
     registerUser(formData, {
-      onSuccess: (res: any) => {
+      onSuccess: (res: {
+        data: {
+          token: string;
+          user: {
+            _id: string;
+            email?: string;
+            firstName: string;
+            lastName?: string;
+            role?: { name: string };
+            isVerified: boolean;
+          };
+        };
+      }) => {
         Cookies.set("access", res.data.token);
         dispatch(
           setUser({
@@ -68,14 +80,19 @@ const SignupForm = () => {
         );
         router.push("/un-verified");
       },
-      onError: (err: any) => {
-        setServerError(
+    
+      onError: (err: {
+        response?: { data?: { message: string } };
+        message: string;
+      }) => {
+        const message =
           err?.response?.data?.message ||
-            err?.message ||
-            "Registration failed"
-        );
+          err?.message ||
+          "Registration failed. Please try again.";
+        setServerError(message);
       },
     });
+    
   };
 
   return (
@@ -83,32 +100,33 @@ const SignupForm = () => {
       md:py-6 py-4 md:px-[4%] px-[3%]
       flex flex-col justify-center">
 
-    <h1 className="text-2xl md:text-3xl font-semibold text-center text-gray-800 mb-3 mt-2">
+    <h1 className="text-2xl md:text-3xl font-semibold text-center text-gray-800 mb-3 md:mt-2">
         Sign-up Account
       </h1>
 
-      <form className="mt-2 space-y-4" onSubmit={handleSubmit(onSubmit)}>
+      <form className="mt-2 space-y-3" onSubmit={handleSubmit(onSubmit)}>
         
         {/* First + Last Name */}
-                <div className="w-full flex md:flex-row flex-col gap-4">
-          <div className="md:w-[49%] w-full">
-            <LabelInput
-              label="First Name"
-              placeholder="your first name"
-              type="text"
-              {...register("firstName", { required: true })}
-            />
-          </div>
+        <div className="w-full flex flex-row gap-3">
+  <div className="w-1/2">
+    <LabelInput
+      label="First Name"
+      placeholder="your first name"
+      type="text"
+      {...register("firstName", { required: true })}
+    />
+  </div>
 
-          <div className="md:w-[49%] w-full">
-            <LabelInput
-              label="Last Name"
-              placeholder="your last name"
-              type="text"
-              {...register("lastName")}
-            />
-          </div>
-        </div>
+  <div className="w-1/2">
+    <LabelInput
+      label="Last Name"
+      placeholder="your last name"
+      type="text"
+      {...register("lastName")}
+    />
+  </div>
+</div>
+
 
         <LabelInput
           label="Phone Number"
@@ -149,7 +167,7 @@ const SignupForm = () => {
         </div>
 
         {(isError || serverError) && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-[12px]  md:text-sm">
             {serverError || error?.message}
           </div>
         )}

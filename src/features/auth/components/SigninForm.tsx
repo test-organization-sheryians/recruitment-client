@@ -42,10 +42,22 @@ const SigninForm = () => {
     sendData.append("password", formData.password);
 
     loginUser(sendData, {
-      onSuccess: (res: any) => {
+      onSuccess: (res: {
+        data: {
+          token: string;
+          user: {
+            _id: string;
+            email?: string;
+            firstName: string;
+            lastName?: string;
+            role?: { name: string };
+            isVerified: boolean;
+          };
+        };
+      }) => {
         Cookies.set("access", res.data.token);
         Cookies.set("role", res.data.user?.role?.name || "user");
-
+    
         dispatch(
           setUser({
             id: res.data.user._id,
@@ -56,22 +68,27 @@ const SigninForm = () => {
             isVerified: res.data.user.isVerified,
           })
         );
-
+    
         if (res.data.user?.role?.name === "admin") {
           router.push(safeRedirect || "/admin");
         } else {
           router.push(safeRedirect || "/");
         }
       },
-
-      onError: (err: any) => {
-        setErrorMsg(
+    
+      onError: (err: {
+        response?: { data?: { message: string } };
+        message: string;
+      }) => {
+        const message =
           err?.response?.data?.message ||
-            err?.message ||
-            "Invalid email or password. Please try again."
-        );
+          err?.message ||
+          "Invalid email or password. Please try again.";
+    
+        setErrorMsg(message);
       },
     });
+    
   };
 
   return (
@@ -80,7 +97,7 @@ const SigninForm = () => {
       md:py-10 py-6 md:px-[20%] px-[6%]
       flex flex-col justify-center"
     >
-      <h1 className="text-2xl md:text-3xl font-semibold text-center text-gray-800 md:mb-8 mb-5 mt-2">
+      <h1 className="text-3xl font-semibold text-center text-gray-800 md:mb-8 mb-5 mt-2">
         Sign in to Your Account
       </h1>
 
