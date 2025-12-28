@@ -80,7 +80,7 @@ const SignupForm = () => {
         );
         router.push("/un-verified");
       },
-    
+
       onError: (err: {
         response?: { data?: { message: string } };
         message: string;
@@ -92,41 +92,43 @@ const SignupForm = () => {
         setServerError(message);
       },
     });
-    
   };
 
   return (
-    <div className="w-full min-h-full bg-white rounded-2xl font-[satoshi]
-      md:py-6 py-4 md:px-[4%] px-[3%]
-      flex flex-col justify-center">
-
-    <h1 className="text-2xl md:text-3xl font-semibold text-center text-gray-800 mb-3 md:mt-2">
+    <div className="w-full min-h-full bg-white rounded-2xl font-[satoshi] md:py-4 py-3 md:px-[4%] px-[3%] flex flex-col justify-center">
+      <h1
+        className="
+          text-3xl 
+          font-bold
+          text-center
+          text-gray-800
+          mb-2 xs:mb-3 sm:mb-4 md:mb-5
+          mt-1 sm:mt-2 md:mt-3
+        "
+      >
         Sign-up Account
       </h1>
 
-      <form className="mt-2 space-y-3" onSubmit={handleSubmit(onSubmit)}>
-        
-        {/* First + Last Name */}
+      <form className="mt-2 space-y-2 " onSubmit={handleSubmit(onSubmit)}>
         <div className="w-full flex flex-row gap-3">
-  <div className="w-1/2">
-    <LabelInput
-      label="First Name"
-      placeholder="your first name"
-      type="text"
-      {...register("firstName", { required: true })}
-    />
-  </div>
+          <div className="w-1/2">
+            <LabelInput
+              label="First Name"
+              placeholder="your first name"
+              type="text"
+              {...register("firstName", { required: true })}
+            />
+          </div>
 
-  <div className="w-1/2">
-    <LabelInput
-      label="Last Name"
-      placeholder="your last name"
-      type="text"
-      {...register("lastName")}
-    />
-  </div>
-</div>
-
+          <div className="w-1/2">
+            <LabelInput
+              label="Last Name"
+              placeholder="your last name"
+              type="text"
+              {...register("lastName")}
+            />
+          </div>
+        </div>
 
         <LabelInput
           label="Phone Number"
@@ -142,7 +144,6 @@ const SignupForm = () => {
           {...register("email", { required: true })}
         />
 
-        {/* Password */}
         <div className="relative">
           <LabelInput
             label="Password"
@@ -150,7 +151,6 @@ const SignupForm = () => {
             type={showPassword && passwordValue ? "text" : "password"}
             {...register("password", { required: true })}
           />
-
           <button
             type="button"
             disabled={!passwordValue}
@@ -167,28 +167,43 @@ const SignupForm = () => {
         </div>
 
         {(isError || serverError) && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-[12px]  md:text-sm">
-            {serverError || error?.message}
+          <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2.5 rounded-lg text-[10px]">
+            {serverError || error?.message || "Something went wrong"}
           </div>
         )}
 
         {isSuccess && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-[13px] md:text-sm">
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-lg   text-[10px] ">
             Account created! Redirecting...
           </div>
         )}
+        
+        
 
         <button
           type="submit"
           disabled={isRegistering}
-          className="w-full bg-[#4C62ED] hover:bg-[#3A4CD1]
-            text-white font-medium rounded-base py-3
-            flex items-center justify-center gap-2
-            disabled:bg-gray-400">
-          {isRegistering ? "Creating Account..." : (
+          className={`
+            w-full bg-[#4C62ED] mt-3 hover:bg-[#3A4CD1]
+            transition-all text-white
+            text-sm xs:text-base sm:text-base md:text-[17px] lg:text-lg
+            font-medium rounded-base
+            py-2 xs:py-3 sm:py-3 md:py-3
+            flex items-center justify-center gap-1.5 xs:gap-2 md:gap-3
+            px-2 sm:px-4 md:px-6
+            min-h-[42px] xs:min-h-[46px] sm:min-h-[48px] md:min-h-[52px]
+            max-w-full
+            shadow-sm md:shadow
+            disabled:bg-gray-400 disabled:cursor-not-allowed
+            focus:outline-none focus:ring-2 focus:ring-[#4C62ED] focus:ring-offset-2
+          `}
+        >
+          {isRegistering ? (
+            <span className="w-full text-center text-xs xs:text-sm sm:text-base">Creating Account...</span>
+          ) : (
             <>
-              <CiMail className="text-lg" />
-              Continue with Email
+              <CiMail className="text-base xs:text-lg md:text-xl" />
+              <span className="truncate text-sm xs:text-base md:text-[16px]">Continue with Email</span>
             </>
           )}
         </button>
@@ -201,17 +216,32 @@ const SignupForm = () => {
 
         <button
           type="button"
-          className="w-full bg-[#3B3A3A] hover:bg-black
-            text-white font-medium rounded-base py-3
-            flex items-center justify-center gap-2">
-          <FcGoogle className="text-xl" />
-          Continue with Google
+          className={`
+            w-full
+            bg-[#3B3A3A] hover:bg-black
+            transition-colors text-white
+            text-sm sm:text-base md:text-[17px] lg:text-lg
+            font-medium rounded-base
+            py-1 sm:py-1.5 md:py-2
+            flex items-center justify-center gap-2 md:gap-3
+            px-2 sm:px-4 md:px-6
+            min-h-[44px] sm:min-h-[48px] md:min-h-[52px]
+            max-w-full
+            shadow-sm md:shadow
+            focus:outline-none focus:ring-2 focus:ring-[#4C62ED] focus:ring-offset-2
+          `}
+        >
+          <FcGoogle className="text-xl md:text-2xl lg:text-3xl" />
+          <span className="truncate">Continue with Google</span>
         </button>
       </form>
 
-      <p className="text-center text-gray-600 text-sm mt-6 mb-2">
+      <p className="text-center text-gray-600 text-sm mt-3 mb-2">
         Already a user?{" "}
-        <a href="/login" className="text-[#4C62ED] underline font-medium">
+        <a 
+           href="/login" 
+           className="text-[#4C62ED] underline font-medium"
+           >
           Sign In
         </a>
       </p>
