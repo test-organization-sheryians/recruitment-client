@@ -57,7 +57,7 @@ export * from "./tests/enRolltest";
 export * from "./tests/getTest";
 export * from "./tests/getTestDetails";
 export * from "./tests/getUserAttempts";
-export * from "./tests/neRolluser";  
+export * from "./tests/enRollBulkUser";  
 export * from "./tests/searchUsertest";
 export * from "./tests/startTest";
 export * from "./tests/testAttempts";
