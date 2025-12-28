@@ -142,7 +142,7 @@ const SigninForm = () => {
               onClick={() => setShowPassword((prev) => !prev)}
               className={`
                 absolute right-3 sm:right-4
-                top-[40px] sm:top-[42px] md:top-[44px]
+                top-0 
                 transition-colors
                 ${
                   passwordValue

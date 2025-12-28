@@ -145,27 +145,31 @@ const SignupForm = () => {
           {...register("email", { required: true })}
         />
 
-        <div className="relative">
-          <LabelInput
-            label="Password"
-            placeholder="8+ characters"
-            type={showPassword && passwordValue ? "text" : "password"}
-            {...register("password", { required: true })}
-          />
-          <button
-            type="button"
-            disabled={!passwordValue}
-            onClick={() => setShowPassword((p) => !p)}
-            className={`absolute right-4 top-[42px] md:top-[44px]
-              ${
-                passwordValue
-                  ? "text-gray-500 hover:text-gray-700"
-                  : "text-gray-300 cursor-not-allowed"
-              }`}
-          >
-            {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-          </button>
-        </div>
+
+<div className="relative">
+  <LabelInput
+    label="Password"
+    placeholder="8+ characters"
+    type={showPassword && passwordValue ? "text" : "password"}
+    {...register("password", { required: true })}
+  />
+
+  <button
+    type="button"
+    disabled={!passwordValue}
+    onClick={() => setShowPassword((p) => !p)}
+    className={`absolute right-3 top-[69%] -translate-y-1/2
+      ${
+        passwordValue
+          ? "text-gray-500 hover:text-gray-700"
+          : "text-gray-300 cursor-not-allowed"
+      }`}
+  >
+    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+  </button>
+</div>
+
+
 
         {(isError || serverError) && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2.5 rounded-lg text-[10px]">
