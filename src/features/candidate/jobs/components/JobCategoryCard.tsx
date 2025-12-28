@@ -6,7 +6,6 @@ import { useToast } from "@/components/ui/Toast";
 import { useGetProfile } from "../../Profile/hooks/useProfileApi";
 import CandidateProfile from "../../Profile/components/CandidateProfile";
 
-
 interface Category {
   _id: string;
   name: string;
@@ -52,35 +51,34 @@ export default function JobCard({ job }: JobCardProps) {
       : null;
 
   // Extract skill names directly (no fetching needed!)
-  const skillNames = job.skills?.map((skill) => skill.name).filter(Boolean) || [];
+  const skillNames =
+    job.skills?.map((skill) => skill.name).filter(Boolean) || [];
 
   const isExpired = job.expiry ? new Date(job.expiry) < new Date() : false;
 
-  const { data: profile, isLoading: profileLoading } = useGetProfile();  
+  const { data: profile, isLoading: profileLoading } = useGetProfile();
 
- const handleApply = () => {
-  if (!job._id || isExpired) return;
+  const handleApply = () => {
+    // ----------------------------------------------
+    if (!job._id || isExpired) return;
 
-  if (profileLoading) {
-    toast.error("Profile is loading. Please wait.");
-    return;
-  }
+    if (profileLoading) {
+      toast.error("Profile is loading. Please wait.");
+      return;
+    }
 
-  if (!profile?.resumeFile) {
-    toast.error("Please upload your resume before applying.");
-    return;
-  }
+    if (!profile?.resumeFile) {
+      toast.error("Please upload your resume before applying.");
+      return;
+    }
 
-  // Only call mutation once
-  applyJobMutation.mutate(
-    {
+    // Only call mutation once
+    applyJobMutation.mutate({
       jobId: job._id,
       message: "Excited to apply!",
       resumeUrl: profile.resumeFile,
-    }
-  );
-};
-
+    });
+  };
 
   return (
     <div
@@ -104,7 +102,7 @@ export default function JobCard({ job }: JobCardProps) {
               </span>
             )}
             {job.education && (
-              <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full truncate max-w-[140px]">
+              <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full truncate max-w-35">
                 {job.education}
               </span>
             )}
@@ -117,7 +115,9 @@ export default function JobCard({ job }: JobCardProps) {
 
           {/* Salary & Department */}
           <div className="text-sm text-gray-600 space-y-1 mb-3">
-            {job.salary && <p className="font-semibold text-gray-800">{job.salary}</p>}
+            {job.salary && (
+              <p className="font-semibold text-gray-800">{job.salary}</p>
+            )}
             {job.department && <p>{job.department}</p>}
           </div>
 
@@ -155,30 +155,28 @@ export default function JobCard({ job }: JobCardProps) {
 
         {/* Right: Apply Button */}
         <div className="shrink-0">
-<button
-  disabled={isExpired || job.applied || applyJobMutation.isPending}
-  onClick={(e) => {
-    e.stopPropagation();
-    handleApply();
-  }}
-  className={`px-6 py-2.5 text-white font-medium text-sm rounded-lg ${
-    isExpired
-      ? "bg-gray-400 cursor-not-allowed"
-      : job.applied
-      ? "bg-gray-400 cursor-not-allowed"
-      : "bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
-  }`}
->
-  {job.applied
-    ? "Applied"
-    : applyJobMutation.isPending
-    ? "Applying..."
-    : isExpired
-    ? "Expired"
-    : "Apply Now"}
-</button>
-
-
+          <button
+            disabled={isExpired || job.applied || applyJobMutation.isPending}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleApply();
+            }}
+            className={`px-6 py-2.5 text-white font-medium text-sm rounded-lg ${
+              isExpired
+                ? "bg-gray-400 cursor-not-allowed"
+                : job.applied
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+            }`}
+          >
+            {job.applied
+              ? "Applied"
+              : applyJobMutation.isPending
+              ? "Applying..."
+              : isExpired
+              ? "Expired"
+              : "Apply Now"}
+          </button>
         </div>
       </div>
     </div>

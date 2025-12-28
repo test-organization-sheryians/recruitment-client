@@ -12,10 +12,20 @@ import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { useLogin } from "../hooks/useAuthApi";
 
+import { useSearchParams } from "next/navigation"; //smart redirect
+
+
 const SigninForm = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState("");
+
+  const searchParams = useSearchParams();             //smart redirect
+  const redirect = searchParams.get("redirect");
+
+  const safeRedirect =
+    redirect && redirect.startsWith("/") ? redirect : null;
+
 
   const { register, handleSubmit } = useForm<{
     email: string;
@@ -46,6 +56,8 @@ const SigninForm = () => {
         };
       }) => {
         Cookies.set("access", res.data.token);
+        Cookies.set("role", res.data.user?.role?.name || "user");
+
 
         dispatch(
           setUser({
@@ -59,10 +71,12 @@ const SigninForm = () => {
         );
 
         if (res.data.user?.role?.name === "admin") {
-          router.push("/admin");
+          router.push(safeRedirect || "/admin");
         } else {
-          router.push("/candidate/resume");
+          router.push(safeRedirect || "/");
         }
+
+
       },
 
       onError: (err: {
@@ -77,6 +91,7 @@ const SigninForm = () => {
       },
     });
   };
+  
 
   return (
     <div className="w-full h-full font-[satoshi] bg-white rounded-2xl py-10 px-[20%] flex flex-col justify-center">

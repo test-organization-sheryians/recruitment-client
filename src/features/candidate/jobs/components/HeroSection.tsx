@@ -5,7 +5,7 @@ interface HeroSectionProps {
   setSearchTerm: (value: string) => void;
   onSearch?: () => void;
   searchLocation: string;
-  setSearchLocation: (value: string) => void;
+  setSearchLocation: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export default function HeroSection({
@@ -13,11 +13,11 @@ export default function HeroSection({
   setSearchTerm,
   onSearch,
   searchLocation,
-  setSearchLocation
+  setSearchLocation,
 }: HeroSectionProps) {
   return (
     <div
-      className="w-full py-16 md:py-20 bg-gradient-to-br from-blue-50 via-white to-indigo-50 
+      className="w-full py-16 md:py-20 bg-linear-to-br from-blue-50 via-white to-indigo-50 
                   bg-no-repeat bg-right bg-cover relative overflow-hidden"
       style={{
         backgroundImage: "url('/images/hero.jpeg')",
@@ -31,7 +31,7 @@ export default function HeroSection({
         {/* Main Heading - Professional Size */}
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 tracking-tight leading-tight">
           Find Your{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">
+          <span className="text-transparent bg-clip-text bg-linear-to-br from-blue-600 to-indigo-700">
             Dream Job
           </span>
         </h1>
@@ -57,7 +57,7 @@ export default function HeroSection({
                              transition-all duration-200 placeholder:text-gray-500"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && onSearch?.()}
+                  // onKeyDown={(e) => e.key === "Enter" && onSearch?.()}
                 />
               </div>
 
@@ -70,15 +70,16 @@ export default function HeroSection({
                   className="w-full pl-12 pr-4 py-4 text-base text-gray-800 bg-gray-50 rounded-xl
                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white
                              transition-all duration-200 placeholder:text-gray-500"
-                  value={searchLocation}
-                  onChange={(e)=>setSearchLocation(e.target.value)}
+                   value={searchLocation}          
+                   onChange={(e)=>setSearchLocation(e.target.value)}
+                  //  onKeyDown={(e)=>e.key == "Enter" && onSearch?.()}
                 />
               </div>
 
               {/* Search Button - Perfect Size */}
               <button
                 onClick={onSearch}
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold
+                className="px-8 py-4 bg-linear-to-br from-blue-600 to-indigo-600 text-white font-semibold
                            text-base rounded-xl hover:from-blue-700 hover:to-indigo-700
                            active:scale-98 transition-all duration-200 shadow-lg hover:shadow-xl
                            flex items-center justify-center gap-2"

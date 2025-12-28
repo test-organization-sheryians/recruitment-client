@@ -1,111 +1,137 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
-import JobCard, { Job } from "./JobCategoryCard";
+import JobCard, { Job as CardJob } from "./JobCategoryCard";
 import HeroSection from "./HeroSection";
 import { Menu, X } from "lucide-react";
-import { useGetJobCategories } from "@/features/admin/categories/hooks/useJobCategoryApi";
+import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
 import {
-  useGetJobs,
-  useGetJobsByCategory,
-} from "@/features/admin/jobs/hooks/useJobApi";
-
-// import search hook
-import { useSearchJobs } from "../jobSearch/hooks/hook";
-
-interface Category {
-  _id: string;
-  name: string;
-}
-
-const normalizeJobs = (data: Job[] | { data: Job[] }): Job[] => {
-  if (Array.isArray(data)) return data;
-  if ("data" in data && Array.isArray(data.data)) return data.data;
-  return [];
-};
-
-
-type SearchQuery = {
-  q: string;
-  
-  location: string;
-};
+  useInfiniteJobs,
+  useInfiniteJobsByCategory,
+} from "@/features/candidate/jobs/hooks/useInfiniteJobs";
+import type { CategoryItem } from "@/api/category/getCategoriesPaginated";
+import { SearchQuery } from "@/types/Job";
+import { useInfiniteSearchJobs } from "@/features/candidate/jobs/hooks/useSearchJobs";
 
 export default function JobDashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchLocation,setSearchLocation] = useState("")
-// state manage for passing data
-const [query, setQuery] = useState<SearchQuery>({
-  q: "",
-  location: "",
+ const [searchLocation,setSearchLocation] = useState("")
+ const [query, setQuery] = useState<SearchQuery>({q: "", location: "",});
+  // const { data: profileCalInfo } = useProfileQuery();
+
+  // const completion = profileCalInfo?.data ?? 0;
+  // const isProfileCompleted = completion < 60;
+
+  // console.log(isProfileCompleted);
+
+  const {
+    data: categoryPages,
+    isLoading: categoriesLoading,
+    fetchNextPage: fetchNextCategories,
+    hasNextPage: hasMoreCategories,
+    isFetchingNextPage: isFetchingMoreCategories,
+  } = useInfiniteJobCategories();
+
+  const categories: CategoryItem[] = (categoryPages?.pages ?? []).flatMap(
+    (p) => p.data ?? []
+  );
+
+  const allJobsQuery = useInfiniteJobs();
+  const jobsByCategoryQuery = useInfiniteJobsByCategory(selectedCategory);
+const searchJobsQuery = useInfiniteSearchJobs({
+  q: query.q,
+  location: query.location,
 });
-const {  data: searchedJobs, isLoading: searchLoading  } = useSearchJobs(query.q, query.location);
-console.log("useSearchjob hook call and data ====>",searchedJobs)
-console.log("side bar selection job ===>",selectedCategory)
 
-  const { data: categories, isLoading: categoriesLoading } = useGetJobCategories();
-  const jobsByCategory = useGetJobsByCategory(selectedCategory || "");
+console.log("Search Jobs Query final response ===>:", searchJobsQuery);
+const isSearchActive = Boolean(query.q || query.location);
+const activeJobsQuery = isSearchActive
+  ? searchJobsQuery
+  : selectedCategory
+  ? jobsByCategoryQuery
+  : allJobsQuery;
 
-const { data: allJobs, isLoading: allJobsLoading } = useGetJobs();
+  const jobsPages = activeJobsQuery.data?.pages ?? [];
+  const jobsLoading = activeJobsQuery.isLoading;
+  const hasMoreJobs = activeJobsQuery.hasNextPage;
+  const fetchNextJobs = activeJobsQuery.fetchNextPage;
+  const isFetchingMoreJobs = activeJobsQuery.isFetchingNextPage;
 
-  const isCategoryMode = !!selectedCategory;
-// const isSearchMode = !selectedCategory && query.q.trim().length > 0;
+console.log("Jobs Pages data check ===>:", jobsPages);
+console.log("total job count check ===>:", jobsPages?.[0]?.pagination.totalRecords);
+const jobsCount = jobsPages?.[0]?.pagination.totalRecords || 0;
 
-const isSearchMode =
-  !selectedCategory &&
-  (query.q.trim().length > 0 || query.location.trim().length > 0);
+  const jobs: CardJob[] = jobsPages
+    .flatMap((p) => p.data ?? [])
+    .map((job) => ({
+      ...job,
+      salary: typeof job.salary === "number" ? String(job.salary) : job.salary,
+      skills: job.skills?.map((s) =>
+        typeof s === "string"
+          ? { _id: s, name: s }
+          : { _id: s._id ?? s.name, name: s.name }
+      ),
+    }));
+console.log("Jobs to be displayed on dashboard ===>:", jobs);
+  // Infinite scroll sentinels
+  const categoriesLoadMoreRef = useRef<HTMLDivElement | null>(null);
+  const jobsLoadMoreRef = useRef<HTMLDivElement | null>(null);
 
+  useEffect(() => {
+    const el = categoriesLoadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (
+        entry.isIntersecting &&
+        hasMoreCategories &&
+        !isFetchingMoreCategories
+      ) {
+        fetchNextCategories();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMoreCategories, isFetchingMoreCategories, fetchNextCategories]);
 
+  useEffect(() => {
+    const el = jobsLoadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (entry.isIntersecting && hasMoreJobs && !isFetchingMoreJobs) {
+        fetchNextJobs();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMoreJobs, isFetchingMoreJobs, fetchNextJobs, selectedCategory]);
 
-let jobsData: Job[] = [];
+ 
 
-if (isCategoryMode) {
-  jobsData = normalizeJobs(jobsByCategory.data);
-} else if (isSearchMode) {
-  jobsData = normalizeJobs(searchedJobs);
-} else {
-  jobsData = normalizeJobs(allJobs);
-}
+  // search button handler
+    const searchHandler = ()=>{
+      
+  console.log("Searching result (seaerhTerm,location) ===>:", searchTerm, searchLocation);
+    const q = searchTerm.trim();
+  const location = searchLocation.trim();
 
-  const jobsLoading =
-  isCategoryMode
-    ? jobsByCategory.isLoading
-    : isSearchMode
-    ? searchLoading
-    : allJobsLoading;
-console.log("check the final data array for passing card ==>",jobsData)
-console.log("jobsData type:", Array.isArray(jobsData), jobsData);
-  // const jobs: Job[] = Array.isArray(jobsData) ? jobsData : [];
-// console.log("length of jobs after filter ===>",jobs.length,jobs)
-  // const term = searchTerm.toLowerCase();
+  // if (!q ) return;
 
-  // const filteredJobs = jobs.filter((job) => {
-  //   const title = job.title?.toLowerCase() || "";
-  //   const department = job.department?.toLowerCase() || "";
-  //   const skills =
-  //     job.skills
-  //       ?.map((s) => (typeof s === "string" ? s : s.name || ""))
-  //       .join(" ")
-  //       .toLowerCase() || "";
-
-  //   return (
-  //     title.includes(term) || department.includes(term) || skills.includes(term)
-  //   );
-  // });
-
-  const searchHandler = ()=>{
- setQuery({
-    q: searchTerm,
-    location: searchLocation,
-  });
+  setQuery({ q, location });
+  setSelectedCategory(null);
+  setSearchTerm("");
+  setSearchLocation("");
   }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero with search */}
-      <HeroSection searchTerm={searchTerm} setSearchTerm={setSearchTerm}  onSearch={searchHandler} searchLocation={searchLocation} setSearchLocation={setSearchLocation} />
+      <HeroSection searchTerm={searchTerm} setSearchTerm={setSearchTerm}  onSearch={searchHandler} 
+     searchLocation={searchLocation} setSearchLocation={setSearchLocation} />
 
       {/* Mobile Filter Bar */}
       <div className="md:hidden sticky top-0 z-30 bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
@@ -116,7 +142,7 @@ console.log("jobsData type:", Array.isArray(jobsData), jobsData);
           <Menu size={18} className="text-gray-700" />
         </button>
         <span className="text-sm font-medium text-gray-800">
-          {selectedCategory ? "Filtered" : "All Jobs"} • {jobsData.length}{" "}
+          {selectedCategory ? "Filtered" : "All Jobs"} • {jobsCount}{" "}
           found
         </span>
       </div>
@@ -140,9 +166,12 @@ console.log("jobsData type:", Array.isArray(jobsData), jobsData);
               onSelect={(id) => {
                 setSelectedCategory(id);
                 setIsSidebarOpen(false);
+                setQuery({ q: "", location: "" })
               }}
+              //  onSelect={setSelectedCategory}
               categories={categories || []}
               isLoading={categoriesLoading}
+              loadMoreRef={categoriesLoadMoreRef}
             />
           </div>
         </div>
@@ -161,6 +190,8 @@ console.log("jobsData type:", Array.isArray(jobsData), jobsData);
               onSelect={setSelectedCategory}
               categories={categories || []}
               isLoading={categoriesLoading}
+              loadMoreRef={categoriesLoadMoreRef}
+             
             />
           </div>
         </div>
@@ -175,7 +206,7 @@ console.log("jobsData type:", Array.isArray(jobsData), jobsData);
                   {selectedCategory ? "Category Jobs" : "All Jobs"}
                 </h2>
                 <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-                  {jobsData.length} jobs
+                  {jobsCount} jobs
                 </span>
               </div>
               {selectedCategory && (
@@ -197,7 +228,7 @@ console.log("jobsData type:", Array.isArray(jobsData), jobsData);
             )}
 
             {/* Empty State */}
-            {!jobsLoading && jobsData.length === 0 && (
+            {!jobsLoading && jobsCount === 0 && (
               <div className="p-12 text-center">
                 <p className="text-sm text-gray-500">
                   No jobs match your search.
@@ -210,7 +241,7 @@ console.log("jobsData type:", Array.isArray(jobsData), jobsData);
 
             {/* Job Cards */}
             <div className="divide-y divide-transparent p-2">
-              {jobsData?.map((job) => (
+              {jobs.map((job) => (
                 <div
                   key={job._id}
                   className="py-5 first:pt-0 hover:bg-gray-50/70 transition-colors duration-150"
@@ -218,6 +249,13 @@ console.log("jobsData type:", Array.isArray(jobsData), jobsData);
                   <JobCard job={job} />
                 </div>
               ))}
+              {/* Infinite scroll sentinel for jobs */}
+              <div ref={jobsLoadMoreRef} className="h-1" />
+              {isFetchingMoreJobs && (
+                <div className="p-4 text-center text-xs text-gray-500">
+                  Loading more…
+                </div>
+              )}
             </div>
           </div>
         </div>
