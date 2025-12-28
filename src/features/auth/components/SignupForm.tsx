@@ -97,19 +97,20 @@ const SignupForm = () => {
   return (
     <div className="w-full min-h-full bg-white rounded-2xl font-[satoshi] md:py-4 py-3 md:px-[4%] px-[3%] flex flex-col justify-center">
       <h1
-        className="
-          text-3xl 
-          font-bold
-          text-center
-          text-gray-800
-          mb-2 xs:mb-3 sm:mb-4 md:mb-5
-          mt-1 sm:mt-2 md:mt-3
-        "
-      >
-        Sign-up Account
-      </h1>
+  className="
+    font-bold
+    text-center
+    text-gray-800
+    whitespace-nowrap
+    mb-1 xs:mb-2 sm:mb-3 md:mb-4
+    text-[clamp(1rem,3vw,2rem)]
+  "
+>
+  Sign-up Account
+</h1>
 
-      <form className="mt-2 space-y-2 " onSubmit={handleSubmit(onSubmit)}>
+
+      <form className="mt-1 space-y-2 " onSubmit={handleSubmit(onSubmit)}>
         <div className="w-full flex flex-row gap-3">
           <div className="w-1/2">
             <LabelInput

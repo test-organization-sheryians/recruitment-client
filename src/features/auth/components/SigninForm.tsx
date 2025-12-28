@@ -95,10 +95,10 @@ const SigninForm = () => {
         w-full min-h-screen bg-white font-[satoshi] flex items-center justify-center px-4 sm:px-6 overflow-hidden
       "
     >
-      <div
+       <div
         className="w-full max-w-[480px] sm:max-w-[520px] bg-white rounded-2xl py-1 sm:py-3 md:py-5 px-4 sm:px-6 md:px-7"
       >
-        <h1
+       <h1
           className="
             text-2xl sm:text-3xl
             font-semibold text-center text-gray-800
