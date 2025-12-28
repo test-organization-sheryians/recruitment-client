@@ -7,12 +7,18 @@ interface AuthLayoutProps {
 
 const AuthLayout = ({ children, imageUrl }: AuthLayoutProps) => {
   return (
-    <div className="h-screen  w-full bg-[#DCDCDC] overflow-hidden  flex gap-3.5 md:p-5 p-3 font-[satoshi]">
-      <div className="bg-white  md:w-1/3 w-full rounded-base overflow-hidden ">
-      {children}
+    <div className="min-h-screen w-full bg-[#DCDCDC]
+      flex gap-3.5 md:p-5 p-3 font-[satoshi]
+      overflow-y-auto">
+
+      {/* Form Section */}
+      <div className="bg-white md:w-1/3 w-full rounded-base overflow-visible">
+        {children}
       </div>
+
+      {/* Image Section */}
       <div
-        className="w-2/3 md:block hidden rounded-base bg-center bg-cover overflow-hidden"
+        className="w-2/3 md:block hidden rounded-base bg-center bg-cover"
         style={{ backgroundImage: `url(${imageUrl})` }}
       />
     </div>
@@ -20,4 +26,3 @@ const AuthLayout = ({ children, imageUrl }: AuthLayoutProps) => {
 };
 
 export default AuthLayout;
-//
