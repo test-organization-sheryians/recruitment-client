@@ -102,8 +102,8 @@ const SignupForm = () => {
     text-center
     text-gray-800
     whitespace-nowrap
-    mb-1 xs:mb-2 sm:mb-3 md:mb-4
-    text-[clamp(1rem,3vw,2rem)]
+    mb-2 xs:mb-3 sm:mb-4 md:mb-5
+    text-[clamp(1.7rem,2vw,2rem)]
   "
 >
   Sign-up Account
