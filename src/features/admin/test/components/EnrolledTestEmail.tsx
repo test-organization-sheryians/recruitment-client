@@ -4,6 +4,8 @@ import Input from "@/components/Input"
 import { useEnrollTestuser } from "@/features/admin/test/hooks/useTest"
 import { useSearchUserTest } from "@/features/admin/test/hooks/useTest"
 import toast from "react-hot-toast"
+import { AxiosError } from "axios";
+
 
 type Props = { testId: string }
 
@@ -56,27 +58,33 @@ const EnrolledTestEmail: React.FC<Props> = ({ testId }) => {
     mutate(
       { testId, emails },
       {
-        onSuccess: (res: unknown) => {
-          const data = res?.data ?? res
+        onSuccess: (res) => {
+  const { insertedCount, skippedCount } = res.data;
 
-          const inserted = data.insertedCount ?? 0
-          const skipped = data.skippedCount ?? 0
+  if (insertedCount > 0 && skippedCount > 0) {
+    toast.success(
+      insertedCount === 1
+        ? `${insertedCount} user enrolled now, ${skippedCount} already assigned`
+        : `${insertedCount} users enrolled now, ${skippedCount} already assigned`
+    );
+  } else if (insertedCount > 0) {
+    toast.success(
+      insertedCount === 1
+        ? `${insertedCount} user enrolled successfully`
+        : `${insertedCount} users enrolled successfully`
+    );
+  } else if (skippedCount > 0) {
+    toast.error("All selected users are already enrolled for this test.");
+  }
 
-          if (inserted > 0 && skipped > 0) {
-            if (inserted==1) toast.success(`${inserted} user enrolled now, ${skipped} already assigned`);
-            else toast.success(`${inserted} users enrolled now, ${skipped} already assigned`);
-          } else if (inserted > 0) {
-            if (inserted==1) toast.success(`${inserted} user enrolled successfully`);
-            else toast.success(`${inserted} users enrolled successfully`);
-          } else if (skipped > 0) {
-            toast.error("All selected users are already enrolled for this test.");
-          }
+  setEmails([]);
+},
 
-          setEmails([])
-        },
-        onError: (err: unknown) => {
-          toast.error(err?.response?.data?.message || "Something went wrong")
-        },
+        onError: (err) => {
+  toast.error(err.response?.data?.message || "Something went wrong");
+}
+
+
       }
     )
   }

@@ -24,3 +24,13 @@ export interface TestAttempt {
   endTime?: string;
   durationTaken?: number;
 }
+
+export type EnrollUsersResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    insertedCount: number;
+    skippedCount: number;
+    totalProvided: number;
+  };
+};
