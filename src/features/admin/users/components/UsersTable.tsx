@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { Pencil, Trash2, Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -8,39 +8,26 @@ import {
   useInfiniteUsers,
   useDeleteUser,
   useUpdateUserRole,
+  User,
 } from "@/features/admin/users/hooks/useUser";
+import { useDebounce } from "@/features/admin/users/hooks/useDebounce";
 import { useToast } from "@/components/ui/Toast";
 
-interface Role {
-  _id: string;
-  name: string;
-}
-
-interface User {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber?: string;
-  role?: Role | null;
-}
-
 export default function UsersTable() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 400);
+
   const {
-    data: userPages,
+    data,
     isLoading,
     isError,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteUsers();
+  } = useInfiniteUsers(debouncedSearch);
 
-  const users = useMemo(
-    () => (userPages?.pages ?? []).flatMap((p) => p.data ?? []),
-    [userPages]
-  );
+  const users = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
 
-  const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("");
@@ -54,40 +41,21 @@ export default function UsersTable() {
   const queryClient = useQueryClient();
   const { success, error } = useToast();
 
-  /* ---------------- URL SYNC (NO RELOAD, NO INVALIDATION) ---------------- */
+  /* ---------------- URL SYNC ---------------- */
   useEffect(() => {
     const timeout = setTimeout(() => {
       const params = new URLSearchParams(window.location.search);
-
-      if (searchQuery) params.set("query", searchQuery);
-      else params.delete("query");
-
-      window.history.replaceState(
-        null,
-        "",
-        `${window.location.pathname}?${params.toString()}`
-      );
+      if (searchQuery) params.set("search", searchQuery);
+      else params.delete("search");
+      window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
     }, 300);
-
     return () => clearTimeout(timeout);
   }, [searchQuery]);
 
-  /* ---------------- CLIENT-SIDE FILTER (FAST) ---------------- */
-  const filteredUsers = useMemo(() => {
-    if (!searchQuery.trim()) return users;
-
-    const q = searchQuery.toLowerCase();
-    return users.filter((u) => {
-      const name = `${u.firstName} ${u.lastName}`.toLowerCase();
-      return name.includes(q) || u.email.toLowerCase().includes(q);
-    });
-  }, [users, searchQuery]);
-
-  /* ---------------- INFINITE SCROLL (FAST, NO RESET) ---------------- */
+  /* ---------------- INFINITE SCROLL ---------------- */
   useEffect(() => {
     const el = loadMoreRef.current;
     if (!el) return;
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
@@ -96,12 +64,11 @@ export default function UsersTable() {
       },
       { threshold: 0.1 }
     );
-
     observer.observe(el);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  /* ---------------- ACTIONS ---------------- */
+  /* ---------------- MODAL / ACTIONS ---------------- */
   const openModal = (user: User) => {
     setSelectedUserId(user._id);
     setSelectedRole(user.role?._id || "");
@@ -113,7 +80,6 @@ export default function UsersTable() {
       error("Please select a role");
       return;
     }
-
     setIsSaving(true);
     updateUserRole.mutate(
       { userId: selectedUserId, role: selectedRole },
@@ -147,10 +113,7 @@ export default function UsersTable() {
   };
 
   if (isLoading) return <p className="text-center py-8">Loading users...</p>;
-  if (isError)
-    return (
-      <p className="text-center py-8 text-red-500">Failed to load users</p>
-    );
+  if (isError) return <p className="text-center py-8 text-red-500">Failed to load users</p>;
 
   return (
     <>
@@ -170,7 +133,6 @@ export default function UsersTable() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-80">
             <h2 className="font-semibold mb-4">Update Role</h2>
-
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
@@ -181,7 +143,6 @@ export default function UsersTable() {
               <option value="692c10094167ed9d874b8f99">Client</option>
               <option value="6915ab309788ad1e00990866">Candidate</option>
             </select>
-
             <div className="flex justify-end gap-3 mt-6">
               <button onClick={() => setIsModalOpen(false)}>Cancel</button>
               <button
@@ -207,71 +168,55 @@ export default function UsersTable() {
             <th className="p-3 text-center">Actions</th>
           </tr>
         </thead>
-
         <tbody>
-          {filteredUsers.length === 0 ? (
+          {users.length === 0 ? (
             <tr>
-              <td
-                colSpan={5}
-                className="text-center py-8 text-gray-500 border-b"
-              >
+              <td colSpan={5} className="text-center py-8 text-gray-500">
                 {searchQuery ? "No matches found" : "No users found"}
               </td>
             </tr>
           ) : (
-            filteredUsers.map((user) => (
+            users.map((user) => (
               <tr key={user._id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 border-b">
                   {user.firstName} {user.lastName}
                 </td>
                 <td className="px-6 py-4 border-b">{user.email}</td>
-                <td className="px-6 py-4 border-b">
-                  {user.phoneNumber || "N/A"}
-                </td>
-                <td className="px-6 py-4 border-b">
-                  <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm">
-                    {user.role?.name || "No Role"}
-                  </span>
-                </td>
-                <td className="px-6 py-4 border-b">
-                  <div className="flex gap-4 justify-center items-center">
-                    <Pencil
-                      className="w-5 h-5 text-blue-600 cursor-pointer hover:text-blue-800"
-                      onClick={() => openModal(user)}
-                    />
-                    <div className="relative">
-                      <Trash2
-                        className="w-5 h-5 text-red-600 cursor-pointer hover:text-red-800"
-                        onClick={() =>
-                          setOpenDeleteMenu(
-                            openDeleteMenu === user._id ? null : user._id
-                          )
-                        }
-                      />
-                      {openDeleteMenu === user._id && (
-                        <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg w-32 z-20">
-                          <button
-                            onClick={() => handleDeleteUser(user._id)}
-                            className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
-                          >
-                            Delete
-                          </button>
-                          <button
-                            onClick={() => setOpenDeleteMenu(null)}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      )}
+                <td className="px-6 py-4 border-b">{user.phoneNumber || "N/A"}</td>
+                <td className="px-6 py-4 border-b">{user.role?.name || "No Role"}</td>
+                <td className="px-6 py-4 border-b text-center">
+                  <Pencil
+                    className="w-5 h-5 text-blue-600 cursor-pointer"
+                    onClick={() => openModal(user)}
+                  />
+                  <Trash2
+                    className="w-5 h-5 text-red-600 cursor-pointer ml-2"
+                    onClick={() =>
+                      setOpenDeleteMenu(openDeleteMenu === user._id ? null : user._id)
+                    }
+                  />
+                  {openDeleteMenu === user._id && (
+                    <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg w-32 z-20">
+                      <button
+                        onClick={() => handleDeleteUser(user._id)}
+                        className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={() => setOpenDeleteMenu(null)}
+                        className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                      >
+                        Cancel
+                      </button>
                     </div>
-                  </div>
+                  )}
                 </td>
               </tr>
             ))
           )}
 
-          {/* Infinite scroll sentinel */}
+          {/* Infinite scroll trigger */}
           <tr ref={loadMoreRef}>
             <td colSpan={5} className="p-0 h-4" />
           </tr>
@@ -284,7 +229,6 @@ export default function UsersTable() {
             </tr>
           )}
         </tbody>
-
       </table>
     </>
   );
