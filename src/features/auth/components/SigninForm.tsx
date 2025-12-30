@@ -73,7 +73,7 @@ const SigninForm = () => {
         if (res.data.user?.role?.name === "admin") {
           router.push(safeRedirect || "/admin");
         } else {
-          router.push(safeRedirect || "/candidate/resume");
+          router.push(safeRedirect || "/");
         }
 
 
