@@ -3,7 +3,11 @@ import * as api from "@/api";
 import { getUsersPaginated, type BackendPaginatedResponse } from "@/api/users/getUsersPaginated";
 
 export interface Role {
+<<<<<<< HEAD
   _id: string;
+=======
+    _id: string;
+>>>>>>> bdd398f8305fd487a994e034adef62d087ae7122
   name: string;
 }
 
@@ -16,6 +20,7 @@ export interface User {
   role?: Role | null;
 }
 
+<<<<<<< HEAD
 const DEFAULT_LIMIT = 10;
 
 export const useInfiniteUsers = (search: string, limit: number = DEFAULT_LIMIT) =>
@@ -23,14 +28,50 @@ export const useInfiniteUsers = (search: string, limit: number = DEFAULT_LIMIT) 
     queryKey: ["users", { search, limit }],
     initialPageParam: 1,
     queryFn: async ({ pageParam }) => getUsersPaginated(pageParam as number, limit, search),
+=======
+/* ============================
+   GET USERS
+============================ */
+export const useGetUsers = () =>
+  useQuery<User[], Error>({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const users = await api.getAllUsers();
+      return Array.isArray(users) ? users : [];
+    },
+    retry: 0,
+  });
+
+/* ============================
+   INFINITE USERS
+============================ */
+
+  const DEFAULT_LIMIT = 10;
+
+export const useInfiniteUsers = (
+  limit: number = DEFAULT_LIMIT,
+  query: string = ""  // <-- add query here
+) =>
+  useInfiniteQuery<BackendPaginatedResponse<User>>({
+    queryKey: ["users", { limit, query }], // <-- include query in key
+    initialPageParam: 1,
+
+    queryFn: async ({ pageParam }) =>
+      getUsersPaginated(pageParam as number, limit, query), // <-- pass query to API
+
+>>>>>>> bdd398f8305fd487a994e034adef62d087ae7122
     getNextPageParam: (lastPage) => {
       const { pagination } = lastPage;
       if (!pagination) return undefined;
       const next = (pagination.currentPage ?? 1) + 1;
       return next <= (pagination.totalPages ?? 0) ? next : undefined;
     },
+
     retry: 0,
   });
+
+
+  
 
 interface UpdateRolePayload {
   userId: string;
