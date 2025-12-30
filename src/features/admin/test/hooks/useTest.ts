@@ -2,7 +2,13 @@ import * as api from "@/api";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Test, TestFormValues } from "@/types/Test"; 
 import { searchUserTest } from "@/api";
+import { EnrollUsersResponse } from "@/types/Enrollment";
+import { AxiosError } from "axios";
 
+type EnrollPayload = {
+  testId: string;
+  emails: string[];
+};
 
 export const useCreateTest = () => {
   const queryClient = useQueryClient();
@@ -63,10 +69,13 @@ export const useEnRollTest = () => {
 
 
 export const useEnrollTestuser = () => {
-  return useMutation({
+  return useMutation<
+    EnrollUsersResponse,                 // ✅ success response
+    AxiosError<{ message?: string }>,    // ✅ error type
+    EnrollPayload                        // ✅ payload
+  >({
     mutationKey: ["enrollTestuser"],
-    mutationFn: (data: { testId: string; emails: string[] }) =>
-      api.enrollTestuser(data),
+    mutationFn: (data) => api.enrollTestuser(data),
     retry: 0,
   });
 };
