@@ -74,7 +74,11 @@ const EnrolledTestEmail: React.FC<Props> = ({ testId }) => {
         : `${insertedCount} users enrolled successfully`
     );
   } else if (skippedCount > 0) {
-    toast.error("All selected users are already enrolled for this test.");
+    toast.error(
+      skippedCount === 1
+        ? `user already enrolled for this test.`
+        : `All selected users are already enrolled for this test.`
+    );
   }
 
   setEmails([]);
