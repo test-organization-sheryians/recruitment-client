@@ -3,29 +3,32 @@ import KpiCard from "./KpiCard";
 
 const KPIS = [
   {
-    title: "Total Resumes",
-    count: 156,
-    change: "+12%",
-    changeTone: "up" as const,
-  },
-  {
     title: "Shortlisted",
     count: 42,
     change: "-8%",
     changeTone: "down" as const,
   },
   { title: "Current Vacancies", count: 104, change: "+5%", changeTone: "up" as const },
-  { title: "Batches", count: 1124, change: "-2%", changeTone: "down" as const },
 ];
 
 export default function KpisRow() {
   return (
-    <div className='grid grid-cols-12 gap-4 mb-4'>
-      {KPIS.map((k) => (
-        <div key={k.title} className='col-span-12 sm:col-span-6 lg:col-span-3'>
-          <KpiCard {...k} />
+    <div className="grid grid-cols-12 gap-4 mb-6">
+      {/* Left: KPI block aligned with VacanciesSection (lg:col-span-7) */}
+      <div className="col-span-12 lg:col-span-7">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="w-full">
+            <KpiCard {...KPIS[0]} />
+          </div>
+
+          <div className="w-full">
+            <KpiCard {...KPIS[1]} />
+          </div>
         </div>
-      ))}
+      </div>
+
+      {/* Right: spacer so KPI block aligns with vacancies below */}
+      <div className="col-span-12 lg:col-span-5" />
     </div>
   );
 }
