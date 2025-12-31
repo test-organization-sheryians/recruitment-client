@@ -4,25 +4,48 @@ import React from 'react';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
+import Cookies from 'js-cookie';
+import { useDispatch } from 'react-redux';
+import { logout as logoutAction } from '@/features/auth/slice';
 
 export default function LogoutButton() {
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const handleLogout = async () => {
-    const confirmed = window.confirm('Are you sure you want to log out?');
-    if (!confirmed) return;
 
     try {
       await fetch('/api/auth/logout', {
         method: 'POST',
-        credentials: 'include', 
+        credentials: 'include',
       });
 
-      router.push('/login');
-      router.refresh(); 
+      try {
+        Cookies.remove('accessToken', { path: '/' });
+        Cookies.remove('refreshToken', { path: '/' });
+        Cookies.remove('role', { path: '/' });
+        Cookies.remove('access', { path: '/' });
+      } catch {}
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch {}
+      try {
+        dispatch(logoutAction());
+      } catch {}
+
+      router.replace('/login');
+      setTimeout(() => {
+        try {
+          window.open('', '_self');
+          window.close();
+        } catch {}
+        // Fallback: force navigation
+        window.location.href = '/login';
+      }, 50);
     } catch (error) {
       console.error('Logout failed:', error);
-      router.push('/login');
+      router.replace('/login');
     }
   };
 
