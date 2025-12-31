@@ -33,7 +33,7 @@ interface ExtendedApplicantRow extends Omit<ApplicantRow, 'id'> {
   email: string;
   role: string;
   date: string;
-  experience: string;
+  experience: string; 
   status: ApplicantStatus;
   resume: string;
 }
@@ -86,6 +86,7 @@ const tabs: Array<"all" | ApplicantStatus> = [
   "forwareded",
   "interview",
   "hired",
+  
 ];
 
 const ThreeDotsIcon = () => (
@@ -109,19 +110,31 @@ export default function ApplicantsList({
   const jobId = id as string;
 
   // 1. Fetch Applicants
-  const { data } = useJobApplicant(jobId) as { data?: ApplicantsApiResponse };
+  const {
+  data,
+  refetch: refetchApplicants,
+} = useJobApplicant(jobId) as {
+  data?: ApplicantsApiResponse;
+  refetch: () => void;
+};
+
 
   // 2. Fetch Interviews (Only when tab is 'interview')
   const [activeTab, setActiveTab] = useState<"all" | ApplicantStatus>("all");
-  const { data: interviewResponse, isLoading: isInterviewsLoading } = useInterviewsByJob(
-    jobId
-  );
+const {
+  data: interviewResponse,
+  isLoading: isInterviewsLoading,
+  refetch: refetchInterviews,
+} = useInterviewsByJob(jobId);
+
 
   const [selectedApplicants, setSelectedApplicants] = useState<string[]>([]);
   const [bulkStatus, setBulkStatus] = useState<ApplicantStatus>("applied");
   const [activeActionId, setActiveActionId] = useState<string | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [scheduleCandidateId, setScheduleCandidateId] = useState<string | null>(null);
+  const [interviewMode, setInterviewMode] = useState<"schedule" | "reschedule">("schedule");
+  const [selectedInterviewId, setSelectedInterviewId] = useState<string | null>(null);
 
   const { mutate, isPending } = useBulkUpdateApplicants();
   const { success, error } = useToast();
@@ -133,8 +146,12 @@ export default function ApplicantsList({
     );
   };
 
-  const handleScheduleInterview = (candidateUserId: string) => {
+  const handleScheduleInterview = (candidateUserId: string,   applicationId: string, mode: "schedule" | "reschedule",
+  interviewId?: string) => {
     setScheduleCandidateId(candidateUserId);
+    setSelectedApplicants([applicationId]);
+    setInterviewMode(mode);
+    setSelectedInterviewId(interviewId || null);
     setIsPopupOpen(true);
     setActiveActionId(null);
   };
@@ -186,6 +203,11 @@ export default function ApplicantsList({
         status: int.status || "Scheduled"
       }))
     : [];
+  
+  const getInterviewForApplicant = (email: string) => {
+  return interviews.find((i) => i.candidateEmail === email);
+};
+
 
   // ==================== RENDER ====================
 
@@ -335,12 +357,13 @@ export default function ApplicantsList({
                   </span>
                 </td>
                 <td className="relative flex justify-center">
-                  {a.status === "shortlisted" && (
+                  {(a.status === "shortlisted" || a.status === "interview") && (
                     <>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setActiveActionId(activeActionId === a.id ? null : a.id);
+                          
                         }}
                         className="p-1 rounded-full hover:bg-gray-200 transition"
                       >
@@ -350,12 +373,39 @@ export default function ApplicantsList({
                         <div className="absolute right-8 top-1/2 -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
                           <button
                             onClick={(e) => {
-                              e.stopPropagation();
-                              handleScheduleInterview(a.candidateUserId);
-                            }}
-                            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2"
-                          >
-                            Schedule Interview
+    e.stopPropagation();
+
+    if (a.status === "shortlisted") {
+      handleScheduleInterview(
+        a.candidateUserId,
+        a.id,
+        "schedule"
+      );
+      return;
+    }
+
+    if (a.status === "interview") {
+      const interview = getInterviewForApplicant(a.email);
+
+      if (!interview) {
+        error("Interview not found");
+        return;
+      }
+
+      handleScheduleInterview(
+        a.candidateUserId,
+        a.id,
+        "reschedule",
+        interview._id
+      );
+    }
+  }}
+  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition"
+>
+  {a.status === "shortlisted"
+    ? "Schedule Interview"
+    : "Reschedule Interview"}
+                            
                           </button>
                         </div>
                       )}
@@ -376,12 +426,23 @@ export default function ApplicantsList({
         )}
       </div>
       
-      <PopupForm 
-        isOpen={isPopupOpen}
-        onClose={() => setIsPopupOpen(false)}
-        candidateId={scheduleCandidateId} 
-        jobId={jobId}
-      />
+      <PopupForm
+  isOpen={isPopupOpen}
+  onClose={() => {
+    setIsPopupOpen(false);
+    setActiveActionId(null);
+    setSelectedApplicants([]);
+    refetchApplicants();
+    refetchInterviews();
+  }}
+  candidateId={scheduleCandidateId}
+  jobId={jobId}
+  applicationId={selectedApplicants[0] || ""}
+  mode={interviewMode}
+  interviewId={selectedInterviewId}
+/>
+
+
     </div>
   );
 }

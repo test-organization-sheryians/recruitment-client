@@ -60,3 +60,9 @@ export type CreateInterviewPayload = {
   timing: string;
   status?: InterviewStatus;
 };
+
+export type RescheduleInterviewPayload = {
+  interviewerEmail: string;
+  meetingLink: string;
+  timing: string;
+};

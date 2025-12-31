@@ -1,5 +1,5 @@
 import api from "@/config/axios";
-import { CreateInterviewPayload, InterviewStatus } from "@/types/applicant";
+import { CreateInterviewPayload, InterviewStatus, RescheduleInterviewPayload } from "@/types/applicant";
 
 export const createInterview = async (data: CreateInterviewPayload) => {
   const res = await api.post("/api/interviews", data);
@@ -31,6 +31,17 @@ export const updateInterviewStatus = async (
   status: InterviewStatus
 ) => {
   const res = await api.patch(`/api/interviews/${id}/status`, { status });
+  return res.data;
+};
+
+export const rescheduleInterview = async (
+  interviewId: string,
+  data: RescheduleInterviewPayload
+) => {
+  const res = await api.patch(
+    `/api/interviews/${interviewId}/reschedule`,
+    data
+  );
   return res.data;
 };
 
