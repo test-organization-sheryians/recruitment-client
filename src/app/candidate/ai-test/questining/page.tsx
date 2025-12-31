@@ -229,18 +229,17 @@ export default function UniversalInterviewPage() {
   ]);
 
 
-  useEffect(() => {
-    if (blocked) {
-      sessionStorage.setItem("disqualified", "true");
-      router.replace("/");
-      return;
-    }
+ useEffect(() => {
+  if (blocked) {
+    sessionStorage.setItem("disqualified", "true");
 
-    if (timerReady && isActiveTest && secondsLeft <= 0) {
-      submit();
-    }
-  }, [secondsLeft, timerReady, isActiveTest, blocked, submit, router]);
+    console.log("Anti-cheat triggered: Test Locked.");
+  }
 
+  if (timerReady && isActiveTest && secondsLeft <= 0) {
+    submit();
+  }
+}, [secondsLeft, timerReady, isActiveTest, blocked, submit]); 
 
   useEffect(() => {
     const prev = answers[step];
@@ -277,21 +276,39 @@ export default function UniversalInterviewPage() {
 
       {/* 1. DISQUALIFIED OVERLAY */}
       {blocked && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4">
-          <div className="bg-white p-8 rounded-2xl max-w-md text-center shadow-2xl border-t-8 border-red-600">
-            <AlertOctagon className="w-16 h-16 text-red-600 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold text-red-600 mb-2">TEST TERMINATED</h2>
-            <p className="text-gray-600 mb-8 font-medium">
-              Activity violation detected (Multiple tab switches). Your test has been locked and reported.
-            </p>
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="w-full bg-red-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-red-700 transition-colors shadow-lg"
-            >
-              Return to Dashboard
-            </button>
-          </div>
-        </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+  <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl ring-1 ring-black/10">
+    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+      <AlertOctagon className="h-9 w-9 text-red-600" />
+    </div>
+
+    <h2 className="mb-2 text-2xl font-extrabold tracking-wide text-red-600">
+      TEST TERMINATED
+    </h2>
+
+    <p className="mb-6 text-sm leading-relaxed text-gray-600">
+      Activity violation detected <span className="font-semibold">(multiple tab switches)</span>.
+      Your test has been locked and reported.
+    </p>
+
+    <button
+      onClick={() => {
+        sessionStorage.setItem("disqualified", "true");
+        router.push("/");
+      }}
+      className="
+        w-full rounded-lg bg-red-600 py-3 text-sm font-bold text-white
+        shadow-md transition
+        hover:bg-red-700
+        active:scale-95
+        focus:outline-none focus:ring-4 focus:ring-red-300
+      "
+    >
+      RETURN TO HOME
+    </button>
+  </div>
+</div>
+
       )}
 
       {/* 2. MAIN TEST CONTENT */}
