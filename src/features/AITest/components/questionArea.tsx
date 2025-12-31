@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import { editor as MonacoEditor, KeyMod, KeyCode } from "monaco-editor";
 
@@ -11,6 +11,9 @@ interface QuestionAreaProps {
   setAnswerText: (value: string) => void;
   answerCode: string;
   setAnswerCode: (value: string) => void;
+  testId: string,
+  initialSwitchCount: number; // Fetch this from your initial test API
+  isBlocked: boolean;
 }
 
 export const QuestionArea: React.FC<QuestionAreaProps> = ({
@@ -20,11 +23,18 @@ export const QuestionArea: React.FC<QuestionAreaProps> = ({
   setAnswerText,
   answerCode,
   setAnswerCode,
+  testId = "defaut-test",
+  initialSwitchCount= 0, 
+  isBlocked,
 }) => {
+
+const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
 
   const handleEditorMount: OnMount = (
     editor: MonacoEditor.IStandaloneCodeEditor
   ) => {
+    editorRef.current = editor;
+
     const domNode = editor.getDomNode();
     if (!domNode) return;
 
@@ -42,14 +52,22 @@ export const QuestionArea: React.FC<QuestionAreaProps> = ({
         KeyMod.Shift | KeyCode.Insert,
       ],
       contextMenuGroupId: "disable",
-      
-      run: () => {},
+
+      run: () => { },
     });
   };
 
+   useEffect(() => {
+    if (!editorRef.current) return;
+
+    editorRef.current.updateOptions({
+      readOnly: isBlocked,
+      domReadOnly: isBlocked,
+    });
+  }, [isBlocked]);
+
   return (
     <>
-    
       <div className="bg-white p-6 rounded-t-xl border border-gray-200 mb-0 shadow-sm">
         <p
           className="text-xl font-medium text-gray-700 no-copy"
@@ -62,16 +80,19 @@ export const QuestionArea: React.FC<QuestionAreaProps> = ({
       </div>
 
 
+     {/* 3. Disable Textarea using isBlocked */}
       <textarea
+        disabled={isBlocked}
         value={answerText}
-        onChange={(e) => setAnswerText(e.target.value)}
+        onChange={(e) =>
+          !isBlocked && setAnswerText(e.target.value)
+        }
         onPaste={(e) => e.preventDefault()}
         rows={8}
         placeholder="Type your answer here..."
-        disabled={isPending}
-        className="w-full p-4 text-[20px] leading-relaxed border border-gray-300 
-          focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 
-          rounded-b-none rounded-t-none"
+        className={`w-full p-4 text-[20px] border border-gray-300 ${
+          isBlocked ? "opacity-50 cursor-not-allowed" : ""
+        }`}
         style={{ resize: "vertical", minHeight: "150px" }}
       />
 
@@ -82,16 +103,16 @@ export const QuestionArea: React.FC<QuestionAreaProps> = ({
           value={answerCode}
           theme="vs-dark"
           onMount={handleEditorMount}
-          onChange={(value) => setAnswerCode(value ?? "")}
+          onChange={(value) =>
+            !isBlocked && setAnswerCode(value ?? "")
+          }
           options={{
             fontSize: 20,
             minimap: { enabled: false },
             automaticLayout: true,
             scrollBeyondLastLine: false,
             tabSize: 2,
-            lineNumbers: "on",
             wordWrap: "on",
-            smoothScrolling: true,
           }}
         />
       </div>
