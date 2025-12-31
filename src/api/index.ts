@@ -25,7 +25,8 @@ export * from "./jobs/updateJob";
 export * from "./jobs/deleteJob";
 export * from "./jobs/jobCategory";
 export * from "./jobs/getJobId";
-// export * from "./jobs/searchJob"
+export * from "./jobs/searchJobs";
+
 /* ================= SKILLS ================= */
 export * from "./skills/createSkill";
 export * from "./skills/deleteSkill";

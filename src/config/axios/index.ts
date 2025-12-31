@@ -23,7 +23,7 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials: true,
-  validateStatus: (status) => status >= 200 && status < 300,
+  // validateStatus: (status) => status >= 200 && status < 300,
 });
 
 api.interceptors.response.use(
@@ -65,6 +65,7 @@ api.interceptors.response.use(
 
       if (typeof window !== "undefined") {
         // window.location.href = "/login";
+         window.location.replace("/login");
       }
 
       return Promise.reject(
