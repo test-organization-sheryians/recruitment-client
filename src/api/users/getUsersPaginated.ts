@@ -18,14 +18,11 @@ export interface BackendPaginatedResponse<T> {
 export const getUsersPaginated = async (
   page: number,
   limit: number,
-<<<<<<< HEAD
-  search : string
+  search: string
 ): Promise<BackendPaginatedResponse<User>> => {
-  const res = await api.get("/api/users/allUser", { params: { page, limit,search } });
-=======
-  query:string=""
-): Promise<BackendPaginatedResponse<User>> => {
-  const res = await api.get("/api/users/allUser", { params: { page, limit,query } });
->>>>>>> bdd398f8305fd487a994e034adef62d087ae7122
+  const res = await api.get("/api/users/allUser", {
+    params: { page, limit, search },
+  });
+
   return res.data as BackendPaginatedResponse<User>;
 };

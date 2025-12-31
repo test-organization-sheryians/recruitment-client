@@ -136,8 +136,7 @@ export default function UsersTable() {
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
-              className="w-full border p-2 rounded"
-            >
+              className="w-full border p-2 rounded">
               <option value="">Select Role</option>
               <option value="6915a17ed8d70e9b7ce70ec7">Admin</option>
               <option value="692c10094167ed9d874b8f99">Client</option>
@@ -158,78 +157,90 @@ export default function UsersTable() {
       )}
 
       {/* TABLE */}
-      <table className="min-w-full bg-white border rounded">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-3 text-left">Name</th>
-            <th className="p-3 text-left">Email</th>
-            <th className="p-3 text-left">Phone</th>
-            <th className="p-3 text-left">Role</th>
-            <th className="p-3 text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.length === 0 ? (
-            <tr>
-              <td colSpan={5} className="text-center py-8 text-gray-500">
-                {searchQuery ? "No matches found" : "No users found"}
-              </td>
-            </tr>
-          ) : (
-            users.map((user) => (
-              <tr key={user._id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 border-b">
-                  {user.firstName} {user.lastName}
-                </td>
-                <td className="px-6 py-4 border-b">{user.email}</td>
-                <td className="px-6 py-4 border-b">{user.phoneNumber || "N/A"}</td>
-                <td className="px-6 py-4 border-b">{user.role?.name || "No Role"}</td>
-                <td className="px-6 py-4 border-b text-center">
-                  <Pencil
-                    className="w-5 h-5 text-blue-600 cursor-pointer"
-                    onClick={() => openModal(user)}
-                  />
-                  <Trash2
-                    className="w-5 h-5 text-red-600 cursor-pointer ml-2"
-                    onClick={() =>
-                      setOpenDeleteMenu(openDeleteMenu === user._id ? null : user._id)
-                    }
-                  />
-                  {openDeleteMenu === user._id && (
-                    <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg w-32 z-20">
-                      <button
-                        onClick={() => handleDeleteUser(user._id)}
-                        className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
-                      >
-                        Delete
-                      </button>
-                      <button
-                        onClick={() => setOpenDeleteMenu(null)}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))
-          )}
+     <table className="min-w-full bg-white border rounded">
+  <thead className="bg-gray-100">
+    <tr>
+      <th className="p-3 text-left">Name</th>
+      <th className="p-3 text-left">Email</th>
+      <th className="p-3 text-left">Phone</th>
+      <th className="p-3 text-left">Role</th>
+      <th className="p-3 text-center">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {users.length === 0 ? (
+      <tr>
+        <td colSpan={5} className="text-center py-8 text-gray-500">
+          {searchQuery ? "No matches found" : "No users found"}
+        </td>
+      </tr>
+    ) : (
+      users.map((user) => (
+        <tr key={user._id} className="hover:bg-gray-50">
+          <td className="px-6 py-4 border-b">
+            {user.firstName} {user.lastName}
+          </td>
+          <td className="px-6 py-4 border-b">{user.email}</td>
+          <td className="px-6 py-4 border-b">
+            {user.phoneNumber || "N/A"}
+          </td>
+          <td className="px-6 py-4 border-b">
+            {user.role?.name || "No Role"}
+          </td>
 
-          {/* Infinite scroll trigger */}
-          <tr ref={loadMoreRef}>
-            <td colSpan={5} className="p-0 h-4" />
-          </tr>
+          {/* ACTIONS */}
+          <td className="px-6 py-4 border-b text-center">
+            <div className="flex justify-center items-center gap-2 relative">
+              <Pencil
+                className="w-5 h-5 text-blue-600 cursor-pointer"
+                onClick={() => openModal(user)}
+              />
+              <Trash2
+                className="w-5 h-5 text-red-600 cursor-pointer"
+                onClick={() =>
+                  setOpenDeleteMenu(
+                    openDeleteMenu === user._id ? null : user._id
+                  )
+                }
+              />
 
-          {isFetchingNextPage && (
-            <tr>
-              <td colSpan={5} className="text-center py-6 text-gray-500">
-                Loading more users...
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+              {openDeleteMenu === user._id && (
+                <div className="absolute top-6 right-0 bg-white border rounded-lg shadow-lg w-32 z-20">
+                  <button
+                    onClick={() => handleDeleteUser(user._id)}
+                    className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => setOpenDeleteMenu(null)}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          </td>
+        </tr>
+      ))
+    )}
+
+    {/* Infinite scroll trigger */}
+    <tr ref={loadMoreRef}>
+      <td colSpan={5} className="p-0 h-4" />
+    </tr>
+
+    {isFetchingNextPage && (
+      <tr>
+        <td colSpan={5} className="text-center py-6 text-gray-500">
+          Loading more users...
+        </td>
+      </tr>
+    )}
+  </tbody>
+</table>
+
     </>
   );  
 }
