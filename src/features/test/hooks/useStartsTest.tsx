@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as api from "@/api";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/Toast";
+import { AxiosError } from "axios";
 
 
 interface TestQuestion {
@@ -42,12 +44,23 @@ const isWrapped = (
 
 
 export const useStartTest = () => {
+   const toast = useToast();
   const queryClient = useQueryClient();
   const router = useRouter();
 
   return useMutation({
-    mutationFn: ({ testId }: { testId: string }) =>
-      api.startTestApi(testId),
+       mutationFn: async ({ testId }: { testId: string }) => {
+      const res = await api.startTestApi(testId);
+
+      if ( !res.attemptId) {
+          throw new Error(
+          res.message || "You cannot start this assessment"
+        );
+      }
+
+      return res;
+    },
+
 
     onSuccess: (res: api.StartTestResponse | WrappedResponse) => {
 
@@ -75,8 +88,19 @@ export const useStartTest = () => {
         attemptId: res.attemptId,
       });
 
-
+      toast.success("Test started successfully!");
       router.push("/candidate/ai-test/questining");
+    },
+     onError: (error: unknown) => {
+      let msg = "Failed to start test";
+
+      if (error instanceof AxiosError) {
+        msg = error.response?.data?.message || msg;
+      } else if (error instanceof Error) {
+        msg = error.message;
+      }
+
+      toast.error(msg);
     },
   });
 };
