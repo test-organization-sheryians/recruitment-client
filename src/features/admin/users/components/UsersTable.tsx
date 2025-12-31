@@ -17,6 +17,12 @@ export default function UsersTable() {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 400);
 
+  const normalizedSearch = debouncedSearch
+  .trim()
+  .split(/\s+/)
+  .join(" ");
+
+
   const {
     data,
     isLoading,
@@ -24,7 +30,7 @@ export default function UsersTable() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteUsers(debouncedSearch);
+  } = useInfiniteUsers(normalizedSearch);
 
   const users = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
 

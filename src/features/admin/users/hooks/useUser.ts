@@ -30,6 +30,9 @@ export const useInfiniteUsers = (search: string) => {
       return undefined;
     },
     initialPageParam: 1,
+
+    placeholderData: (prev) => prev,
+    staleTime: 5 * 60 * 1000,      // ✅ avoids refetch on every keystroke
   });
 };
 
