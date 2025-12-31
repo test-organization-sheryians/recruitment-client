@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-
+ //logout timer added
 
 let logoutTimer: ReturnType<typeof setTimeout>;
 
