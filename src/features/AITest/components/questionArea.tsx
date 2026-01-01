@@ -88,17 +88,17 @@ const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
           !isBlocked && setAnswerText(e.target.value)
         }
         onPaste={(e) => e.preventDefault()}
-        rows={8}
+        rows={16}
         placeholder="Type your answer here..."
         className={`w-full p-4 text-[20px] border border-gray-300 ${
           isBlocked ? "opacity-50 cursor-not-allowed" : ""
         }`}
-        style={{ resize: "vertical", minHeight: "150px" }}
+        style={{ resize: "vertical", minHeight: "250px" }}
       />
 
       <div className="border border-gray-900 rounded-b-lg">
         <Editor
-          height="400px"
+          height="80vh"
           defaultLanguage="javascript"
           value={answerCode}
           theme="vs-dark"
@@ -107,6 +107,7 @@ const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
             !isBlocked && setAnswerCode(value ?? "")
           }
           options={{
+            placeholder: "JavaScript Code",
             fontSize: 20,
             minimap: { enabled: false },
             automaticLayout: true,

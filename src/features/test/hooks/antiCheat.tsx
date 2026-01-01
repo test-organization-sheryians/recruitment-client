@@ -22,7 +22,7 @@ export function useAntiCheat(
 
       const nextCount = ++countRef.current;
       setSwitchCount(nextCount);
-      reportViolationMutation.mutate({ attemptId });
+      reportViolationMutation.mutate({ attemptId});
 
       if (nextCount === 1)
         alert("⚠️ WARNING: You switched tabs");

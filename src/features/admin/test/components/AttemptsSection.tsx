@@ -15,7 +15,7 @@ type Attempt = {
   createdAt: string;
   score: number;
   isPassed: boolean;
-  status: "Graded" | "Failed" | "Started";
+  status: "Graded" | "Failed" | "Started" | "Disqualified";
 };
 
 export default function AttemptsSection({ testId }: Props) {
@@ -27,7 +27,7 @@ export default function AttemptsSection({ testId }: Props) {
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [filterStatus, setFilterStatus] = useState<
-    "all" | "passed" | "failed"
+    "all" | "passed" | "failed" | "disqualified"
   >("all");
 
   const [openSort, setOpenSort] = useState(false);
@@ -51,6 +51,12 @@ export default function AttemptsSection({ testId }: Props) {
         (a) => a.isPassed === false && a.status === "Failed"
       );
     }
+    if (filterStatus === "disqualified") {
+  filtered = filtered.filter(
+    (a) => a.status === "Disqualified"
+  );
+}
+
 
     filtered.sort((a, b) =>
       sortOrder === "asc" ? a.score - b.score : b.score - a.score
@@ -83,7 +89,7 @@ export default function AttemptsSection({ testId }: Props) {
         <div className="relative">
           <button
             onClick={() => setOpenSort((p) => !p)}
-            className="flex items-center gap-2 rounded-lg border bg-white px-4 py-2 text-sm shadow-sm hover:bg-gray-50"
+            className="flex items-center gap-2 rounded-lg border mt-1 bg-white px-4 py-2 text-sm shadow-sm hover:bg-gray-50"
           >
             Sort
             <span className="text-xs text-gray-400">
@@ -100,9 +106,8 @@ export default function AttemptsSection({ testId }: Props) {
                     setSortOrder(v as "asc" | "desc");
                     setOpenSort(false);
                   }}
-                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${
-                    sortOrder === v ? "bg-gray-100 font-medium" : ""
-                  }`}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${sortOrder === v ? "bg-gray-100 font-medium" : ""
+                    }`}
                 >
                   {v === "desc" ? "High to Low" : "Low to High"}
                 </button>
@@ -125,18 +130,17 @@ export default function AttemptsSection({ testId }: Props) {
 
           {openFilter && (
             <div className="absolute right-0 mt-2 w-44 rounded-xl border bg-white shadow-xl overflow-hidden">
-              {["all", "passed", "failed"].map((v) => (
+              {["all", "passed", "failed", "disqualified"].map((v) => (
                 <button
                   key={v}
                   onClick={() => {
-                    setFilterStatus(v as "all" | "passed" | "failed");
+                    setFilterStatus(v as "all" | "passed" | "failed" | "disqualified");
                     setOpenFilter(false);
                   }}
-                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 capitalize ${
-                    filterStatus === v ? "bg-gray-100 font-medium" : ""
-                  }`}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 capitalize ${filterStatus === v ? "bg-gray-100 font-medium" : ""
+                    }`}
                 >
-                  {v}
+                     {v === "disqualified" ? "Disqualified" : v}
                 </button>
               ))}
             </div>
@@ -156,18 +160,23 @@ export default function AttemptsSection({ testId }: Props) {
         <div className="space-y-3">
           {processedAttempts.map((a) => {
             const statusStyles =
-              a.status === "Graded" && a.isPassed
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                : a.status === "Failed"
-                ? "bg-red-50 text-red-700 border-red-200"
-                : "bg-yellow-50 text-yellow-700 border-yellow-200"; // Started
+              a.status === "Disqualified"
+                ? "bg-red-600 text-white border-red-700"
+                : a.status === "Graded" && a.isPassed
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : a.status === "Failed"
+                    ? "bg-red-50 text-red-700 border-red-200"
+                    : "bg-yellow-50 text-yellow-700 border-yellow-200";
+
 
             const dotStyles =
-              a.status === "Graded" && a.isPassed
-                ? "bg-emerald-500"
-                : a.status === "Failed"
-                ? "bg-red-500"
-                : "bg-yellow-500";
+              a.status === "Disqualified"
+                ? "bg-white animate-pulse"
+                : a.status === "Graded" && a.isPassed
+                  ? "bg-emerald-500"
+                  : a.status === "Failed"
+                    ? "bg-red-500"
+                    : "bg-yellow-500";
 
             return (
               <div

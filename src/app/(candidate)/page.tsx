@@ -13,7 +13,7 @@ export default function CandidateHomePage() {
         ({ closeToast }) => (
           <div className="flex flex-col gap-3 p-4 text-center">
   <span className="text-xl font-extrabold text-red-600">
-    ❌ Violation Detected
+ Violation Detected
   </span>
 
   <p className="text-sm text-gray-700 leading-relaxed">

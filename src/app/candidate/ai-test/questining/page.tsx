@@ -77,6 +77,9 @@ export default function UniversalInterviewPage() {
   const [isClient, setIsClient] = useState(false);
   const [timerReady, setTimerReady] = useState(false);
   const [blocked, setBlocked] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   useAntiCheat(attemptId, () => setBlocked(true));
 
@@ -148,7 +151,7 @@ export default function UniversalInterviewPage() {
 
   const prevent = (e: React.ClipboardEvent<HTMLTextAreaElement>) => e.preventDefault();
 
-  const submit = useCallback(async () => {
+  const submitTest = useCallback(async () => {
     if (blocked) return;
 
     const finalAnswers = [...answers];
@@ -190,6 +193,7 @@ export default function UniversalInterviewPage() {
         })
       );
 
+      setIsSubmitting(false); // ✅ ADD HERE
       router.push("/candidate/ai-test/result");
       return;
     }
@@ -210,7 +214,13 @@ export default function UniversalInterviewPage() {
         durationTaken: testDuration * 60 - secondsLeft,
       },
       {
-        onSuccess: () => router.push("/candidate/ai-test/submitted"),
+        onSuccess: () => {
+          setIsSubmitting(false); 
+          router.push("/candidate/ai-test/submitted");
+        },
+        onError: () => {
+          setIsSubmitting(false); 
+        },
       }
     );
   }, [
@@ -228,18 +238,30 @@ export default function UniversalInterviewPage() {
     testDuration,
   ]);
 
+  const onFinishClick = () => {
+    if (blocked || isSubmitting) return;
+    setShowConfirm(true);
+  };
 
- useEffect(() => {
-  if (blocked) {
-    sessionStorage.setItem("disqualified", "true");
+  const confirmSubmit = async () => {
+    setShowConfirm(false);
+    setIsSubmitting(true);
+    await submitTest();
+  };
 
-    console.log("Anti-cheat triggered: Test Locked.");
-  }
 
-  if (timerReady && isActiveTest && secondsLeft <= 0) {
-    submit();
-  }
-}, [secondsLeft, timerReady, isActiveTest, blocked, submit]); 
+
+  useEffect(() => {
+    if (blocked) {
+      sessionStorage.setItem("disqualified", "true");
+
+      console.log("Anti-cheat triggered: Test Locked.");
+    }
+
+    if (timerReady && isActiveTest && secondsLeft <= 0) {
+      submitTest();
+    }
+  }, [secondsLeft, timerReady, isActiveTest, blocked, submitTest]);
 
   useEffect(() => {
     const prev = answers[step];
@@ -258,7 +280,7 @@ export default function UniversalInterviewPage() {
   const next = () => {
     if (blocked) return;
     save();
-    step < finalQuestions.length - 1 ? setStep(step + 1) : submit();
+    step < finalQuestions.length - 1 ? setStep(step + 1) : onFinishClick();
   };
 
   const prev = () => {
@@ -277,39 +299,74 @@ export default function UniversalInterviewPage() {
       {/* 1. DISQUALIFIED OVERLAY */}
       {blocked && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-  <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl ring-1 ring-black/10">
-    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-      <AlertOctagon className="h-9 w-9 text-red-600" />
-    </div>
+          <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl ring-1 ring-black/10">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+              <AlertOctagon className="h-9 w-9 text-red-600" />
+            </div>
 
-    <h2 className="mb-2 text-2xl font-extrabold tracking-wide text-red-600">
-      TEST TERMINATED
-    </h2>
+            <h2 className="mb-2 text-2xl font-extrabold tracking-wide text-red-600">
+              TEST TERMINATED
+            </h2>
 
-    <p className="mb-6 text-sm leading-relaxed text-gray-600">
-      Activity violation detected <span className="font-semibold">(multiple tab switches)</span>.
-      Your test has been locked and reported.
-    </p>
+            <p className="mb-6 text-sm leading-relaxed text-gray-600">
+              Activity violation detected <span className="font-semibold">(multiple tab switches)</span>.
+              Your test has been locked and reported.
+            </p>
 
-    <button
-      onClick={() => {
-        sessionStorage.setItem("disqualified", "true");
-        router.push("/");
-      }}
-      className="
+            <button
+              onClick={() => {
+                sessionStorage.setItem("disqualified", "true");
+                router.push("/");
+              }}
+              className="
         w-full rounded-lg bg-red-600 py-3 text-sm font-bold text-white
         shadow-md transition
         hover:bg-red-700
         active:scale-95
         focus:outline-none focus:ring-4 focus:ring-red-300
       "
-    >
-      RETURN TO HOME
-    </button>
-  </div>
-</div>
+            >
+              RETURN TO HOME
+            </button>
+          </div>
+        </div>
 
       )}
+
+      {/* 2. SUBMIT CONFIRM MODAL */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center">
+            <h2 className="text-xl font-bold mb-2">Submit Test?</h2>
+            <p className="text-gray-600 mb-6">
+              You won’t be able to change answers after this.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 border rounded-lg py-2"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={confirmSubmit}
+                className="flex-1 bg-red-600 text-white rounded-lg py-2"
+              >
+                Yes, Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSubmitting && (
+        <div className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-white border-t-transparent" />
+        </div>
+      )}
+
 
       {/* 2. MAIN TEST CONTENT */}
       <div className={blocked ? "blur-md pointer-events-none select-none" : ""}>
@@ -335,7 +392,12 @@ export default function UniversalInterviewPage() {
             )}
 
             <button
-              onClick={next}
+              onClick={
+                step === finalQuestions.length - 1
+                  ? onFinishClick
+                  : next
+              }
+
               className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors flex items-center gap-2"
             >
               {step === finalQuestions.length - 1 ? <><Send className="w-4 h-4" /> Finish</> : <ChevronRight className="w-6 h-6" />}
