@@ -8,7 +8,6 @@ export function useDebounce<T>(value: T, delay = 600): T {
       setDebouncedValue(value);
     }, delay);
 
-    // Cleanup on value or delay change
     return () => clearTimeout(handler);
   }, [value, delay]);
 
