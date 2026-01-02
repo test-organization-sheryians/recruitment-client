@@ -27,6 +27,8 @@ export default function PopupForm({
   mode,
   interviewId,
 }: PopupFormProps) {
+  const today = new Date().toISOString().split('T')[0];
+  
   const [formData, setFormData] = useState({
     interviewDate: "",
     interviewTime: "",
@@ -132,7 +134,7 @@ export default function PopupForm({
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4">
-          <Input type="date" name="interviewDate" value={formData.interviewDate} onChange={handleChange} required />
+          <Input type="date" name="interviewDate" value={formData.interviewDate} onChange={handleChange}   min={today} required />
           <Input type="time" name="interviewTime" value={formData.interviewTime} onChange={handleChange} required />
         </div>
 
