@@ -48,7 +48,7 @@ export default function AttemptsSection({ testId }: Props) {
 
     if (filterStatus === "failed") {
       filtered = filtered.filter(
-        (a) => a.isPassed === false && a.status === "Failed"
+        (a) => a.isPassed === false && a.status === "Graded"
       );
     }
     if (filterStatus === "disqualified") {
@@ -84,7 +84,39 @@ export default function AttemptsSection({ testId }: Props) {
   return (
     <div className="space-y-4">
       {/* CONTROLS */}
-      <div className="flex items-center justify-between relative z-30">
+      <div className="flex items-center gap-3 justify-end relative z-30">
+
+         {/* FILTER */}
+        <div className="relative">
+          <button
+            onClick={() => setOpenFilter((p) => !p)}
+            className="flex items-center gap-2 rounded-lg border bg-white px-4 py-2 text-sm mt-1 shadow-sm hover:bg-gray-50"
+          >
+            Filter
+            <span className="text-xs text-gray-400 capitalize">
+              {filterStatus}
+            </span>
+          </button>
+
+          {openFilter && (
+            <div className="absolute right-0 mt-2 w-44 rounded-xl border bg-white shadow-xl overflow-hidden">
+              {["all", "passed", "failed", "disqualified"].map((v) => (
+                <button
+                  key={v}
+                  onClick={() => {
+                    setFilterStatus(v as "all" | "passed" | "failed" | "disqualified");
+                    setOpenFilter(false);
+                  }}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 capitalize ${filterStatus === v ? "bg-gray-100 font-medium" : ""
+                    }`}
+                >
+                     {v === "disqualified" ? "Disqualified" : v}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* SORT */}
         <div className="relative">
           <button
@@ -116,36 +148,7 @@ export default function AttemptsSection({ testId }: Props) {
           )}
         </div>
 
-        {/* FILTER */}
-        <div className="relative">
-          <button
-            onClick={() => setOpenFilter((p) => !p)}
-            className="flex items-center gap-2 rounded-lg border bg-white px-4 py-2 text-sm shadow-sm hover:bg-gray-50"
-          >
-            Filter
-            <span className="text-xs text-gray-400 capitalize">
-              {filterStatus}
-            </span>
-          </button>
-
-          {openFilter && (
-            <div className="absolute right-0 mt-2 w-44 rounded-xl border bg-white shadow-xl overflow-hidden">
-              {["all", "passed", "failed", "disqualified"].map((v) => (
-                <button
-                  key={v}
-                  onClick={() => {
-                    setFilterStatus(v as "all" | "passed" | "failed" | "disqualified");
-                    setOpenFilter(false);
-                  }}
-                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 capitalize ${filterStatus === v ? "bg-gray-100 font-medium" : ""
-                    }`}
-                >
-                     {v === "disqualified" ? "Disqualified" : v}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+     
       </div>
 
       {/* LIST */}
