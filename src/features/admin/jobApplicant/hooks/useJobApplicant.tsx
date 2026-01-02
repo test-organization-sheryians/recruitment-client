@@ -23,10 +23,18 @@ export const useBulkUpdateApplicants = () => {
       api.bulkUpdateData(payload),
 
     onSuccess: () => {
-      // 🔁 refetch applicants after update
-      queryClient.invalidateQueries({
-        queryKey: ["jobApplicant"],
-      });
+      // 🔁 refetch applicants after update (match keys with prefix)
+      queryClient.invalidateQueries({ queryKey: ["jobApplicant"] });
+      // update shortlisted KPI: invalidate and proactively fetch fresh data
+      queryClient.invalidateQueries({ queryKey: ["shortlistedCount"] });
+      queryClient
+        .fetchQuery({
+          queryKey: ["shortlistedCount"],
+          queryFn: () => api.getShortlistedCount(),
+        })
+        .catch(() => {
+          // ignore; invalidateQueries will cause eventual refetch
+        });
     },
 
     retry: 0,
