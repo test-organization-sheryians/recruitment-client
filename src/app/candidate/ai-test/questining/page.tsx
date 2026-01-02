@@ -352,7 +352,7 @@ export default function UniversalInterviewPage() {
 
               <button
                 onClick={confirmSubmit}
-                className="flex-1 bg-red-600 text-white rounded-lg py-2"
+                className="flex-1 bg-cyan-600 text-white rounded-lg py-2"
               >
                 Yes, Submit
               </button>
@@ -363,8 +363,11 @@ export default function UniversalInterviewPage() {
 
       {isSubmitting && (
         <div className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-white border-t-transparent" />
-        </div>
+    <div className="spinner">
+      <div></div>
+      <div></div>
+    </div>
+  </div>
       )}
 
 

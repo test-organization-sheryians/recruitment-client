@@ -115,7 +115,7 @@ export default function TestDetails({ testId, onClose }: TestDetailsProps) {
     totalStudents > 0 ? Math.round((passedStudents / totalStudents) * 100) : 0;
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex justify-center items-center z-50">
       <div className="bg-white p-6 rounded-2xl shadow-xl w-[70vw] max-h-[90vh] overflow-y-auto relative">
 
         {/* SAME CLOSE BUTTON */}
