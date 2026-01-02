@@ -4,7 +4,8 @@ import "./globals.css";
 import Wrapper from "@/components/hoc/Wrapper";
 import AuthProvider from "@/components/hoc/AuthProvider";
 
-
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,9 +29,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
+        
         <Wrapper>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <ToastContainer />
+          </AuthProvider>
         </Wrapper>
       </body>
     </html>
