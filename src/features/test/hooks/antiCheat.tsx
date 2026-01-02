@@ -10,34 +10,49 @@ export function useAntiCheat(
 
   const countRef = useRef(0);
   const { reportViolationMutation } = useAITest();
-
+   const lastViolationRef = useRef(0);
   const initializedRef = useRef(false);
 
   useEffect(() => {
     if (!attemptId || isDisqualified || initializedRef.current) return;
-  initializedRef.current = true;
-  
-     const handleVisibilityChange = () => {
-      if (!document.hidden) return;
+    initializedRef.current = true;
+
+    const registerViolation = () => {
+
+      const now = Date.now();
+      if (now - lastViolationRef.current < 800) return; // ⛔ prevent double fire
+      lastViolationRef.current = now;
 
       const nextCount = ++countRef.current;
       setSwitchCount(nextCount);
-      reportViolationMutation.mutate({ attemptId});
+      reportViolationMutation.mutate({ attemptId });
 
       if (nextCount === 1)
-        alert("⚠️ WARNING: You switched tabs");
+        alert("⚠️ WARNING: You switched focus");
       else if (nextCount === 2)
         alert("⚠️ FINAL WARNING: One more switch will terminate the test");
       else if (nextCount >= 3) {
         setIsDisqualified(true);
-        onDisqualify(); 
+        onDisqualify();
       }
     };
 
+    const handleVisibilityChange = () => {
+      if (document.hidden) registerViolation();
+    };
+
+    const handleBlur = () => {
+      // 🔥 Detect split-screen / window focus loss
+      registerViolation();
+    };
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
-   return () => {
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
       initializedRef.current = false;
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleBlur);
     };
   }, [attemptId, isDisqualified, onDisqualify, reportViolationMutation]);
 
