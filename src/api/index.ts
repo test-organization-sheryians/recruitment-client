@@ -67,3 +67,5 @@ export * from "./tests/updateTest";
 
 export * from "./password/forgotPassword";
 export * from "./password/resetPassword";
+
+export * from "./jobApplication/scheduleInterview";
