@@ -14,6 +14,8 @@ import {
   ApplicantRow, 
   ApplicantsApiResponse 
 } from "@/types/applicant";
+import { updateInterviewStatus } from "@/api/jobApplication/scheduleInterview";
+
 
 /* ================= TYPES ================= */
 
@@ -171,6 +173,17 @@ const {
     );
   };
 
+  const handleCancelInterview = async (interviewId: string) => {
+  try {
+    await updateInterviewStatus(interviewId, "Cancelled");
+    success("Interview cancelled successfully");
+    refetchInterviews();
+  } catch (err: any) {
+    error(err.message || "Failed to cancel interview");
+  }
+};
+
+
   // ==================== DATA MAPPING ====================
 
   // 1. Map Applicants
@@ -307,10 +320,19 @@ const {
                 </td>
                 <td className="truncate" title={int.interviewer}>{int.interviewer}</td>
                 <td>
-                  <a href={int.meetingLink} target="_blank" className="text-blue-600 hover:underline truncate block w-32">
-                    Join Meeting
-                  </a>
-                </td>
+                  {int.status !== "Cancelled" ? (
+                     <a
+                     href={int.meetingLink}
+                     target="_blank"
+                     className="text-blue-600 hover:underline truncate block w-32"
+                     >
+                     Join Meeting
+                     </a>
+                     ) : (
+                      <span className="text-gray-400 text-sm">Cancelled</span>
+                     )}
+                    </td>
+
                 <td>
                   {new Date(int.Timing).toLocaleString("en-US", { 
                     month: "short", day: "numeric", hour: "numeric", minute: "2-digit" 
@@ -322,8 +344,19 @@ const {
                   </span>
                 </td>
                 <td className="text-center">
-                  <button className="text-gray-400 hover:text-red-500 text-xs">Cancel</button>
-                </td>
+                 {int.status !== "Cancelled" && (
+                  <button
+                    onClick={(e) => {
+                    e.stopPropagation();
+                    handleCancelInterview(int._id);
+                    }}
+                    className="text-red-500 hover:text-red-700 text-xs font-medium"
+                     >
+                     Cancel
+                     </button>
+                     )}
+                    </td>
+
               </tr>
             ))}
 
