@@ -5,10 +5,11 @@ import {
   Menu,
   X,
   UserIcon,
-  Settings,
   User,
   ChevronRight,
   Bookmark,
+  BookCheck,
+  Briefcase,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -104,6 +105,15 @@ const Navbar = () => {
                   <User size={18} /> My Profile
                 </Link>
 
+                {/* ✅ Applied Jobs */}
+                <Link
+                  href="/appliedjobs"
+                  onClick={() => setOpenProfile(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
+                >
+                  <Briefcase size={18} /> Applied Jobs
+                </Link>
+
                 <Link
                   href="/jobs/saved-job"
                   onClick={() => setOpenProfile(false)}
@@ -112,9 +122,13 @@ const Navbar = () => {
                   <Bookmark size={18} /> Saved Jobs
                 </Link>
 
-                <button type="button" className="flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg">
-                  <Settings size={18} /> Settings
-                </button>
+                <Link
+                  href="/tests"
+                  onClick={() => setOpenProfile(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
+                >
+                  <BookCheck size={18} /> Test
+                </Link>
               </div>
 
               {/* Logout */}
@@ -167,6 +181,18 @@ const Navbar = () => {
               <ChevronRight size={16} />
             </Link>
 
+            {/* ✅ Applied Jobs */}
+            <Link
+              href="/appliedjobs"
+              onClick={() => setOpenMenu(false)}
+              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
+            >
+              <div className="flex gap-3">
+                <Briefcase size={20} /> Applied Jobs
+              </div>
+              <ChevronRight size={16} />
+            </Link>
+
             <Link
               href="/jobs-savedjob"
               onClick={() => setOpenMenu(false)}
@@ -178,12 +204,16 @@ const Navbar = () => {
               <ChevronRight size={16} />
             </Link>
 
-            <button className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50 w-full">
+            <Link
+              href="/tests"
+              onClick={() => setOpenMenu(false)}
+              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
+            >
               <div className="flex gap-3">
-                <Settings size={20} /> Settings
+                <BookCheck size={20} /> Test
               </div>
               <ChevronRight size={16} />
-            </button>
+            </Link>
           </div>
 
           {/* Logout */}

@@ -32,7 +32,7 @@ export default function TestSubmittedPage() {
 
         <div className="flex flex-col gap-4">
           <button
-            onClick={() => router.push("/candidate")}
+            onClick={() => router.push("/tests")}
             className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl text-lg font-semibold hover:opacity-90 transition"
           >
             Go to Dashboard
