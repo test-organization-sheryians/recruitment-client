@@ -90,7 +90,7 @@ const selectedTest = tests.find(test => test._id === disclosingTestId);
           setDisclosingTestId(null);
         }, 2000);
       },
-      onError: (error) => {
+      onError: () => {
         setPublishStatus('error');
         setTimeout(() => setPublishStatus('idle'), 3000);
       }

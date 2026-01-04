@@ -119,9 +119,9 @@ export const usePublishTestResult = ()=>{
       });
 
     },
-    onError: (error: any) => {
+    onError: () => {
       toast.error(
-        error?.response?.data?.message || "Failed to publish results"
+        "Failed to publish results"
       );
     },
   })
