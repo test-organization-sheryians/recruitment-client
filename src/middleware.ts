@@ -31,7 +31,7 @@ export function middleware(req: NextRequest) {
     "/un-verified",
     "/unauthorized",
     "/reset-password",
-    "user-verification"
+    "/user-verification"
   ];
 
   const isPublic = publicRoutes.some(
