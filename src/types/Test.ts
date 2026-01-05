@@ -2,9 +2,10 @@ export interface Enrollment {
   _id: string;
   testId: string;
   email: string;
-  status: string;
+  status: "passed" | "failed" | "pending" | "Disqualified" | string;
   createdAt: string;
   updatedAt: string;
+  tabSwitches?: number;
 }
 
 export interface EnrolledUser {
@@ -50,6 +51,7 @@ export interface Attempt {
   completedAt: string;
   createdAt: string;
   updatedAt: string;
+  tabSwitches?: number;
 }
 
 export type TestFormValues = {

@@ -50,6 +50,7 @@ export * from "./users/deleteUser";
 export * from "./profile/index";
 export * from "./jobApplication/applyJob";
 export * from "./jobApplication/bulkUpdate";
+export * from "./jobApplication/getShortlistedCount";
 
 /* ================= TESTS ================= */
 export * from "./tests/createTest";

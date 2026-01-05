@@ -8,7 +8,7 @@ import {
   useGetAllTests,
 } from "@/features/admin/test/hooks/useTest";
 
-import EnrolledPopup from "@/app/admin/tests/Enrolled/[id]/page";
+import EnrolledPopup from "@/features/admin/test/components/EnrolledPopUp";
 import TestDetails from "./TestDetails";
 import CreateTestModal from "./CreateTestForm";
 

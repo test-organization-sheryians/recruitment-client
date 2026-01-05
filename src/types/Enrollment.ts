@@ -1,6 +1,6 @@
 export interface Enrollment {
   _id: string;
-  status: "Assigned" | "Started" | "Completed";
+  status: "Assigned" | "Started" | "Completed" | "Disqualified";
   createdAt: string;
   test: {
     _id: string;
@@ -19,7 +19,7 @@ export interface TestAttempt {
   score: number;
   percentage: number;
   isPassed: boolean;
-  status: "Started" | "Submitted" | "Graded" | "Failed";
+  status: "Started" | "Submitted" | "Graded" | "Failed" | "Disqualified";
   startTime: string;
   endTime?: string;
   durationTaken?: number;
