@@ -20,7 +20,7 @@ export function useAntiCheat(
     const registerViolation = () => {
 
       const now = Date.now();
-      if (now - lastViolationRef.current < 800) return; // ⛔ prevent double fire
+      if (now - lastViolationRef.current < 800) return; //  prevent double fire
       lastViolationRef.current = now;
 
       const nextCount = ++countRef.current;
@@ -42,7 +42,7 @@ export function useAntiCheat(
     };
 
     const handleBlur = () => {
-      // 🔥 Detect split-screen / window focus loss
+      //  Detect split-screen / window focus loss
       registerViolation();
     };
 
