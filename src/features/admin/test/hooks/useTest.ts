@@ -4,6 +4,7 @@ import { Test, TestFormValues } from "@/types/Test";
 import { searchUserTest } from "@/api";
 import { EnrollUsersResponse } from "@/types/Enrollment";
 import { AxiosError } from "axios";
+import toast from "react-hot-toast";
 
 type EnrollPayload = {
   testId: string;
@@ -102,3 +103,26 @@ export const useGetUserAttempts = (id: string) => {
     retry: 0,
   });
 };
+
+export const usePublishTestResult = ()=>{
+  const queryClient=useQueryClient();
+  return useMutation({
+    mutationKey:["PublishTest"],
+    mutationFn:api.publishResult,
+    onSuccess:(testId)=>{
+            toast.success("Results published successfully");
+        queryClient.invalidateQueries({
+        queryKey: ["tests"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["testAttempts", testId],
+      });
+
+    },
+    onError: () => {
+      toast.error(
+        "Failed to publish results"
+      );
+    },
+  })
+}

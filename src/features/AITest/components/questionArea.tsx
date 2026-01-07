@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import { editor as MonacoEditor, KeyMod, KeyCode } from "monaco-editor";
 
@@ -18,13 +18,12 @@ interface QuestionAreaProps {
 
 export const QuestionArea: React.FC<QuestionAreaProps> = ({
   questionText,
-  isPending,
   answerText,
   setAnswerText,
   answerCode,
   setAnswerCode,
-  testId = "defaut-test",
-  initialSwitchCount= 0, 
+  // testId = "defaut-test",
+  // initialSwitchCount= 0, 
   isBlocked,
 }) => {
 
