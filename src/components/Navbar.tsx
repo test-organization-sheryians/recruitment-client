@@ -8,6 +8,7 @@ import {
   User,
   ChevronRight,
   Bookmark,
+  BookCheck,
   Briefcase,
 } from "lucide-react";
 
@@ -120,6 +121,14 @@ const Navbar = () => {
                 >
                   <Bookmark size={18} /> Saved Jobs
                 </Link>
+
+                <Link
+                  href="/tests"
+                  onClick={() => setOpenProfile(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
+                >
+                  <BookCheck size={18} /> Test
+                </Link>
               </div>
 
               {/* Logout */}
@@ -191,6 +200,17 @@ const Navbar = () => {
             >
               <div className="flex gap-3">
                 <Bookmark size={20} /> Saved Jobs
+              </div>
+              <ChevronRight size={16} />
+            </Link>
+
+            <Link
+              href="/tests"
+              onClick={() => setOpenMenu(false)}
+              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
+            >
+              <div className="flex gap-3">
+                <BookCheck size={20} /> Test
               </div>
               <ChevronRight size={16} />
             </Link>

@@ -4,7 +4,7 @@ export type ApplicantStatus =
   | "applied"
   | "shortlisted"
   | "rejected"
-  | "forwareded"
+  | "forwarded"
   | "interview"
   | "hired";
 
