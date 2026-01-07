@@ -31,3 +31,4 @@ const handleSubmit = async (data: JobFormData) => {
 };
   return <JobForm mode="create" onSubmit={handleSubmit} loading={loading} />;
 }
+
