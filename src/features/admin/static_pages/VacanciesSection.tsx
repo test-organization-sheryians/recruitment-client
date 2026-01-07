@@ -3,6 +3,7 @@
 import React from "react";
 import VacancyCard, { JobData } from "./VacancyCard";
 import { useGetJobs } from "../jobs/hooks/useJobApi";
+import { Briefcase, Loader2, AlertCircle } from "lucide-react";
 
 /* ===================== UTILS ===================== */
 
@@ -28,16 +29,30 @@ const VacanciesSection: React.FC<VacanciesSectionProps> = ({
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl bg-white p-4 border border-gray-200">
-        Loading vacancies...
+      <div 
+        style={{
+          width: getStyleValue(width),
+          height: getStyleValue(height),
+        }}
+        className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col items-center justify-center"
+      >
+        <Loader2 className="animate-spin text-gray-400 mb-2" size={24} />
+        <span className="text-sm text-gray-500">Loading vacancies...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-2xl bg-white p-4 border border-gray-200 text-red-500">
-        Failed to load vacancies
+      <div 
+        style={{
+          width: getStyleValue(width),
+          height: getStyleValue(height),
+        }}
+        className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col items-center justify-center"
+      >
+        <AlertCircle className="text-red-400 mb-2" size={24} />
+        <span className="text-sm text-red-500">Failed to load vacancies</span>
       </div>
     );
   }
@@ -50,30 +65,45 @@ const VacanciesSection: React.FC<VacanciesSectionProps> = ({
         width: getStyleValue(width),
         height: getStyleValue(height),
       }}
-      className="rounded-2xl bg-white p-4 border border-gray-200 flex flex-col"
+      className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col"
     >
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between shrink-0">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Current Vacancies</h2>
+          <p className="text-xs text-gray-400 font-medium mt-1">Active job openings</p>
+        </div>
+        
         <div className="flex items-center gap-2">
-          <h3 className="text-lg font-semibold">Current Vacancies</h3>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-[#E9EFF7] text-[#1270B0]">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 font-semibold">
             {jobs.length}
           </span>
         </div>
       </div>
 
-      {/* Cards */}
-      <div className="grid md:grid-cols-2 gap-4 overflow-y-auto flex-1 pr-2">
-        {jobs.map((job) => (
-          <VacancyCard key={job._id} data={job} />
-        ))}
-
-        {jobs.length === 0 && (
-          <div className="col-span-full text-center text-sm text-gray-500">
-            No active vacancies found.
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar -mr-2 pt-2">
+        {jobs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-48 text-center border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/50">
+            <Briefcase size={32} className="text-gray-300 mb-2" />
+            <p className="text-sm font-semibold text-gray-500">No active vacancies</p>
+            <p className="text-xs text-gray-400">Create your first job posting</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6 pb-2">
+            {jobs.map((job) => (
+              <VacancyCard key={job._id} data={job} />
+            ))}
           </div>
         )}
       </div>
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #f1f5f9; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #cbd5e1; }
+      `}</style>
     </div>
   );
 };
