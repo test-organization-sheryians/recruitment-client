@@ -30,7 +30,8 @@ export function middleware(req: NextRequest) {
     "/forgot-password",
     "/un-verified",
     "/unauthorized",
-    "/reset-password"
+    "/reset-password",
+    "/user-verification"
   ];
 
   const isPublic = publicRoutes.some(
