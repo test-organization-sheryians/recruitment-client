@@ -1,5 +1,5 @@
-import ApplicantsSection from "./ApplicantsSection";
-import BatchesSection from "./BatchesSection";
+// import ApplicantsSection from "./ApplicantsSection";
+
 import KpisRow from "./KpisRow";
 import Schedule from "./Schedule";
 import VacanciesSection from "./VacanciesSection";
@@ -18,13 +18,11 @@ export default function DashboardPage() {
           <Schedule height={500} />
         </aside>
 
-        <section className="col-span-12 lg:col-span-8">
+        {/* <section className="col-span-12 lg:col-span-8">
           <ApplicantsSection width={720} />
-        </section>
+        </section> */}
 
-        <section className="col-span-12 lg:col-span-4">
-          <BatchesSection />
-        </section>
+        
       </div>
     </>
   );

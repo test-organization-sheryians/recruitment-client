@@ -1,16 +1,10 @@
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  useInfiniteQuery,
-} from "@tanstack/react-query";
-import * as api from "@/api";
-import {
-  getUsersPaginated,
-  type BackendPaginatedResponse,
-} from "@/api/users/getUsersPaginated";
+import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
+import api from "@/config/axios";
+import { getUsersPaginated, type BackendPaginatedResponse } from "@/api/users/getUsersPaginated";
 
+/* ===== FIX: MERGE CONFLICT REMOVED ===== */
 export interface Role {
+  _id: string;
   name: string;
 }
 
@@ -20,76 +14,46 @@ export interface User {
   lastName: string;
   email: string;
   phoneNumber?: string;
-  role?: Role | null;
+  role?: Role;
 }
 
-/* ============================
-   GET USERS
-============================ */
-export const useGetUsers = () =>
-  useQuery<User[], Error>({
-    queryKey: ["users"],
-    queryFn: async () => {
-      const users = await api.getAllUsers();
-      return Array.isArray(users) ? users : [];
-    },
-    retry: 0,
-  });
-
-/* ============================
-   INFINITE USERS
-============================ */
-
-const DEFAULT_LIMIT = 10;
-
-export const useInfiniteUsers = (limit: number = DEFAULT_LIMIT) =>
-  useInfiniteQuery<BackendPaginatedResponse<User>>({
-    queryKey: ["users", { limit }],
-    initialPageParam: 1,
-    queryFn: async ({ pageParam }) =>
-      getUsersPaginated(pageParam as number, limit),
+/* ===== USERS LIST ===== */
+export const useInfiniteUsers = (search: string) => {
+  return useInfiniteQuery<BackendPaginatedResponse<User>>({
+    queryKey: ["users", search],
+    queryFn: ({ pageParam = 1 }) =>
+      getUsersPaginated(pageParam as number, 10, search),
     getNextPageParam: (lastPage) => {
-      const { pagination } = lastPage;
-      if (!pagination) return undefined;
-      const next = (pagination.currentPage ?? 1) + 1;
-      return next <= (pagination.totalPages ?? 0) ? next : undefined;
+      if (lastPage.pagination.currentPage < lastPage.pagination.totalPages) {
+        return lastPage.pagination.currentPage + 1;
+      }
+      return undefined;
     },
-    retry: 0,
-  });
+    initialPageParam: 1,
 
-interface UpdateRolePayload {
-  userId: string;
-  role: string;
-}
-
-export const useUpdateUserRole = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<unknown, Error, UpdateRolePayload>({
-    mutationFn: async ({ userId, role }) => {
-      return api.updateUserRole(userId, role);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
-    retry: 0,
+    placeholderData: (prev) => prev,
+    staleTime: 5 * 60 * 1000,      // ✅ avoids refetch on every keystroke
   });
 };
 
-interface DeleteUserPayload {
-  userId: string;
-}
-
+/* ===== DELETE USER ===== */
 export const useDeleteUser = () => {
-  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId }: { userId: string }) =>
+      api.delete(`/api/users/${userId}`),
+  });
+};
 
-  return useMutation<unknown, Error, DeleteUserPayload>({
-    mutationFn: async ({ userId }) => {
-      return api.deleteUser(userId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
-    retry: 0,
+/* ===== UPDATE ROLE ===== */
+export const useUpdateUserRole = () => {
+  return useMutation({
+    mutationFn: ({
+      userId,
+      role,
+    }: {
+      userId: string;
+      role: string;
+    }) =>
+      api.put(`/api/users/update-role/${userId}`, { roleId: role }),
   });
 };
