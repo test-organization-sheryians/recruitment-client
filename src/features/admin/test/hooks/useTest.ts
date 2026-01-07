@@ -102,3 +102,15 @@ export const useGetUserAttempts = (id: string) => {
     retry: 0,
   });
 };
+
+export const useDeleteTest = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["deleteTest"],
+    mutationFn: (id: string) => api.deleteTest(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tests"] });
+    },
+  });
+};
