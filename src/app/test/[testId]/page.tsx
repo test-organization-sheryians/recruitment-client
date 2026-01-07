@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 "use client";
 
 import React from "react";
@@ -114,7 +113,7 @@ export default function StartTestPage() {
           </div>
 
           <h1 className="text-3xl font-bold mb-3">{test.title}</h1>
-          <p className="text-gray-700 mb-6">{test.summary}</p>
+          {/* <p className="text-gray-700 mb-6">{test.summury}</p> */}
 
           <div className="grid grid-cols-3 gap-4 mb-8">
             <Stat
@@ -148,7 +147,6 @@ export default function StartTestPage() {
               <h2 className="text-xl font-bold mb-2">
                 Before You Begin
               </h2>
-              <p className="text-gray-700">{test.prompt}</p>
             </div>
           </div>
 

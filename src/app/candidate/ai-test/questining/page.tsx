@@ -150,6 +150,10 @@ export default function UniversalInterviewPage() {
   const submitMutation = useSubmitResult();
 
   const submit = async () => {
+
+    const finalAnswers = [...answers];
+  finalAnswers[step] = isMCQ(activeQuestion) ? { text } : { text, code };
+
     const aiQ: string[] = [];
     const aiA: string[] = [];
     const fullAiAns: CandidateAnswer[] = [];
@@ -157,7 +161,7 @@ export default function UniversalInterviewPage() {
     const ta: ApiAnswer[] = [];
 
     finalQuestions.forEach((q, i) => {
-      const ans = answers[i] || {};
+      const ans = finalAnswers[i] || {};
       const value = ans.text || ans.code || "";
 
       if (q.source === "ai") {

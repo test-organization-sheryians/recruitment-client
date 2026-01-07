@@ -6,6 +6,7 @@ import { Clock, GraduationCap, EllipsisVertical, Search } from "lucide-react";
 
 import {
   useGetAllTests,
+  useDeleteTest,
 } from "@/features/admin/test/hooks/useTest";
 
 import EnrolledPopup from "@/app/admin/tests/Enrolled/[id]/page";
@@ -32,11 +33,14 @@ export default function TestList() {
   const [showDetailsId, setShowDetailsId] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useGetAllTests();
+  const deleteMut = useDeleteTest();
 
-  const tests: Test[] = useMemo(
-    () => (Array.isArray(data) ? data : []),
-    [data]
-  );
+  const tests: Test[] = useMemo(() => {
+    if (!Array.isArray(data)) return [];
+    return [...data].sort((a, b) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [data]); // Added the latest on the top
 
   const filteredTests = useMemo(() => {
     if (!searchTerm) return tests;
@@ -66,7 +70,7 @@ export default function TestList() {
     );
   }
 
-  const handleDiscloseResult = (test: Test) => { 
+  const handleDiscloseResult = (test: Test) => {
     alert(`Results for "${test.title}" have been disclosed to candidates.`);
     setOpenMenu(null);
   };
@@ -142,6 +146,20 @@ export default function TestList() {
                       }}
                     >
                       Edit Test
+                    </button>
+
+                    <button
+                      className="w-full px-4 py-2 text-left text-red-600"
+                      onClick={async () => {
+                        try {
+                          await deleteMut.mutateAsync(test._id);
+                          setOpenMenu(null);
+                        } catch (err) {
+                          alert("Failed to delete test");
+                        }
+                      }}
+                    >
+                      Delete Test
                     </button>
 
                     {!test.showResults && (
