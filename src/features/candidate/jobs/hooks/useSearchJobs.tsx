@@ -19,7 +19,7 @@ export const useInfiniteSearchJobs = ({
   location,
   limit = DEFAULT_LIMIT,
 }: SearchParams) => {
-  console.log("useInfiniteSearchJobs Params hook check the data (request) ===>:", { q, location, limit });
+
   return useInfiniteQuery<BackendPaginatedResponse<Job>>({
     queryKey: ["jobsSearch", { q, location, limit }],
 

@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import { useState, useEffect } from "react";
 import {
@@ -17,13 +17,13 @@ import {
 
 /* ================= TYPES ================= */
 
-type Size = number | string;
+type Size = number | string
 
 type ApplicantsListProps = {
-  height?: Size;
-  width?: Size;
-  className?: string;
-};
+  height?: Size
+  width?: Size
+  className?: string
+}
 
 // Extended row for applicants
 interface ExtendedApplicantRow extends Omit<ApplicantRow, 'id'> {
@@ -70,7 +70,7 @@ const statusColors: Record<string, string> = {
   applied: "bg-blue-100 text-blue-700",
   shortlisted: "bg-yellow-100 text-yellow-700",
   rejected: "bg-red-100 text-red-700",
-  forwareded: "bg-purple-100 text-purple-700",
+  forwarded: "bg-purple-100 text-purple-700",
   interview: "bg-orange-100 text-orange-700",
   hired: "bg-green-100 text-green-700",
   Scheduled: "bg-indigo-100 text-indigo-700", 
@@ -83,10 +83,12 @@ const tabs: Array<"all" | ApplicantStatus> = [
   "applied",
   "shortlisted",
   "rejected",
-  "forwareded",
+  "forwarded",
   "interview",
   "hired",
-];
+]
+
+const TABLE_GRID = "grid grid-cols-[48px_1.6fr_1.1fr_1fr_1fr_1fr_1fr]"
 
 const ThreeDotsIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-gray-500 hover:text-gray-800">
@@ -124,8 +126,8 @@ export default function ApplicantsList({
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [scheduleCandidateId, setScheduleCandidateId] = useState<string | null>(null);
 
-  const { mutate, isPending } = useBulkUpdateApplicants();
-  const { success, error } = useToast();
+  const { mutate, isPending } = useBulkUpdateApplicants()
+  const { success, error } = useToast()
 
   // --- Handlers ---
   const toggleSelect = (appId: string) => {
@@ -142,18 +144,19 @@ export default function ApplicantsList({
 
   const handleSubmit = () => {
     if (selectedApplicants.length === 0) {
-      error("Please select at least one applicant");
-      return;
+      error("Please select at least one applicant")
+      return
     }
     mutate({ applicationIds: selectedApplicants, status: bulkStatus }, {
         onSuccess: () => {
-          success("Applicants status updated successfully");
+          success("Applicants status updated successfully")
           setSelectedApplicants([]);
+          setActiveTab(bulkStatus);
         },
         onError: () => error("Failed to update applicant status"),
       }
-    );
-  };
+    )
+  }
 
   // ==================== DATA MAPPING ====================
 

@@ -46,7 +46,7 @@ const searchJobsQuery = useInfiniteSearchJobs({
   location: query.location,
 });
 
-console.log("Search Jobs Query final response ===>:", searchJobsQuery);
+
 const isSearchActive = Boolean(query.q || query.location);
 const activeJobsQuery = isSearchActive
   ? searchJobsQuery
@@ -75,7 +75,7 @@ const jobsCount = jobsPages?.[0]?.pagination.totalRecords || 0;
           : { _id: s._id ?? s.name, name: s.name }
       ),
     }));
-console.log("Jobs to be displayed on dashboard ===>:", jobs);
+
   // Infinite scroll sentinels
   const categoriesLoadMoreRef = useRef<HTMLDivElement | null>(null);
   const jobsLoadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -115,7 +115,7 @@ console.log("Jobs to be displayed on dashboard ===>:", jobs);
   // search button handler
     const searchHandler = ()=>{
       
-  console.log("Searching result (seaerhTerm,location) ===>:", searchTerm, searchLocation);
+ 
     const q = searchTerm.trim();
   const location = searchLocation.trim();
 
@@ -187,7 +187,11 @@ console.log("Jobs to be displayed on dashboard ===>:", jobs);
             </h3>
             <Sidebar
               selected={selectedCategory}
-              onSelect={setSelectedCategory}
+             onSelect={(id) => {
+                setSelectedCategory(id);
+                setIsSidebarOpen(false);
+                setQuery({ q: "", location: "" })
+              }}
               categories={categories || []}
               isLoading={categoriesLoading}
               loadMoreRef={categoriesLoadMoreRef}
