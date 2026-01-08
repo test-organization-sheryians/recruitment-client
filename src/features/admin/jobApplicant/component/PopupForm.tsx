@@ -84,9 +84,14 @@ export default function PopupForm({
 
         success("Interview rescheduled successfully");
         onClose();
-      } catch (err: any) {
-        error(err.message || "Failed to reschedule interview");
-      }
+      } catch (err) {
+  if (err instanceof Error) {
+    error(err.message);
+  } else {
+    error("Failed to reschedule interview");
+  }
+}
+
 
       return;
     }
