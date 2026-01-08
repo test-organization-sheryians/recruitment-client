@@ -6,6 +6,7 @@ import { useGetJobById } from "@/features/admin/jobs/hooks/useJobApi";
 import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
 import { useToast } from "@/components/ui/Toast";
 import { useGetProfile } from "../../Profile/hooks/useProfileApi";
+import EmptyState from "@/components/ui/EmptyState";
 
 export default function JobDetails() {
   const searchParams = useSearchParams();
@@ -25,12 +26,17 @@ export default function JobDetails() {
       </p>
     );
 
-  if (error || !job)
-    return (
-      <p className="text-center mt-10 text-red-500">
-        Failed to load job details
-      </p>
-    );
+ if (error || !job) {
+  return (
+    <EmptyState
+      title="Job Not Found"
+      description="The link is invalid or the job no longer exists."
+      actionLabel="Back to all jobs"
+      onAction={() => router.push("/jobs")}
+    />
+  );
+}
+
 
      const isExpired = job.expiry ? new Date(job.expiry) < new Date() : false;
 
