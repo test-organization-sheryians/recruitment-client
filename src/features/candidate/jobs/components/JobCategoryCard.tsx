@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
 import { useToast } from "@/components/ui/Toast";
 import { useGetProfile } from "../../Profile/hooks/useProfileApi";
-import CandidateProfile from "../../Profile/components/CandidateProfile";
 
 interface Category {
   _id: string;

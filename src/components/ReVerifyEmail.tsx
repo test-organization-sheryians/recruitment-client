@@ -18,8 +18,10 @@ export default function ReVerifyEmailPage({ email, isVerified }: Props) {
     }
 
     try {
-      const res = await mutateAsync();
+      await mutateAsync();
     } catch (error) {
+      console.log(error);
+      
     }
   };
 

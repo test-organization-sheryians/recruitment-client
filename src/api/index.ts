@@ -64,7 +64,12 @@ export * from "./tests/startTest";
 export * from "./tests/testAttempts";
 export * from "./tests/testInfo";
 export * from "./tests/updateTest";
+export * from "./tests/publishTestResult"
 
 
 export * from "./password/forgotPassword";
 export * from "./password/resetPassword";
+
+export * from "./jobApplication/scheduleInterview";
+
+export * from "./interviews/getAllInterviews";

@@ -1,7 +1,7 @@
 "use client";
 
 import JobDashboardPage from "@/features/candidate/jobs/components/JobDashboard";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { toast } from "react-toastify"
 
 export default function CandidateHomePage() {

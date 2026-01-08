@@ -4,7 +4,6 @@ import Input from "@/components/Input"
 import { useEnrollTestuser } from "@/features/admin/test/hooks/useTest"
 import { useSearchUserTest } from "@/features/admin/test/hooks/useTest"
 import toast from "react-hot-toast"
-import { AxiosError } from "axios";
 
 
 type Props = { testId: string }

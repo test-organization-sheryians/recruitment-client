@@ -1,8 +1,5 @@
 import * as api from "@/api";
-import { useQuery } from "@tanstack/react-query";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useJobApplicant = (id: string) => {
     return useQuery({
@@ -13,8 +10,6 @@ export const useJobApplicant = (id: string) => {
     });
 };
 
-
-
 export const useBulkUpdateApplicants = () => {
   const queryClient = useQueryClient();
 
@@ -23,21 +18,36 @@ export const useBulkUpdateApplicants = () => {
       api.bulkUpdateData(payload),
 
     onSuccess: () => {
-      // 🔁 refetch applicants after update (match keys with prefix)
-      queryClient.invalidateQueries({ queryKey: ["jobApplicant"] });
-      // update shortlisted KPI: invalidate and proactively fetch fresh data
-      queryClient.invalidateQueries({ queryKey: ["shortlistedCount"] });
-      queryClient
-        .fetchQuery({
-          queryKey: ["shortlistedCount"],
-          queryFn: () => api.getShortlistedCount(),
-        })
-        .catch(() => {
-          // ignore; invalidateQueries will cause eventual refetch
-        });
+      queryClient.invalidateQueries({
+        queryKey: ["jobApplicant"],
+      });
     },
 
     retry: 0,
   });
-
 }
+
+export const useScheduleInterview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: api.ScheduleInterviewPayload) =>
+      api.scheduleInterview(payload),
+    
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["jobApplicant"],
+      });
+    },
+  });
+};
+
+// ✅ ADD THIS HOOK
+export const useJobInterviews = (jobId: string, enabled: boolean = false) => {
+  return useQuery({
+    queryKey: ["jobInterviews", jobId],
+    queryFn: () => api.getInterviewsByJobId(jobId), // Now this exists!
+    enabled: !!jobId && enabled,
+    retry: 1,
+  });
+};
