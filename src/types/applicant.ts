@@ -46,3 +46,23 @@ export interface ApplicantRow {
   status: ApplicantStatus;
   resume: string;
 }
+
+export type InterviewStatus =
+  | "Scheduled"
+  | "Rescheduled"
+  | "Cancelled";
+
+export type CreateInterviewPayload = {
+  jobId: string;
+  candidateId: string;
+  interviewerEmail: string;
+  meetingLink: string;
+  timing: string;
+  status?: InterviewStatus;
+};
+
+export type RescheduleInterviewPayload = {
+  interviewerEmail: string;
+  meetingLink: string;
+  timing: string;
+};

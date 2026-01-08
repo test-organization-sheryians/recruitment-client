@@ -1,5 +1,6 @@
 import * as api from "@/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { CreateInterviewPayload, InterviewStatus } from "@/types/applicant";
 
 export const useJobApplicant = (id: string) => {
     return useQuery({
@@ -27,27 +28,65 @@ export const useBulkUpdateApplicants = () => {
   });
 }
 
-export const useScheduleInterview = () => {
+export const useCreateInterview = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: api.ScheduleInterviewPayload) =>
-      api.scheduleInterview(payload),
-    
+    mutationFn: (payload: CreateInterviewPayload) =>
+      api.createInterview(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["jobApplicant"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["interviews"] });
     },
+    retry: 0,
   });
 };
 
-// ✅ ADD THIS HOOK
-export const useJobInterviews = (jobId: string, enabled: boolean = false) => {
+export const useMyScheduleInterviews = () => {
   return useQuery({
-    queryKey: ["jobInterviews", jobId],
-    queryFn: () => api.getInterviewsByJobId(jobId), // Now this exists!
-    enabled: !!jobId && enabled,
-    retry: 1,
+    queryKey: ["myInterviews"],
+    queryFn: api.getMyScheduleInterviews,
+    retry: 0,
+  });
+};
+
+export const useAllInterviews = () => {
+  return useQuery({
+    queryKey: ["interviews"],
+    queryFn: api.getAllInterviews,
+    retry: 0,
+  });
+};
+
+export const useInterviewsByJob = (jobId: string) => {
+  return useQuery({
+    queryKey: ["interviewsByJob", jobId],
+    queryFn: () => api.getInterviewByJobId(jobId),
+    enabled: !!jobId,
+    retry: 0,
+  });
+};
+
+export const useUpdateInterviewStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { id: string; status: InterviewStatus }) =>
+      api.updateInterviewStatus(payload.id, payload.status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["interviews"] });
+    },
+    retry: 0,
+  });
+};
+
+export const useDeleteInterview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => api.deleteInterview(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["interviews"] });
+    },
+    retry: 0,
   });
 };
