@@ -85,7 +85,7 @@ const tabs: Array<"all" | ApplicantStatus> = [
   "applied",
   "shortlisted",
   "rejected",
-  "forwareded",
+  "forwarded",
   "interview",
   "hired",
   
@@ -178,9 +178,13 @@ const {
     await updateInterviewStatus(interviewId, "Cancelled");
     success("Interview cancelled successfully");
     refetchInterviews();
-  } catch (err: any) {
-    error(err.message || "Failed to cancel interview");
+  } catch (err) {
+  if (err instanceof Error) {
+    error(err.message);
+  } else {
+    error("Failed to cancel interview");
   }
+}
 };
 
 
