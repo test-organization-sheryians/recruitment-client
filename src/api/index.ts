@@ -32,4 +32,14 @@ export * from "./users/getAllUsers";
 export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
 
+export * from "./products/createProduct";
+export * from "./products/deleteProduct";
+export * from "./products/getAllProducts";
+export * from "./products/getProductById";
+export * from "./products/updateProduct";
+
+
+
+
+
 

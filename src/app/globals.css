@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+
 @custom-variant dark (&:is(.dark *));
 
 @theme {
@@ -10,10 +11,13 @@
 
 /* fonts */
 
-@font-face {
+ @font-face {
   font-family: 'satoshi';
   src: url('/fonts/Satoshi-Variable.ttf');
-}
+} 
+
+
+
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
@@ -142,6 +146,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+
+
+
 @layer utilities {
   .scrollbar-hide::-webkit-scrollbar {
     width: 0px;
@@ -154,6 +163,62 @@
     scrollbar-width: none;
   }
 }
+
+
+
+@layer base {
+  /* HEADINGS */
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+  }
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-top: 1.1em;
+    margin-bottom: 0.5em;
+  }
+  h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 1em;
+    margin-bottom: 0.4em;
+  }
+
+  /* LISTS */
+  ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin-top: 0.6em;
+    margin-bottom: 0.6em;
+  }
+
+  ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin-top: 0.6em;
+    margin-bottom: 0.6em;
+  }
+
+  li {
+    margin-top: 0.3em;
+  }
+}
+
+/* show placeholder only when editor is empty */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #9ca3af; /* gray text for placeholder */
+  pointer-events: none;
+  height: 0;
+  font-style: italic;
+}
+
 
 
 
