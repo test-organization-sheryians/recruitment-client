@@ -294,7 +294,7 @@ export default function UniversalInterviewPage() {
   const progress = ((step + 1) / finalQuestions.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-indigo-50">
+    <div className="min-h-screen bg-linear-to-br from-indigo-100 via-white to-indigo-50">
 
       {/* 1. DISQUALIFIED OVERLAY */}
       {blocked && (

@@ -200,7 +200,7 @@ const SigninForm = () => {
             <span className="flex-1 border-t border-gray-300" />
           </div>
 
-          <button
+          {/* <button
             type="button"
             className={`
               w-full
@@ -219,7 +219,7 @@ const SigninForm = () => {
           >
             <FcGoogle className="text-xl md:text-2xl lg:text-3xl" />
             <span className="truncate">Continue with Google</span>
-          </button>
+          </button> */}
         </form>
 
         <p
