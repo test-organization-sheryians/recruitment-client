@@ -1,8 +1,6 @@
 import * as api from "@/api";
-import { useQuery } from "@tanstack/react-query";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { CreateInterviewPayload, InterviewStatus } from "@/types/applicant";
 
 export const useJobApplicant = (id: string) => {
     return useQuery({
@@ -13,8 +11,6 @@ export const useJobApplicant = (id: string) => {
     });
 };
 
-
-
 export const useBulkUpdateApplicants = () => {
   const queryClient = useQueryClient();
 
@@ -23,21 +19,74 @@ export const useBulkUpdateApplicants = () => {
       api.bulkUpdateData(payload),
 
     onSuccess: () => {
-      // 🔁 refetch applicants after update (match keys with prefix)
-      queryClient.invalidateQueries({ queryKey: ["jobApplicant"] });
-      // update shortlisted KPI: invalidate and proactively fetch fresh data
-      queryClient.invalidateQueries({ queryKey: ["shortlistedCount"] });
-      queryClient
-        .fetchQuery({
-          queryKey: ["shortlistedCount"],
-          queryFn: () => api.getShortlistedCount(),
-        })
-        .catch(() => {
-          // ignore; invalidateQueries will cause eventual refetch
-        });
+      queryClient.invalidateQueries({
+        queryKey: ["jobApplicant"],
+      });
     },
 
     retry: 0,
   });
-
 }
+
+export const useCreateInterview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: CreateInterviewPayload) =>
+      api.createInterview(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["interviews"] });
+    },
+    retry: 0,
+  });
+};
+
+export const useMyScheduleInterviews = () => {
+  return useQuery({
+    queryKey: ["myInterviews"],
+    queryFn: api.getMyScheduleInterviews,
+    retry: 0,
+  });
+};
+
+export const useAllInterviews = () => {
+  return useQuery({
+    queryKey: ["interviews"],
+    queryFn: api.getAllInterviews,
+    retry: 0,
+  });
+};
+
+export const useInterviewsByJob = (jobId: string) => {
+  return useQuery({
+    queryKey: ["interviewsByJob", jobId],
+    queryFn: () => api.getInterviewByJobId(jobId),
+    enabled: !!jobId,
+    retry: 0,
+  });
+};
+
+export const useUpdateInterviewStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { id: string; status: InterviewStatus }) =>
+      api.updateInterviewStatus(payload.id, payload.status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["interviews"] });
+    },
+    retry: 0,
+  });
+};
+
+export const useDeleteInterview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => api.deleteInterview(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["interviews"] });
+    },
+    retry: 0,
+  });
+};
