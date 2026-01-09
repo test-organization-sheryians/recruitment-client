@@ -78,6 +78,9 @@ export default function JobDetails() {
       message: "Excited to apply!",
       resumeUrl: profile.resumeFile,
     });
+    
+    
+    router.push(`/jobs/${job._id}/apply`);
   };
 
   const handleBookmarkToggle = () => {
