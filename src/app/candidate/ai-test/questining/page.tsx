@@ -509,6 +509,9 @@ export default function UniversalInterviewPage() {
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onPaste={prevent}
+  onCopy={prevent}
+  onCut={prevent}
             className="
               flex-1 p-8
               resize-none outline-none
@@ -582,6 +585,9 @@ export default function UniversalInterviewPage() {
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onPaste={prevent}
+  onCopy={prevent}
+  onCut={prevent}
           className="
             flex-1 p-10
             resize-none outline-none
