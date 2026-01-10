@@ -65,23 +65,18 @@ export default function JobDetails() {
     ) ?? false;
 
   /* -------------------- Handlers -------------------- */
-  const handleApply = () => {
-    if (isExpired || job.applied) return;
+ const handleApply = () => {
+  if (isExpired || job.applied) return;
 
-    if (!profile?.resumeFile) {
-      toast.error("Please upload your resume before applying.");
-      return;
-    }
+  if (!profile?.resumeFile) {
+    toast.error("Please upload your resume before applying.");
+    return;
+  }
 
-    applyJobMutation.mutate({
-      jobId: job._id,
-      message: "Excited to apply!",
-      resumeUrl: profile.resumeFile,
-    });
-    
-    
-    router.push(`/jobs/${job._id}/apply`);
-  };
+  // ✅ ONLY REDIRECT
+  router.push(`/jobs/${job._id}/apply`);
+};
+
 
   const handleBookmarkToggle = () => {
     if (isExpired || !job._id) return;

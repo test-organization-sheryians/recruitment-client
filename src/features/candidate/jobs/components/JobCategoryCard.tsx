@@ -175,7 +175,7 @@ export default function JobCard({ job }: JobCardProps) {
               : isExpired
               ? "Expired"
               : "Apply Now"}
-          </button>0;6p
+          </button>
         </div>
       </div>
     </div>

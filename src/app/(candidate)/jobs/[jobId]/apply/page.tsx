@@ -1,4 +1,10 @@
 "use client";
+import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
+import { useGetProfile } from "@/features/candidate/Profile/hooks/useProfileApi";
+import { useParams } from "next/navigation";
+import { useState } from "react";
+
+
 
 type Question = {
   _id: string;
@@ -59,13 +65,41 @@ const QUESTIONS: Question[] = [
 ];
 
 export default function ApplyPage() {
+
+const applyJobMutation = useApplyJob();
+const { jobId } = useParams<{ jobId: string }>();
+ const { data: profile } = useGetProfile();
+ const [answers, setAnswers] = useState<{ [key: string]: string }>({});
+
+ const handleChange = (id: string, value: string) => {
+  setAnswers((prev) => ({
+    ...prev,
+    [id]: value,
+  }));
+};
+
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+console.log("JOB ID:", jobId);
+console.log("RESUME:", profile?.resumeFile);
+console.log("ANSWERS:", answers);
+
+  applyJobMutation.mutate({
+    jobId, // ya params se aane wala jobId
+    message: JSON.stringify(answers), // form answerssn
+    resumeUrl: profile?.resumeFile,   // candidate resume
+  });
+};
+
+
+
   return (
     <div className="max-w-2xl mx-auto p-6">
       <h1 className="text-2xl font-semibold mb-6">
         Job Application Form
       </h1>
 
-      <form className="space-y-6">
+      <form className="space-y-6"  onSubmit={handleSubmit}>
         {QUESTIONS.map((q) => (
           <div key={q._id}>
             <label className="block font-medium mb-1">
@@ -86,6 +120,7 @@ export default function ApplyPage() {
                 type="text"
                 placeholder={q.placeholder}
                 maxLength={q.maxLength ?? undefined}
+                onChange={(e) => handleChange(q._id, e.target.value)}
                 className="w-full border px-3 py-2 rounded"
               />
             )}
@@ -94,6 +129,7 @@ export default function ApplyPage() {
               <input
                 type="number"
                 placeholder={q.placeholder}
+                onChange={(e) => handleChange(q._id, e.target.value)}
                 className="w-full border px-3 py-2 rounded"
               />
             )}
@@ -103,17 +139,23 @@ export default function ApplyPage() {
                 placeholder={q.placeholder}
                 maxLength={q.maxLength ?? undefined}
                 className="w-full border px-3 py-2 rounded"
+                onChange={(e) => handleChange(q._id, e.target.value)}
                 rows={4}
               />
             )}
 
             {q.inputType === "dropdown" && (
-              <select className="w-full border px-3 py-2 rounded">
+              <select 
+              className="w-full border px-3 py-2 rounded"
+              onChange={(e) => handleChange(q._id, e.target.value)}
+              >
+              
                 <option value="">Select</option>
                 {q.options.map((opt) => (
                   <option key={opt}>{opt}</option>
                 ))}
               </select>
+
             )}
           </div>
         ))}
@@ -121,6 +163,7 @@ export default function ApplyPage() {
         <button
           type="submit"
           className="bg-blue-600 text-white px-6 py-2 rounded"
+         
         >
           Submit
         </button>
