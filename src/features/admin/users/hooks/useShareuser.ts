@@ -33,9 +33,10 @@ export const useCreateShareCandidate = () => {
   });
 };
 
-export const useShareCandidates = () => {
-  return useQuery<BackendResponse<ShareCandidate>>({
-    queryKey: ['share-candidates'],
-    queryFn: getShareCandidate,
+export const useShareCandidates = (shareId: string) => {
+  return useQuery({
+    queryKey: ['share-candidates', shareId],
+    queryFn: () => getShareCandidate(shareId),
+    enabled: !!shareId,
   });
 };

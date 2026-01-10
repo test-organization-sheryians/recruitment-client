@@ -1,18 +1,19 @@
 'use client';
 
-import { useState, useRef, useMemo, useEffect } from 'react';
-import { Pencil, Trash2, Loader2, Users, MoreVertical } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { Loader2, MoreVertical, Pencil, Trash2, Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  useInfiniteUsers,
-  useDeleteUser,
-  useUpdateUserRole,
-  User,
-} from '@/features/admin/users/hooks/useUser';
-import { useDebounce } from '@/features/admin/users/hooks/useDebounce';
 import { useToast } from '@/components/ui/Toast';
+import { useDebounce } from '@/features/admin/users/hooks/useDebounce';
 import { useCreateShareCandidate } from '@/features/admin/users/hooks/useShareuser';
+import {
+  useDeleteUser,
+  useInfiniteUsers,
+  User,
+  useUpdateUserRole,
+} from '@/features/admin/users/hooks/useUser';
 
 export default function UsersTable() {
   /* ---------------- SEARCH ---------------- */
@@ -48,6 +49,7 @@ export default function UsersTable() {
   const updateUserRole = useUpdateUserRole();
   const queryClient = useQueryClient();
   const { success, error } = useToast();
+  const router = useRouter();
 
   /* ---------------- URL SYNC ---------------- */
   useEffect(() => {
@@ -126,13 +128,13 @@ export default function UsersTable() {
       error('Please select at least one user');
       return;
     }
-
     const payload = selectedUserIds.map(id => ({ candidateId: id }));
-
     shareCandidates(payload, {
-      onSuccess: () => {
+      onSuccess: res => {
         success('Candidates shared successfully');
         setSelectedUserIds([]);
+        const shareId = res.shareLink.split('/').pop();
+        router.push(`/selected-candidates?shareId=${shareId}`);
       },
       onError: () => error('Failed to share candidates'),
     });
