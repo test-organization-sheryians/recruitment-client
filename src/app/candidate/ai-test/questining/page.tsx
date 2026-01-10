@@ -439,7 +439,7 @@ export default function UniversalInterviewPage() {
           active:scale-95
         "
       >
-        {showCodeEditor ? "Hide Code" : "Add Code"}
+        {showCodeEditor ? "Hide Code" : "Write Code"}
       </button>
     </div>
   )}
