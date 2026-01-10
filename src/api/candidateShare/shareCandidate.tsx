@@ -1,16 +1,37 @@
 import api from "@/config/axios"
 
 interface ShareCandidatePayload {
-  candidateId: string;
+  userId: string;
 }
+interface Skill {
+  _id?: string;
+  name?: string;
+}
+
+interface Experience {
+  _id?: string;
+  company?: string;
+  role?: string;
+}
+interface User {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
 
 interface ShareCandidate {
   _id: string;
-  candidateId: string;
-  email?: string;
-  name?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  userId: string;
+  availability: "looking" | "not_looking";
+  resumeFile?: string;
+  createdAt: string;
+  updatedAt: string;
+
+  user: User;
+  skills: Skill[];
+  experiences: Experience[];
 }
 
  interface BackendResponse<T> {
@@ -18,15 +39,18 @@ interface ShareCandidate {
   message?: string;
   data: T[];
 }
-
+ interface CreateShareCandidateResponse {
+  message: string;
+  shareLink: string;
+}
 export const createShareCandidate = async (
   data: ShareCandidatePayload[]
-) => {
+): Promise<CreateShareCandidateResponse> => {
   const response = await api.post(
     "/api/share-candidate",
     data
   )
-console.log("check the response ")
+console.log("check the response ===>",response)
   return response.data
 }
 

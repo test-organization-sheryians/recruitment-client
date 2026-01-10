@@ -1,9 +1,9 @@
 import { createShareCandidate, getShareCandidate } from "@/api/candidateShare/shareCandidate";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-interface ShareCandidatePayload {
-  candidateId: string;
-}
+// interface ShareCandidatePayload {
+//   candidateId: string;
+// }
 
 interface BackendResponse<T> {
   success: boolean;
@@ -11,21 +11,58 @@ interface BackendResponse<T> {
   data: T[];
 }
 
-interface ShareCandidate {
+interface User {
   _id: string;
-  candidateId: string;
-  email?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+
+interface Skill {
+  _id?: string;
   name?: string;
-  createdAt?: string;
-  updatedAt?: string;
+}
+
+interface Experience {
+  _id?: string;
+  company?: string;
+  role?: string;
+}
+
+
+export interface ShareCandidate {
+  _id: string;
+  userId: string;
+  availability: "looking" | "not_looking";
+  resumeFile?: string;
+  createdAt: string;
+  updatedAt: string;
+
+  user: User;
+  skills: Skill[];
+  experiences: Experience[];
+}
+ interface CreateShareCandidateResponse {
+  message: string;
+  shareLink: string;
+}
+ interface ShareCandidatePayload {
+  userId: string;
 }
 
 export const useCreateShareCandidate = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation <
+    CreateShareCandidateResponse, 
+    Error,                        
+    ShareCandidatePayload[]       
+  >({
     mutationFn: (payload: ShareCandidatePayload[]) =>createShareCandidate(payload),
-    onSuccess: () => {
+   onSuccess: (data) => {
+      console.log("Share link:", data.shareLink);
+
       queryClient.invalidateQueries({
         queryKey: ["share-candidates"],
       });
