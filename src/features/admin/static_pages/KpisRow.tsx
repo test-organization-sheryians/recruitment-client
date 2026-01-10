@@ -6,11 +6,14 @@ import { getShortlistedCount } from "@/api";
 import { useGetJobs } from "../jobs/hooks/useJobApi";
 
 export default function KpisRow() {
-  const { data: shortlistedData } = useQuery({
+  const { data: shortlistedData, isLoading } = useQuery({
     queryKey: ["shortlistedCount"],
     queryFn: getShortlistedCount,
     staleTime: 1000 * 60,
   });
+
+  // Debug: log fetched data
+  console.debug("KpisRow shortlistedCount query data:", shortlistedData, "isLoading:", isLoading);
 
   const { data: jobs } = useGetJobs();
 

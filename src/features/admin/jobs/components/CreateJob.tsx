@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { createJob } from "@/api/index";
 import JobForm , { JobFormData } from "../../categories/components/JobForm";
 import { useState } from "react";
+import AddQuestionsModal from "./AddQuestionsModal";
 
 export default function CreateJob({
   onJobCreated,
@@ -12,6 +13,8 @@ export default function CreateJob({
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showQuestions, setShowQuestions] = useState(false);
+  const [createdJobId, setCreatedJobId] = useState<string | null>(null);
 
 const handleSubmit = async (data: JobFormData) => {
   setLoading(true);
@@ -20,8 +23,10 @@ const handleSubmit = async (data: JobFormData) => {
     const res = await createJob(data as unknown as Record<string, unknown>); 
 
     if (res.success || res.data) { 
-      onJobCreated?.();
-      router.refresh();
+      const jobId = res.data?._id || res.data?.id || null;
+      setCreatedJobId(jobId);
+      setShowQuestions(true);
+      // Defer calling onJobCreated (which closes the parent dialog) until questions are saved/closed
     }
   } catch (error) {
     console.error("Submission error:", error);
@@ -29,5 +34,23 @@ const handleSubmit = async (data: JobFormData) => {
     setLoading(false);
   }
 };
-  return <JobForm mode="create" onSubmit={handleSubmit} loading={loading} />;
+  return (
+    <>
+      <JobForm mode="create" onSubmit={handleSubmit} loading={loading} />
+      {showQuestions && createdJobId && (
+        <AddQuestionsModal
+          jobId={createdJobId}
+          onClose={() => {
+            setShowQuestions(false);
+            setCreatedJobId(null);
+            onJobCreated?.(); // now refresh parent and close dialog after modal closed
+          }}
+          onSaved={() => {
+            setShowQuestions(false);
+            onJobCreated?.(); // refresh parent when questions are saved
+          }}
+        />
+      )}
+    </>
+  );
 }

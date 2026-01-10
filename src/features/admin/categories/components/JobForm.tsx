@@ -30,7 +30,7 @@ interface Location {
   city: string;
   state: string;
   pincode: string;
-  country: string
+  country: string;
 }
 
 export interface JobFormData {
@@ -51,6 +51,7 @@ interface JobFormProps {
   initialData?: Partial<JobFormData>;
   onSubmit: (data: JobFormData) => Promise<void>;
   loading?: boolean;
+  extraAction?: React.ReactNode;
 }
 
 export default function JobForm({
@@ -58,6 +59,7 @@ export default function JobForm({
   initialData,
   onSubmit,
   loading = false,
+  extraAction,
 }: JobFormProps) {
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
@@ -69,9 +71,10 @@ export default function JobForm({
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     requiredExperience: initialData?.requiredExperience || "",
-    category: typeof initialData?.category === 'string'
-      ? initialData.category
-      : (initialData?.category as unknown as Category)?._id || "",
+    category:
+      typeof initialData?.category === "string"
+        ? initialData.category
+        : (initialData?.category as unknown as Category)?._id || "",
     education: initialData?.education || "",
     description: initialData?.description || "",
     location: {
@@ -79,17 +82,19 @@ export default function JobForm({
       state: initialData?.location?.state || "",
       pincode: initialData?.location?.pincode || "",
       country: initialData?.location?.country || "",
-    },       // added Location 
+    }, // added Location
     skills: Array.isArray(initialData?.skills)
       ? (initialData.skills as (string | Skill)[]).map((s) =>
-        typeof s === "string" ? s : s._id
-      )
+          typeof s === "string" ? s : s._id
+        )
       : [],
     expiry: initialData?.expiry
       ? new Date(initialData.expiry).toISOString().split("T")[0]
       : "",
     clientId: initialData?.clientId || "6915b90df6594de75060410b",
   });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (categories.length > 0 && !formData.category) {
@@ -100,8 +105,11 @@ export default function JobForm({
     }
   }, [categories]);
 
-  const handleChange = (e: { target: { name: string; value: string } }) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e: { target: { name: string; value: string } }) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
 
   const handleSkillToggle = (skillId: string) => {
     setFormData((prev) => ({
@@ -120,13 +128,69 @@ export default function JobForm({
         [key]: value,
       },
     }));
+    setErrors((prev) => ({ ...prev, ["location." + key]: "" }));
   };
 
+  const validateField = (name: string, value: string) => {
+    let msg = "";
+    const trimmed = (value || "").toString().trim();
+    switch (name) {
+      case "title":
+        if (!trimmed) msg = "Please enter job title";
+        else if (trimmed.length < 3) msg = "Title must be at least 3 characters";
+        break;
+      case "description":
+        if (!trimmed) msg = "Please enter job description";
+        else if (trimmed.length < 10) msg = "Description must be at least 10 characters";
+        break;
+      case "education":
+        if (!trimmed) msg = "Please enter required education";
+        break;
+      case "requiredExperience":
+        if (!trimmed) msg = "Please enter required experience";
+        break;
+      case "expiry":
+        if (!trimmed) msg = "Please select application deadline";
+        break;
+      default:
+        break;
+    }
+    setErrors((prev) => ({ ...prev, [name]: msg }));
+    return msg === "";
+  };
+
+  const validateLocationField = (key: keyof Location, value: string) => {
+    const name = "location." + key;
+    const trimmed = (value || "").toString().trim();
+    let msg = "";
+    if (!trimmed) msg = `Please enter ${key}`;
+    else if (key === "pincode") {
+      if (!/^[0-9]+$/.test(trimmed)) msg = "Pincode must be numeric";
+      else if (trimmed.length < 4 || trimmed.length > 10) msg = "Pincode length seems invalid";
+    }
+    setErrors((prev) => ({ ...prev, [name]: msg }));
+    return msg === "";
+  };
 
   const handleSubmit = async () => {
     setError("");
 
-    const isLocationValid = Object.values(formData.location).every(Boolean);
+    // Run per-field validation to surface inline errors before submission
+    const v1 = validateField("title", formData.title);
+    const v2 = validateField("description", formData.description);
+    const v3 = validateField("education", formData.education);
+    const v4 = validateField("requiredExperience", formData.requiredExperience);
+    const v5 = validateField("expiry", formData.expiry);
+    const lv1 = validateLocationField("city", formData.location.city);
+    const lv2 = validateLocationField("state", formData.location.state);
+    const lv3 = validateLocationField("pincode", formData.location.pincode);
+    const lv4 = validateLocationField("country", formData.location.country);
+    const isLocationValid = lv1 && lv2 && lv3 && lv4;
+
+    if (!(v1 && v2 && v3 && v4 && v5 && isLocationValid)) {
+      setError("Please resolve the highlighted errors before submitting");
+      return;
+    }
 
     const requiredFields = [
       "title",
@@ -169,7 +233,9 @@ export default function JobForm({
           return;
         }
       } else {
-        setError(`Please fill all required fields: ${missingFields.join(", ")}`);
+        setError(
+          `Please fill all required fields: ${missingFields.join(", ")}`
+        );
         return;
       }
     }
@@ -179,13 +245,13 @@ export default function JobForm({
     } catch (err: unknown) {
       const error = err as {
         response?: { data?: { message?: string } };
-        message?: string
+        message?: string;
       };
-      const msg = error.response?.data?.message || error.message || "Update failed";
+      const msg =
+        error.response?.data?.message || error.message || "Update failed";
       setError(msg);
     }
   };
-
 
   const getMinDate = () =>
     new Date(Date.now() + 86400000).toISOString().split("T")[0];
@@ -200,6 +266,8 @@ export default function JobForm({
     formData.location.state &&
     formData.location.pincode &&
     formData.location.country;
+
+  const hasErrors = Object.values(errors).some((v) => !!v);
 
   return (
     <div className="w-full h-full py-3 rounded-md mb-2">
@@ -232,8 +300,12 @@ export default function JobForm({
                     name="title"
                     value={formData.title}
                     onChange={handleChange}
+                    onBlur={() => validateField("title", formData.title)}
                     className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                   />
+                  {errors.title && (
+                    <p className="mt-1 text-xs text-red-600">{errors.title}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -247,8 +319,12 @@ export default function JobForm({
                     rows={5}
                     value={formData.description}
                     onChange={handleChange}
+                    onBlur={() => validateField("description", formData.description)}
                     className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
                   />
+                  {errors.description && (
+                    <p className="mt-1 text-xs text-red-600">{errors.description}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -261,8 +337,12 @@ export default function JobForm({
                     name="education"
                     value={formData.education}
                     onChange={handleChange}
+                    onBlur={() => validateField("education", formData.education)}
                     className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                   />
+                  {errors.education && (
+                    <p className="mt-1 text-xs text-red-600">{errors.education}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -277,8 +357,12 @@ export default function JobForm({
                       min={getMinDate()}
                       value={formData.expiry}
                       onChange={handleChange}
+                      onBlur={() => validateField("expiry", formData.expiry)}
                       className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                     />
+                    {errors.expiry && (
+                      <p className="mt-1 text-xs text-red-600">{errors.expiry}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
@@ -290,56 +374,120 @@ export default function JobForm({
                       name="requiredExperience"
                       value={formData.requiredExperience}
                       onChange={handleChange}
+                      onBlur={() => validateField("requiredExperience", formData.requiredExperience)}
                       className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                     />
+                    {errors.requiredExperience && (
+                      <p className="mt-1 text-xs text-red-600">{errors.requiredExperience}</p>
+                    )}
                   </div>
 
                   {/* {/* Location Added */}
-                  <div className="space-y-2">
+                  {/* Location Section */}
+                  <div className="space-y-3 col-span-2">
                     <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                       <Clock className="w-4 h-4 text-blue-600" />
                       Location Required *
                     </label>
 
-                    <div className="grid grid-cols-2 gap-2 mt-1">
-                      <input
-                        placeholder="City"
-                        value={formData.location.city}
-                        onChange={(e) => handleLocationChange("city", e.target.value)}
-                        className="w-full border-2 border-gray-100 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
+                    {/* Full width wrapper same as other inputs */}
+                    <div className="w-full bg-gray-10/20 border border-gray-200 rounded-2xl px-4 py-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 w-full">
+                        {/* City */}
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-medium text-gray-500">
+                            City
+                          </label>
+                          <input
+                            placeholder="Enter city"
+                            value={formData.location.city}
+                            onChange={(e) =>
+                              handleLocationChange("city", e.target.value)
+                            }
+                            onBlur={() => validateLocationField("city", formData.location.city)}
+                            className="w-full h-11 border-2 border-gray-200 rounded-xl px-4 text-sm
+                     focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                     outline-none transition-all bg-white"
+                          />
+                          {errors["location.city"] && (
+                            <p className="mt-1 text-xs text-red-600">{errors["location.city"]}</p>
+                          )}
+                        </div>
 
-                      <input
-                        placeholder="State"
-                        value={formData.location.state}
-                        onChange={(e) => handleLocationChange("state", e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
+                        {/* State */}
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-medium text-gray-500">
+                            State
+                          </label>
+                          <input
+                            placeholder="Enter state"
+                            value={formData.location.state}
+                              onChange={(e) =>
+                                handleLocationChange("state", e.target.value)
+                              }
+                              onBlur={() => validateLocationField("state", formData.location.state)}
+                            className="w-full h-11 border-2 border-gray-200 rounded-xl px-4 text-sm
+                     focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                     outline-none transition-all bg-white"
+                          />
+                          {errors["location.state"] && (
+                            <p className="mt-1 text-xs text-red-600">{errors["location.state"]}</p>
+                          )}
+                        </div>
 
-                      <input
-                        placeholder="Pincode"
-                        value={formData.location.pincode}
-                        onChange={(e) => handleLocationChange("pincode", e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
+                        {/* Pincode */}
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-medium text-gray-500">
+                            Pincode
+                          </label>
+                          <input
+                            placeholder="Enter pincode"
+                            value={formData.location.pincode}
+                            onChange={(e) =>
+                              handleLocationChange("pincode", e.target.value)
+                            }
+                            onBlur={() => validateLocationField("pincode", formData.location.pincode)}
+                            className="w-full h-11 border-2 border-gray-200 rounded-xl px-4 text-sm
+                     focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                     outline-none transition-all bg-white"
+                          />
+                          {errors["location.pincode"] && (
+                            <p className="mt-1 text-xs text-red-600">{errors["location.pincode"]}</p>
+                          )}
+                        </div>
 
-                      <input
-                        placeholder="Country"
-                        value={formData.location.country}
-                        onChange={(e) => handleLocationChange("country", e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
+                        {/* Country */}
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-medium text-gray-500">
+                            Country
+                          </label>
+                          <input
+                            placeholder="Enter country"
+                            value={formData.location.country}
+                            onChange={(e) =>
+                              handleLocationChange("country", e.target.value)
+                            }
+                            onBlur={() => validateLocationField("country", formData.location.country)}
+                            className="w-full h-11 border-2 border-gray-200 rounded-xl px-4 text-sm
+                     focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                     outline-none transition-all bg-white"
+                          />
+                          {errors["location.country"] && (
+                            <p className="mt-1 text-xs text-red-600">{errors["location.country"]}</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
-
                 </div>
 
-                <div className="flex justify-end pt-4">
+                <div className={`flex items-center ${extraAction ? "justify-between" : "justify-end"} gap-4 pt-4`}>
+                  {extraAction && <div className="self-start">{extraAction}</div>}
                   <button
                     type="button"
-                    disabled={!isStep1Valid}
-                    className="group flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => isStep1Valid && setStep(2)}
+                    disabled={!isStep1Valid || hasErrors}
+                    className="group flex items-center gap-2 px-8 py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => (isStep1Valid && !hasErrors) && setStep(2)}
                   >
                     Continue
                     <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -384,9 +532,12 @@ export default function JobForm({
                   {/* 2. Search Results */}
                   <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2">
                     {skillsResponse
-                      .filter(s =>
-                        s.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-                        !formData.skills.includes(s._id)
+                      .filter(
+                        (s) =>
+                          s.name
+                            .toLowerCase()
+                            .includes(searchTerm.toLowerCase()) &&
+                          !formData.skills.includes(s._id)
                       )
                       .slice(0, 10)
                       .map((skill) => (
@@ -407,16 +558,22 @@ export default function JobForm({
                   {/* 3. Selected Skills Display (The "Tags" view) */}
                   {formData.skills.length > 0 && (
                     <div className="mt-4">
-                      <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Selected Skills:</p>
+                      <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">
+                        Selected Skills:
+                      </p>
                       <div className="flex flex-wrap gap-2 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
                         {formData.skills.map((skillId) => {
                           // ADD THE ARRAY CHECK HERE
                           const skillName = Array.isArray(skillsResponse)
-                            ? skillsResponse.find(s => s._id === skillId)?.name
+                            ? skillsResponse.find((s) => s._id === skillId)
+                                ?.name
                             : "Loading..."; // Fallback if data isn't an array yet
 
                           return (
-                            <span key={skillId} className="flex items-center gap-1 bg-white text-blue-700 px-3 py-1 rounded-full text-sm border border-blue-200 shadow-sm">
+                            <span
+                              key={skillId}
+                              className="flex items-center gap-1 bg-white text-blue-700 px-3 py-1 rounded-full text-sm border border-blue-200 shadow-sm"
+                            >
                               {skillName}
                               <button
                                 type="button"
@@ -447,7 +604,7 @@ export default function JobForm({
                     type="button"
                     disabled={loading}
                     onClick={handleSubmit}
-                    className="flex-1 flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-2 px-8 py-3 bg-linear-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <>
