@@ -1,0 +1,16 @@
+{
+  "title": "Pre Application Test",
+  "questions": [
+    {
+      "id": 1,
+      "type": "text",
+      "question": "Why should we hire you?"
+    },
+    {
+      "id": 2,
+      "type": "mcq",
+      "question": "Your experience?",
+      "options": ["Fresher", "1-3 Years", "3+ Years"]
+    }
+  ]
+}

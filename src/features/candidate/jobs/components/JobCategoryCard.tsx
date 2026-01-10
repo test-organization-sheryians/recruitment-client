@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
 import { useToast } from "@/components/ui/Toast";
 import { useGetProfile } from "../../Profile/hooks/useProfileApi";
 
@@ -34,32 +33,28 @@ interface JobCardProps {
 
 export default function JobCard({ job }: JobCardProps) {
   const router = useRouter();
-  const applyJobMutation = useApplyJob();
   const toast = useToast();
+  const { data: profile, isLoading: profileLoading } = useGetProfile();
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Prevent navigation when clicking "Apply" button
+    // card click → job details
     if ((e.target as HTMLElement).closest("button")) return;
     router.push(`/job-details?id=${job._id}`);
   };
 
-  // Safely extract category name
   const categoryName =
     typeof job.category === "object" && job.category?.name
       ? job.category.name
       : null;
 
-  // Extract skill names directly (no fetching needed!)
   const skillNames =
     job.skills?.map((skill) => skill.name).filter(Boolean) || [];
 
   const isExpired = job.expiry ? new Date(job.expiry) < new Date() : false;
 
-  const { data: profile, isLoading: profileLoading } = useGetProfile();
-
+  /* ================= APPLY HANDLER ================= */
   const handleApply = () => {
-    // ----------------------------------------------
-    if (!job._id || isExpired) return;
+    if (!job._id || isExpired || job.applied) return;
 
     if (profileLoading) {
       toast.error("Profile is loading. Please wait.");
@@ -71,12 +66,8 @@ export default function JobCard({ job }: JobCardProps) {
       return;
     }
 
-    // Only call mutation once
-    applyJobMutation.mutate({
-      jobId: job._id,
-      message: "Excited to apply!",
-      resumeUrl: profile.resumeFile,
-    });
+    // ✅ ONLY REDIRECT TO FORM PAGE
+    router.push(`/jobs/${job._id}/apply`);
   };
 
   return (
@@ -155,23 +146,19 @@ export default function JobCard({ job }: JobCardProps) {
         {/* Right: Apply Button */}
         <div className="shrink-0">
           <button
-            disabled={isExpired || job.applied || applyJobMutation.isPending}
+            disabled={isExpired || job.applied}
             onClick={(e) => {
               e.stopPropagation();
               handleApply();
             }}
             className={`px-6 py-2.5 text-white font-medium text-sm rounded-lg ${
-              isExpired
-                ? "bg-gray-400 cursor-not-allowed"
-                : job.applied
+              isExpired || job.applied
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
             }`}
           >
             {job.applied
               ? "Applied"
-              : applyJobMutation.isPending
-              ? "Applying..."
               : isExpired
               ? "Expired"
               : "Apply Now"}
@@ -181,3 +168,4 @@ export default function JobCard({ job }: JobCardProps) {
     </div>
   );
 }
+

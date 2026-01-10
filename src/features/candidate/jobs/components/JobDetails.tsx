@@ -5,7 +5,6 @@ import { ArrowLeft, Bookmark } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useGetJobById } from "@/features/admin/jobs/hooks/useJobApi";
-import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
 import {
   useSaveJob,
   useUnsaveJob,
@@ -30,11 +29,6 @@ export default function JobDetails() {
   const { data: profile } = useGetProfile();
   const { data: savedJobs } = useGetSavedJobs();
 
-  /* -------------------- Mutations -------------------- */
-  const applyJobMutation = useApplyJob();
-  const saveJobMutation = useSaveJob();
-  const unsaveJobMutation = useUnsaveJob();
-
   /* -------------------- Guards -------------------- */
   if (isLoading) {
     return (
@@ -56,7 +50,7 @@ export default function JobDetails() {
     ? new Date(job.expiry) < new Date()
     : false;
 
-  /* -------------------- Saved State (TYPE SAFE) -------------------- */
+  /* -------------------- Saved State -------------------- */
   const isSaved =
     savedJobs?.some((saved: SavedJob) =>
       typeof saved.jobId === "string"
@@ -65,40 +59,32 @@ export default function JobDetails() {
     ) ?? false;
 
   /* -------------------- Handlers -------------------- */
- const handleApply = () => {
-  if (isExpired || job.applied) return;
+  const handleApply = () => {
+    if (isExpired || job.applied) return;
 
-  if (!profile?.resumeFile) {
-    toast.error("Please upload your resume before applying.");
-    return;
-  }
+    if (!profile?.resumeFile) {
+      toast.error("Please upload your resume before applying.");
+      return;
+    }
 
-  // ✅ ONLY REDIRECT
-  router.push(`/jobs/${job._id}/apply`);
-};
-
+    // ✅ ONLY NAVIGATION
+    router.push(`/jobs/${job._id}/apply`);
+  };
 
   const handleBookmarkToggle = () => {
     if (isExpired || !job._id) return;
-    if (saveJobMutation.isPending || unsaveJobMutation.isPending) return;
 
     if (!isSaved) {
-      saveJobMutation.mutate(job._id, {
+      useSaveJob().mutate(job._id, {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
-        },
-        onError: (err: unknown) => {
-          if ((err as { status?: number })?.status !== 409) {
-            toast.error("Failed to save job");
-          }
         },
       });
     } else {
-      unsaveJobMutation.mutate(job._id, {
+      useUnsaveJob().mutate(job._id, {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
         },
-        onError: () => toast.error("Failed to remove saved job"),
       });
     }
   };
@@ -117,7 +103,6 @@ export default function JobDetails() {
           <span className="text-sm font-medium">Back</span>
         </button>
 
-        {/* Title */}
         <h1 className="mt-6 text-2xl font-bold">{job.title}</h1>
 
         {/* Actions */}
@@ -153,63 +138,9 @@ export default function JobDetails() {
           </button>
         </div>
 
-        {/* Meta */}
-        <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
-          {job.category && (
-            <p>
-              <strong>Category:</strong>{" "}
-              {typeof job.category === "string"
-                ? job.category
-                : job.category.name}
-            </p>
-          )}
-          {job.salary && <p><strong>Salary:</strong> {job.salary}</p>}
-          {job.department && (
-            <p><strong>Department:</strong> {job.department}</p>
-          )}
-          {job.requiredExperience && (
-            <p><strong>Experience:</strong> {job.requiredExperience}</p>
-          )}
-          {job.education && (
-            <p><strong>Education:</strong> {job.education}</p>
-          )}
-          {job.expiry && (
-            <p>
-              <strong>Expiry:</strong>{" "}
-              {new Date(job.expiry).toLocaleDateString()}
-            </p>
-          )}
-        </div>
-
         {/* Description */}
         {job.description && (
-          <div>
-            <h2 className="mb-1 font-semibold text-gray-800">
-              Description
-            </h2>
-            <p className="text-sm leading-relaxed text-gray-600">
-              {job.description}
-            </p>
-          </div>
-        )}
-
-        {/* Skills */}
-        {(job.skills ?? []).length > 0 && (
-          <div>
-            <h2 className="mb-2 font-semibold text-gray-800">
-              Skills Required
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {job.skills!.map((skill: Skill | string, index: number) => (
-                <span
-                  key={index}
-                  className="rounded-md bg-gray-100 px-3 py-1 text-xs text-gray-700"
-                >
-                  {typeof skill === "string" ? skill : skill.name}
-                </span>
-              ))}
-            </div>
-          </div>
+          <p className="text-sm text-gray-600">{job.description}</p>
         )}
       </div>
     </div>
