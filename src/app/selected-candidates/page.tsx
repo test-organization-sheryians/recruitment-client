@@ -22,30 +22,29 @@ export default function SelectedCandidatesPage() {
   const params = useSearchParams();
   const shareId = params.get('shareId');
 
-  const { data, isLoading } = useShareCandidates(shareId!);
+  const { data: backendCandidates = [], isLoading } = useShareCandidates(shareId!);
 
-  const candidates: UIShareCandidate[] =
-    data?.data.map((c: any) => ({
-      _id: c._id,
-      userId: c.userId,
-      name: `${c.user.firstName} ${c.user.lastName}`,
-      email: c.user.email,
-      availability: c.availability,
-      resumeFile: c.resumeFile,
-      skills: c.skills || [],
-      experiences: c.experiences || [],
-      createdAt: c.createdAt,
-    })) ?? [];
+  const uiCandidates: UIShareCandidate[] = backendCandidates.map((c: any) => ({
+    _id: c._id,
+    userId: c.userId,
+    name: `${c.user.firstName} ${c.user.lastName}`,
+    email: c.user.email,
+    availability: c.availability,
+    resumeFile: c.resumeFile,
+    skills: c.skills || [],
+    experiences: c.experiences || [],
+    createdAt: c.createdAt,
+  }));
 
   const [activeId, setActiveId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (candidates.length > 0 && !activeId) {
-      setActiveId(candidates[0]._id);
+    if (uiCandidates.length > 0 && !activeId) {
+      setActiveId(uiCandidates[0]._id);
     }
-  }, [candidates, activeId]);
+  }, [uiCandidates, activeId]);
 
-  const activeCandidate = candidates.find(c => c._id === activeId) ?? null;
+  const activeCandidate = uiCandidates.find(c => c._id === activeId) ?? null;
 
   if (isLoading) {
     return (
@@ -55,7 +54,7 @@ export default function SelectedCandidatesPage() {
     );
   }
 
-  if (!isLoading && candidates.length === 0) {
+  if (!isLoading && uiCandidates.length === 0) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-slate-100">
         <User className="mb-4 h-12 w-12 text-slate-400" />
@@ -84,7 +83,7 @@ export default function SelectedCandidatesPage() {
 
           <h1 className="text-2xl font-semibold text-slate-800">
             Shared Candidates
-            <span className="ml-2 text-sm font-normal text-slate-500">({candidates.length})</span>
+            <span className="ml-2 text-sm font-normal text-slate-500">({uiCandidates.length})</span>
           </h1>
         </div>
 
@@ -96,7 +95,7 @@ export default function SelectedCandidatesPage() {
             </div>
 
             <div className="divide-y">
-              {candidates.map(c => (
+              {uiCandidates.map(c => (
                 <button
                   key={c._id}
                   onClick={() => setActiveId(c._id)}
@@ -132,7 +131,6 @@ export default function SelectedCandidatesPage() {
                     <h2 className="text-2xl font-semibold text-slate-800">
                       {activeCandidate.name}
                     </h2>
-
                     <p className="mt-2 text-sm text-slate-500">
                       Shared at:{' '}
                       {activeCandidate.createdAt
@@ -154,6 +152,39 @@ export default function SelectedCandidatesPage() {
                     label="Availability"
                     value={activeCandidate.availability}
                   />
+
+                  {activeCandidate.skills.length > 0 && (
+                    <div className="col-span-2">
+                      <p className="mb-2 text-sm font-semibold text-slate-700">Skills</p>
+                      <div className="flex flex-wrap gap-2">
+                        {activeCandidate.skills.map(skill => (
+                          <span
+                            key={skill._id}
+                            className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
+                          >
+                            {skill.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeCandidate.experiences.length > 0 && (
+                    <div className="col-span-2">
+                      <p className="mb-2 text-sm font-semibold text-slate-700">Experience</p>
+                      <div className="space-y-2">
+                        {activeCandidate.experiences.map((exp: any, index: number) => (
+                          <div
+                            key={exp._id || index}
+                            className="rounded-lg border bg-slate-50 p-3 text-sm"
+                          >
+                            <p className="font-medium text-slate-800">{exp.role}</p>
+                            <p className="text-xs text-slate-500">{exp.company}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {activeCandidate.resumeFile && (
                     <div className="col-span-2">
