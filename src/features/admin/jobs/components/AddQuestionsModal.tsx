@@ -158,7 +158,7 @@ export default function AddQuestionsModal({
 
       {/* Modal wrapper */}
       <div className="fixed inset-0 z-1000 flex items-center justify-center  px-6">
-        <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.18)] flex flex-col">
+        <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-2xl flex flex-col">
 
           {/* Header */}
           <div className="flex items-center justify-between px-8 py-5 border-b bg-white">
@@ -176,11 +176,12 @@ export default function AddQuestionsModal({
             {questions.map((q, idx) => (
               <div
                 key={idx}
-                className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4 shadow-sm group"
+                className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4 group"
               >
                 {/* Question title + Required */}
                 <div className="flex items-center justify-between">
-                  <div className="text-sm font-semibold text-gray-800">Question {idx + 1}</div>
+                  <div className="text-gray-600 text-sm font-medium mb-1">Question {idx + 1}</div>
+
                   <label className="flex items-center gap-2 text-sm text-gray-600">
                     <input
                       type="checkbox"
@@ -204,7 +205,7 @@ export default function AddQuestionsModal({
                     }
                     onBlur={() => validateQuestion(idx)}
                     placeholder="Enter question text"
-                    className="md:col-span-3 w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="md:col-span-3 w-full text-sm sm:text-base bg-[#DFECFF] rounded-base px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 outline-none border border-gray-200 focus:border-blue-400 transition "
                   />
 
                   <select
@@ -219,7 +220,7 @@ export default function AddQuestionsModal({
                             : [],
                       });
                     }}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full text-sm text-gray-600 sm:text-base bg-[#DFECFF] rounded-base px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 outline-none border border-gray-200 focus:border-blue-400 transition "
                   >
                     {[
                       "text",
@@ -249,51 +250,51 @@ export default function AddQuestionsModal({
                 {(q.inputType === "radio" ||
                   q.inputType === "checkbox" ||
                   q.inputType === "dropdown") && (
-                  <div className="mt-3 space-y-2">
-                    {q.options.map((opt, oi) => (
-                      <div key={oi} className="flex gap-2 items-center relative hover:[&>button]:opacity-100">
-                        <input
-                          value={opt}
-                          onChange={(e) =>
-                            updateOption(idx, oi, e.target.value)
-                          }
-                          placeholder={`Option ${oi + 1}`}
-                          onBlur={() => validateQuestion(idx)}
-                          className="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        />
+                    <div className="mt-3 space-y-2">
+                      {q.options.map((opt, oi) => (
+                        <div key={oi} className="flex gap-2 items-center relative hover:[&>button]:opacity-100">
+                          <input
+                            value={opt}
+                            onChange={(e) =>
+                              updateOption(idx, oi, e.target.value)
+                            }
+                            placeholder={`Option ${oi + 1}`}
+                            onBlur={() => validateQuestion(idx)}
+                            className="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                          />
+                          <button
+                            onClick={() => removeOption(idx, oi)}
+                            className="opacity-0 transition-opacity duration-150 w-9 h-9 rounded-xl bg-gray-50 text-gray-500 hover:bg-gray-100 flex items-center justify-center"
+                            aria-label={`Remove option ${oi + 1} for question ${idx + 1}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                      {qErrors[idx]?.options && (
+                        <p className="mt-1 text-xs text-red-600">{qErrors[idx].options}</p>
+                      )}
+                      <button
+                        onClick={() => addOption(idx)}
+                        className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add option
+                      </button>
+                      {/* Move question-level Remove button under options */}
+                      <div className="flex justify-end items-center text-sm text-gray-600 mt-2">
                         <button
-                          onClick={() => removeOption(idx, oi)}
-                          className="opacity-0 transition-opacity duration-150 w-9 h-9 rounded-xl bg-gray-50 text-gray-500 hover:bg-gray-100 flex items-center justify-center"
-                          aria-label={`Remove option ${oi + 1} for question ${idx + 1}`}
+                          onClick={() => setConfirmDeleteIndex(idx)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-2 rounded text-red-500 hover:text-red-600 flex items-center gap-1"
+                          aria-label={`Remove question ${idx + 1}`}
+                          title="Delete question"
                         >
                           <Trash2 className="w-4 h-4" />
+                          <span className="select-none">Remove</span>
                         </button>
                       </div>
-                    ))}
-                    {qErrors[idx]?.options && (
-                      <p className="mt-1 text-xs text-red-600">{qErrors[idx].options}</p>
-                    )}
-                    <button
-                      onClick={() => addOption(idx)}
-                      className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add option
-                    </button>
-                    {/* Move question-level Remove button under options */}
-                    <div className="flex justify-end items-center text-sm text-gray-600 mt-2">
-                      <button
-                        onClick={() => setConfirmDeleteIndex(idx)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-2 rounded text-red-500 hover:text-red-600 flex items-center gap-1"
-                        aria-label={`Remove question ${idx + 1}`}
-                        title="Delete question"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span className="select-none">Remove</span>
-                      </button>
                     </div>
-                  </div>
-                )}
+                  )}
                 {/* For question types without options, still show Remove at bottom */}
                 {!(q.inputType === "radio" || q.inputType === "checkbox" || q.inputType === "dropdown") && (
                   <div className="flex justify-end items-center text-sm text-gray-600">
@@ -315,7 +316,7 @@ export default function AddQuestionsModal({
             <div className="flex justify-end">
               <button
                 onClick={addRow}
-                className="inline-flex items-center gap-2 px-5 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-semibold"
+                className="inline-flex items-center gap-2 px-5 py-3 text-gray-600 text-sm font-semibold"
               >
                 <Plus className="w-4 h-4" />
                 Add Question

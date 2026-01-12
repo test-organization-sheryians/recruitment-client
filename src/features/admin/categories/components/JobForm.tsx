@@ -291,7 +291,7 @@ export default function JobForm({
               {/* Step 1: Basic Information */}
               <div className="w-1/2 pr-8 space-y-6">
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-600">
                     <Briefcase className="w-4 h-4 text-blue-600" />
                     Job Title *
                   </label>
@@ -301,7 +301,7 @@ export default function JobForm({
                     value={formData.title}
                     onChange={handleChange}
                     onBlur={() => validateField("title", formData.title)}
-                    className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    className="md:col-span-3 w-full text-sm sm:text-base bg-[#DFECFF] rounded-base px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 outline-none border border-gray-200 focus:border-blue-400 transition"
                   />
                   {errors.title && (
                     <p className="mt-1 text-xs text-red-600">{errors.title}</p>
@@ -309,7 +309,7 @@ export default function JobForm({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-600">
                     <FileText className="w-4 h-4 text-blue-600" />
                     Job Description *
                   </label>
@@ -320,7 +320,7 @@ export default function JobForm({
                     value={formData.description}
                     onChange={handleChange}
                     onBlur={() => validateField("description", formData.description)}
-                    className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
+                    className="md:col-span-3 w-full text-sm sm:text-base bg-[#DFECFF] rounded-base px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 outline-none border border-gray-200 focus:border-blue-400 transition"
                   />
                   {errors.description && (
                     <p className="mt-1 text-xs text-red-600">{errors.description}</p>
@@ -328,7 +328,7 @@ export default function JobForm({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-600">
                     <GraduationCap className="w-4 h-4 text-blue-600" />
                     Education Required *
                   </label>
@@ -338,7 +338,7 @@ export default function JobForm({
                     value={formData.education}
                     onChange={handleChange}
                     onBlur={() => validateField("education", formData.education)}
-                    className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    className="md:col-span-3 w-full text-sm sm:text-base bg-[#DFECFF] rounded-base px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 outline-none border border-gray-200 focus:border-blue-400 transition"
                   />
                   {errors.education && (
                     <p className="mt-1 text-xs text-red-600">{errors.education}</p>
@@ -347,7 +347,7 @@ export default function JobForm({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-600">
                       <Calendar className="w-4 h-4 text-blue-600" />
                       Application Deadline *
                     </label>
@@ -358,14 +358,14 @@ export default function JobForm({
                       value={formData.expiry}
                       onChange={handleChange}
                       onBlur={() => validateField("expiry", formData.expiry)}
-                      className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      className="md:col-span-3 w-full text-sm sm:text-base bg-[#DFECFF] rounded-base px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 outline-none border border-gray-200 focus:border-blue-400 transition"
                     />
                     {errors.expiry && (
                       <p className="mt-1 text-xs text-red-600">{errors.expiry}</p>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-600">
                       <Clock className="w-4 h-4 text-blue-600" />
                       Experience Required *
                     </label>
@@ -375,7 +375,7 @@ export default function JobForm({
                       value={formData.requiredExperience}
                       onChange={handleChange}
                       onBlur={() => validateField("requiredExperience", formData.requiredExperience)}
-                      className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      className="md:col-span-3 w-full text-sm sm:text-base bg-[#DFECFF] rounded-base px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 outline-none border border-gray-200 focus:border-blue-400 transition"
                     />
                     {errors.requiredExperience && (
                       <p className="mt-1 text-xs text-red-600">{errors.requiredExperience}</p>
@@ -385,7 +385,7 @@ export default function JobForm({
                   {/* {/* Location Added */}
                   {/* Location Section */}
                   <div className="space-y-3 col-span-2">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-600">
                       <Clock className="w-4 h-4 text-blue-600" />
                       Location Required *
                     </label>
@@ -405,9 +405,7 @@ export default function JobForm({
                               handleLocationChange("city", e.target.value)
                             }
                             onBlur={() => validateLocationField("city", formData.location.city)}
-                            className="w-full h-11 border-2 border-gray-200 rounded-xl px-4 text-sm
-                     focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                     outline-none transition-all bg-white"
+                            className="md:col-span-3 w-full text-sm sm:text-base bg-[#DFECFF] rounded-base px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 outline-none border border-gray-200 focus:border-blue-400 transition"
                           />
                           {errors["location.city"] && (
                             <p className="mt-1 text-xs text-red-600">{errors["location.city"]}</p>
@@ -416,7 +414,7 @@ export default function JobForm({
 
                         {/* State */}
                         <div className="flex flex-col gap-1">
-                          <label className="text-xs font-medium text-gray-500">
+                          <label className="text-xs font-medium text-gray-600">
                             State
                           </label>
                           <input
@@ -426,9 +424,7 @@ export default function JobForm({
                                 handleLocationChange("state", e.target.value)
                               }
                               onBlur={() => validateLocationField("state", formData.location.state)}
-                            className="w-full h-11 border-2 border-gray-200 rounded-xl px-4 text-sm
-                     focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                     outline-none transition-all bg-white"
+                            className="md:col-span-3 w-full text-sm sm:text-base bg-[#DFECFF] rounded-base px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 outline-none border border-gray-200 focus:border-blue-400 transition"
                           />
                           {errors["location.state"] && (
                             <p className="mt-1 text-xs text-red-600">{errors["location.state"]}</p>
@@ -437,7 +433,7 @@ export default function JobForm({
 
                         {/* Pincode */}
                         <div className="flex flex-col gap-1">
-                          <label className="text-xs font-medium text-gray-500">
+                          <label className="text-xs font-medium text-gray-600">
                             Pincode
                           </label>
                           <input
@@ -447,9 +443,7 @@ export default function JobForm({
                               handleLocationChange("pincode", e.target.value)
                             }
                             onBlur={() => validateLocationField("pincode", formData.location.pincode)}
-                            className="w-full h-11 border-2 border-gray-200 rounded-xl px-4 text-sm
-                     focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                     outline-none transition-all bg-white"
+                            className="md:col-span-3 w-full text-sm sm:text-base bg-[#DFECFF] rounded-base px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 outline-none border border-gray-200 focus:border-blue-400 transition"
                           />
                           {errors["location.pincode"] && (
                             <p className="mt-1 text-xs text-red-600">{errors["location.pincode"]}</p>
@@ -458,7 +452,7 @@ export default function JobForm({
 
                         {/* Country */}
                         <div className="flex flex-col gap-1">
-                          <label className="text-xs font-medium text-gray-500">
+                          <label className="text-xs font-medium text-gray-600">
                             Country
                           </label>
                           <input
@@ -468,9 +462,7 @@ export default function JobForm({
                               handleLocationChange("country", e.target.value)
                             }
                             onBlur={() => validateLocationField("country", formData.location.country)}
-                            className="w-full h-11 border-2 border-gray-200 rounded-xl px-4 text-sm
-                     focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                     outline-none transition-all bg-white"
+                            className="md:col-span-3 w-full text-sm sm:text-base bg-[#DFECFF] rounded-base px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 outline-none border border-gray-200 focus:border-blue-400 transition"
                           />
                           {errors["location.country"] && (
                             <p className="mt-1 text-xs text-red-600">{errors["location.country"]}</p>
@@ -497,7 +489,7 @@ export default function JobForm({
 
               <div className="w-1/2 pl-8 space-y-6">
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-600">
                     <FolderOpen className="w-4 h-4 text-blue-600" />
                     Job Category *
                   </label>
@@ -505,7 +497,7 @@ export default function JobForm({
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+                    className="w-full border-1 bg-[#DFECFF] rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   >
                     {categories.map((cat: { _id: string; name: string }) => (
                       <option key={cat._id} value={cat._id}>
@@ -516,7 +508,7 @@ export default function JobForm({
                 </div>
 
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-600">
                     <Sparkles className="w-4 h-4 text-blue-600" />
                     Required Skills *
                   </label>
@@ -525,7 +517,7 @@ export default function JobForm({
                   <input
                     type="text"
                     placeholder="Search and add skills (e.g. React, Node...)"
-                    className="w-full border-2 border-gray-100 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    className="w-full border-1 bg-[#DFECFF] rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     onChange={(e) => setSearchTerm(e.target.value)} // You'll need to add a [searchTerm, setSearchTerm] state
                   />
 
@@ -558,10 +550,10 @@ export default function JobForm({
                   {/* 3. Selected Skills Display (The "Tags" view) */}
                   {formData.skills.length > 0 && (
                     <div className="mt-4">
-                      <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">
+                      <p className="text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">
                         Selected Skills:
                       </p>
-                      <div className="flex flex-wrap gap-2 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
+                      <div className="flex flex-wrap gap-2 p-3 bg-[#DFECFF] rounded-xl border border-blue-100">
                         {formData.skills.map((skillId) => {
                           // ADD THE ARRAY CHECK HERE
                           const skillName = Array.isArray(skillsResponse)
