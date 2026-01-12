@@ -103,13 +103,13 @@ export default function AddQuestionsModal({
 
       if (toCreate.length) await addJobQuestions(jobId, toCreate);
       await Promise.all(
-        toUpdate.map((q) => updateJobQuestion(q._id!, q))
+        toUpdate.map((q) => updateJobQuestion(jobId, q._id!, q))
       );
 
       // delete any questions that were removed in the UI
       if (deletedIds.length) {
         await Promise.all(
-          deletedIds.map((id) => deleteJobQuestion(id).catch(() => null))
+          deletedIds.map((id) => deleteJobQuestion(jobId, id).catch(() => null))
         );
       }
 
