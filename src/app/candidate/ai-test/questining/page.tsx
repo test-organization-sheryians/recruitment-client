@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type * as monaco from "monaco-editor";
+
 // Hooks
 import { useActiveQuestions } from "@/features/test/hooks/useActivation";
 import { useEvaluateAnswers } from "@/features/AITest/hooks/aiTestApi";
@@ -51,6 +53,7 @@ const isMCQ = (q?: Question): q is Question => !!q && Array.isArray(q.options);
 
 
 export default function UniversalInterviewPage() {
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const attemptId =
     typeof window !== "undefined" ? localStorage.getItem("attemptId") : null;
 
@@ -90,7 +93,22 @@ export default function UniversalInterviewPage() {
   const [step, setStep] = useState(0);
   const [text, setText] = useState("");
   const [code, setCode] = useState("");
+  const [showCodeEditor, setShowCodeEditor] = useState(false);
   const [answers, setAnswers] = useState<CandidateAnswer[]>([]);
+
+  // to reset code editor when question change
+  useEffect(() => {
+    setShowCodeEditor(false);
+  }, [step]);
+
+  useEffect(() => {
+    if (showCodeEditor && editorRef.current) {
+      setTimeout(() => {
+        editorRef.current?.layout();
+      }, 0);
+    }
+  }, [showCodeEditor]);
+
 
   /* ---------- EFFECT: INITIAL LOAD & QUESTIONS ---------- */
   useEffect(() => {
@@ -120,8 +138,9 @@ export default function UniversalInterviewPage() {
   }, [attempt]);
 
   /* ---------- TIMER LOGIC ---------- */
+  const questions = Array.isArray(finalQuestions) ? finalQuestions : [];
   const activeQuestion = finalQuestions[step];
-  const isResumeTest = finalQuestions.some((q) => q.source === "ai");
+  const isResumeTest = questions.some(q => q.source === "ai");
   const isActiveTest = !isResumeTest;
 
   const { data: secondsLeft = testDuration * 60 } = useQuery({
@@ -215,11 +234,11 @@ export default function UniversalInterviewPage() {
       },
       {
         onSuccess: () => {
-          setIsSubmitting(false); 
+          setIsSubmitting(false);
           router.push("/candidate/ai-test/submitted");
         },
         onError: () => {
-          setIsSubmitting(false); 
+          setIsSubmitting(false);
         },
       }
     );
@@ -267,7 +286,7 @@ export default function UniversalInterviewPage() {
     const prev = answers[step];
     setText(prev?.text ?? "");
     setCode(prev?.code ?? "");
-  }, [step, answers]);
+  }, [step]);
 
   const save = () => {
     setAnswers((prev) => {
@@ -288,8 +307,14 @@ export default function UniversalInterviewPage() {
     if (step > 0) setStep(step - 1);
   };
 
-  if (isLoading) return <p className="p-8 text-center font-medium">Preparing questions…</p>;
-  if (!activeQuestion) return <p className="p-8 text-center font-medium">No questions found</p>;
+  if (isLoading || finalQuestions.length === 0) {
+    return (
+      <p className="p-8 text-center font-medium">
+        Loading questions…
+      </p>
+    );
+  }
+
 
   const progress = ((step + 1) / finalQuestions.length) * 100;
 
@@ -363,11 +388,11 @@ export default function UniversalInterviewPage() {
 
       {isSubmitting && (
         <div className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center">
-    <div className="spinner">
-      <div></div>
-      <div></div>
-    </div>
-  </div>
+          <div className="spinner">
+            <div></div>
+            <div></div>
+          </div>
+        </div>
       )}
 
 
@@ -409,87 +434,161 @@ export default function UniversalInterviewPage() {
 
           <div className="px-6 pb-4 text-center">
             <p className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">Question {step + 1} of {finalQuestions.length}</p>
-            <h2 className="text-xl font-bold text-gray-800 leading-tight">{activeQuestion.question}</h2>
+            <h2 className="text-xl font-bold text-gray-800 leading-tight">{activeQuestion?.question ?? "Loading question..."}</h2>
           </div>
         </div>
 
         {/* BODY */}
+        {/* BODY */}
         <div className="p-6">
-          <div ref={ref} className="flex min-h-[65vh] bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+
+          {/* ADD / HIDE CODE BUTTON */}
+          {!isMCQ(activeQuestion) && (
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={() => setShowCodeEditor(prev => !prev)}
+                className="
+          px-4 py-2 text-sm font-semibold
+          rounded-full
+          bg-indigo-600 text-white
+          hover:bg-indigo-700
+          shadow-md
+          transition-all
+          active:scale-95
+        "
+              >
+                {showCodeEditor ? "Hide Code" : "Write Code"}
+              </button>
+            </div>
+          )}
+
+          {/* MAIN CONTAINER */}
+          <div
+            ref={ref}
+            className="
+      relative flex min-h-[65vh]
+      bg-white rounded-2xl
+      shadow-lg
+      overflow-hidden
+      border border-gray-200
+      transition-all duration-300 ease-in-out
+    "
+          >
+
             {isMCQ(activeQuestion) ? (
+              /* ---------- MCQ UI ---------- */
               <div className="w-full p-10 grid gap-4 max-w-2xl mx-auto items-center">
                 {activeQuestion.options!.map((opt, i) => (
                   <button
                     key={i}
-                    disabled={blocked}
                     onClick={() => setText(opt)}
-                    className={`p-5 border-2 rounded-xl flex items-center gap-4 transition-all text-left ${text === opt ? "border-indigo-600 bg-indigo-50 shadow-inner" : "border-gray-100 hover:border-indigo-200"
-                      }`}
+                    className={`
+          p-5 border-2 rounded-xl flex items-center gap-4 transition-all text-left
+          ${text === opt
+                        ? "border-indigo-600 bg-indigo-50 shadow-inner"
+                        : "border-gray-100 hover:border-indigo-200"}
+        `}
                   >
-                    <CheckCircle2 className={`w-6 h-6 ${text === opt ? "text-indigo-600" : "text-gray-200"}`} />
-                    <span className={`font-semibold ${text === opt ? "text-indigo-800" : "text-gray-600"}`}>{opt}</span>
+                    <CheckCircle2
+                      className={`w-6 h-6 ${text === opt ? "text-indigo-600" : "text-gray-200"}`}
+                    />
+                    <span className="font-semibold text-gray-700">{opt}</span>
                   </button>
                 ))}
               </div>
             ) : (
               <>
-                <div style={{ width: `${width}%` }} className="flex flex-col bg-gray-50 border-r border-gray-200">
-                  <div className="px-4 py-2 bg-gray-100 text-gray-500 text-[10px] font-black uppercase tracking-widest border-b">Explanation Area</div>
-                  <textarea
-                    value={text}
-                    disabled={blocked}
-                    onChange={(e) => {
-                      if (blocked) return;
-                      setText(e.target.value);
-                    }}
-                    onPaste={prevent}
-                    onCopy={prevent}
-                    className="flex-1 p-6 resize-none outline-none bg-transparent text-gray-700 text-lg leading-relaxed font-medium"
-                    placeholder="Write your explanation or logic here..."
-                  />
-                </div>
-
+                {/* ---------- SPLIT VIEW (TEXT + CODE) ---------- */}
                 <div
-                  className="w-1.5 bg-gray-100 hover:bg-indigo-400 cursor-col-resize flex items-center justify-center transition-colors"
-                  onMouseDown={() => setDragging(true)}
-                  onMouseUp={() => setDragging(false)}
-                  onMouseMove={onDrag}
+                  style={{ display: showCodeEditor ? "flex" : "none" }}
+                  className="relative w-full min-h-[65vh] bg-white rounded-2xl shadow-lg border overflow-hidden"
                 >
-                  <GripVertical className="text-gray-300 w-4" />
-                </div>
+                  {/* LEFT: TEXT */}
+                  <div
+                    style={{ width: `${width}%` }}
+                    className="flex flex-col border-r bg-gray-50"
+                  >
+                    <div className="px-6 py-3 border-b bg-white">
+                      <span className="text-xs font-bold uppercase tracking-widest text-indigo-500">
+                        Explanation
+                      </span>
+                    </div>
 
-                <div style={{ width: `${100 - width}%` }} className="flex flex-col bg-[#1e1e1e]">
-                  <div className="px-4 py-2 bg-[#252526] text-gray-500 text-[10px] font-black uppercase tracking-widest border-b border-[#333]">Monaco Code Editor</div>
-                  <div className="flex-1 overflow-hidden">
+                    <textarea
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      onPaste={prevent}
+                      onCopy={prevent}
+                      onCut={prevent}
+                      className="flex-1 p-8 resize-none outline-none bg-transparent text-[16px]"
+                      placeholder="Explain your approach here..."
+                    />
+                  </div>
+
+                  {/* RESIZER */}
+                  <div
+                    className="w-1.5 bg-gray-100 hover:bg-indigo-400 cursor-col-resize"
+                    onMouseDown={() => setDragging(true)}
+                    onMouseUp={() => setDragging(false)}
+                    onMouseMove={onDrag}
+                  />
+
+                  {/* RIGHT: CODE EDITOR (ALWAYS MOUNTED) */}
+                  <div
+                    style={{ width: `${100 - width}%` }}
+                    className="flex flex-col bg-[#1e1e1e]"
+                  >
+                    <div className="px-6 py-3 bg-[#252526] border-b border-[#333]">
+                      <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                        Code Editor
+                      </span>
+                    </div>
+
                     <Editor
                       height="100%"
                       defaultLanguage="javascript"
                       value={code}
                       theme="vs-dark"
-                      onChange={(v) => {
-                        if (blocked) return;
-                        setCode(v ?? "");
+                      onMount={(editor) => {
+                        editorRef.current = editor;
                       }}
+                      onChange={(v) => setCode(v ?? "")}
                       options={{
-                        readOnly: blocked,
-                        fontSize: 16,
+                        fontSize: 15,
                         minimap: { enabled: false },
-                        contextmenu: false,
-                        automaticLayout: true,
-                        lineNumbers: "on",
-                        padding: { top: 20 }
-                      }}
-                      onMount={(editor, monaco) => {
-                        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC, () => { });
-                        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV, () => { });
+                        automaticLayout: false,
                       }}
                     />
                   </div>
                 </div>
+
+                {/* ---------- TEXT ONLY VIEW ---------- */}
+                <div
+                  style={{ display: showCodeEditor ? "none" : "flex" }}
+                  className="w-full min-h-[65vh] flex flex-col bg-white rounded-2xl shadow-lg border"
+                >
+                  <div className="px-6 py-3 border-b bg-white">
+                    <span className="text-xs font-bold uppercase tracking-widest text-indigo-500">
+                      Answer
+                    </span>
+                  </div>
+
+                  <textarea
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    onPaste={prevent}
+                    onCopy={prevent}
+                    onCut={prevent}
+                    className="flex-1 p-10 resize-none outline-none bg-transparent text-[17px]"
+                    placeholder="Write your complete answer here..."
+                  />
+                </div>
               </>
             )}
+
           </div>
         </div>
+
       </div>
     </div>
   );
