@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Plus, Trash2, X, HelpCircle, CheckCircle2 } from "lucide-react";
+import Select from "@/components/ui/select";
 import { addJobQuestions, updateJobQuestion, deleteJobQuestion } from "@/api/jobs/addJobQuestions";
 import type { JobQuestion } from "@/types/JobQuestion";
 
@@ -208,10 +209,10 @@ export default function AddQuestionsModal({
                     className="md:col-span-3 w-full text-sm sm:text-base bg-[#DFECFF] rounded-base px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 outline-none border border-gray-200 focus:border-blue-400 transition "
                   />
 
-                  <select
+                  <Select
                     value={q.inputType}
                     onChange={(e) => {
-                      const val = e.target.value;
+                      const val = (e.target as HTMLSelectElement).value;
                       updateRow(idx, {
                         inputType: val,
                         options:
@@ -220,9 +221,8 @@ export default function AddQuestionsModal({
                             : [],
                       });
                     }}
-                    className="w-full text-sm text-gray-600 sm:text-base bg-[#DFECFF] rounded-base px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 outline-none border border-gray-200 focus:border-blue-400 transition "
-                  >
-                    {[
+                    className="w-full text-sm text-gray-600 sm:text-base bg-[#DFECFF] rounded-base px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 outline-none border border-gray-200 focus:border-blue-400 transition"
+                    options={[
                       "text",
                       "textarea",
                       "radio",
@@ -233,12 +233,8 @@ export default function AddQuestionsModal({
                       "date",
                       "number",
                       "rating",
-                    ].map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
+                    ].map((type) => ({ value: type, label: type }))}
+                  />
                 </div>
                 {qErrors[idx]?.title && (
                   <p className="mt-2 text-xs text-red-600">{qErrors[idx].title}</p>
