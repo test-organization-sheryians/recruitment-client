@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react";
 import React from "react";
 
 type ErrorStateProps = {
@@ -27,9 +28,9 @@ const ErrorState: React.FC<ErrorStateProps> = ({
 
         <button
           onClick={onBack}
-          className="inline-flex items-center justify-center gap-3 px-6 py-3 cursor-pointer bg-[#1447E6] text-white text-md rounded-xl hover:bg-[#18399a] active:scale-95 focus:outline-none focus:ring-4 focus:ring-indigo-200 transition-all"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 cursor-pointer bg-[#1447E6] text-white text-md rounded-xl hover:bg-[#18399a] active:scale-95 focus:outline-none focus:ring-4 focus:ring-indigo-200 transition-all"
         >
-          ⬅ Go To Home 
+          <ArrowLeft size={18} />Go To Home 
         </button>
       </div>
     </div>
