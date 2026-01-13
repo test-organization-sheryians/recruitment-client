@@ -1,7 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { Check, Copy, Loader2, MoreVertical, Pencil, Trash2, Users } from 'lucide-react';
+import { Check, Copy, LinkIcon, Loader2, MoreVertical, Pencil, Trash2, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -133,11 +133,11 @@ export default function UsersTable() {
     const payload = selectedUserIds.map(id => ({ candidateId: id }));
     shareCandidates(payload, {
       onSuccess: res => {
-        // success('Candidates shared successfully');
         setSelectedUserIds([]);
         const shareId = res.shareLink.split('/').pop();
-        // router.push(`/selected-candidates?shareId=${shareId}`);
-        setLink(`http://localhost:3000/selected-candidates?shareId=${shareId}`);
+        setLink(
+          `https://recruitment-client-git-dev-anshu-pandeys-projects.vercel.app/selected-candidates?shareId=${shareId}`
+        );
         setShowLink(true);
       },
       onError: () => error('Failed to share candidates'),
@@ -181,16 +181,19 @@ export default function UsersTable() {
           )}
 
           {showLink && (
-            <div className="flex items-center gap-2 rounded-lg border bg-gray-50 p-2">
-              <p className="text-sm text-gray-700 truncate">{link}</p>
+            <div className="flex max-w-xl items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm">
+              <div className="flex flex-1 items-center gap-2 overflow-hidden">
+                <LinkIcon className="h-4 w-4 text-gray-400" />
+                <p className="truncate text-sm font-medium text-gray-700">{link}</p>
+              </div>
 
               <button
                 onClick={handleCopy}
-                className="flex items-center gap-1 rounded-md bg-gray-200 px-2 py-1 text-xs hover:bg-gray-300"
+                className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition"
               >
                 {copied ? (
                   <>
-                    <Check className="h-3 w-3 text-green-600" />
+                    <Check className="h-3 w-3" />
                     Copied
                   </>
                 ) : (

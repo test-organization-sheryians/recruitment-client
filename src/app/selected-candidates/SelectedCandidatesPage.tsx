@@ -25,18 +25,6 @@ export default function SelectedCandidatesPage() {
 
   const { data: backendCandidates = [], isLoading } = useShareCandidates(shareId!);
 
-  // const uiCandidate: UIShareCandidate[] = backendCandidates.map((c: ShareCandidate) => ({
-  //   _id: c._id,
-  //   userId: c.userId,
-  //   name: `${c.user.firstName} ${c.user.lastName}`,
-  //   email: c.user.email,
-  //   availability: c.availability,
-  //   resumeFile: c.resumeFile,
-  //   skills: c.skills || [],
-  //   experiences: c.experiences || [],
-  //   createdAt: c.createdAt,
-  // }));
-
   const uiCandidates: UIShareCandidate[] = backendCandidates.map((c: ShareCandidate) => ({
     _id: c._id,
     userId: c.userId,
@@ -45,7 +33,7 @@ export default function SelectedCandidatesPage() {
     availability: c.availability,
     resumeFile: c.resumeFile,
 
-    // 🔑 normalize optional → required
+    //  normalize optional → required
     skills: (c.skills ?? []).map(skill => ({
       _id: skill._id ?? '',
       name: skill.name ?? '',
@@ -99,7 +87,7 @@ export default function SelectedCandidatesPage() {
 
           <button
             onClick={() => router.push('/')}
-            className="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+            className="flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
           >
             <Home className="h-4 w-4" />
             Home
@@ -192,18 +180,29 @@ export default function SelectedCandidatesPage() {
 
                   {activeCandidate.experiences.length > 0 && (
                     <div className="col-span-2">
-                      <p className="mb-2 text-sm font-semibold text-slate-700">Experience</p>
-                      <div className="space-y-2">
+                      <p className="mb-3 text-sm font-semibold text-slate-700">Experience</p>
+
+                      <div className="space-y-3">
                         {activeCandidate.experiences.map((exp: Experience, index: number) => (
                           <div
                             key={exp._id || index}
-                            className="rounded-lg border bg-slate-50 p-3 text-sm"
+                            className="group rounded-xl border bg-white p-4 shadow-sm transition hover:shadow-md"
                           >
-                            <p className="text-xs text-slate-500">{exp.company}</p>
-                            <p className="font-medium text-slate-800">{exp.title}</p>
-                            <p className="font-medium text-slate-800">{exp.location}</p>
-                            <p className="font-medium text-slate-800">{exp.startDate}</p>
-                            <p className="font-medium text-slate-800">{exp.endDate}</p>
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <p className="text-sm font-semibold text-slate-900">{exp.title}</p>
+                                <p className="text-sm text-slate-600">
+                                  {exp.company} • {exp.location}
+                                </p>
+                              </div>
+
+                              <span className="text-xs text-slate-500">
+                                {new Date(exp.startDate).toLocaleDateString()} –{' '}
+                                {exp.endDate
+                                  ? new Date(exp.endDate).toLocaleDateString()
+                                  : 'Present'}
+                              </span>
+                            </div>
                           </div>
                         ))}
                       </div>
