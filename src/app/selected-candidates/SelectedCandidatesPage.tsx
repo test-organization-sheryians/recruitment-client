@@ -17,13 +17,15 @@ interface UIShareCandidate {
   experiences: Experience[];
   createdAt?: string;
 }
+function formatDate(date?: string) {
+  return date ? new Date(date).toLocaleDateString() : 'Present';
+}
 
 export default function SelectedCandidatesPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const shareId = params.get('shareId');
-
-  const { data: backendCandidates = [], isLoading } = useShareCandidates(shareId!);
+  const shareId = params.get('shareId') ?? '';
+  const { data: backendCandidates = [], isLoading } = useShareCandidates(shareId);
 
   const uiCandidates: UIShareCandidate[] = backendCandidates.map((c: ShareCandidate) => ({
     _id: c._id,
@@ -195,12 +197,8 @@ export default function SelectedCandidatesPage() {
                                   {exp.company} • {exp.location}
                                 </p>
                               </div>
-
                               <span className="text-xs text-slate-500">
-                                {new Date(exp.startDate).toLocaleDateString()} –{' '}
-                                {exp.endDate
-                                  ? new Date(exp.endDate).toLocaleDateString()
-                                  : 'Present'}
+                                {formatDate(exp.startDate)} – {formatDate(exp.endDate)}
                               </span>
                             </div>
                           </div>

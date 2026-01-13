@@ -135,6 +135,7 @@ export default function UsersTable() {
       onSuccess: res => {
         setSelectedUserIds([]);
         const shareId = res.shareLink.split('/').pop();
+        // setLink(`http://localhost:3000/selected-candidates?shareId=${shareId}`);
         setLink(
           `https://recruitment-client-git-dev-anshu-pandeys-projects.vercel.app/selected-candidates?shareId=${shareId}`
         );
