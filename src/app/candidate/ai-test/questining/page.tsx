@@ -98,16 +98,16 @@ export default function UniversalInterviewPage() {
 
   // to reset code editor when question change
   useEffect(() => {
-  setShowCodeEditor(false);
-}, [step]);
+    setShowCodeEditor(false);
+  }, [step]);
 
-useEffect(() => {
-  if (showCodeEditor && editorRef.current) {
-    setTimeout(() => {
-      editorRef.current?.layout();
-    }, 0);
-  }
-}, [showCodeEditor]);
+  useEffect(() => {
+    if (showCodeEditor && editorRef.current) {
+      setTimeout(() => {
+        editorRef.current?.layout();
+      }, 0);
+    }
+  }, [showCodeEditor]);
 
 
   /* ---------- EFFECT: INITIAL LOAD & QUESTIONS ---------- */
@@ -138,8 +138,9 @@ useEffect(() => {
   }, [attempt]);
 
   /* ---------- TIMER LOGIC ---------- */
+  const questions = Array.isArray(finalQuestions) ? finalQuestions : [];
   const activeQuestion = finalQuestions[step];
-  const isResumeTest = finalQuestions.some((q) => q.source === "ai");
+  const isResumeTest = questions.some(q => q.source === "ai");
   const isActiveTest = !isResumeTest;
 
   const { data: secondsLeft = testDuration * 60 } = useQuery({
@@ -233,11 +234,11 @@ useEffect(() => {
       },
       {
         onSuccess: () => {
-          setIsSubmitting(false); 
+          setIsSubmitting(false);
           router.push("/candidate/ai-test/submitted");
         },
         onError: () => {
-          setIsSubmitting(false); 
+          setIsSubmitting(false);
         },
       }
     );
@@ -306,13 +307,13 @@ useEffect(() => {
     if (step > 0) setStep(step - 1);
   };
 
- if (isLoading || finalQuestions.length === 0) {
-  return (
-    <p className="p-8 text-center font-medium">
-      Loading questions…
-    </p>
-  );
-}
+  if (isLoading || finalQuestions.length === 0) {
+    return (
+      <p className="p-8 text-center font-medium">
+        Loading questions…
+      </p>
+    );
+  }
 
 
   const progress = ((step + 1) / finalQuestions.length) * 100;
@@ -387,11 +388,11 @@ useEffect(() => {
 
       {isSubmitting && (
         <div className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center">
-    <div className="spinner">
-      <div></div>
-      <div></div>
-    </div>
-  </div>
+          <div className="spinner">
+            <div></div>
+            <div></div>
+          </div>
+        </div>
       )}
 
 
@@ -433,20 +434,20 @@ useEffect(() => {
 
           <div className="px-6 pb-4 text-center">
             <p className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">Question {step + 1} of {finalQuestions.length}</p>
-            <h2 className="text-xl font-bold text-gray-800 leading-tight">{activeQuestion.question}</h2>
+            <h2 className="text-xl font-bold text-gray-800 leading-tight">{activeQuestion?.question ?? "Loading question..."}</h2>
           </div>
         </div>
 
         {/* BODY */}
-       {/* BODY */}
-<div className="p-6">
+        {/* BODY */}
+        <div className="p-6">
 
-  {/* ADD / HIDE CODE BUTTON */}
-  {!isMCQ(activeQuestion) && (
-    <div className="flex justify-end mb-4">
-      <button
-        onClick={() => setShowCodeEditor(prev => !prev)}
-        className="
+          {/* ADD / HIDE CODE BUTTON */}
+          {!isMCQ(activeQuestion) && (
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={() => setShowCodeEditor(prev => !prev)}
+                className="
           px-4 py-2 text-sm font-semibold
           rounded-full
           bg-indigo-600 text-white
@@ -455,16 +456,16 @@ useEffect(() => {
           transition-all
           active:scale-95
         "
-      >
-        {showCodeEditor ? "Hide Code" : "Write Code"}
-      </button>
-    </div>
-  )}
+              >
+                {showCodeEditor ? "Hide Code" : "Write Code"}
+              </button>
+            </div>
+          )}
 
-  {/* MAIN CONTAINER */}
-  <div
-    ref={ref}
-    className="
+          {/* MAIN CONTAINER */}
+          <div
+            ref={ref}
+            className="
       relative flex min-h-[65vh]
       bg-white rounded-2xl
       shadow-lg
@@ -472,121 +473,121 @@ useEffect(() => {
       border border-gray-200
       transition-all duration-300 ease-in-out
     "
-  >
+          >
 
-    {isMCQ(activeQuestion) ? (
-  /* ---------- MCQ UI ---------- */
-  <div className="w-full p-10 grid gap-4 max-w-2xl mx-auto items-center">
-    {activeQuestion.options!.map((opt, i) => (
-      <button
-        key={i}
-        onClick={() => setText(opt)}
-        className={`
+            {isMCQ(activeQuestion) ? (
+              /* ---------- MCQ UI ---------- */
+              <div className="w-full p-10 grid gap-4 max-w-2xl mx-auto items-center">
+                {activeQuestion.options!.map((opt, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setText(opt)}
+                    className={`
           p-5 border-2 rounded-xl flex items-center gap-4 transition-all text-left
           ${text === opt
-            ? "border-indigo-600 bg-indigo-50 shadow-inner"
-            : "border-gray-100 hover:border-indigo-200"}
+                        ? "border-indigo-600 bg-indigo-50 shadow-inner"
+                        : "border-gray-100 hover:border-indigo-200"}
         `}
-      >
-        <CheckCircle2
-          className={`w-6 h-6 ${text === opt ? "text-indigo-600" : "text-gray-200"}`}
-        />
-        <span className="font-semibold text-gray-700">{opt}</span>
-      </button>
-    ))}
-  </div>
-) : (
-  <>
-    {/* ---------- SPLIT VIEW (TEXT + CODE) ---------- */}
-    <div
-      style={{ display: showCodeEditor ? "flex" : "none" }}
-      className="relative w-full min-h-[65vh] bg-white rounded-2xl shadow-lg border overflow-hidden"
-    >
-      {/* LEFT: TEXT */}
-      <div
-        style={{ width: `${width}%` }}
-        className="flex flex-col border-r bg-gray-50"
-      >
-        <div className="px-6 py-3 border-b bg-white">
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-500">
-            Explanation
-          </span>
+                  >
+                    <CheckCircle2
+                      className={`w-6 h-6 ${text === opt ? "text-indigo-600" : "text-gray-200"}`}
+                    />
+                    <span className="font-semibold text-gray-700">{opt}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <>
+                {/* ---------- SPLIT VIEW (TEXT + CODE) ---------- */}
+                <div
+                  style={{ display: showCodeEditor ? "flex" : "none" }}
+                  className="relative w-full min-h-[65vh] bg-white rounded-2xl shadow-lg border overflow-hidden"
+                >
+                  {/* LEFT: TEXT */}
+                  <div
+                    style={{ width: `${width}%` }}
+                    className="flex flex-col border-r bg-gray-50"
+                  >
+                    <div className="px-6 py-3 border-b bg-white">
+                      <span className="text-xs font-bold uppercase tracking-widest text-indigo-500">
+                        Explanation
+                      </span>
+                    </div>
+
+                    <textarea
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      onPaste={prevent}
+                      onCopy={prevent}
+                      onCut={prevent}
+                      className="flex-1 p-8 resize-none outline-none bg-transparent text-[16px]"
+                      placeholder="Explain your approach here..."
+                    />
+                  </div>
+
+                  {/* RESIZER */}
+                  <div
+                    className="w-1.5 bg-gray-100 hover:bg-indigo-400 cursor-col-resize"
+                    onMouseDown={() => setDragging(true)}
+                    onMouseUp={() => setDragging(false)}
+                    onMouseMove={onDrag}
+                  />
+
+                  {/* RIGHT: CODE EDITOR (ALWAYS MOUNTED) */}
+                  <div
+                    style={{ width: `${100 - width}%` }}
+                    className="flex flex-col bg-[#1e1e1e]"
+                  >
+                    <div className="px-6 py-3 bg-[#252526] border-b border-[#333]">
+                      <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                        Code Editor
+                      </span>
+                    </div>
+
+                    <Editor
+                      height="100%"
+                      defaultLanguage="javascript"
+                      value={code}
+                      theme="vs-dark"
+                      onMount={(editor) => {
+                        editorRef.current = editor;
+                      }}
+                      onChange={(v) => setCode(v ?? "")}
+                      options={{
+                        fontSize: 15,
+                        minimap: { enabled: false },
+                        automaticLayout: false,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* ---------- TEXT ONLY VIEW ---------- */}
+                <div
+                  style={{ display: showCodeEditor ? "none" : "flex" }}
+                  className="w-full min-h-[65vh] flex flex-col bg-white rounded-2xl shadow-lg border"
+                >
+                  <div className="px-6 py-3 border-b bg-white">
+                    <span className="text-xs font-bold uppercase tracking-widest text-indigo-500">
+                      Answer
+                    </span>
+                  </div>
+
+                  <textarea
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    onPaste={prevent}
+                    onCopy={prevent}
+                    onCut={prevent}
+                    className="flex-1 p-10 resize-none outline-none bg-transparent text-[17px]"
+                    placeholder="Write your complete answer here..."
+                  />
+                </div>
+              </>
+            )}
+
+          </div>
         </div>
-
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onPaste={prevent}
-          onCopy={prevent}
-          onCut={prevent}
-          className="flex-1 p-8 resize-none outline-none bg-transparent text-[16px]"
-          placeholder="Explain your approach here..."
-        />
-      </div>
-
-      {/* RESIZER */}
-      <div
-        className="w-1.5 bg-gray-100 hover:bg-indigo-400 cursor-col-resize"
-        onMouseDown={() => setDragging(true)}
-        onMouseUp={() => setDragging(false)}
-        onMouseMove={onDrag}
-      />
-
-      {/* RIGHT: CODE EDITOR (ALWAYS MOUNTED) */}
-      <div
-        style={{ width: `${100 - width}%` }}
-        className="flex flex-col bg-[#1e1e1e]"
-      >
-        <div className="px-6 py-3 bg-[#252526] border-b border-[#333]">
-          <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-            Code Editor
-          </span>
-        </div>
-
-        <Editor
-          height="100%"
-          defaultLanguage="javascript"
-          value={code}
-          theme="vs-dark"
-           onMount={(editor) => {
-    editorRef.current = editor;
-  }}
-          onChange={(v) => setCode(v ?? "")}
-          options={{
-            fontSize: 15,
-            minimap: { enabled: false },
-            automaticLayout: false,
-          }}
-        />
-      </div>
-    </div>
-
-    {/* ---------- TEXT ONLY VIEW ---------- */}
-    <div
-      style={{ display: showCodeEditor ? "none" : "flex" }}
-      className="w-full min-h-[65vh] flex flex-col bg-white rounded-2xl shadow-lg border"
-    >
-      <div className="px-6 py-3 border-b bg-white">
-        <span className="text-xs font-bold uppercase tracking-widest text-indigo-500">
-          Answer
-        </span>
-      </div>
-
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onPaste={prevent}
-        onCopy={prevent}
-        onCut={prevent}
-        className="flex-1 p-10 resize-none outline-none bg-transparent text-[17px]"
-        placeholder="Write your complete answer here..."
-      />
-    </div>
-  </>
-)}
-
-  </div>
-</div>
 
       </div>
     </div>
