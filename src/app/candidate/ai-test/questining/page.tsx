@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type * as monaco from "monaco-editor";
+
 // Hooks
 import { useActiveQuestions } from "@/features/test/hooks/useActivation";
 import { useEvaluateAnswers } from "@/features/AITest/hooks/aiTestApi";
@@ -51,6 +53,7 @@ const isMCQ = (q?: Question): q is Question => !!q && Array.isArray(q.options);
 
 
 export default function UniversalInterviewPage() {
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const attemptId =
     typeof window !== "undefined" ? localStorage.getItem("attemptId") : null;
 
@@ -97,6 +100,14 @@ export default function UniversalInterviewPage() {
   useEffect(() => {
   setShowCodeEditor(false);
 }, [step]);
+
+useEffect(() => {
+  if (showCodeEditor && editorRef.current) {
+    setTimeout(() => {
+      editorRef.current?.layout();
+    }, 0);
+  }
+}, [showCodeEditor]);
 
 
   /* ---------- EFFECT: INITIAL LOAD & QUESTIONS ---------- */
@@ -274,7 +285,7 @@ export default function UniversalInterviewPage() {
     const prev = answers[step];
     setText(prev?.text ?? "");
     setCode(prev?.code ?? "");
-  }, [step, answers]);
+  }, [step]);
 
   const save = () => {
     setAnswers((prev) => {
@@ -295,8 +306,14 @@ export default function UniversalInterviewPage() {
     if (step > 0) setStep(step - 1);
   };
 
-  if (isLoading) return <p className="p-8 text-center font-medium">Preparing questions…</p>;
-  if (!activeQuestion) return <p className="p-8 text-center font-medium">No questions found</p>;
+ if (isLoading || finalQuestions.length === 0) {
+  return (
+    <p className="p-8 text-center font-medium">
+      Loading questions…
+    </p>
+  );
+}
+
 
   const progress = ((step + 1) / finalQuestions.length) * 100;
 
@@ -458,127 +475,41 @@ export default function UniversalInterviewPage() {
   >
 
     {isMCQ(activeQuestion) ? (
-      /* ---------- MCQ UI ---------- */
-      <div className="w-full p-10 grid gap-4 max-w-2xl mx-auto items-center">
-        {activeQuestion.options!.map((opt, i) => (
-          <button
-            key={i}
-            onClick={() => setText(opt)}
-            className={`
-              p-5 border-2 rounded-xl
-              flex items-center gap-4
-              transition-all text-left
-              ${
-                text === opt
-                  ? "border-indigo-600 bg-indigo-50 shadow-inner"
-                  : "border-gray-100 hover:border-indigo-200"
-              }
-            `}
-          >
-            <CheckCircle2
-              className={`w-6 h-6 ${
-                text === opt ? "text-indigo-600" : "text-gray-200"
-              }`}
-            />
-            <span className="font-semibold text-gray-700">
-              {opt}
-            </span>
-          </button>
-        ))}
-      </div>
-
-    ) : showCodeEditor ? (
-      /* ---------- SPLIT VIEW (TEXT + CODE) ---------- */
-      <>
-        {/* LEFT: EXPLANATION */}
-        <div
-          style={{ width: `${width}%` }}
-          className="
-            flex flex-col
-            bg-gradient-to-br from-gray-50 to-white
-            border-r border-gray-200
-            transition-all duration-300
-          "
-        >
-          <div className="px-6 py-3 border-b bg-white">
-            <span className="text-xs font-bold uppercase tracking-widest text-indigo-500">
-              Explanation
-            </span>
-          </div>
-
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onPaste={prevent}
-  onCopy={prevent}
-  onCut={prevent}
-            className="
-              flex-1 p-8
-              resize-none outline-none
-              bg-transparent
-              text-[16px] leading-relaxed
-              text-gray-800
-              placeholder:text-gray-400
-            "
-            placeholder="Explain your approach here..."
-          />
-        </div>
-
-        {/* RESIZER */}
-        <div
-          className="
-            w-1.5 bg-gray-100
-            hover:bg-indigo-400
-            cursor-col-resize
-            flex items-center justify-center
-            transition-colors
-          "
-          onMouseDown={() => setDragging(true)}
-          onMouseUp={() => setDragging(false)}
-          onMouseMove={onDrag}
-        >
-          <GripVertical className="w-4 h-4 text-gray-300" />
-        </div>
-
-        {/* RIGHT: CODE EDITOR */}
-        <div
-          style={{ width: `${100 - width}%` }}
-          className="
-            flex flex-col
-            bg-[#1e1e1e]
-            transition-all duration-300
-          "
-        >
-          <div className="px-6 py-3 bg-[#252526] border-b border-[#333]">
-            <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-              Code Editor
-            </span>
-          </div>
-
-          <div className="flex-1 overflow-hidden">
-            <Editor
-              height="100%"
-              defaultLanguage="javascript"
-              value={code}
-              theme="vs-dark"
-              onChange={(v) => setCode(v ?? "")}
-              options={{
-                fontSize: 15,
-                minimap: { enabled: false },
-                padding: { top: 16 },
-                automaticLayout: true,
-              }}
-            />
-          </div>
-        </div>
-      </>
-
-    ) : (
-      /* ---------- TEXT ONLY (FULL WIDTH) ---------- */
-      <div className="w-full flex flex-col bg-gradient-to-br from-gray-50 to-white">
+  /* ---------- MCQ UI ---------- */
+  <div className="w-full p-10 grid gap-4 max-w-2xl mx-auto items-center">
+    {activeQuestion.options!.map((opt, i) => (
+      <button
+        key={i}
+        onClick={() => setText(opt)}
+        className={`
+          p-5 border-2 rounded-xl flex items-center gap-4 transition-all text-left
+          ${text === opt
+            ? "border-indigo-600 bg-indigo-50 shadow-inner"
+            : "border-gray-100 hover:border-indigo-200"}
+        `}
+      >
+        <CheckCircle2
+          className={`w-6 h-6 ${text === opt ? "text-indigo-600" : "text-gray-200"}`}
+        />
+        <span className="font-semibold text-gray-700">{opt}</span>
+      </button>
+    ))}
+  </div>
+) : (
+  <>
+    {/* ---------- SPLIT VIEW (TEXT + CODE) ---------- */}
+    <div
+      style={{ display: showCodeEditor ? "flex" : "none" }}
+      className="relative w-full min-h-[65vh] bg-white rounded-2xl shadow-lg border overflow-hidden"
+    >
+      {/* LEFT: TEXT */}
+      <div
+        style={{ width: `${width}%` }}
+        className="flex flex-col border-r bg-gray-50"
+      >
         <div className="px-6 py-3 border-b bg-white">
           <span className="text-xs font-bold uppercase tracking-widest text-indigo-500">
-            Answer
+            Explanation
           </span>
         </div>
 
@@ -586,20 +517,74 @@ export default function UniversalInterviewPage() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onPaste={prevent}
-  onCopy={prevent}
-  onCut={prevent}
-          className="
-            flex-1 p-10
-            resize-none outline-none
-            bg-transparent
-            text-[17px] leading-relaxed
-            text-gray-800
-            placeholder:text-gray-400
-          "
-          placeholder="Write your complete answer here..."
+          onCopy={prevent}
+          onCut={prevent}
+          className="flex-1 p-8 resize-none outline-none bg-transparent text-[16px]"
+          placeholder="Explain your approach here..."
         />
       </div>
-    )}
+
+      {/* RESIZER */}
+      <div
+        className="w-1.5 bg-gray-100 hover:bg-indigo-400 cursor-col-resize"
+        onMouseDown={() => setDragging(true)}
+        onMouseUp={() => setDragging(false)}
+        onMouseMove={onDrag}
+      />
+
+      {/* RIGHT: CODE EDITOR (ALWAYS MOUNTED) */}
+      <div
+        style={{ width: `${100 - width}%` }}
+        className="flex flex-col bg-[#1e1e1e]"
+      >
+        <div className="px-6 py-3 bg-[#252526] border-b border-[#333]">
+          <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
+            Code Editor
+          </span>
+        </div>
+
+        <Editor
+          height="100%"
+          defaultLanguage="javascript"
+          value={code}
+          theme="vs-dark"
+           onMount={(editor) => {
+    editorRef.current = editor;
+  }}
+          onChange={(v) => setCode(v ?? "")}
+          options={{
+            fontSize: 15,
+            minimap: { enabled: false },
+            automaticLayout: false,
+          }}
+        />
+      </div>
+    </div>
+
+    {/* ---------- TEXT ONLY VIEW ---------- */}
+    <div
+      style={{ display: showCodeEditor ? "none" : "flex" }}
+      className="w-full min-h-[65vh] flex flex-col bg-white rounded-2xl shadow-lg border"
+    >
+      <div className="px-6 py-3 border-b bg-white">
+        <span className="text-xs font-bold uppercase tracking-widest text-indigo-500">
+          Answer
+        </span>
+      </div>
+
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onPaste={prevent}
+        onCopy={prevent}
+        onCut={prevent}
+        className="flex-1 p-10 resize-none outline-none bg-transparent text-[17px]"
+        placeholder="Write your complete answer here..."
+      />
+    </div>
+  </>
+)}
+
   </div>
 </div>
 
