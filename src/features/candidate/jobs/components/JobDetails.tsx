@@ -16,6 +16,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useGetProfile } from "../../Profile/hooks/useProfileApi";
 
 import type { SavedJob, Skill } from "@/types/Job";
+import ErrorState from "@/components/ui/jobNotfound";
 
 export default function JobDetails() {
   const router = useRouter();
@@ -43,12 +44,14 @@ export default function JobDetails() {
       </p>
     );
   }
-
+// job not found ui 
   if (error || !job) {
     return (
-      <p className="mt-10 text-center text-red-500">
-        Failed to load job details
-      </p>
+      <ErrorState
+     title="Job Listing Unavailable"
+     message="This job is no longer available. Please return to view active listing jobs."
+     onBack={() => router.push("/jobs")}
+    />
     );
   }
 
