@@ -1,7 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { Loader2, MoreVertical, Pencil, Trash2, Users } from 'lucide-react';
+import { Check, Copy, Loader2, MoreVertical, Pencil, Trash2, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -42,7 +42,9 @@ export default function UsersTable() {
   const [selectedRole, setSelectedRole] = useState('');
   const [openDeleteMenu, setOpenDeleteMenu] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-
+  const [link, setLink] = useState<string>('');
+  const [showLink, setShowLink] = useState(false);
+  const [copied, setCopied] = useState(false);
   const loadMoreRef = useRef<HTMLTableRowElement | null>(null);
 
   const deleteUser = useDeleteUser();
@@ -131,15 +133,25 @@ export default function UsersTable() {
     const payload = selectedUserIds.map(id => ({ candidateId: id }));
     shareCandidates(payload, {
       onSuccess: res => {
-        success('Candidates shared successfully');
+        // success('Candidates shared successfully');
         setSelectedUserIds([]);
         const shareId = res.shareLink.split('/').pop();
-        router.push(`/selected-candidates?shareId=${shareId}`);
+        // router.push(`/selected-candidates?shareId=${shareId}`);
+        setLink(`http://localhost:3000/selected-candidates?shareId=${shareId}`);
+        setShowLink(true);
       },
       onError: () => error('Failed to share candidates'),
     });
   };
-
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy', err);
+    }
+  };
   /* ---------------- STATES ---------------- */
   if (isLoading) return <p className="py-10 text-center">Loading users…</p>;
   if (isError) return <p className="py-10 text-center text-red-500">Failed to load users</p>;
@@ -156,14 +168,41 @@ export default function UsersTable() {
           onChange={e => setSearchQuery(e.target.value)}
         />
 
-        <button
-          onClick={handleViewSelected}
-          disabled={selectedUserIds.length === 0 || isPending}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:bg-gray-400"
-        >
-          <Users className="h-4 w-4" />
-          Share Selected ({selectedUserIds.length})
-        </button>
+        <div className="space-y-3">
+          {selectedUserIds.length > 0 && (
+            <button
+              onClick={handleViewSelected}
+              disabled={selectedUserIds.length === 0 || isPending}
+              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:bg-gray-400"
+            >
+              <Users className="h-4 w-4" />
+              Share Selected ({selectedUserIds.length})
+            </button>
+          )}
+
+          {showLink && (
+            <div className="flex items-center gap-2 rounded-lg border bg-gray-50 p-2">
+              <p className="text-sm text-gray-700 truncate">{link}</p>
+
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-1 rounded-md bg-gray-200 px-2 py-1 text-xs hover:bg-gray-300"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-3 w-3 text-green-600" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3 w-3" />
+                    Copy
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* TABLE */}
