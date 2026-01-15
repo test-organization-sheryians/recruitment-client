@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type * as monaco from "monaco-editor";
+
 // Hooks
 import { useActiveQuestions } from "@/features/test/hooks/useActivation";
 import { useEvaluateAnswers } from "@/features/AITest/hooks/aiTestApi";
@@ -16,9 +18,7 @@ import { useAntiCheat } from "@/features/test/hooks/antiCheat";
 import {
   ChevronLeft,
   ChevronRight,
-  Send,
   CheckCircle2,
-  GripVertical,
   AlertOctagon,
   Flag,
   Clock,
@@ -53,6 +53,7 @@ const isMCQ = (q?: Question): q is Question => !!q && Array.isArray(q.options);
 
 
 export default function UniversalInterviewPage() {
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const attemptId =
     typeof window !== "undefined" ? localStorage.getItem("attemptId") : null;
 
@@ -83,7 +84,7 @@ export default function UniversalInterviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
 
-  // useAntiCheat(attemptId, () => setBlocked(true));
+  useAntiCheat(attemptId, () => setBlocked(true));
 
   const { data: rqQuestions, isLoading } = useActiveQuestions();
   const [finalQuestions, setFinalQuestions] = useState<Question[]>([]);
@@ -92,6 +93,7 @@ export default function UniversalInterviewPage() {
   const [step, setStep] = useState(0);
   const [text, setText] = useState("");
   const [code, setCode] = useState("");
+  // const [showCodeEditor, setShowCodeEditor] = useState(false);
   const [answers, setAnswers] = useState<CandidateAnswer[]>([]);
 
   const [showCode, setShowCode] = useState(false); // by default HIDDEN
@@ -103,6 +105,18 @@ const [reviewSteps, setReviewSteps] = useState<Set<number>>(new Set());
 
 const [showSaveWarning, setShowSaveWarning] = useState(false);
 const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
+  // to reset code editor when question change
+  // useEffect(() => {
+  //   setShowCodeEditor(false);
+  // }, [step]);
+
+  // useEffect(() => {
+  //   if (showCodeEditor && editorRef.current) {
+  //     setTimeout(() => {
+  //       editorRef.current?.layout();
+  //     }, 0);
+  //   }
+  // }, [showCodeEditor]);
 
 
   /* ---------- EFFECT: INITIAL LOAD & QUESTIONS ---------- */
@@ -133,8 +147,9 @@ const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
   }, [attempt]);
 
   /* ---------- TIMER LOGIC ---------- */
+  const questions = Array.isArray(finalQuestions) ? finalQuestions : [];
   const activeQuestion = finalQuestions[step];
-  const isResumeTest = finalQuestions.some((q) => q.source === "ai");
+  const isResumeTest = questions.some(q => q.source === "ai");
   const isActiveTest = !isResumeTest;
 
   const { data: secondsLeft = testDuration * 60 } = useQuery({
@@ -148,19 +163,19 @@ const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
   });
 
   /* ---------- UI HANDLERS ---------- */
-  const ref = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(INIT);
-  const [dragging, setDragging] = useState(false);
+  // const ref = useRef<HTMLDivElement>(null);
+  // const [width, setWidth] = useState(INIT);
+  // const [dragging, setDragging] = useState(false);
 
-  const onDrag = useCallback(
-    (e: React.MouseEvent) => {
-      if (!dragging || !ref.current) return;
-      const rect = ref.current.getBoundingClientRect();
-      const w = ((e.clientX - rect.left) / rect.width) * 100;
-      setWidth(Math.max(MIN, Math.min(MAX, w)));
-    },
-    [dragging]
-  );
+  // const onDrag = useCallback(
+  //   (e: React.MouseEvent) => {
+  //     if (!dragging || !ref.current) return;
+  //     const rect = ref.current.getBoundingClientRect();
+  //     const w = ((e.clientX - rect.left) / rect.width) * 100;
+  //     setWidth(Math.max(MIN, Math.min(MAX, w)));
+  //   },
+  //   [dragging]
+  // );
 
   const prevent = (e: React.ClipboardEvent<HTMLTextAreaElement>) => e.preventDefault();
 
@@ -228,11 +243,11 @@ const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
       },
       {
         onSuccess: () => {
-          setIsSubmitting(false); 
+          setIsSubmitting(false);
           router.push("/candidate/ai-test/submitted");
         },
         onError: () => {
-          setIsSubmitting(false); 
+          setIsSubmitting(false);
         },
       }
     );
@@ -280,7 +295,7 @@ const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
     const prev = answers[step];
     setText(prev?.text ?? "");
     setCode(prev?.code ?? "");
-  }, [step, answers]);
+  }, [step]);
 
   const save = () => {
   setAnswers((prev) => {
@@ -365,10 +380,16 @@ const tryNavigate = (action: () => void) => {
 };
 
 
-  if (isLoading) return <p className="p-8 text-center font-medium">Preparing questions…</p>;
-  if (!activeQuestion) return <p className="p-8 text-center font-medium">No questions found</p>;
+  if (isLoading || finalQuestions.length === 0) {
+    return (
+      <p className="p-8 text-center font-medium">
+        Loading questions…
+      </p>
+    );
+  }
 
-  const progress = ((step + 1) / finalQuestions.length) * 100;
+
+const progress = ((step + 1) / finalQuestions.length) * 100;
 
 return (
   <div className="min-h-screen flex bg-indigo-50">
@@ -479,14 +500,14 @@ return (
 
       {isSubmitting && (
         <div className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center">
-    <div className="spinner">
-      <div></div>
-      <div></div>
-    </div>
-  </div>
+          <div className="spinner">
+            <div></div>
+            <div></div>
+          </div>
+        </div>
       )}
 
-
+{/* <div className={blocked ? "blur-md pointer-events-none select-none" : "flex flex"}> */}
 {/* ================= LEFT SIDEBAR ================= */}
  <aside
   className="
@@ -561,9 +582,6 @@ return (
   </div>
 </aside>
 
-
-
-
     {/* ================= MAIN ================= */}
     <div className="flex-1 flex flex-col">
 
@@ -588,6 +606,7 @@ return (
   )}
 </div>
 
+
 {/* ===== QUESTION HEADER ===== */}
 <div className="bg-white border-b border-gray-200">
   <div className="text-center py-3">
@@ -596,7 +615,8 @@ return (
     </div>
 
     <h2 className="text-xl font-semibold text-gray-900 px-4">
-      {activeQuestion.question}
+      {activeQuestion?.question}
+
     </h2>
   </div>
 
@@ -630,6 +650,34 @@ return (
   {/* ================= MAIN CONTENT AREA ================= */}
 <div className="bg-blue-50 flex-1 overflow-hidden flex flex-col">
   <div className="flex-1 p-4 overflow-auto">
+
+
+   {isMCQ(activeQuestion) ? (
+      /* ================= MCQ UI ================= */
+      <div className="w-full max-w-2xl mx-auto grid gap-4">
+        {activeQuestion.options!.map((opt, i) => (
+          <button
+            key={i}
+            onClick={() => setText(opt)}
+            className={`
+              p-4 rounded-lg border-2 text-left transition-all
+              ${text === opt
+                ? "border-blue-600 bg-blue-50"
+                : "border-gray-200 hover:border-blue-300"}
+            `}
+          >
+            <div className="flex items-center gap-3">
+              <CheckCircle2
+                className={`w-5 h-5 ${
+                  text === opt ? "text-blue-600" : "text-gray-300"
+                }`}
+              />
+              <span className="font-medium text-gray-800">{opt}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+    ):(
     <div
       className="grid gap-4 h-full"
       style={{ gridTemplateColumns: showCode ? "1fr 1fr" : "1fr" }}
@@ -664,6 +712,9 @@ return (
         <textarea
   value={text}
   onChange={(e) => setText(e.target.value)}
+  onPaste={prevent}
+  onCopy={prevent}
+  onCut={prevent}
   placeholder="Explain your approach here..."
   className="
     flex-1
@@ -686,53 +737,78 @@ return (
 
       {/* ===== CODE EDITOR ===== */}
       {showCode && (
-        <div className="bg-gray-800 rounded-lg shadow-sm p-4 flex flex-col border border-gray-700">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wide">
-              Code Editor
-            </h3>
+  <div className="bg-[#1e1e1e] rounded-xl shadow-lg flex flex-col border border-[#2d2d2d] overflow-hidden">
+    
+    {/* HEADER */}
+    <div className="flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-[#333]">
+      <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+        Code Editor
+      </h3>
 
-            <button
-              onClick={() => setShowCode(false)}
-              className="
-                text-xs
-                font-semibold
-                text-blue-300
-                hover:text-blue-200
-                bg-blue-600
-                px-2 py-1
-                rounded
-                transition-colors
-              "
-            >
-              Hide Code
-            </button>
-          </div>
-
-          <div className="flex gap-3 flex-1">
-            <div className="text-gray-400 font-mono text-sm select-none">
-              1
-            </div>
-
-            <textarea
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="// Write your code here..."
-              className="
-                flex-1
-                bg-transparent
-                text-gray-100
-                font-mono
-                text-sm
-                resize-none
-                outline-none
-                placeholder-gray-500
-              "
-            />
-          </div>
-        </div>
-      )}
+      <button
+        onClick={() => setShowCode(false)}
+        className="
+          text-xs
+          font-semibold
+          text-white
+          bg-blue-600
+          hover:bg-blue-700
+          px-3 py-1
+          rounded
+          transition-colors
+        "
+      >
+        Hide Code
+      </button>
     </div>
+
+    {/* EDITOR */}
+    <div className="flex-1">
+      <Editor
+        height="100%"
+        defaultLanguage="javascript"
+        value={code}
+        theme="vs-dark"
+        onMount={(editor) => {
+          editorRef.current = editor;
+          editor.focus();
+        }}
+        onChange={(v) => setCode(v ?? "")}
+        options={{
+          fontSize: 15,
+          fontFamily: "Fira Code, monospace",
+          lineHeight: 22,
+
+          minimap: { enabled: false },
+          automaticLayout: true,
+
+          scrollBeyondLastLine: false,
+          smoothScrolling: true,
+
+          cursorBlinking: "smooth",
+          cursorSmoothCaretAnimation: "on",
+
+          wordWrap: "on",
+          tabSize: 2,
+
+          padding: {
+            top: 12,
+            bottom: 12,
+          },
+
+          renderLineHighlight: "all",
+          scrollbar: {
+            verticalScrollbarSize: 8,
+            horizontalScrollbarSize: 8,
+          },
+        }}
+      />
+    </div>
+  </div>
+)}
+
+    </div>
+    )}
   </div>
 
   {/* ================= FOOTER ================= */}
@@ -800,6 +876,7 @@ return (
 
 
     </div>
-  </div>
+    </div>
+  // </div>
 );
 }
