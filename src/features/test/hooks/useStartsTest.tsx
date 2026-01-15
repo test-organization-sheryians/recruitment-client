@@ -74,7 +74,7 @@ export const useStartTest = () => {
       const activeQuestions = hasTestBlock(res.questions)
         ? res.questions.test?.questions
         : res.questions;
-
+      
       queryClient.setQueryData(
         ["active-questions"],
         activeQuestions

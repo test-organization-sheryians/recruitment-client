@@ -37,25 +37,26 @@ export default function AttemptsSection({ testId }: Props) {
     const attempts: Attempt[] = Array.isArray(response)
       ? response
       : response?.data || [];
+      console.log("RAW DATA FROM BACKEND:", attempts); // <--- ADD THIS
 
     let filtered = [...attempts];
 
     if (filterStatus === "passed") {
       filtered = filtered.filter(
-        (a) => a.isPassed === true && a.status === "Graded"
+        (a) => a.isPassed === true && a.status.toLowerCase() === "graded"
       );
     }
 
     if (filterStatus === "failed") {
       filtered = filtered.filter(
-        (a) => a.isPassed === false && a.status === "Graded"
+        (a) => a.isPassed === false && a.status.toLowerCase() === "graded"
       );
     }
     if (filterStatus === "disqualified") {
-  filtered = filtered.filter(
-    (a) => a.status === "Disqualified"
-  );
-}
+      filtered = filtered.filter(
+        (a) => a.status.toLowerCase() === "disqualified"
+      );
+    }
 
 
     filtered.sort((a, b) =>
@@ -86,7 +87,7 @@ export default function AttemptsSection({ testId }: Props) {
       {/* CONTROLS */}
       <div className="flex items-center gap-3 justify-end relative z-30">
 
-         {/* FILTER */}
+        {/* FILTER */}
         <div className="relative">
           <button
             onClick={() => setOpenFilter((p) => !p)}
@@ -110,7 +111,7 @@ export default function AttemptsSection({ testId }: Props) {
                   className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 capitalize ${filterStatus === v ? "bg-gray-100 font-medium" : ""
                     }`}
                 >
-                     {v === "disqualified" ? "Disqualified" : v}
+                  {v === "disqualified" ? "Disqualified" : v}
                 </button>
               ))}
             </div>
@@ -148,7 +149,7 @@ export default function AttemptsSection({ testId }: Props) {
           )}
         </div>
 
-     
+
       </div>
 
       {/* LIST */}
@@ -162,22 +163,23 @@ export default function AttemptsSection({ testId }: Props) {
       ) : (
         <div className="space-y-3">
           {processedAttempts.map((a) => {
+            const currentStatus = a.status?.toLowerCase();
+
             const statusStyles =
-              a.status === "Disqualified"
+              currentStatus === "disqualified"
                 ? "bg-red-600 text-white border-red-700"
-                : a.status === "Graded" && a.isPassed
+                : currentStatus === "graded" && a.isPassed
                   ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                  : a.status === "Failed"
+                  : (currentStatus === "failed" || currentStatus === "graded" && !a.isPassed)
                     ? "bg-red-50 text-red-700 border-red-200"
                     : "bg-yellow-50 text-yellow-700 border-yellow-200";
 
-
             const dotStyles =
-              a.status === "Disqualified"
+             currentStatus === "disqualified"
                 ? "bg-white animate-pulse"
-                : a.status === "Graded" && a.isPassed
-                  ? "bg-emerald-500"
-                  : a.status === "Failed"
+                : currentStatus === "graded" && a.isPassed
+                  ? "bg-emerald-500 animate-pulse"
+                  : (currentStatus === "failed" || (currentStatus === "graded" && !a.isPassed))
                     ? "bg-red-500"
                     : "bg-yellow-500";
 
