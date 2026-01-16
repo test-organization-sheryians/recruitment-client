@@ -84,7 +84,7 @@ export default function UniversalInterviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
 
-  useAntiCheat(attemptId, () => setBlocked(true));
+  // useAntiCheat(attemptId, () => setBlocked(true));
 
   const { data: rqQuestions, isLoading } = useActiveQuestions();
   const [finalQuestions, setFinalQuestions] = useState<Question[]>([]);
@@ -93,7 +93,6 @@ export default function UniversalInterviewPage() {
   const [step, setStep] = useState(0);
   const [text, setText] = useState("");
   const [code, setCode] = useState("");
-  // const [showCodeEditor, setShowCodeEditor] = useState(false);
   const [answers, setAnswers] = useState<CandidateAnswer[]>([]);
 
   const [showCode, setShowCode] = useState(false); // by default HIDDEN
@@ -105,18 +104,6 @@ const [reviewSteps, setReviewSteps] = useState<Set<number>>(new Set());
 
 const [showSaveWarning, setShowSaveWarning] = useState(false);
 const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
-  // to reset code editor when question change
-  // useEffect(() => {
-  //   setShowCodeEditor(false);
-  // }, [step]);
-
-  // useEffect(() => {
-  //   if (showCodeEditor && editorRef.current) {
-  //     setTimeout(() => {
-  //       editorRef.current?.layout();
-  //     }, 0);
-  //   }
-  // }, [showCodeEditor]);
 
 
   /* ---------- EFFECT: INITIAL LOAD & QUESTIONS ---------- */
@@ -162,20 +149,6 @@ const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
     enabled: isClient && timerReady && isActiveTest && testDuration > 0 && !blocked,
   });
 
-  /* ---------- UI HANDLERS ---------- */
-  // const ref = useRef<HTMLDivElement>(null);
-  // const [width, setWidth] = useState(INIT);
-  // const [dragging, setDragging] = useState(false);
-
-  // const onDrag = useCallback(
-  //   (e: React.MouseEvent) => {
-  //     if (!dragging || !ref.current) return;
-  //     const rect = ref.current.getBoundingClientRect();
-  //     const w = ((e.clientX - rect.left) / rect.width) * 100;
-  //     setWidth(Math.max(MIN, Math.min(MAX, w)));
-  //   },
-  //   [dragging]
-  // );
 
   const prevent = (e: React.ClipboardEvent<HTMLTextAreaElement>) => e.preventDefault();
 
@@ -361,14 +334,26 @@ const toggleReview = () => {
   });
 };
 
+const isDirty = () => {
+  const prev = answers[step];
 
-  const shouldBlockNavigation = () => {
-  const hasTyped = text.trim() !== "" || code.trim() !== "";
-  const isSaved = savedSteps.has(step);
+  const prevText = (prev?.text ?? "").trim();
+  const prevCode = (prev?.code ?? "").trim();
+
+  const currText = text.trim();
+  const currCode = code.trim();
+
+  return prevText !== currText || prevCode !== currCode;
+};
+
+
+ const shouldBlockNavigation = () => {
+  const dirty = isDirty();
   const isReviewed = reviewSteps.has(step);
 
-  return hasTyped && !isSaved && !isReviewed;
+  return dirty && !isReviewed;
 };
+
 
 const tryNavigate = (action: () => void) => {
   if (shouldBlockNavigation()) {
@@ -715,7 +700,7 @@ return (
   onPaste={prevent}
   onCopy={prevent}
   onCut={prevent}
-  placeholder="Explain your approach here..."
+  placeholder="Explain your answer here..."
   className="
     flex-1
     w-full
