@@ -105,6 +105,8 @@ const [reviewSteps, setReviewSteps] = useState<Set<number>>(new Set());
 const [showSaveWarning, setShowSaveWarning] = useState(false);
 const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
 
+const [showInstructions, setShowInstructions] = useState(false);
+
 
   /* ---------- EFFECT: INITIAL LOAD & QUESTIONS ---------- */
   useEffect(() => {
@@ -379,6 +381,70 @@ const progress = ((step + 1) / finalQuestions.length) * 100;
 return (
   <div className="min-h-screen flex bg-indigo-50">
 
+    {showInstructions && (
+  <div className="fixed inset-0 z-[400] bg-black/70 flex items-center justify-center">
+    <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl text-gray-800">
+
+      <h2 className="text-xl font-bold mb-4 text-center text-blue-600">
+        Test Instructions
+      </h2>
+
+      <div className="space-y-3 text-sm">
+
+        <div className="flex items-center gap-3">
+          <span className="w-4 h-4 rounded-full bg-red-500" />
+          <span><b>Red:</b> Question visited but no answer saved</span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="w-4 h-4 rounded-full bg-green-600" />
+          <span><b>Green:</b> Answer saved successfully</span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="w-4 h-4 rounded-full bg-amber-500" />
+          <span><b>Orange:</b> Marked for review</span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="w-4 h-4 rounded-full ring-2 ring-indigo-500 rounded-full" />
+          <span><b>Blue Ring:</b> Current question</span>
+        </div>
+
+        <hr className="my-3" />
+
+        <p className="text-red-600 font-semibold">
+          ⚠️ Do NOT switch tabs, minimize, or leave the test window.
+          <br />
+          Doing so may <b>disqualify your test automatically</b>.
+        </p>
+
+        <p className="text-gray-700">
+          💾 Always <b>Save</b> or <b>Mark for Review</b> before navigating to another question.
+        </p>
+      </div>
+
+      <button
+        onClick={() => setShowInstructions(false)}
+        className="
+          mt-6
+          w-full
+          bg-blue-600
+          hover:bg-blue-700
+          text-white
+          font-semibold
+          py-2
+          rounded-lg
+          transition-all
+        "
+      >
+        Got It
+      </button>
+    </div>
+  </div>
+)}
+
+
     {showSaveWarning && (
   <div className="fixed inset-0 z-[250] bg-black/60 flex items-center justify-center">
     <div className="bg-white rounded-xl p-6 max-w-sm w-full text-center shadow-xl">
@@ -579,7 +645,27 @@ return (
 </div>
 
 {/* ===== TIMER HEADER ===== */}
-<div className="bg-blue-100 px-4 py-3 flex items-center justify-center border-b border-blue-200">
+<div className="bg-blue-100 px-4 py-3 flex items-center justify-between border-b border-blue-200">
+  
+  {/* Instructions Button */}
+  <button
+    onClick={() => setShowInstructions(true)}
+    className="
+      px-4 py-1.5
+      text-sm
+      font-semibold
+      rounded-lg
+      bg-white
+      text-blue-600
+      border border-blue-300
+      hover:bg-blue-50
+      transition-all
+    "
+  >
+    Instructions
+  </button>
+
+  {/* TIMER */}
   {isActiveTest && (
     <div className="flex items-center gap-2">
       <Clock className="w-5 h-5 text-gray-700" />
@@ -589,7 +675,10 @@ return (
       </div>
     </div>
   )}
+
+  <div className="w-[100px]" />
 </div>
+
 
 
 {/* ===== QUESTION HEADER ===== */}
