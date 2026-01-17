@@ -57,6 +57,15 @@ export default function UniversalInterviewPage() {
   const attemptId =
     typeof window !== "undefined" ? localStorage.getItem("attemptId") : null;
 
+    const testId =
+  typeof window !== "undefined" ? localStorage.getItem("testId") : null;
+
+const STORAGE_KEY = testId
+  ? `testProgress:${testId}`
+  : "testProgress:temp";
+
+
+
   const { data: attempt } = useQuery({
     queryKey: ["attempt", attemptId],
     enabled: !!attemptId,
@@ -84,7 +93,7 @@ export default function UniversalInterviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
 
-  useAntiCheat(attemptId, () => setBlocked(true));
+  // useAntiCheat(attemptId, () => setBlocked(true));
 
   const { data: rqQuestions, isLoading } = useActiveQuestions();
   const [finalQuestions, setFinalQuestions] = useState<Question[]>([]);
@@ -107,43 +116,116 @@ const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
 
 const [showInstructions, setShowInstructions] = useState(false);
 
+const [restored, setRestored] = useState(false);
+
+const persistProgress = useCallback((
+  nextStep = step,
+  nextQuestions = finalQuestions,
+  nextAnswers = answers,
+  nextVisited = visitedSteps,
+  nextSaved = savedSteps,
+  nextReview = reviewSteps
+) => {
+  const payload = {
+    step: nextStep,
+    questions: nextQuestions,
+    answers: nextAnswers,
+    visited: Array.from(nextVisited),
+    saved: Array.from(nextSaved),
+    review: Array.from(nextReview),
+  };
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+}, [step, finalQuestions, answers, visitedSteps, savedSteps, reviewSteps]);
+
+
 
   /* ---------- EFFECT: INITIAL LOAD & QUESTIONS ---------- */
-  useEffect(() => {
+ useEffect(() => {
+  if (!restored) return; // 🔥 DO NOT OVERWRITE STORAGE BEFORE RESTORE
+
   setIsClient(true);
 
   const duration = Number(localStorage.getItem("duration") ?? 0);
   setTestDuration(duration);
   if (duration > 0) setTimerReady(true);
 
-  // 1. Prefer API questions
-  if (Array.isArray(rqQuestions)) {
+  // Only load API questions if we don't already have them
+  if (Array.isArray(rqQuestions) && finalQuestions.length === 0) {
     setFinalQuestions(rqQuestions);
+    persistProgress(step, rqQuestions);
     return;
   }
 
-  // 2. Fallback to localStorage
+  // Fallback only if nothing exists
+  if (finalQuestions.length > 0) return;
+
   const stored = localStorage.getItem("activeQuestions");
+  if (!stored) return;
+
+  try {
+    const parsed = JSON.parse(stored);
+
+    let questions: any[] = [];
+
+    if (Array.isArray(parsed)) {
+      questions = parsed;
+    } else if (Array.isArray(parsed.questions)) {
+      questions = parsed.questions;
+    }
+
+    if (questions.length > 0) {
+      setFinalQuestions(questions);
+      persistProgress(step, questions);
+    }
+  } catch {
+    console.warn("Failed to parse activeQuestions");
+  }
+}, [rqQuestions, restored, finalQuestions.length, step, persistProgress]);
+
+
+
+useEffect(() => {
+  const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
-    setFinalQuestions([]);
+    setRestored(true);
     return;
   }
 
   try {
     const parsed = JSON.parse(stored);
 
-    // Handle both formats safely
-    if (Array.isArray(parsed)) {
-      setFinalQuestions(parsed);
-    } else if (Array.isArray(parsed.questions)) {
+    if (Array.isArray(parsed.questions)) {
       setFinalQuestions(parsed.questions);
-    } else {
-      setFinalQuestions([]);
+    }
+
+    if (Array.isArray(parsed.answers)) {
+      setAnswers(parsed.answers);
+    }
+
+    if (typeof parsed.step === "number") {
+      setStep(parsed.step);
+    }
+
+    if (Array.isArray(parsed.visited)) {
+      setVisitedSteps(new Set(parsed.visited));
+    }
+
+    if (Array.isArray(parsed.saved)) {
+      setSavedSteps(new Set(parsed.saved));
+    }
+
+    if (Array.isArray(parsed.review)) {
+      setReviewSteps(new Set(parsed.review));
     }
   } catch {
-    setFinalQuestions([]);
+    console.warn("Failed to restore test progress");
+  } finally {
+    setRestored(true); // 🔥 MARK RESTORE COMPLETE
   }
-}, [rqQuestions]);
+}, []);
+
+
 
 
   useEffect(() => {
@@ -216,7 +298,8 @@ const [showInstructions, setShowInstructions] = useState(false);
         })
       );
 
-      setIsSubmitting(false); // ✅ ADD HERE
+      setIsSubmitting(false); 
+      localStorage.removeItem(STORAGE_KEY);
       router.push("/candidate/ai-test/result");
       return;
     }
@@ -239,6 +322,7 @@ const [showInstructions, setShowInstructions] = useState(false);
       {
         onSuccess: () => {
           setIsSubmitting(false);
+          localStorage.removeItem(STORAGE_KEY);
           router.push("/candidate/ai-test/submitted");
         },
         onError: () => {
@@ -293,25 +377,44 @@ const [showInstructions, setShowInstructions] = useState(false);
   }, [step]);
 
   const save = () => {
+  let nextAnswers: CandidateAnswer[] = [];
+
   setAnswers((prev) => {
     const copy = [...prev];
     copy[step] = isMCQ(activeQuestion) ? { text } : { text, code };
+    nextAnswers = copy;
     return copy;
   });
 
-  // empty ya filled check
   const hasAnswer = text.trim() !== "" || code.trim() !== "";
+
+  let nextSaved = new Set<number>();
   setSavedSteps((prev) => {
     const s = new Set(prev);
     if (hasAnswer) s.add(step);
     else s.delete(step);
+    nextSaved = s;
     return s;
   });
+
+  const nextVisited = new Set(visitedSteps).add(step);
+
+  persistProgress(
+    step,
+    finalQuestions,
+    nextAnswers,
+    nextVisited,
+    nextSaved,
+    reviewSteps
+  );
 };
+
 
  const next = () => {
   tryNavigate(() => {
     if (blocked) return;
+
+    // Save current answer + persist state
     save();
     setShowCode(false);
 
@@ -321,11 +424,16 @@ const [showInstructions, setShowInstructions] = useState(false);
       return s;
     });
 
-    step < finalQuestions.length - 1
-      ? setStep(step + 1)
-      : onFinishClick();
+    if (step < finalQuestions.length - 1) {
+      const newStep = step + 1;
+      setStep(newStep);
+      persistProgress(newStep); // 🔥 SAVE STEP TO LOCALSTORAGE
+    } else {
+      onFinishClick();
+    }
   });
 };
+
 
 
 // sidebar click
@@ -335,6 +443,7 @@ const jumpToQuestion = (i: number) => {
     setShowCode(false);
     setVisitedSteps((prev) => new Set(prev).add(i));
     setStep(i);
+    persistProgress(i);
   });
 };
 
@@ -348,13 +457,22 @@ const toggleReview = () => {
   });
 };
 
- const prev = () => {
+const prev = () => {
   tryNavigate(() => {
+    if (blocked) return;
+
+    // Save current answer + persist state
     save();
-    if (step > 0) setStep(step - 1);
     setShowCode(false);
+
+    if (step > 0) {
+      const newStep = step - 1;
+      setStep(newStep);
+      persistProgress(newStep); // 🔥 SAVE STEP TO LOCALSTORAGE
+    }
   });
 };
+
 
 const isDirty = () => {
   const prev = answers[step];
@@ -971,6 +1089,5 @@ return (
 
     </div>
     </div>
-  // </div>
 );
 }
