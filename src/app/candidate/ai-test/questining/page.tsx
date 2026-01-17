@@ -93,7 +93,7 @@ const STORAGE_KEY = testId
   const [isSubmitting, setIsSubmitting] = useState(false);
 
 
-  // useAntiCheat(attemptId, () => setBlocked(true));
+  useAntiCheat(attemptId, () => setBlocked(true));
 
   const { data: rqQuestions, isLoading } = useActiveQuestions();
   const [finalQuestions, setFinalQuestions] = useState<Question[]>([]);
@@ -136,7 +136,7 @@ const persistProgress = useCallback((
   };
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-}, [step, finalQuestions, answers, visitedSteps, savedSteps, reviewSteps]);
+}, [step, finalQuestions, answers, visitedSteps, savedSteps, reviewSteps,STORAGE_KEY]);
 
 
 
@@ -166,7 +166,7 @@ const persistProgress = useCallback((
   try {
     const parsed = JSON.parse(stored);
 
-    let questions: any[] = [];
+    let questions: Question[] = [];
 
     if (Array.isArray(parsed)) {
       questions = parsed;
@@ -181,7 +181,7 @@ const persistProgress = useCallback((
   } catch {
     console.warn("Failed to parse activeQuestions");
   }
-}, [rqQuestions, restored, finalQuestions.length, step, persistProgress]);
+}, [rqQuestions, restored, finalQuestions.length, step, persistProgress,STORAGE_KEY]);
 
 
 
@@ -343,6 +343,7 @@ useEffect(() => {
     router,
     secondsLeft,
     testDuration,
+     STORAGE_KEY
   ]);
 
   const onFinishClick = () => {
