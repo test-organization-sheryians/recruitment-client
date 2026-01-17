@@ -84,7 +84,7 @@ export default function UniversalInterviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
 
-  // useAntiCheat(attemptId, () => setBlocked(true));
+  useAntiCheat(attemptId, () => setBlocked(true));
 
   const { data: rqQuestions, isLoading } = useActiveQuestions();
   const [finalQuestions, setFinalQuestions] = useState<Question[]>([]);
