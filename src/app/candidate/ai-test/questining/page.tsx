@@ -326,7 +326,7 @@ useEffect(() => {
           router.push("/candidate/ai-test/submitted");
         },
         onError: () => {
-          setIsSubmitting(false);
+          setIsSubmitting(false); 
         },
       }
     );
@@ -374,7 +374,7 @@ useEffect(() => {
     const prev = answers[step];
     setText(prev?.text ?? "");
     setCode(prev?.code ?? "");
-  }, [step]);
+  }, [step, answers]);
 
   const save = () => {
   let nextAnswers: CandidateAnswer[] = [];
@@ -505,13 +505,7 @@ const tryNavigate = (action: () => void) => {
 };
 
 
-  if (isLoading || finalQuestions.length === 0) {
-    return (
-      <p className="p-8 text-center font-medium">
-        Loading questions…
-      </p>
-    );
-  }
+
 
 
 const progress = ((step + 1) / finalQuestions.length) * 100;
@@ -689,11 +683,11 @@ return (
 
       {isSubmitting && (
         <div className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center">
-          <div className="spinner">
-            <div></div>
-            <div></div>
-          </div>
-        </div>
+    <div className="spinner">
+      <div></div>
+      <div></div>
+    </div>
+  </div>
       )}
 
 {/* <div className={blocked ? "blur-md pointer-events-none select-none" : "flex flex"}> */}
