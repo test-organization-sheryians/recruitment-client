@@ -110,24 +110,41 @@ const [showInstructions, setShowInstructions] = useState(false);
 
   /* ---------- EFFECT: INITIAL LOAD & QUESTIONS ---------- */
   useEffect(() => {
-    setIsClient(true);
-    const duration = Number(localStorage.getItem("duration") ?? 0);
-    setTestDuration(duration);
-    if (duration > 0) setTimerReady(true);
+  setIsClient(true);
 
-    if (Array.isArray(rqQuestions) && rqQuestions.length > 0) {
-      setFinalQuestions(rqQuestions);
+  const duration = Number(localStorage.getItem("duration") ?? 0);
+  setTestDuration(duration);
+  if (duration > 0) setTimerReady(true);
+
+  // 1. Prefer API questions
+  if (Array.isArray(rqQuestions)) {
+    setFinalQuestions(rqQuestions);
+    return;
+  }
+
+  // 2. Fallback to localStorage
+  const stored = localStorage.getItem("activeQuestions");
+  if (!stored) {
+    setFinalQuestions([]);
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(stored);
+
+    // Handle both formats safely
+    if (Array.isArray(parsed)) {
+      setFinalQuestions(parsed);
+    } else if (Array.isArray(parsed.questions)) {
+      setFinalQuestions(parsed.questions);
     } else {
-      const stored = localStorage.getItem("activeQuestions");
-      if (stored) {
-        try {
-          setFinalQuestions(JSON.parse(stored));
-        } catch {
-          setFinalQuestions([]);
-        }
-      }
+      setFinalQuestions([]);
     }
-  }, [rqQuestions]);
+  } catch {
+    setFinalQuestions([]);
+  }
+}, [rqQuestions]);
+
 
   useEffect(() => {
     if (attempt?.isDisqualified) {
@@ -137,7 +154,10 @@ const [showInstructions, setShowInstructions] = useState(false);
 
   /* ---------- TIMER LOGIC ---------- */
   const questions = Array.isArray(finalQuestions) ? finalQuestions : [];
-  const activeQuestion = finalQuestions[step];
+  const activeQuestion = Array.isArray(finalQuestions)
+  ? finalQuestions[step]
+  : undefined;
+
   const isResumeTest = questions.some(q => q.source === "ai");
   const isActiveTest = !isResumeTest;
 
