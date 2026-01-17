@@ -5,8 +5,6 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type * as monaco from "monaco-editor";
-
 // Hooks
 import { useActiveQuestions } from "@/features/test/hooks/useActivation";
 import { useEvaluateAnswers } from "@/features/AITest/hooks/aiTestApi";
@@ -22,6 +20,8 @@ import {
   CheckCircle2,
   GripVertical,
   AlertOctagon,
+  Flag,
+  Clock,
 } from "lucide-react";
 
 // Monaco Editor (Client-side only)
@@ -53,7 +53,6 @@ const isMCQ = (q?: Question): q is Question => !!q && Array.isArray(q.options);
 
 
 export default function UniversalInterviewPage() {
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const attemptId =
     typeof window !== "undefined" ? localStorage.getItem("attemptId") : null;
 
@@ -84,7 +83,7 @@ export default function UniversalInterviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
 
-  useAntiCheat(attemptId, () => setBlocked(true));
+  // useAntiCheat(attemptId, () => setBlocked(true));
 
   const { data: rqQuestions, isLoading } = useActiveQuestions();
   const [finalQuestions, setFinalQuestions] = useState<Question[]>([]);
@@ -93,21 +92,17 @@ export default function UniversalInterviewPage() {
   const [step, setStep] = useState(0);
   const [text, setText] = useState("");
   const [code, setCode] = useState("");
-  const [showCodeEditor, setShowCodeEditor] = useState(false);
   const [answers, setAnswers] = useState<CandidateAnswer[]>([]);
 
-  // to reset code editor when question change
-  useEffect(() => {
-    setShowCodeEditor(false);
-  }, [step]);
+  const [showCode, setShowCode] = useState(false); // by default HIDDEN
 
-  useEffect(() => {
-    if (showCodeEditor && editorRef.current) {
-      setTimeout(() => {
-        editorRef.current?.layout();
-      }, 0);
-    }
-  }, [showCodeEditor]);
+  // ---- LEFT SIDEBAR UI STATES ----
+const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([0]));
+const [savedSteps, setSavedSteps] = useState<Set<number>>(new Set());
+const [reviewSteps, setReviewSteps] = useState<Set<number>>(new Set());
+
+const [showSaveWarning, setShowSaveWarning] = useState(false);
+const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
 
 
   /* ---------- EFFECT: INITIAL LOAD & QUESTIONS ---------- */
@@ -138,9 +133,8 @@ export default function UniversalInterviewPage() {
   }, [attempt]);
 
   /* ---------- TIMER LOGIC ---------- */
-  const questions = Array.isArray(finalQuestions) ? finalQuestions : [];
   const activeQuestion = finalQuestions[step];
-  const isResumeTest = questions.some(q => q.source === "ai");
+  const isResumeTest = finalQuestions.some((q) => q.source === "ai");
   const isActiveTest = !isResumeTest;
 
   const { data: secondsLeft = testDuration * 60 } = useQuery({
@@ -234,11 +228,11 @@ export default function UniversalInterviewPage() {
       },
       {
         onSuccess: () => {
-          setIsSubmitting(false);
+          setIsSubmitting(false); 
           router.push("/candidate/ai-test/submitted");
         },
         onError: () => {
-          setIsSubmitting(false);
+          setIsSubmitting(false); 
         },
       }
     );
@@ -286,42 +280,139 @@ export default function UniversalInterviewPage() {
     const prev = answers[step];
     setText(prev?.text ?? "");
     setCode(prev?.code ?? "");
-  }, [step]);
+  }, [step, answers]);
 
   const save = () => {
-    setAnswers((prev) => {
-      const copy = [...prev];
-      copy[step] = isMCQ(activeQuestion) ? { text } : { text, code };
-      return copy;
-    });
-  };
+  setAnswers((prev) => {
+    const copy = [...prev];
+    copy[step] = isMCQ(activeQuestion) ? { text } : { text, code };
+    return copy;
+  });
 
-  const next = () => {
+  // empty ya filled check
+  const hasAnswer = text.trim() !== "" || code.trim() !== "";
+  setSavedSteps((prev) => {
+    const s = new Set(prev);
+    if (hasAnswer) s.add(step);
+    else s.delete(step);
+    return s;
+  });
+};
+
+ const next = () => {
+  tryNavigate(() => {
     if (blocked) return;
     save();
-    step < finalQuestions.length - 1 ? setStep(step + 1) : onFinishClick();
-  };
+    setShowCode(false);
 
-  const prev = () => {
+    setVisitedSteps((prev) => {
+      const s = new Set(prev);
+      if (step + 1 < finalQuestions.length) s.add(step + 1);
+      return s;
+    });
+
+    step < finalQuestions.length - 1
+      ? setStep(step + 1)
+      : onFinishClick();
+  });
+};
+
+
+// sidebar click
+const jumpToQuestion = (i: number) => {
+  tryNavigate(() => {
+    save();
+    setShowCode(false);
+    setVisitedSteps((prev) => new Set(prev).add(i));
+    setStep(i);
+  });
+};
+
+
+// mark for review
+const toggleReview = () => {
+  setReviewSteps((prev) => {
+    const s = new Set(prev);
+    s.has(step) ? s.delete(step) : s.add(step);
+    return s;
+  });
+};
+
+ const prev = () => {
+  tryNavigate(() => {
     save();
     if (step > 0) setStep(step - 1);
-  };
+    setShowCode(false);
+  });
+};
 
-  if (isLoading || finalQuestions.length === 0) {
-    return (
-      <p className="p-8 text-center font-medium">
-        Loading questions…
-      </p>
-    );
+
+  const shouldBlockNavigation = () => {
+  const hasTyped = text.trim() !== "" || code.trim() !== "";
+  const isSaved = savedSteps.has(step);
+  const isReviewed = reviewSteps.has(step);
+
+  return hasTyped && !isSaved && !isReviewed;
+};
+
+const tryNavigate = (action: () => void) => {
+  if (shouldBlockNavigation()) {
+    setPendingNav(() => action);
+    setShowSaveWarning(true);
+    return;
   }
+  action();
+};
 
+
+  if (isLoading) return <p className="p-8 text-center font-medium">Preparing questions…</p>;
+  if (!activeQuestion) return <p className="p-8 text-center font-medium">No questions found</p>;
 
   const progress = ((step + 1) / finalQuestions.length) * 100;
 
-  return (
-    <div className="min-h-screen bg-linear-to-br from-indigo-100 via-white to-indigo-50">
+return (
+  <div className="min-h-screen flex bg-indigo-50">
 
-      {/* 1. DISQUALIFIED OVERLAY */}
+    {showSaveWarning && (
+  <div className="fixed inset-0 z-[250] bg-black/60 flex items-center justify-center">
+    <div className="bg-white rounded-xl p-6 max-w-sm w-full text-center shadow-xl">
+      <h2 className="text-lg font-bold text-gray-900 mb-2">
+        Unsaved Answer
+      </h2>
+
+      <p className="text-sm text-gray-600 mb-5">
+        Please <span className="font-semibold">Save</span> your answer or
+        <span className="font-semibold"> Mark for Review</span> before navigating.
+      </p>
+
+      <div className="flex gap-3">
+        <button
+          onClick={() => {
+            setShowSaveWarning(false);
+            setPendingNav(null);
+          }}
+          className="flex-1 border rounded-lg py-2 text-sm"
+        >
+          Stay Here
+        </button>
+
+        <button
+          onClick={() => {
+            setShowSaveWarning(false);
+            if (pendingNav) pendingNav();
+            setPendingNav(null);
+          }}
+          className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+     {/* 1. DISQUALIFIED OVERLAY */}
       {blocked && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl ring-1 ring-black/10">
@@ -388,208 +479,327 @@ export default function UniversalInterviewPage() {
 
       {isSubmitting && (
         <div className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center">
-          <div className="spinner">
-            <div></div>
-            <div></div>
-          </div>
-        </div>
+    <div className="spinner">
+      <div></div>
+      <div></div>
+    </div>
+  </div>
       )}
 
 
-      {/* 2. MAIN TEST CONTENT */}
-      <div className={blocked ? "blur-md pointer-events-none select-none" : ""}>
-        {/* HEADER */}
-        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b">
-          <div className="h-1 bg-gray-200">
-            <div className="h-full bg-indigo-600 transition-all duration-300" style={{ width: `${progress}%` }} />
-          </div>
+{/* ================= LEFT SIDEBAR ================= */}
+ <aside
+  className="
+    w-20
+    h-screen
+    bg-indigo-100
+    border-r border-indigo-200
+    py-6
+    px-3
+    flex
+    flex-col
+    items-center
 
-          <div className="px-6 py-3 flex items-center justify-between">
-            <button
-              onClick={prev}
-              disabled={step === 0}
-              className="p-2 bg-indigo-50 rounded-lg disabled:opacity-30 transition-opacity"
-            >
-              <ChevronLeft className="w-6 h-6 text-indigo-600" />
-            </button>
+    overflow-y-auto
+    overflow-x-auto
 
-            {isActiveTest && (
-              <div className={`font-mono font-bold text-lg ${secondsLeft < 60 ? 'text-red-500 animate-pulse' : 'text-gray-700'}`}>
-                {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}
-              </div>
-            )}
+    scrollbar-thin
+    scrollbar-thumb-black
+    scrollbar-track-transparent
+  "
+>
+  {/* Attempt counter */}
+  <div className="text-xs font-bold text-indigo-700 mb-6 shrink-0">
+    {savedSteps.size}/{finalQuestions.length}
+  </div>
 
-            <button
-              onClick={
-                step === finalQuestions.length - 1
-                  ? onFinishClick
-                  : next
-              }
+  {/* Timeline */}
+  <div className="relative flex flex-col items-center gap-5 pb-6 min-w-max">
+    {/* Vertical connecting line */}
+    <div className="absolute top-0 bottom-0 w-[2px] bg-indigo-300" />
 
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors flex items-center gap-2"
-            >
-              {step === finalQuestions.length - 1 ? <><Send className="w-4 h-4" /> Finish</> : <ChevronRight className="w-6 h-6" />}
-            </button>
-          </div>
+    {finalQuestions.map((_, i) => {
+      const isCurrent = i === step;
+      const isReview = reviewSteps.has(i);
+      const isSaved = savedSteps.has(i);
+      const isVisited = visitedSteps.has(i);
 
-          <div className="px-6 pb-4 text-center">
-            <p className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">Question {step + 1} of {finalQuestions.length}</p>
-            <h2 className="text-xl font-bold text-gray-800 leading-tight">{activeQuestion?.question ?? "Loading question..."}</h2>
-          </div>
-        </div>
+      const cls = isCurrent
+        ? "bg-indigo-600 text-white ring-4 ring-indigo-300"
+        : isReview
+        ? "bg-amber-500 text-white"
+        : isSaved
+        ? "bg-green-600 text-white"
+        : isVisited
+        ? "bg-red-500 text-white"
+        : "bg-white text-gray-600 border-2 border-gray-300";
 
-        {/* BODY */}
-        {/* BODY */}
-        <div className="p-6">
-
-          {/* ADD / HIDE CODE BUTTON */}
-          {!isMCQ(activeQuestion) && (
-            <div className="flex justify-end mb-4">
-              <button
-                onClick={() => setShowCodeEditor(prev => !prev)}
-                className="
-          px-4 py-2 text-sm font-semibold
-          rounded-full
-          bg-indigo-600 text-white
-          hover:bg-indigo-700
-          shadow-md
-          transition-all
-          active:scale-95
-        "
-              >
-                {showCodeEditor ? "Hide Code" : "Write Code"}
-              </button>
-            </div>
+      return (
+        <button
+          key={i}
+          onClick={() => jumpToQuestion(i)}
+          className={`
+            relative z-10
+            w-10 h-10
+            rounded-full
+            flex items-center justify-center
+            text-sm font-bold
+            transition-all
+            ${cls}
+          `}
+        >
+          {isReview ? (
+            <Flag className="w-5 h-5" />
+          ) : isSaved ? (
+            <CheckCircle2 className="w-5 h-5" />
+          ) : (
+            i + 1
           )}
+        </button>
+      );
+    })}
+  </div>
+</aside>
 
-          {/* MAIN CONTAINER */}
-          <div
-            ref={ref}
-            className="
-      relative flex min-h-[65vh]
-      bg-white rounded-2xl
-      shadow-lg
-      overflow-hidden
-      border border-gray-200
-      transition-all duration-300 ease-in-out
-    "
-          >
 
-            {isMCQ(activeQuestion) ? (
-              /* ---------- MCQ UI ---------- */
-              <div className="w-full p-10 grid gap-4 max-w-2xl mx-auto items-center">
-                {activeQuestion.options!.map((opt, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setText(opt)}
-                    className={`
-          p-5 border-2 rounded-xl flex items-center gap-4 transition-all text-left
-          ${text === opt
-                        ? "border-indigo-600 bg-indigo-50 shadow-inner"
-                        : "border-gray-100 hover:border-indigo-200"}
-        `}
-                  >
-                    <CheckCircle2
-                      className={`w-6 h-6 ${text === opt ? "text-indigo-600" : "text-gray-200"}`}
-                    />
-                    <span className="font-semibold text-gray-700">{opt}</span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <>
-                {/* ---------- SPLIT VIEW (TEXT + CODE) ---------- */}
-                <div
-                  style={{ display: showCodeEditor ? "flex" : "none" }}
-                  className="relative w-full min-h-[65vh] bg-white rounded-2xl shadow-lg border overflow-hidden"
-                >
-                  {/* LEFT: TEXT */}
-                  <div
-                    style={{ width: `${width}%` }}
-                    className="flex flex-col border-r bg-gray-50"
-                  >
-                    <div className="px-6 py-3 border-b bg-white">
-                      <span className="text-xs font-bold uppercase tracking-widest text-indigo-500">
-                        Explanation
-                      </span>
-                    </div>
 
-                    <textarea
-                      value={text}
-                      onChange={(e) => setText(e.target.value)}
-                      onPaste={prevent}
-                      onCopy={prevent}
-                      onCut={prevent}
-                      className="flex-1 p-8 resize-none outline-none bg-transparent text-[16px]"
-                      placeholder="Explain your approach here..."
-                    />
-                  </div>
 
-                  {/* RESIZER */}
-                  <div
-                    className="w-1.5 bg-gray-100 hover:bg-indigo-400 cursor-col-resize"
-                    onMouseDown={() => setDragging(true)}
-                    onMouseUp={() => setDragging(false)}
-                    onMouseMove={onDrag}
-                  />
+    {/* ================= MAIN ================= */}
+    <div className="flex-1 flex flex-col">
 
-                  {/* RIGHT: CODE EDITOR (ALWAYS MOUNTED) */}
-                  <div
-                    style={{ width: `${100 - width}%` }}
-                    className="flex flex-col bg-[#1e1e1e]"
-                  >
-                    <div className="px-6 py-3 bg-[#252526] border-b border-[#333]">
-                      <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                        Code Editor
-                      </span>
-                    </div>
+      {/* ===== PROGRESS BAR ===== */}
+<div className="h-1 bg-blue-200">
+  <div
+    className="h-full bg-blue-600 transition-all duration-300"
+    style={{ width: `${progress}%` }}
+  />
+</div>
 
-                    <Editor
-                      height="100%"
-                      defaultLanguage="javascript"
-                      value={code}
-                      theme="vs-dark"
-                      onMount={(editor) => {
-                        editorRef.current = editor;
-                      }}
-                      onChange={(v) => setCode(v ?? "")}
-                      options={{
-                        fontSize: 15,
-                        minimap: { enabled: false },
-                        automaticLayout: false,
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* ---------- TEXT ONLY VIEW ---------- */}
-                <div
-                  style={{ display: showCodeEditor ? "none" : "flex" }}
-                  className="w-full min-h-[65vh] flex flex-col bg-white rounded-2xl shadow-lg border"
-                >
-                  <div className="px-6 py-3 border-b bg-white">
-                    <span className="text-xs font-bold uppercase tracking-widest text-indigo-500">
-                      Answer
-                    </span>
-                  </div>
-
-                  <textarea
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    onPaste={prevent}
-                    onCopy={prevent}
-                    onCut={prevent}
-                    className="flex-1 p-10 resize-none outline-none bg-transparent text-[17px]"
-                    placeholder="Write your complete answer here..."
-                  />
-                </div>
-              </>
-            )}
-
-          </div>
-        </div>
-
+{/* ===== TIMER HEADER ===== */}
+<div className="bg-blue-100 px-4 py-3 flex items-center justify-center border-b border-blue-200">
+  {isActiveTest && (
+    <div className="flex items-center gap-2">
+      <Clock className="w-5 h-5 text-gray-700" />
+      <div className="text-lg font-semibold text-gray-900">
+        {Math.floor(secondsLeft / 60)}:
+        {String(secondsLeft % 60).padStart(2, "0")}
       </div>
     </div>
-  );
+  )}
+</div>
+
+{/* ===== QUESTION HEADER ===== */}
+<div className="bg-white border-b border-gray-200">
+  <div className="text-center py-3">
+    <div className="text-xs font-semibold text-blue-600 mb-1 uppercase tracking-wide">
+      Question {step + 1} of {finalQuestions.length}
+    </div>
+
+    <h2 className="text-xl font-semibold text-gray-900 px-4">
+      {activeQuestion.question}
+    </h2>
+  </div>
+
+  <div className="px-4 pb-3 flex items-center justify-between">
+    <div className="text-sm text-gray-600">
+      <span className="font-semibold text-blue-600">
+        {savedSteps.size}
+      </span>{" "}
+      answered •{" "}
+      <span className="font-semibold text-gray-500">
+        {finalQuestions.length - savedSteps.size}
+      </span>{" "}
+      remaining
+    </div>
+
+    <button
+      onClick={toggleReview}
+      className={`px-4 py-1.5 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
+        reviewSteps.has(step)
+          ? "bg-blue-600 text-white hover:bg-blue-700"
+          : "bg-white text-blue-600 border-2 border-blue-300 hover:border-blue-400 hover:bg-blue-50"
+      }`}
+    >
+      <Flag className="w-4 h-4" />
+      {reviewSteps.has(step) ? "Marked for Review" : "Mark for Review"}
+    </button>
+  </div>
+</div>
+
+
+  {/* ================= MAIN CONTENT AREA ================= */}
+<div className="bg-blue-50 flex-1 overflow-hidden flex flex-col">
+  <div className="flex-1 p-4 overflow-auto">
+    <div
+      className="grid gap-4 h-full"
+      style={{ gridTemplateColumns: showCode ? "1fr 1fr" : "1fr" }}
+    >
+      {/* ===== EXPLANATION ===== */}
+      <div className="bg-blue-50 rounded-lg shadow-sm p-4 flex flex-col border border-blue-100 relative">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xs font-bold text-blue-600 uppercase tracking-wide">
+            Explanation
+          </h3>
+
+          {!showCode && (
+            <button
+              onClick={() => setShowCode(true)}
+              className="
+                text-xs
+                font-semibold
+                text-white
+                bg-blue-600
+                hover:bg-blue-700
+                px-3 py-2
+                rounded
+                transition-colors
+              "
+            >
+              Show Code
+            </button>
+          )}
+        </div>
+
+        <textarea
+  value={text}
+  onChange={(e) => setText(e.target.value)}
+  placeholder="Explain your approach here..."
+  className="
+    flex-1
+    w-full
+    p-3
+    bg-white
+    border
+    border-blue-200
+    rounded
+    resize-none
+    text-black
+    font-semibold
+    focus:outline-none
+    focus:ring-2
+    focus:ring-blue-500
+  "
+/>
+
+      </div>
+
+      {/* ===== CODE EDITOR ===== */}
+      {showCode && (
+        <div className="bg-gray-800 rounded-lg shadow-sm p-4 flex flex-col border border-gray-700">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wide">
+              Code Editor
+            </h3>
+
+            <button
+              onClick={() => setShowCode(false)}
+              className="
+                text-xs
+                font-semibold
+                text-blue-300
+                hover:text-blue-200
+                bg-blue-600
+                px-2 py-1
+                rounded
+                transition-colors
+              "
+            >
+              Hide Code
+            </button>
+          </div>
+
+          <div className="flex gap-3 flex-1">
+            <div className="text-gray-400 font-mono text-sm select-none">
+              1
+            </div>
+
+            <textarea
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="// Write your code here..."
+              className="
+                flex-1
+                bg-transparent
+                text-gray-100
+                font-mono
+                text-sm
+                resize-none
+                outline-none
+                placeholder-gray-500
+              "
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+
+  {/* ================= FOOTER ================= */}
+  <div className="px-4 pb-4 pt-2 flex justify-between items-center bg-blue-50">
+    <button
+      onClick={prev}
+      disabled={step === 0}
+      className="
+        px-6 py-2
+        bg-blue-600
+        hover:bg-blue-700
+        text-white
+        font-semibold
+        rounded-lg
+        shadow-md
+        transition-all
+        disabled:opacity-30
+        disabled:cursor-not-allowed
+        flex items-center gap-2
+      "
+    >
+      <ChevronLeft className="w-4 h-4" />
+      Back
+    </button>
+
+    <div className="flex items-center gap-3">
+      <button
+        onClick={save}
+        className="
+          px-6 py-2
+          bg-blue-600
+          hover:bg-blue-700
+          text-white
+          font-semibold
+          rounded-lg
+          shadow-md
+          transition-all
+        "
+      >
+        Save
+      </button>
+
+      <button
+        onClick={next}
+        className="
+          px-6 py-2
+          bg-blue-600
+          hover:bg-blue-700
+          text-white
+          font-semibold
+          rounded-lg
+          shadow-md
+          transition-all
+          flex items-center gap-2
+        "
+      >
+        {step === finalQuestions.length - 1 ? "Submit Test" : "Next"}
+        {step < finalQuestions.length - 1 && (
+          <ChevronRight className="w-4 h-4" />
+        )}
+      </button>
+    </div>
+  </div>
+</div>
+
+
+    </div>
+  </div>
+);
 }
