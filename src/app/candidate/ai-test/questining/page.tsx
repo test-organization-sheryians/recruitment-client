@@ -19,7 +19,11 @@ import { useSplitEditor } from "@/features/test/hooks/useSplitEditor";
 import { useAntiCheat } from "@/features/test/hooks/antiCheat";
 
 // Icons
-import { ChevronLeft, ChevronRight, CheckCircle2, AlertOctagon, Flag, Clock, } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle2, Flag, Clock, } from "lucide-react";
+import TestInstructionsModal from "@/features/test/components/TestInstruct";
+import SaveWarningModal from "@/features/test/components/SaveWarning";
+import TestTerminatedModal from "@/features/test/components/TestTermination";
+import SubmitConfirmModal from "@/features/test/components/SubmitWarning";
 
 // Monaco Editor (Client-side only)
 const Editor = dynamic(() => import("@monaco-editor/react"), {
@@ -122,6 +126,21 @@ export default function UniversalInterviewPage() {
       setBlocked(true);
     }
   }, [attempt]);
+  useEffect(() => {
+  if (!restored || !activeQuestion) return;
+
+  const id = setTimeout(() => {
+    const nextAnswers = [...state.answers];
+    nextAnswers[step] = isMCQ(activeQuestion)
+      ? { text }
+      : { text, code };
+
+    persist({ answers: nextAnswers });
+  }, 500);
+
+  return () => clearTimeout(id);
+}, [text, code, step, activeQuestion, restored]);
+
 
   /* ---------- TIMER LOGIC ---------- */
   const questions = Array.isArray(finalQuestions) ? finalQuestions : [];
@@ -156,7 +175,6 @@ export default function UniversalInterviewPage() {
     setIsSubmitting(true);
     await submitTest();
   };
-
 
   useEffect(() => {
     if (blocked) {
@@ -231,116 +249,19 @@ export default function UniversalInterviewPage() {
 
   return (
     <div className="min-h-screen flex bg-indigo-50">
-      {showInstructions && (
-        <div className="fixed inset-0 z-[400] bg-black/70 flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl text-gray-800">
-            <h2 className="text-xl font-bold mb-4 text-center text-blue-600">
-              Test Instructions
-            </h2>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-3">
-                <span className="w-4 h-4 rounded-full bg-red-500" />
-                <span><b>Red:</b> Question visited but no answer saved</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="w-4 h-4 rounded-full bg-green-600" />
-                <span><b>Green:</b> Answer saved successfully</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="w-4 h-4 rounded-full bg-amber-500" />
-                <span><b>Orange:</b> Marked for review</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="w-4 h-4 rounded-full ring-2 ring-indigo-500 rounded-full" />
-                <span><b>Blue Ring:</b> Current question</span>
-              </div>
-              <hr className="my-3" />
-              <p className="text-red-600 font-semibold">
-                ⚠️ Do NOT switch tabs, minimize, or leave the test window.
-                <br />
-                Doing so may <b>disqualify your test automatically</b>.
-              </p>
-              <p className="text-gray-700">
-                💾 Always <b>Save</b> or <b>Mark for Review</b> before navigating to another question.
-              </p>
-            </div>
-            <button onClick={() => setShowInstructions(false)}
-            className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-all">Got It</button>
-          </div>
-        </div>
-      )}
-
-      {showSaveWarning && (
-        <div className="fixed inset-0 z-[250] bg-black/60 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-6 max-w-sm w-full text-center shadow-xl">
-            <h2 className="text-lg font-bold text-gray-900 mb-2">
-              Unsaved Answer
-            </h2>
-            <p className="text-sm text-gray-600 mb-5">
-              Please <span className="font-semibold">Save</span> your answer or
-              <span className="font-semibold"> Mark for Review</span> before navigating.
-            </p>
-            <div className="flex gap-3">
-              <button onClick={clearWarning}
-              className="flex-1 border rounded-lg py-2 text-sm cursor-pointer">Stay Here</button>
-
-              <button onClick={() => {onSave();
-                confirmAndNavigate();}}
-                className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm cursor-pointer">Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+     {showInstructions && (<TestInstructionsModal onClose={() => setShowInstructions(false)} />)}
+      
+      {showSaveWarning && (<SaveWarningModal onStay={clearWarning} onSaveAndNavigate={()=>{
+        onSave();
+        confirmAndNavigate();}}/>)}
 
       {/* 1. DISQUALIFIED OVERLAY */}
-      {blocked && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl ring-1 ring-black/10">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-              <AlertOctagon className="h-9 w-9 text-red-600" />
-            </div>
-            <h2 className="mb-2 text-2xl font-extrabold tracking-wide text-red-600">
-              TEST TERMINATED
-            </h2>
-            <p className="mb-6 text-sm leading-relaxed text-gray-600">
-              Activity violation detected <span className="font-semibold">(multiple tab switches)</span>.
-              Your test has been locked and reported.
-            </p>
-            <button
-              onClick={() => {
-                sessionStorage.setItem("disqualified", "true");
-                router.push("/");
-              }}
-              className="w-full rounded-lg bg-red-600 py-3 text-sm font-bold text-white shadow-md transition hover:bg-red-700 active:scale-95 focus:outline-none focus:ring-4 focus:ring-red-300"> 
-              RETURN TO HOME
-            </button>
-          </div>
-        </div>
-      )}
+      {blocked && (<TestTerminatedModal/>)}
 
       {/* 2. SUBMIT CONFIRM MODAL */}
-      {showConfirm && (
-        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center">
-            <h2 className="text-xl font-bold mb-2">Submit Test?</h2>
-            <p className="text-gray-600 mb-6">
-              You won’t be able to change answers after this.
-            </p>
-
-            <div className="flex gap-3">
-              <button onClick={() => setShowConfirm(false)} className="flex-1 border rounded-lg py-2">
-                Cancel
-              </button>
-
-              <button
-                onClick={confirmSubmit} className="flex-1 bg-cyan-600 text-white rounded-lg py-2">
-                Yes, Submit
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showConfirm && (<SubmitConfirmModal
+    onCancel={() => setShowConfirm(false)}
+    onConfirm={confirmSubmit}/> )}
 
       {isSubmitting && (
         <div className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center">
@@ -512,24 +433,11 @@ export default function UniversalInterviewPage() {
                         }}
                         onChange={(v) => setCode(v ?? "")}
                         options={{ fontSize: 15, fontFamily: "Fira Code, monospace", lineHeight: 22,
-                          minimap: { enabled: false },
-                          automaticLayout: true,
-                          scrollBeyondLastLine: false,
-                          smoothScrolling: true,
-                          cursorBlinking: "smooth",
-                          cursorSmoothCaretAnimation: "on",
-                          wordWrap: "on",
-                          tabSize: 2,
-                          padding: { top: 12, bottom: 12 },
-                          renderLineHighlight: "all",
-                          scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8,},}}/>
+                          minimap: { enabled: false }, automaticLayout: true, scrollBeyondLastLine: false, smoothScrolling: true, cursorBlinking: "smooth", cursorSmoothCaretAnimation: "on", wordWrap: "on", tabSize: 2, padding: { top: 12, bottom: 12 }, renderLineHighlight: "all", scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8,},}}/>
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
+                  </div>)}
+              </div>)}
           </div>
-
           {/* ================= FOOTER ================= */}
           <div className="px-4 pb-4 pt-2 flex justify-between items-center bg-blue-50">
             <button onClick={prev} disabled={step === 0} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2">
@@ -545,5 +453,5 @@ export default function UniversalInterviewPage() {
         </div>
       </div>
     </div>
-  );
-}
+  );}
+  
