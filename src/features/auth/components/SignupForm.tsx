@@ -213,7 +213,7 @@ const SignupForm = () => {
           )}
         </button>
 
- {/* commented google signup*/}
+ {/* commented google signup */}
  
         {/* <div className="flex items-center justify-center my-2">
           <span className="flex-1 border-t border-gray-300" />
