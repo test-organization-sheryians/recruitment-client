@@ -11,11 +11,12 @@ import type * as monaco from "monaco-editor";
 import { useActiveQuestions } from "@/features/test/hooks/useActivation";
 import { useEvaluateAnswers } from "@/features/AITest/hooks/aiTestApi";
 import { useSubmitResult } from "@/features/test/hooks/useResultTest";
-import { useTestQuestions } from "@/features/test/hooks/useQuestion";
 import { useAnswers } from "@/features/test/hooks/useAnswers";
 import { useTestTimer } from "@/features/test/hooks/useTimer";
 import { useTestSubmission } from "@/features/test/hooks/useTestSubmission";
 import { usePreventNavigation } from "@/features/test/hooks/usePreventNavigation";
+import { useTestPersistence } from "@/features/test/hooks/useTestPersistence";
+import { useSplitEditor } from "@/features/test/hooks/useSplitEditor";
 import { useAntiCheat } from "@/features/test/hooks/antiCheat";
 
 // Icons
@@ -27,12 +28,21 @@ import {
   Flag,
   Clock,
 } from "lucide-react";
-import { useSplitEditor } from "@/features/test/hooks/useSplitEditor";
 
 // Monaco Editor (Client-side only)
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
 });
+
+const INITIAL_STATE = {
+  step: 0,
+  questions: [],
+  answers: [],
+  visited: [],
+  saved: [],
+  review: [],
+};
+
 
 /* ---------- INTERFACES ---------- */
 interface Question {
@@ -40,6 +50,11 @@ interface Question {
   options?: string[];
   source?: "ai" | "test";
 }
+interface CandidateAnswer {
+  text?: string;
+  code?: string;
+}
+
 
 const isMCQ = (q?: Question): q is Question => !!q && Array.isArray(q.options);
 
@@ -59,6 +74,8 @@ export default function UniversalInterviewPage() {
     },
   });
 
+  
+
   const router = useRouter();
 
   /* ---------- API MUTATIONS ---------- */
@@ -67,12 +84,48 @@ export default function UniversalInterviewPage() {
   const { data: rqQuestions } = useActiveQuestions();
   const { containerRef, width, startDrag } = useSplitEditor();
 
+   const STORAGE_KEY =
+    typeof window !== "undefined"
+      ? `testProgress:${localStorage.getItem("testId") ?? "temp"}`
+      : "testProgress:temp";
+
+  const {
+  restored,
+  state,
+  persist,
+} = useTestPersistence<Question, CandidateAnswer>(
+  STORAGE_KEY,
+  INITIAL_STATE
+);
+
+const step = state.step;
+const savedQuestions = state.questions;
+
+const visitedSteps = new Set(state.visited);
+const savedSteps = new Set(state.saved);
+const reviewSteps = new Set(state.review);
+
+const activeQuestion = savedQuestions[step] ?? null;
+
+
+useEffect(() => {
+  if (!restored) return;
+  if (state.questions.length > 0) return;
+  if (!rqQuestions?.length) return;
+
+  persist({
+    questions: rqQuestions,
+    visited: [0],
+  });
+}, [restored, rqQuestions]);
+
 
 
   /* ---------- STATE ---------- */
   const [blocked, setBlocked] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
 
   const secondsLeftRef = useRef(0);
 
@@ -80,48 +133,51 @@ export default function UniversalInterviewPage() {
 
   useAntiCheat(attemptId, () => setBlocked(true));
   const [testDuration, setTestDuration] = useState(0);
+  
 
-  const { questions: finalQuestions } =
-    useTestQuestions(rqQuestions);
-  const [step, setStep] = useState(0);
-  const activeQuestion = finalQuestions[step] ?? null;
+  
 
-  const {
-    answers,
-    text,
-    setText,
-    code,
-    setCode,
-    saveAnswer,
-    isDirty,
-  } = useAnswers(activeQuestion, step);
+const finalQuestions = state.questions;
+
+const {
+  text,
+  setText,
+  code,
+  setCode,
+  isDirty,
+} = useAnswers(
+  activeQuestion,
+  step,
+  state.answers   // 👈 pass persisted answers
+);
 
 
-  useEffect(() => {
-  setSavedSteps((prev) => {
-    const s = new Set(prev);
 
-    const hasAnswer =
-      (text && text.trim().length > 0) ||
-      (code && code.trim().length > 0);
+//   useEffect(() => {
+//   setSavedSteps((prev) => {
+//     const s = new Set(prev);
 
-    if (hasAnswer && !isDirty) {
-      s.add(step);        // 🟢 saved
-    } else {
-      s.delete(step);     // 🔴 not answered
-    }
+//     const hasAnswer =
+//       (text && text.trim().length > 0) ||
+//       (code && code.trim().length > 0);
 
-    return s;
-  });
-}, [text, code, step, isDirty]);
+//     if (hasAnswer && !isDirty) {
+//       s.add(step);        // 🟢 saved
+//     } else {
+//       s.delete(step);     // 🔴 not answered
+//     }
+
+//     return s;
+//   });
+// }, [text, code, step, isDirty]);
 
 
   const [showCode, setShowCode] = useState(false); // by default HIDDEN
 
   // ---- LEFT SIDEBAR UI STATES ----
-  const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([0]));
-  const [savedSteps, setSavedSteps] = useState<Set<number>>(new Set());
-  const [reviewSteps, setReviewSteps] = useState<Set<number>>(new Set());
+  // const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([0]));
+  // const [savedSteps, setSavedSteps] = useState<Set<number>>(new Set());
+  // const [reviewSteps, setReviewSteps] = useState<Set<number>>(new Set());
 
   const [showInstructions, setShowInstructions] = useState(false);
 
@@ -146,7 +202,7 @@ export default function UniversalInterviewPage() {
 
   const { submitTest } = useTestSubmission({
     questions: finalQuestions,
-    answers,
+     answers: state.answers,
     blocked,
     secondsLeft: secondsLeftRef.current,
     testDuration,
@@ -197,68 +253,67 @@ export default function UniversalInterviewPage() {
     isReviewed: reviewSteps.has(step),
   });
 
-  const next = () => {
-    tryNavigate(() => {
-      if (blocked) return;
+ const next = () => {
+  tryNavigate(() => {
+    if (blocked) return;
 
-      // Save current answer + persist state
-   setShowCode(false);
+    onSave();
+    setShowCode(false);
 
-      setVisitedSteps((prev) => {
-        const s = new Set(prev);
-        if (step + 1 < finalQuestions.length) s.add(step + 1);
-        return s;
-      });
+    if (step < finalQuestions.length - 1) {
+      persist({ step: step + 1 });
+    } else {
+      onFinishClick();
+    }
+  });
+};
 
-      if (step < finalQuestions.length - 1) {
-        const newStep = step + 1;
-        setStep(newStep);
-      } else {
-        onFinishClick();
-      }
-    });
-  };
 
   // sidebar click
-  const jumpToQuestion = (i: number) => {
-    tryNavigate(() => {
-      setShowCode(false);
-      setVisitedSteps((prev) => new Set(prev).add(i));
-      setStep(i);
-    });
-  };
+const jumpToQuestion = (i: number) => {
+  tryNavigate(() => {
+    onSave();
+    setShowCode(false);
+    persist({ step: i });
+  });
+};
+
 
   // mark for review
-  const toggleReview = () => {
-    setReviewSteps((prev) => {
-      const s = new Set(prev);
-      s.has(step) ? s.delete(step) : s.add(step);
-      return s;
-    });
-  };
+const toggleReview = () => {
+  const review = new Set(state.review);
+  review.has(step) ? review.delete(step) : review.add(step);
+  persist({ review: [...review] });
+};
 
-  const prev = () => {
-    tryNavigate(() => {
-      if (blocked) return;
-
-      // Save current answer + persist state
-   setShowCode(false);
-
-      if (step > 0) {
-        const newStep = step - 1;
-        setStep(newStep);
-      }
-    });
-  };
+const prev = () => {
+  tryNavigate(() => {
+    if (blocked) return;
+    onSave();
+    setShowCode(false);
+    if (step > 0) persist({ step: step - 1 });
+  });
+};
 
  const onSave = () => {
-  const hasAnswer =
-    (text && text.trim().length > 0) ||
-    (code && code.trim().length > 0);
+  const nextAnswers = [...state.answers];
+  nextAnswers[step] = isMCQ(activeQuestion)
+    ? { text }
+    : { text, code };
 
-  if (!hasAnswer) return; // 🚫 don't save empty
+  const hasAnswer = text.trim() || code.trim();
 
-  saveAnswer();
+  const saved = new Set(state.saved);
+  hasAnswer ? saved.add(step) : saved.delete(step);
+
+  const visited = new Set(state.visited);
+  visited.add(step);
+
+  persist({
+    answers: nextAnswers,
+    saved: [...saved],
+    visited: [...visited],
+  });
 };
 
 

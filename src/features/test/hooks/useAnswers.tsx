@@ -14,47 +14,32 @@ const isMCQ = (q: Question | null | undefined): q is Question =>
 
 export function useAnswers(
   activeQuestion: Question | null,
-  step: number
+  step: number,
+  persistedAnswers : CandidateAnswer[],
 ) {
-  const [answers, setAnswers] = useState<CandidateAnswer[]>([]);
-  const [text, setText] = useState(""); 
-  const [code, setCode] = useState("");
+const [text, setText] = useState("");
+const [code, setCode] = useState("");
 
-  // 🔁 Sync text/code when step changes
-  useEffect(() => {
-    const prev = answers[step];
-    setText(prev?.text ?? "");
-    setCode(prev?.code ?? "");
-  }, [step, answers]);
+useEffect(() => {
+  const prev = persistedAnswers?.[step];
+  setText(prev?.text ?? "");
+  setCode(prev?.code ?? "");
+}, [step, persistedAnswers]);
 
- // 📦 build current answer safely
-  const buildAnswer = (): CandidateAnswer =>
-    isMCQ(activeQuestion) ? { text } : { text, code };
-
-  // 💾 commit answer
-  const saveAnswer = () => {
-    setAnswers((prev) => {
-      const next = [...prev];
-      next[step] = buildAnswer();
-      return next;
-    });
-  };
-;
 
    // 🧠 derived helpers
-  const currentAnswer = buildAnswer();
-  const savedAnswer = answers[step];
+const savedAnswer = persistedAnswers?.[step];
 
-  const hasSavedAnswer =
-    Boolean(savedAnswer?.text?.trim()) ||
-    Boolean(savedAnswer?.code?.trim());
+const isDirty =
+  (savedAnswer?.text ?? "") !== text ||
+  (savedAnswer?.code ?? "") !== code;
 
-  const isDirty =
-    (savedAnswer?.text ?? "") !== text ||
-    (savedAnswer?.code ?? "") !== code;
+const hasSavedAnswer =
+  Boolean(savedAnswer?.text?.trim()) ||
+  Boolean(savedAnswer?.code?.trim());
+
 
   return {
-    answers,
 
     // editor state
     text,
@@ -62,12 +47,8 @@ export function useAnswers(
     code,
     setCode,
 
-    // actions
-    saveAnswer,
-
     // helpers
-    currentAnswer,
-    hasSavedAnswer,
     isDirty,
+    hasSavedAnswer,
   };
 }
