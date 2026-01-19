@@ -47,7 +47,8 @@ export default function AppliedJobCard({ job }: Props) {
       onClick={() => {
         console.log("Navigating to job details for jobId:", job.jobId);
         if (job._id) {
-          router.push(`/job-details?id=${job.jobId}`);
+         router.push(`/jobs/${job.jobId}`);
+
         }
       }}
       

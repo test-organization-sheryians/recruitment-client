@@ -40,7 +40,12 @@ export default function JobCard({ job }: JobCardProps) {
   const handleCardClick = (e: React.MouseEvent) => {
     // Prevent navigation when clicking "Apply" button
     if ((e.target as HTMLElement).closest("button")) return;
-    router.push(`/job-details?id=${job._id}`);
+    // router.push(`/job-details?id=${job._id}`);
+    router.push(`/jobs/${job._id}`);
+
+   console.log("JOB PARAM:", job._id);
+
+
   };
 
   // Safely extract category name
