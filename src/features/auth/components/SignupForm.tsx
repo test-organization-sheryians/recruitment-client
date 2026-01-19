@@ -213,7 +213,9 @@ const SignupForm = () => {
           )}
         </button>
 
-        <div className="flex items-center justify-center my-2">
+ {/* commented google signup */}
+ 
+        {/* <div className="flex items-center justify-center my-2">
           <span className="flex-1 border-t border-gray-300" />
           <span className="mx-4 text-gray-400 text-xs font-medium">OR</span>
           <span className="flex-1 border-t border-gray-300" />
@@ -238,7 +240,7 @@ const SignupForm = () => {
         >
           <FcGoogle className="text-xl md:text-2xl lg:text-3xl" />
           <span className="truncate">Continue with Google</span>
-        </button>
+         </button> */}
       </form>
 
       <p className="text-center text-gray-600 text-sm mt-3 mb-2">
