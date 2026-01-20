@@ -181,7 +181,7 @@ export default function UsersTable() {
             </button>
           )}
 
-          {showLink && (
+          {/* {showLink && (
             <div className="flex max-w-xl items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm">
               <div className="flex flex-1 items-center gap-2 overflow-hidden">
                 <LinkIcon className="h-4 w-4 text-gray-400" />
@@ -205,7 +205,51 @@ export default function UsersTable() {
                 )}
               </button>
             </div>
-          )}
+          )} */}
+
+
+
+{showLink && (
+  <div className="relative flex max-w-xl items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm">
+    
+    {/* Link section */}
+    <div className="flex flex-1 items-center gap-2 overflow-hidden">
+      <LinkIcon className="h-4 w-4 text-gray-400" />
+      <p className="truncate text-sm font-medium text-gray-700">{link}</p>
+    </div>
+
+    {/* Copy button */}
+    <button
+      onClick={handleCopy}
+      className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition"
+    >
+      {copied ? (
+        <>
+          <Check className="h-3 w-3" />
+          Copied
+        </>
+      ) : (
+        <>
+          <Copy className="h-3 w-3" />
+          Copy
+        </>
+      )}
+    </button>
+
+    {/* Cross button */}
+    <button
+      onClick={() => setShowLink(false)}
+      className="ml-1 flex h-6 w-6 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+    >
+      ✕
+    </button>
+  </div>
+)}
+
+
+
+
+
         </div>
       </div>
 
@@ -321,3 +365,4 @@ export default function UsersTable() {
     </>
   );
 }
+
