@@ -135,7 +135,7 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
           />
         </div>
 
-        <div className="max-h-[120px] w-[500px] overflow-y-scroll p-4 space-y-2 scrollbar-hide">
+        <div className="max-h-[40vh] overflow-y-scroll p-4 space-y-2 scrollbar-hide">
           {isFetching ? (
             <div className="text-center py-8 text-gray-500">
               <LoaderCircleIcon className="animate-spin mx-auto" />

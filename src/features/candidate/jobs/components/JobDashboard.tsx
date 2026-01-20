@@ -148,34 +148,42 @@ const jobsCount = jobsPages?.[0]?.pagination.totalRecords || 0;
       </div>
 
       {/* Mobile Sidebar */}
-      {isSidebarOpen && (
-        <div className="md:hidden fixed inset-0 z-40 flex">
-          <div
-            className="fixed inset-0 bg-black/40"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-          <div className="bg-white w-72 h-full shadow-2xl p-4 overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold">Categories</h3>
-              <button onClick={() => setIsSidebarOpen(false)} className="p-1">
-                <X size={18} />
-              </button>
-            </div>
-            <Sidebar
-              selected={selectedCategory}
-              onSelect={(id) => {
-                setSelectedCategory(id);
-                setIsSidebarOpen(false);
-                setQuery({ q: "", location: "" })
-              }}
-              //  onSelect={setSelectedCategory}
-              categories={categories || []}
-              isLoading={categoriesLoading}
-              loadMoreRef={categoriesLoadMoreRef}
-            />
-          </div>
-        </div>
-      )}
+{isSidebarOpen && (
+  <div className="md:hidden fixed inset-0 z-40 overflow-hidden">
+    {/* Backdrop */}
+    <div
+      className="absolute inset-0 bg-black/40"
+      onClick={() => setIsSidebarOpen(false)}
+    />
+
+    {/* Sidebar */}
+    <div className="absolute left-0 top-0 h-full w-72 bg-white shadow-2xl flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b">
+        <h3 className="text-base font-semibold">Categories</h3>
+        <button onClick={() => setIsSidebarOpen(false)}>
+          <X size={18} />
+        </button>
+      </div>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+        <Sidebar
+          selected={selectedCategory}
+          onSelect={(id) => {
+            setSelectedCategory(id);
+            setIsSidebarOpen(false);
+            setQuery({ q: "", location: "" });
+          }}
+          categories={categories || []}
+          isLoading={categoriesLoading}
+          loadMoreRef={categoriesLoadMoreRef}
+        />
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* Main Grid */}
       <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-12 gap-6">
