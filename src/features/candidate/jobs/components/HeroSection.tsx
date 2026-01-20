@@ -91,7 +91,7 @@ export default function HeroSection({
           </div>
 
           {/* Popular Tags - Subtle & Professional */}
-          <div className="mt-6 flex flex-wrap justify-center gap-2">
+          {/* <div className="mt-6 flex flex-wrap justify-center gap-2">
             {["Remote Jobs", "Full Time", "React Developer", "Senior", "Startup"].map((tag) => (
               <button
                 key={tag}
@@ -102,15 +102,15 @@ export default function HeroSection({
                 {tag}
               </button>
             ))}
-          </div>
+          </div> */}
         </div>
 
         {/* Trust Indicator */}
-        <div className="mt-12">
+        {/* <div className="mt-12">
           <p className="text-gray-600 text-sm">
             Trusted by <span className="font-bold text-blue-600">10,000+</span> job seekers every month
           </p>
-        </div>
+        </div> */}
       </div>
     </div>
   );
