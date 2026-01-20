@@ -50,7 +50,7 @@ const Navbar = () => {
       {/* ---------- LOGO ---------- */}
       <Link href="/">
         <h1 className="text-2xl font-bold tracking-wide cursor-pointer text-blue-950">
-          Sheryians.
+          Sheryians<span className="text-blue-600">.</span>
         </h1>
       </Link>
 
