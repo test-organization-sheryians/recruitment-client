@@ -86,7 +86,7 @@ const Sidebar: React.FC = () => {
       {/* Brand */}
       <div className="px-6 pt-6 pb-4">
         <div className="text-xl font-extrabold tracking-tight text-slate-900">
-          HRCT<span className="text-blue-600">.</span>
+          Sheryians<span className="text-blue-600">.</span>
         </div>
         <p className="text-[11px] text-slate-500 mt-0.5">
           Admin Control Panel
