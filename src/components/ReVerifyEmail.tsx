@@ -131,12 +131,8 @@ export default function ReVerifyEmailPage({ email, isVerified }: Props) {
               </p>
               <ul className="text-amber-700 space-y-1">
                 <li>• Check spam/junk folder</li>
-                <li>• Search for “Sheriyansh”</li>
-                <li>
-                  • Add{" "}
-                  <span className="font-medium">no-reply@sheriyansh.com</span>{" "}
-                  to contacts
-                </li>
+                <li>• Search for “Sheryians”</li>
+                <li>• Add <span className="font-medium">no-reply@sheryians.com</span> to contacts</li>
               </ul>
             </div>
 
@@ -166,11 +162,8 @@ export default function ReVerifyEmailPage({ email, isVerified }: Props) {
 
             <p className="text-center text-sm text-gray-500">
               Need help?{" "}
-              <a
-                href="mailto:support@sheriyansh.com"
-                className="text-indigo-600 font-medium hover:underline"
-              >
-                support@sheriyansh.com
+              <a href="mailto:support@sheriyansh.com" className="text-indigo-600 font-medium hover:underline">
+                support@sheryians.com
               </a>
             </p>
           </div>
