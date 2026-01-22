@@ -16,8 +16,9 @@ import {
 import { useToast } from "@/components/ui/Toast";
 import { useGetProfile } from "../../Profile/hooks/useProfileApi";
 
-import api from "@/config/axios";
 import type { SavedJob, Skill } from "@/types/Job";
+import { useGetJobQuestions } from "@/features/admin/jobApplicationQuestions/hooks/useGetJobQuestions";
+import { applyJob } from "@/api/jobApplication/applyJob";
 
 export default function JobDetails() {
   const router = useRouter();
@@ -28,6 +29,10 @@ export default function JobDetails() {
   const queryClient = useQueryClient();
 
   const [showQuestions, setShowQuestions] = useState(false);
+
+  const saveJobMutation = useSaveJob();
+const unsaveJobMutation = useUnsaveJob();
+
 
   useEffect(() => {
     if (showQuestions) {
@@ -43,6 +48,12 @@ export default function JobDetails() {
 
   /* -------------------- Queries -------------------- */
   const { data: job, isLoading, error, refetch } = useGetJobById(jobId);
+const {
+  data: questions,
+  isLoading: questionsLoading,
+} = useGetJobQuestions(jobId);
+
+
   const { data: profile } = useGetProfile();
   const { data: savedJobs } = useGetSavedJobs();
 
@@ -72,64 +83,67 @@ export default function JobDetails() {
     ) ?? false;
 
   /* -------------------- Handlers -------------------- */
-  const applyDirectly = async () => {
-    await api.post("/api/job-apply", {
+ const applyDirectly = async () => {
+  try {
+    await applyJob({
       jobId: job._id,
       resumeUrl: profile?.resumeFile,
       answers: [],
     });
 
     toast.success("Job applied successfully");
-  };
+    queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    await handleRefreshAfterApply();
+  } catch {
+    toast.error("Failed to apply");
+  }
+};
 
-  const handleApply = async () => {
-    if (isExpired || job.applied) return;
 
-    if (!profile?.resumeFile) {
-      toast.error("Please upload your resume before applying.");
+ const handleApply = async () => {
+  if (isExpired || job.applied) return;
+
+  if (!profile?.resumeFile) {
+    toast.error("Please upload your resume before applying.");
+    return;
+  }
+
+  if (questionsLoading) {
+    toast.loading("Checking job questions...");
+    return;
+  }
+
+  try {
+    if (!questions || questions.length === 0) {
+      await applyDirectly();
+      await handleRefreshAfterApply();
       return;
     }
 
-    try {
-      // ✅ CORRECT API
+    setShowQuestions(true);
+  } catch {
+    toast.error("Failed to apply");
+  }
+};
 
-      const res = await api.get(
-        `/api/job-questions/getjobquestions/${job._id}`,
-      );
-
-      const questions = res.data?.data ?? [];
-
-      // ✅ NO QUESTIONS → DIRECT APPLY (NO POPUP AT ALL)
-      if (questions.length === 0) {
-        await applyDirectly();
-        await handleRefreshAfterApply();
-        return;
-      }
-
-      // ✅ QUESTIONS PRESENT → OPEN POPUP
-      setShowQuestions(true);
-    } catch (err) {
-      toast.error("Failed to fetch job questions");
-    }
-  };
 
   const handleBookmarkToggle = () => {
-    if (isExpired || !job._id) return;
+  if (isExpired || !job._id) return;
 
-    if (!isSaved) {
-      useSaveJob().mutate(job._id, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
-        },
-      });
-    } else {
-      useUnsaveJob().mutate(job._id, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
-        },
-      });
-    }
-  };
+  if (!isSaved) {
+    saveJobMutation.mutate(job._id, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
+      },
+    });
+  } else {
+    unsaveJobMutation.mutate(job._id, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
+      },
+    });
+  }
+};
 
   const handleRefreshAfterApply = async () => {
     await refetch(); // 🔁 job details refetch
@@ -190,11 +204,13 @@ export default function JobDetails() {
             {/* 👇 Sirf isi box ko scrollable banao */}
             <div className="w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
               <JobQuestionsList
-                jobId={job._id}
-                onNoQuestions={() => {
-                  handleRefreshAfterApply();
-                }}
-              />
+  jobId={job._id}
+  onSuccess={async() => {
+    toast.success("Applied successfully");
+    await handleRefreshAfterApply();
+  }}
+/>
+
             </div>
           </div>
         )}

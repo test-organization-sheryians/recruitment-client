@@ -1,18 +1,23 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useGetJobQuestions } from "../hooks/useGetJobQuestions";
 import { applyJob } from "@/api";
 import { useGetProfile } from "@/features/candidate/Profile/hooks/useProfileApi";
-import { useQueryClient } from "@tanstack/react-query";
 import { uploadFileToS3 } from "@/lib/uploadFile";
 
 /* ================= TYPES ================= */
 
 type Props = {
   jobId: string;
-  onNoQuestions: () => void;
+  onSuccess: () => void;
 };
+
+type Answer = {
+  question: string;
+  answer: string;
+};
+
 
 type Question = {
   _id: string;
@@ -28,7 +33,7 @@ type Question = {
     | "yes-no"
     | "date"
     | "rating";
-  options?: any[];
+ options?: (string | { label: string; value?: string })[];
   isRequired: boolean;
 };
 
@@ -67,31 +72,29 @@ const OptionWrapper = ({ children }: { children: React.ReactNode }) => (
 
 /* ================= COMPONENT ================= */
 
-export default function JobQuestionsForm({ jobId, onNoQuestions }: Props) {
+export default function JobQuestionsForm({ jobId, onSuccess }: Props) {
   const { data, isLoading, isError } = useGetJobQuestions(jobId);
   const { data: profile } = useGetProfile();
-  const queryClient = useQueryClient();
 
   const questions: Question[] = data || [];
 
-  const [answers, setAnswers] = useState<
-    { question: string; answer: string }[]
-  >([]);
+  const [answers, setAnswers] = useState<Answer[]>([]);
+
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [error, setError] = useState("");
   const [uploaded, setUploaded] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
 
   const getOptions = (q: Question): string[] =>
-    q.options?.map((o: any) => (typeof o === "string" ? o : o.label)) || [];
+  q.options?.map((o) => (typeof o === "string" ? o : o.label)) || [];
 
   /* ================= HANDLERS ================= */
 
   const handleChange = async (
-    questionText: string,
-    value: any,
-    inputType?: Question["inputType"],
-  ) => {
+  questionText: string,
+  value: string | number | File,
+  inputType?: Question["inputType"],
+) => {
     if (inputType === "file") {
       if (!(value instanceof File)) return;
       if (value.type !== "application/pdf") {
@@ -151,7 +154,7 @@ export default function JobQuestionsForm({ jobId, onNoQuestions }: Props) {
     });
 
     setSubmitting(false);
-    onNoQuestions();
+    onSuccess();
   };
 
   if (isLoading) return null;
@@ -317,13 +320,16 @@ export default function JobQuestionsForm({ jobId, onNoQuestions }: Props) {
                       <label className="bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer">
                         Upload PDF
                         <input
-                          type="file"
-                          hidden
-                          accept="application/pdf"
-                          onChange={(e) =>
-                            handleChange(q.title, e.target.files?.[0], "file")
-                          }
-                        />
+  type="file"
+  hidden
+  accept="application/pdf"
+  onChange={(e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    handleChange(q.title, file, "file");
+  }}
+/>
+
                       </label>
 
                       {/* 🔥 YAHI UPLOADED MESSAGE AAYEGA */}

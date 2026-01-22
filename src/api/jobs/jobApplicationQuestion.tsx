@@ -1,9 +1,21 @@
 import api from '@/config/axios';
 
+export type JobQuestionPayload = {
+  title: string;
+  inputType: string;
+  isRequired: boolean;
+  options?: string[];
+  description?: string;
+};
+
+
 
 /* ================= CREATE QUESTIONS ================= */
 // POST /api/job-application-questions/createjobquestions/:id
-export const createJobApplicationQuestions = async (jobId: string , payload: any) => {
+export const createJobApplicationQuestions = async (
+  jobId: string,
+  payload: JobQuestionPayload
+) => {
   const res = await api.post(
     `/api/job-questions/createjobquestions/${jobId}`,
     payload
@@ -24,7 +36,7 @@ export const getJobQuestions = async (jobId: string) => {
 // PATCH /api/job-application-questions/updatejobquestion/:id
 export const updateJobApplicationQuestion = async (
   questionId: string,
-  payload: any
+  payload: JobQuestionPayload
 ) => {
   const res = await api.patch(
     `/api/job-questions/updatejobquestion/${questionId}`,

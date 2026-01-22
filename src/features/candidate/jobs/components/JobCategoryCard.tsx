@@ -9,6 +9,7 @@ import { applyJob } from "@/api/jobApplication/applyJob";
 import { useQueryClient } from "@tanstack/react-query";
 
 import JobQuestionsList from "@/features/admin/jobApplicationQuestions/components/jobQuestionList";
+import { useGetJobQuestions } from "@/features/admin/jobApplicationQuestions/hooks/useGetJobQuestions";
 
 interface Category {
   _id: string;
@@ -43,7 +44,12 @@ export default function JobCard({ job }: JobCardProps) {
   const { data: profile, isLoading: profileLoading} = useGetProfile();
   const [showQuestions, setShowQuestions] = useState(false);
   const queryClient = useQueryClient();
-  const [hasQuestions, setHasQuestions] = useState<boolean | null>(null);
+  const [checking, setChecking] = useState(false);
+
+  const { data: questions, isLoading: questionsLoading } =
+  useGetJobQuestions(job._id);
+
+
 
   /* 🔒 BODY SCROLL LOCK */
   useEffect(() => {
@@ -73,23 +79,28 @@ export default function JobCard({ job }: JobCardProps) {
 
   const isExpired = job.expiry ? new Date(job.expiry) < new Date() : false;
 
-  const applyDirectly = async () => {
-    try {
-      await applyJob({
-        jobId: job._id,
-        resumeUrl: profile?.resumeFile,
-        answers: [], // 🔥 NO QUESTIONS
-      });
+ const applyDirectly = async () => {
+  try {
+    await applyJob({
+      jobId: job._id,
+      resumeUrl: profile?.resumeFile,
+      answers: [],
+    });
 
-      toast.success("Applied successfully");
-      queryClient.invalidateQueries({ queryKey: ["jobs"] });
-    } catch {
-      toast.error("Failed to apply");
-    }
-  };
+    toast.success("Applied successfully");
+    queryClient.invalidateQueries({ queryKey: ["jobs"] });
+  } catch {
+    toast.error("Failed to apply");
+  }
+};
 
 
-  const handleApply = () => {
+
+const handleApply = async () => {
+  if (checking) return;
+  setChecking(true);
+
+  try {
     if (!job._id || isExpired || job.applied) return;
 
     if (profileLoading) {
@@ -102,8 +113,26 @@ export default function JobCard({ job }: JobCardProps) {
       return;
     }
 
+    // 🔥 Questions already fetched by React Query hook
+    if (questionsLoading) {
+      toast.loading("Checking job questions...");
+      return;
+    }
+
+    if (!questions || questions.length === 0) {
+      await applyDirectly();
+      return;
+    }
+
     setShowQuestions(true);
-  };
+  } catch {
+    toast.error("Failed to check job questions");
+  } finally {
+    setChecking(false);
+  }
+};
+
+
 
   return (
     <>
@@ -200,13 +229,14 @@ export default function JobCard({ job }: JobCardProps) {
             </button>
 
             <JobQuestionsList
-              jobId={job._id}
-              onNoQuestions={async() => {
-                setShowQuestions(false);
-                  await applyDirectly();
-                // yahan direct apply ka logic hoga
-              }}
-            />
+  jobId={job._id}
+  onSuccess={() => {
+    toast.success("Applied successfully");
+    queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    setShowQuestions(false);
+  }}
+/>
+
           </div>
         </div>
       )}
