@@ -33,28 +33,42 @@ export default function AppliedJobs() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteAppliedJobs(activeStatus === "all" ? null : activeStatus);
+  } = useInfiniteAppliedJobs(null);
 
-  const pages = data?.pages ?? [];
-  const jobs = pages.flatMap((p) => p.data ?? []);
+const pages = data?.pages ?? [];
+const allJobs = pages.flatMap((p) => p.data ?? []);
+
+const filteredJobs =
+  activeStatus === "all"
+    ? allJobs
+    : allJobs.filter((job) => job.status === activeStatus);
   const totalCount = pages[0]?.pagination?.totalRecords ?? 0;
 
+  const counts: Record<StatusKey, number> = {
+  all: allJobs.length,
+  shortlisted: allJobs.filter((j) => j.status === "shortlisted").length,
+  rejected: allJobs.filter((j) => j.status === "rejected").length,
+  forwareded: allJobs.filter((j) => j.status === "forwareded").length,
+  interview: allJobs.filter((j) => j.status === "interview").length,
+};
+
   const loadMoreRef = useIntersectionObserver({
-    enabled: hasNextPage && !isFetchingNextPage,
+
+    enabled: activeStatus === "all"&&hasNextPage && !isFetchingNextPage,
     onIntersect: fetchNextPage,
   });
 
   if (isLoading) return <p>Loading applied jobs...</p>;
   if (isError) return <p>Failed to load applied jobs</p>;
-  if (jobs.length === 0) return <EmptyState />;
+  if (allJobs.length === 0) return <EmptyState />;
 
-  const counts: Record<StatusKey, number> = {
-    all: totalCount,
-    shortlisted: totalCount,
-    rejected: totalCount,
-    forwareded: totalCount,
-    interview: totalCount,
-  };
+  // const counts: Record<StatusKey, number> = {
+  //   all: totalCount,
+  //   shortlisted: totalCount,
+  //   rejected: totalCount,
+  //   forwareded: totalCount,
+  //   interview: totalCount,
+  // };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -93,7 +107,7 @@ export default function AppliedJobs() {
 
       {/* Job Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {jobs.map((job) => (
+        {filteredJobs.map((job) => (
           <AppliedJobCard key={job._id} job={job} />
         ))}
       </div>

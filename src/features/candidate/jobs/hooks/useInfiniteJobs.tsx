@@ -57,13 +57,14 @@ export const useInfiniteAppliedJobs = (
   limit: number = DEFAULT_LIMIT
 ) => {
   return useInfiniteQuery<BackendPaginatedJobResponse<AppliedJob>>({
-    queryKey: ["appliedJobs", {status, limit }],
+    queryKey: ["appliedJobs",status, limit ],
     initialPageParam: 1,
     queryFn: ({ pageParam }) =>
       getAppliedJobsPaginated(pageParam as number, limit,status ?? undefined),
 
     getNextPageParam: (lastPage) => {
       const { pagination } = lastPage;
+      if (!pagination) return undefined;
 
       const nextPage = pagination.currentPage + 1;
       return nextPage <= pagination.totalPages ? nextPage : undefined;
