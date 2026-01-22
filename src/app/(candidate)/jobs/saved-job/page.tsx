@@ -11,6 +11,8 @@ import { SavedJob } from "@/types/Job";
 export default function SavedJobsPage() {
   const router = useRouter();
 
+  //ghagsuid
+
   const {
     data: savedJobsPages,
     isLoading,
@@ -74,7 +76,7 @@ export default function SavedJobsPage() {
       <div className="mx-auto max-w-4xl space-y-6 rounded-2xl bg-white p-6 shadow">
         <Header onBack={() => router.back()} />
 
-        <div className="grid gap-4">
+        <div className="grid gap-4">  
           {savedJobs.map((savedJob: SavedJob) => {
             const { _id, jobId } = savedJob;
 
