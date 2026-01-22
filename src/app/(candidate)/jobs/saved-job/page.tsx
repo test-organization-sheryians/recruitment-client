@@ -11,6 +11,8 @@ import { SavedJob } from "@/types/Job";
 export default function SavedJobsPage() {
   const router = useRouter();
 
+  //ghagsuid
+
   const {
     data: savedJobsPages,
     isLoading,
@@ -74,7 +76,7 @@ export default function SavedJobsPage() {
       <div className="mx-auto max-w-4xl space-y-6 rounded-2xl bg-white p-6 shadow">
         <Header onBack={() => router.back()} />
 
-        <div className="grid gap-4">
+        <div className="grid gap-4">  
           {savedJobs.map((savedJob: SavedJob) => {
             const { _id, jobId } = savedJob;
 
@@ -84,11 +86,13 @@ export default function SavedJobsPage() {
               <div
                 key={_id}
                 className="rounded-xl border bg-white p-5 transition hover:shadow"
+                onClick={() => jobId?._id && router.push(`/jobs/${jobId._id}`)}
+
               >
                 {/* Title + Unsave */}
                 <div className="flex items-start justify-between">
                   <h2
-                    onClick={() => router.push(`/job-details?id=${jobId._id}`)}
+                   
                     className="cursor-pointer text-lg font-semibold text-gray-900"
                   >
                     {jobId.title}
