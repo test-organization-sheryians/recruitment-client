@@ -50,20 +50,20 @@ const Navbar = () => {
       {/* ---------- LOGO ---------- */}
       <Link href="/">
         <h1 className="text-2xl font-bold tracking-wide cursor-pointer text-blue-950">
-          HRECT.
+          Sheryians<span className="text-blue-600">.</span>
         </h1>
       </Link>
 
       {/* ---------- DESKTOP NAV ---------- */}
       <div className="hidden md:flex items-center gap-6">
         {/* Notifications */}
-        <button
+        {/* <button
           className="relative p-2 hover:bg-gray-100 rounded-full"
           onClick={() => setOpenNotif(!openNotif)}
         >
           <BellDot size={22} className="text-gray-600" />
           <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full border border-white" />
-        </button>
+        </button> */}
 
         {/* Profile */}
         <div className="relative">
@@ -194,7 +194,7 @@ const Navbar = () => {
             </Link>
 
             <Link
-              href="/jobs-savedjob"
+              href="/jobs/saved-job"
               onClick={() => setOpenMenu(false)}
               className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
             >
@@ -224,7 +224,7 @@ const Navbar = () => {
       </div>
 
       {/* ---------- NOTIFICATIONS ---------- */}
-      <div
+      {/* <div
         className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl border-l z-[999] transition-transform ${
           openNotif ? "translate-x-0" : "translate-x-full"
         }`}
@@ -235,7 +235,7 @@ const Navbar = () => {
             <X size={22} />
           </button>
         </div>
-      </div>
+      </div> */}
     </nav>
   );
 };

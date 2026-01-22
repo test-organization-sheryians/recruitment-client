@@ -1,67 +1,70 @@
-"use client";
+'use client';
 
-import { useState, useRef, useMemo, useEffect } from "react";
-import { Pencil, Trash2, Loader2 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from '@tanstack/react-query';
+import { Check, Copy, LinkIcon, Loader2, MoreVertical, Pencil, Trash2, Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { useToast } from '@/components/ui/Toast';
+import { useDebounce } from '@/features/admin/users/hooks/useDebounce';
+import { useCreateShareCandidate } from '@/features/admin/users/hooks/useShareuser';
 import {
-  useInfiniteUsers,
   useDeleteUser,
-  useUpdateUserRole,
+  useInfiniteUsers,
   User,
-} from "@/features/admin/users/hooks/useUser";
-import { useDebounce } from "@/features/admin/users/hooks/useDebounce";
-import { useToast } from "@/components/ui/Toast";
+  useUpdateUserRole,
+} from '@/features/admin/users/hooks/useUser';
 
 export default function UsersTable() {
-  const [searchQuery, setSearchQuery] = useState("");
+  /* ---------------- SEARCH ---------------- */
+  const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 400);
+  const normalizedSearch = debouncedSearch.trim().replace(/\s+/g, ' ');
 
-  const normalizedSearch = debouncedSearch
-  .trim()
-  .split(/\s+/)
-  .join(" ");
+  /* ---------------- DATA ---------------- */
+  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteUsers(normalizedSearch);
 
+  const users = useMemo(() => data?.pages.flatMap(p => p.data) ?? [], [data]);
 
-  const {
-    data,
-    isLoading,
-    isError,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteUsers(normalizedSearch);
+  /* ---------------- SELECTION ---------------- */
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const toggleUserSelection = (id: string) => {
+    setSelectedUserIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+  };
 
-  const users = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
+  /* ---------------- SHARE ---------------- */
+  const { mutate: shareCandidates, isPending } = useCreateShareCandidate();
 
+  /* ---------------- ACTION STATE ---------------- */
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [selectedRole, setSelectedRole] = useState('');
   const [openDeleteMenu, setOpenDeleteMenu] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-
+  const [link, setLink] = useState<string>('');
+  const [showLink, setShowLink] = useState(false);
+  const [copied, setCopied] = useState(false);
   const loadMoreRef = useRef<HTMLTableRowElement | null>(null);
 
   const deleteUser = useDeleteUser();
   const updateUserRole = useUpdateUserRole();
   const queryClient = useQueryClient();
   const { success, error } = useToast();
+  const router = useRouter();
 
   /* ---------------- URL SYNC ---------------- */
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      const params = new URLSearchParams(window.location.search);
-      if (searchQuery) params.set("search", searchQuery);
-      else params.delete("search");
-      window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
-    }, 300);
-    return () => clearTimeout(timeout);
+    const params = new URLSearchParams(window.location.search);
+    searchQuery ? params.set('search', searchQuery) : params.delete('search');
+    window.history.replaceState(null, '', `?${params.toString()}`);
   }, [searchQuery]);
 
   /* ---------------- INFINITE SCROLL ---------------- */
   useEffect(() => {
     const el = loadMoreRef.current;
     if (!el) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
@@ -70,22 +73,24 @@ export default function UsersTable() {
       },
       { threshold: 0.1 }
     );
+
     observer.observe(el);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  /* ---------------- MODAL / ACTIONS ---------------- */
+  /* ---------------- EDIT ROLE ---------------- */
   const openModal = (user: User) => {
     setSelectedUserId(user._id);
-    setSelectedRole(user.role?._id || "");
+    setSelectedRole(user.role?._id || '');
     setIsModalOpen(true);
   };
 
   const handleSaveRole = () => {
     if (!selectedUserId || !selectedRole) {
-      error("Please select a role");
+      error('Please select a role');
       return;
     }
+
     setIsSaving(true);
     updateUserRole.mutate(
       { userId: selectedUserId, role: selectedRole },
@@ -93,160 +98,271 @@ export default function UsersTable() {
         onSuccess: () => {
           setIsSaving(false);
           setIsModalOpen(false);
-          success("Role updated successfully!");
-          queryClient.invalidateQueries({ queryKey: ["users"] });
+          success('Role updated successfully');
+          queryClient.invalidateQueries({ queryKey: ['users'] });
         },
         onError: () => {
           setIsSaving(false);
-          error("Failed to update role");
+          error('Failed to update role');
         },
       }
     );
   };
 
+  /* ---------------- DELETE ---------------- */
   const handleDeleteUser = (userId: string) => {
     deleteUser.mutate(
       { userId },
       {
         onSuccess: () => {
           setOpenDeleteMenu(null);
-          success("User deleted successfully!");
-          queryClient.invalidateQueries({ queryKey: ["users"] });
+          success('User deleted successfully');
+          queryClient.invalidateQueries({ queryKey: ['users'] });
         },
-        onError: () => error("Failed to delete user"),
+        onError: () => error('Failed to delete user'),
       }
     );
   };
 
-  if (isLoading) return <p className="text-center py-8">Loading users...</p>;
-  if (isError) return <p className="text-center py-8 text-red-500">Failed to load users</p>;
+  /* ---------------- SHARE ---------------- */
+  const handleViewSelected = () => {
+    if (selectedUserIds.length === 0) {
+      error('Please select at least one user');
+      return;
+    }
+    const payload = selectedUserIds.map(id => ({ candidateId: id }));
+    shareCandidates(payload, {
+      onSuccess: res => {
+        setSelectedUserIds([]);
+        const shareId = res.shareLink.split('/').pop();
+        // setLink(`http://localhost:3000/selected-candidates?shareId=${shareId}`);
+        setLink(
+          `https://recruitment-client-git-dev-anshu-pandeys-projects.vercel.app/selected-candidates?shareId=${shareId}`
+        );
+        setShowLink(true);
+      },
+      onError: () => error('Failed to share candidates'),
+    });
+  };
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy', err);
+    }
+  };
+  /* ---------------- STATES ---------------- */
+  if (isLoading) return <p className="py-10 text-center">Loading users…</p>;
+  if (isError) return <p className="py-10 text-center text-red-500">Failed to load users</p>;
 
   return (
     <>
-      {/* SEARCH */}
-      <div className="flex justify-end mb-6">
+      {/* HEADER */}
+      <div className="mb-6 flex items-center justify-between">
         <input
           type="text"
-          placeholder="Search by name or email..."
-          className="px-4 py-2 border rounded-lg w-64"
+          placeholder="Search by name or email…"
+          className="w-64 rounded-lg border-3 px-4 py-2"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={e => setSearchQuery(e.target.value)}
         />
+
+        <div className="space-y-3">
+          {selectedUserIds.length > 0 && (
+            <button
+              onClick={handleViewSelected}
+              disabled={selectedUserIds.length === 0 || isPending}
+              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:bg-gray-400"
+            >
+              <Users className="h-4 w-4" />
+              Share Selected ({selectedUserIds.length})
+            </button>
+          )}
+
+          {/* {showLink && (
+            <div className="flex max-w-xl items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm">
+              <div className="flex flex-1 items-center gap-2 overflow-hidden">
+                <LinkIcon className="h-4 w-4 text-gray-400" />
+                <p className="truncate text-sm font-medium text-gray-700">{link}</p>
+              </div>
+
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-3 w-3" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3 w-3" />
+                    Copy
+                  </>
+                )}
+              </button>
+            </div>
+          )} */}
+
+
+
+{showLink && (
+  <div className="relative flex max-w-xl items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm">
+    
+    {/* Link section */}
+    <div className="flex flex-1 items-center gap-2 overflow-hidden">
+      <LinkIcon className="h-4 w-4 text-gray-400" />
+      <p className="truncate text-sm font-medium text-gray-700">{link}</p>
+    </div>
+
+    {/* Copy button */}
+    <button
+      onClick={handleCopy}
+      className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition"
+    >
+      {copied ? (
+        <>
+          <Check className="h-3 w-3" />
+          Copied
+        </>
+      ) : (
+        <>
+          <Copy className="h-3 w-3" />
+          Copy
+        </>
+      )}
+    </button>
+
+    {/* Cross button */}
+    <button
+      onClick={() => setShowLink(false)}
+      className="ml-1 flex h-6 w-6 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+    >
+      ✕
+    </button>
+  </div>
+)}
+
+
+
+
+
+        </div>
       </div>
 
-      {/* MODAL */}
+      {/* TABLE */}
+      <div className="overflow-hidden rounded-xl border bg-white">
+        <table className="w-full">
+          <thead className="sticky top-0 bg-gray-100 text-sm">
+            <tr>
+              <th className="px-4 py-3 text-center">Select</th>
+              <th className="px-4 py-3 text-left">Name</th>
+              <th className="px-4 py-3 text-left">Email</th>
+              <th className="px-4 py-3 text-left">Phone</th>
+              <th className="px-4 py-3 text-left">Role</th>
+              <th className="px-4 py-3 text-center">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {users.map(user => (
+              <tr key={user._id} className="border-t hover:bg-gray-50">
+                <td className="px-4 py-3 text-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedUserIds.includes(user._id)}
+                    onChange={() => toggleUserSelection(user._id)}
+                    className="h-4 w-4 accent-blue-600"
+                  />
+                </td>
+
+                <td className="px-4 py-3 font-medium">
+                  {user.firstName} {user.lastName}
+                </td>
+                <td className="px-4 py-3">{user.email}</td>
+                <td className="px-4 py-3">{user.phoneNumber || 'N/A'}</td>
+                <td className="px-4 py-3">{user.role?.name || 'No Role'}</td>
+
+                <td className="relative px-4 py-3 text-center">
+                  <button
+                    onClick={() => setOpenDeleteMenu(prev => (prev === user._id ? null : user._id))}
+                    className="rounded-md p-2 hover:bg-gray-100"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+
+                  {openDeleteMenu === user._id && (
+                    <div className="absolute right-6 top-10 z-20 w-36 rounded-lg border bg-white shadow-lg">
+                      <button
+                        onClick={() => openModal(user)}
+                        className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Edit
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteUser(user._id)}
+                        className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+
+            <tr ref={loadMoreRef}>
+              <td colSpan={6} />
+            </tr>
+
+            {isFetchingNextPage && (
+              <tr>
+                <td colSpan={6} className="py-6 text-center text-gray-500">
+                  Loading more users…
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ROLE MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-80">
-            <h2 className="font-semibold mb-4">Update Role</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-80 rounded-xl bg-white p-6 shadow-xl">
+            <h2 className="mb-4 text-lg font-semibold">Update Role</h2>
+
             <select
               value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value)}
-              className="w-full border p-2 rounded">
-              <option value="">Select Role</option>
+              onChange={e => setSelectedRole(e.target.value)}
+              className="w-full rounded-lg border px-3 py-2"
+            >
+              <option value="">Select role</option>
               <option value="6915a17ed8d70e9b7ce70ec7">Admin</option>
               <option value="692c10094167ed9d874b8f99">Client</option>
               <option value="6915ab309788ad1e00990866">Candidate</option>
             </select>
-            <div className="flex justify-end gap-3 mt-6">
+
+            <div className="mt-6 flex justify-end gap-3">
               <button onClick={() => setIsModalOpen(false)}>Cancel</button>
               <button
                 onClick={handleSaveRole}
                 disabled={isSaving}
-                className="bg-blue-600 text-white px-4 py-2 rounded"
+                className="rounded-lg bg-blue-600 px-4 py-2 text-white"
               >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
               </button>
             </div>
           </div>
         </div>
       )}
-
-      {/* TABLE */}
-     <table className="min-w-full bg-white border rounded">
-  <thead className="bg-gray-100">
-    <tr>
-      <th className="p-3 text-left">Name</th>
-      <th className="p-3 text-left">Email</th>
-      <th className="p-3 text-left">Phone</th>
-      <th className="p-3 text-left">Role</th>
-      <th className="p-3 text-center">Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {users.length === 0 ? (
-      <tr>
-        <td colSpan={5} className="text-center py-8 text-gray-500">
-          {searchQuery ? "No matches found" : "No users found"}
-        </td>
-      </tr>
-    ) : (
-      users.map((user) => (
-        <tr key={user._id} className="hover:bg-gray-50">
-          <td className="px-6 py-4 border-b">
-            {user.firstName} {user.lastName}
-          </td>
-          <td className="px-6 py-4 border-b">{user.email}</td>
-          <td className="px-6 py-4 border-b">
-            {user.phoneNumber || "N/A"}
-          </td>
-          <td className="px-6 py-4 border-b">
-            {user.role?.name || "No Role"}
-          </td>
-
-          {/* ACTIONS */}
-          <td className="px-6 py-4 border-b text-center">
-            <div className="flex justify-center items-center gap-2 relative">
-              <Pencil
-                className="w-5 h-5 text-blue-600 cursor-pointer"
-                onClick={() => openModal(user)}
-              />
-              <Trash2
-                className="w-5 h-5 text-red-600 cursor-pointer"
-                onClick={() =>
-                  setOpenDeleteMenu(
-                    openDeleteMenu === user._id ? null : user._id
-                  )
-                }
-              />
-
-              {openDeleteMenu === user._id && (
-                <div className="absolute top-6 right-0 bg-white border rounded-lg shadow-lg w-32 z-20">
-                  <button
-                    onClick={() => handleDeleteUser(user._id)}
-                    className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    onClick={() => setOpenDeleteMenu(null)}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-            </div>
-          </td>
-        </tr>
-      ))
-    )}
-
-    {/* Infinite scroll trigger */}
-    <tr ref={loadMoreRef}>
-      <td colSpan={5} className="p-0 h-4" />
-    </tr>
-
-    {isFetchingNextPage && (
-      <tr>
-        <td colSpan={5} className="text-center py-6 text-gray-500">
-          Loading more users...
-        </td>
-      </tr>
-    )}
-  </tbody>
-</table>
-
     </>
-  );  
+  );
 }
+

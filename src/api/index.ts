@@ -3,6 +3,7 @@ export * from "./auth/login";
 export * from "./auth/register";
 export * from "./auth/logout";
 export * from "./auth/verify";
+export * from "./auth/refreshToken";
 
 /* ================= PROFILE ================= */
 export * from "./profile";

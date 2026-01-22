@@ -66,7 +66,7 @@ const getStyleValue = (value?: string | number) => {
 
 const Schedule = ({ height, className = "" }: ScheduleProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState("All Upcoming");
+  const [selectedFilter, setSelectedFilter] = useState("Today");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedInterview, setSelectedInterview] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);

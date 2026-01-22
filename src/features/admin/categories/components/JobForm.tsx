@@ -59,36 +59,46 @@ export default function JobForm({
   onSubmit,
   loading = false,
 }: JobFormProps) {
+  const safeInitialData = initialData || {};
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [pincodeStatus, setPincodeStatus] = useState<{
+    loading: boolean;
+    message: string;
+    type: "info" | "error" | "";
+  }>({
+    loading: false,
+    message: "",
+    type: "",
+  });
 
   const { data: categories = [] } = useGetJobCategories();
   const { data: skillsResponse = [] } = useGetAllSkills();
 
   const [formData, setFormData] = useState({
-    title: initialData?.title || "",
-    requiredExperience: initialData?.requiredExperience || "",
-    category: typeof initialData?.category === 'string'
-      ? initialData.category
-      : (initialData?.category as unknown as Category)?._id || "",
-    education: initialData?.education || "",
-    description: initialData?.description || "",
+    title: safeInitialData.title || "",
+    requiredExperience: safeInitialData.requiredExperience || "",
+    category: typeof safeInitialData.category === "string"
+      ? (safeInitialData.category as string)
+      : (safeInitialData.category as unknown as Category)?._id || "",
+    education: safeInitialData.education || "",
+    description: safeInitialData.description || "",
     location: {
-      city: initialData?.location?.city || "",
-      state: initialData?.location?.state || "",
-      pincode: initialData?.location?.pincode || "",
-      country: initialData?.location?.country || "",
+      city: safeInitialData.location?.city || "",
+      state: safeInitialData.location?.state || "",
+      pincode: safeInitialData.location?.pincode || "",
+      country: safeInitialData.location?.country || "",
     },       // added Location 
-    skills: Array.isArray(initialData?.skills)
-      ? (initialData.skills as (string | Skill)[]).map((s) =>
+    skills: Array.isArray(safeInitialData.skills)
+      ? (safeInitialData.skills as (string | Skill)[]).map((s) =>
         typeof s === "string" ? s : s._id
       )
       : [],
-    expiry: initialData?.expiry
-      ? new Date(initialData.expiry).toISOString().split("T")[0]
+    expiry: safeInitialData.expiry
+      ? new Date(safeInitialData.expiry).toISOString().split("T")[0]
       : "",
-    clientId: initialData?.clientId || "6915b90df6594de75060410b",
+    clientId: safeInitialData.clientId || "6915b90df6594de75060410b",
   });
 
   useEffect(() => {
@@ -121,6 +131,91 @@ export default function JobForm({
       },
     }));
   };
+
+  // 🔎 Auto-fill city/state/country based on pincode (India-focused)
+  useEffect(() => {
+    const pincode = formData.location.pincode?.trim();
+
+    // Reset helper if no pincode
+    if (!pincode) {
+      setPincodeStatus({ loading: false, message: "", type: "" });
+      return;
+    }
+
+    // Only trigger for 6-digit numeric Indian pincodes
+    if (pincode.length !== 6 || !/^\d{6}$/.test(pincode)) {
+      setPincodeStatus({
+        loading: false,
+        message: "Please enter a valid 6-digit pincode",
+        type: "error",
+      });
+      return;
+    }
+
+    let cancelled = false;
+    setPincodeStatus({
+      loading: true,
+      message: "Looking up location from pincode...",
+      type: "info",
+    });
+
+    // Small debounce so we don't hit API on every keystroke
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://api.postalpincode.in/pincode/${encodeURIComponent(pincode)}`
+        );
+        const data = await res.json();
+
+        if (cancelled) return;
+
+        if (
+          !Array.isArray(data) ||
+          !data[0] ||
+          data[0].Status !== "Success" ||
+          !Array.isArray(data[0].PostOffice) ||
+          !data[0].PostOffice[0]
+        ) {
+          setPincodeStatus({
+            loading: false,
+            message: "No location found for this pincode",
+            type: "error",
+          });
+          return;
+        }
+
+        const po = data[0].PostOffice[0];
+
+        setFormData((prev) => ({
+          ...prev,
+          location: {
+            ...prev.location,
+            city: po.District || prev.location.city,
+            state: po.State || prev.location.state,
+            country: po.Country || prev.location.country || "India",
+          },
+        }));
+
+        setPincodeStatus({
+          loading: false,
+          message: `Detected ${po.District}, ${po.State}, ${po.Country || "India"}`,
+          type: "info",
+        });
+      } catch (err) {
+        if (cancelled) return;
+        setPincodeStatus({
+          loading: false,
+          message: "Failed to fetch location for this pincode. Please fill manually.",
+          type: "error",
+        });
+      }
+    }, 500);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [formData.location.pincode]);
 
 
   const handleSubmit = async () => {
@@ -330,6 +425,21 @@ export default function JobForm({
                         className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
                       />
                     </div>
+
+                    {pincodeStatus.message && (
+                      <p
+                        className={`mt-2 text-xs ${
+                          pincodeStatus.type === "error"
+                            ? "text-red-600"
+                            : "text-blue-600"
+                        }`}
+                      >
+                        {pincodeStatus.loading && (
+                          <span className="inline-block w-3 h-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin align-middle" />
+                        )}
+                        {pincodeStatus.message}
+                      </p>
+                    )}
                   </div>
 
                 </div>

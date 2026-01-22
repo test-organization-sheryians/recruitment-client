@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Bookmark } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -22,8 +22,9 @@ import { applyJob } from "@/api/jobApplication/applyJob";
 
 export default function JobDetails() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const jobId = searchParams.get("id") ?? undefined;
+  const params = useParams();
+  const jobId = params.jobId as string;
+
 
   const toast = useToast();
   const queryClient = useQueryClient();

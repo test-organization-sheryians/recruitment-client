@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
 import { useState, useEffect } from "react";
 import {
   useBulkUpdateApplicants,
   useJobApplicant,
-  useJobInterviews,
+  useInterviewsByJob,
 } from "../hooks/useJobApplicant";
 import { useParams } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
@@ -14,16 +14,18 @@ import {
   ApplicantRow, 
   ApplicantsApiResponse 
 } from "@/types/applicant";
+import { updateInterviewStatus } from "@/api/jobApplication/scheduleInterview";
+
 
 /* ================= TYPES ================= */
 
-type Size = number | string
+type Size = number | string;
 
 type ApplicantsListProps = {
-  height?: Size
-  width?: Size
-  className?: string
-}
+  height?: Size;
+  width?: Size;
+  className?: string;
+};
 
 // Extended row for applicants
 interface ExtendedApplicantRow extends Omit<ApplicantRow, 'id'> {
@@ -33,7 +35,7 @@ interface ExtendedApplicantRow extends Omit<ApplicantRow, 'id'> {
   email: string;
   role: string;
   date: string;
-  experience: string;
+  experience: string; 
   status: ApplicantStatus;
   resume: string;
 }
@@ -70,7 +72,7 @@ const statusColors: Record<string, string> = {
   applied: "bg-blue-100 text-blue-700",
   shortlisted: "bg-yellow-100 text-yellow-700",
   rejected: "bg-red-100 text-red-700",
-  forwarded: "bg-purple-100 text-purple-700",
+  forwareded: "bg-purple-100 text-purple-700",
   interview: "bg-orange-100 text-orange-700",
   hired: "bg-green-100 text-green-700",
   Scheduled: "bg-indigo-100 text-indigo-700", 
@@ -86,9 +88,8 @@ const tabs: Array<"all" | ApplicantStatus> = [
   "forwarded",
   "interview",
   "hired",
-]
-
-const TABLE_GRID = "grid grid-cols-[48px_1.6fr_1.1fr_1fr_1fr_1fr_1fr]"
+  
+];
 
 const ThreeDotsIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-gray-500 hover:text-gray-800">
@@ -111,23 +112,34 @@ export default function ApplicantsList({
   const jobId = id as string;
 
   // 1. Fetch Applicants
-  const { data } = useJobApplicant(jobId) as { data?: ApplicantsApiResponse };
+  const {
+  data,
+  refetch: refetchApplicants,
+} = useJobApplicant(jobId) as {
+  data?: ApplicantsApiResponse;
+  refetch: () => void;
+};
+
 
   // 2. Fetch Interviews (Only when tab is 'interview')
   const [activeTab, setActiveTab] = useState<"all" | ApplicantStatus>("all");
-  const { data: interviewResponse, isLoading: isInterviewsLoading } = useJobInterviews(
-    jobId, 
-    activeTab === "interview"
-  );
+const {
+  data: interviewResponse,
+  isLoading: isInterviewsLoading,
+  refetch: refetchInterviews,
+} = useInterviewsByJob(jobId);
+
 
   const [selectedApplicants, setSelectedApplicants] = useState<string[]>([]);
   const [bulkStatus, setBulkStatus] = useState<ApplicantStatus>("applied");
   const [activeActionId, setActiveActionId] = useState<string | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [scheduleCandidateId, setScheduleCandidateId] = useState<string | null>(null);
+  const [interviewMode, setInterviewMode] = useState<"schedule" | "reschedule">("schedule");
+  const [selectedInterviewId, setSelectedInterviewId] = useState<string | null>(null);
 
-  const { mutate, isPending } = useBulkUpdateApplicants()
-  const { success, error } = useToast()
+  const { mutate, isPending } = useBulkUpdateApplicants();
+  const { success, error } = useToast();
 
   // --- Handlers ---
   const toggleSelect = (appId: string) => {
@@ -136,27 +148,45 @@ export default function ApplicantsList({
     );
   };
 
-  const handleScheduleInterview = (candidateUserId: string) => {
+  const handleScheduleInterview = (candidateUserId: string,   applicationId: string, mode: "schedule" | "reschedule",
+  interviewId?: string) => {
     setScheduleCandidateId(candidateUserId);
+    setSelectedApplicants([applicationId]);
+    setInterviewMode(mode);
+    setSelectedInterviewId(interviewId || null);
     setIsPopupOpen(true);
     setActiveActionId(null);
   };
 
   const handleSubmit = () => {
     if (selectedApplicants.length === 0) {
-      error("Please select at least one applicant")
-      return
+      error("Please select at least one applicant");
+      return;
     }
     mutate({ applicationIds: selectedApplicants, status: bulkStatus }, {
         onSuccess: () => {
-          success("Applicants status updated successfully")
+          success("Applicants status updated successfully");
           setSelectedApplicants([]);
-          setActiveTab(bulkStatus);
         },
         onError: () => error("Failed to update applicant status"),
       }
-    )
+    );
+  };
+
+  const handleCancelInterview = async (interviewId: string) => {
+  try {
+    await updateInterviewStatus(interviewId, "Cancelled");
+    success("Interview cancelled successfully");
+    refetchInterviews();
+  } catch (err) {
+  if (err instanceof Error) {
+    error(err.message);
+  } else {
+    error("Failed to cancel interview");
   }
+}
+};
+
 
   // ==================== DATA MAPPING ====================
 
@@ -190,6 +220,11 @@ export default function ApplicantsList({
         status: int.status || "Scheduled"
       }))
     : [];
+  
+  const getInterviewForApplicant = (email: string) => {
+  return interviews.find((i) => i.candidateEmail === email);
+};
+
 
   // ==================== RENDER ====================
 
@@ -289,10 +324,19 @@ export default function ApplicantsList({
                 </td>
                 <td className="truncate" title={int.interviewer}>{int.interviewer}</td>
                 <td>
-                  <a href={int.meetingLink} target="_blank" className="text-blue-600 hover:underline truncate block w-32">
-                    Join Meeting
-                  </a>
-                </td>
+                  {int.status !== "Cancelled" ? (
+                     <a
+                     href={int.meetingLink}
+                     target="_blank"
+                     className="text-blue-600 hover:underline truncate block w-32"
+                     >
+                     Join Meeting
+                     </a>
+                     ) : (
+                      <span className="text-gray-400 text-sm">Cancelled</span>
+                     )}
+                    </td>
+
                 <td>
                   {new Date(int.Timing).toLocaleString("en-US", { 
                     month: "short", day: "numeric", hour: "numeric", minute: "2-digit" 
@@ -304,8 +348,19 @@ export default function ApplicantsList({
                   </span>
                 </td>
                 <td className="text-center">
-                  <button className="text-gray-400 hover:text-red-500 text-xs">Cancel</button>
-                </td>
+                 {int.status !== "Cancelled" && (
+                  <button
+                    onClick={(e) => {
+                    e.stopPropagation();
+                    handleCancelInterview(int._id);
+                    }}
+                    className="text-red-500 hover:text-red-700 text-xs font-medium"
+                     >
+                     Cancel
+                     </button>
+                     )}
+                    </td>
+
               </tr>
             ))}
 
@@ -339,12 +394,13 @@ export default function ApplicantsList({
                   </span>
                 </td>
                 <td className="relative flex justify-center">
-                  {a.status === "shortlisted" && (
+                  {(a.status === "shortlisted" || a.status === "interview") && (
                     <>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setActiveActionId(activeActionId === a.id ? null : a.id);
+                          
                         }}
                         className="p-1 rounded-full hover:bg-gray-200 transition"
                       >
@@ -354,12 +410,39 @@ export default function ApplicantsList({
                         <div className="absolute right-8 top-1/2 -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
                           <button
                             onClick={(e) => {
-                              e.stopPropagation();
-                              handleScheduleInterview(a.candidateUserId);
-                            }}
-                            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2"
-                          >
-                            Schedule Interview
+    e.stopPropagation();
+
+    if (a.status === "shortlisted") {
+      handleScheduleInterview(
+        a.candidateUserId,
+        a.id,
+        "schedule"
+      );
+      return;
+    }
+
+    if (a.status === "interview") {
+      const interview = getInterviewForApplicant(a.email);
+
+      if (!interview) {
+        error("Interview not found");
+        return;
+      }
+
+      handleScheduleInterview(
+        a.candidateUserId,
+        a.id,
+        "reschedule",
+        interview._id
+      );
+    }
+  }}
+  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition"
+>
+  {a.status === "shortlisted"
+    ? "Schedule Interview"
+    : "Reschedule Interview"}
+                            
                           </button>
                         </div>
                       )}
@@ -380,12 +463,23 @@ export default function ApplicantsList({
         )}
       </div>
       
-      <PopupForm 
-        isOpen={isPopupOpen}
-        onClose={() => setIsPopupOpen(false)}
-        candidateId={scheduleCandidateId} 
-        jobId={jobId}
-      />
+      <PopupForm
+  isOpen={isPopupOpen}
+  onClose={() => {
+    setIsPopupOpen(false);
+    setActiveActionId(null);
+    setSelectedApplicants([]);
+    refetchApplicants();
+    refetchInterviews();
+  }}
+  candidateId={scheduleCandidateId}
+  jobId={jobId}
+  applicationId={selectedApplicants[0] || ""}
+  mode={interviewMode}
+  interviewId={selectedInterviewId}
+/>
+
+
     </div>
   );
 }
