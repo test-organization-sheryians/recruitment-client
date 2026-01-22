@@ -21,7 +21,7 @@ export interface CandidateProfile {
 
   resumeFile?: string;
   resumeFileNoPI?: string;
-
+  resumeUrl?: string;
   linkedinUrl?: string;
   githubUrl?: string;
   portfolioUrl?: string;

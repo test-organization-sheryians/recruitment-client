@@ -3,6 +3,8 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Bookmark } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import JobQuestionsList from "@/features/admin/jobApplicationQuestions/components/jobQuestionList";
 
 import { useGetJobById } from "@/features/admin/jobs/hooks/useJobApi";
 import {
@@ -14,6 +16,7 @@ import {
 import { useToast } from "@/components/ui/Toast";
 import { useGetProfile } from "../../Profile/hooks/useProfileApi";
 
+import api from "@/config/axios";
 import type { SavedJob, Skill } from "@/types/Job";
 
 export default function JobDetails() {
@@ -24,17 +27,29 @@ export default function JobDetails() {
   const toast = useToast();
   const queryClient = useQueryClient();
 
+  const [showQuestions, setShowQuestions] = useState(false);
+
+  useEffect(() => {
+    if (showQuestions) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showQuestions]);
+
   /* -------------------- Queries -------------------- */
-  const { data: job, isLoading, error } = useGetJobById(jobId);
+  const { data: job, isLoading, error, refetch } = useGetJobById(jobId);
   const { data: profile } = useGetProfile();
   const { data: savedJobs } = useGetSavedJobs();
 
   /* -------------------- Guards -------------------- */
   if (isLoading) {
     return (
-      <p className="mt-10 text-center text-gray-500">
-        Fetching job details...
-      </p>
+      <p className="mt-10 text-center text-gray-500">Fetching job details...</p>
     );
   }
 
@@ -46,20 +61,28 @@ export default function JobDetails() {
     );
   }
 
-  const isExpired = job.expiry
-    ? new Date(job.expiry) < new Date()
-    : false;
+  const isExpired = job.expiry ? new Date(job.expiry) < new Date() : false;
 
   /* -------------------- Saved State -------------------- */
   const isSaved =
     savedJobs?.some((saved: SavedJob) =>
       typeof saved.jobId === "string"
         ? saved.jobId === job._id
-        : saved.jobId?._id === job._id
+        : saved.jobId?._id === job._id,
     ) ?? false;
 
   /* -------------------- Handlers -------------------- */
-  const handleApply = () => {
+  const applyDirectly = async () => {
+    await api.post("/api/job-apply", {
+      jobId: job._id,
+      resumeUrl: profile?.resumeFile,
+      answers: [],
+    });
+
+    toast.success("Job applied successfully");
+  };
+
+  const handleApply = async () => {
     if (isExpired || job.applied) return;
 
     if (!profile?.resumeFile) {
@@ -67,8 +90,27 @@ export default function JobDetails() {
       return;
     }
 
-    // ✅ ONLY NAVIGATION
-    router.push(`/jobs/${job._id}/apply`);
+    try {
+      // ✅ CORRECT API
+
+      const res = await api.get(
+        `/api/job-questions/getjobquestions/${job._id}`,
+      );
+
+      const questions = res.data?.data ?? [];
+
+      // ✅ NO QUESTIONS → DIRECT APPLY (NO POPUP AT ALL)
+      if (questions.length === 0) {
+        await applyDirectly();
+        await handleRefreshAfterApply();
+        return;
+      }
+
+      // ✅ QUESTIONS PRESENT → OPEN POPUP
+      setShowQuestions(true);
+    } catch (err) {
+      toast.error("Failed to fetch job questions");
+    }
   };
 
   const handleBookmarkToggle = () => {
@@ -89,11 +131,16 @@ export default function JobDetails() {
     }
   };
 
+  const handleRefreshAfterApply = async () => {
+    await refetch(); // 🔁 job details refetch
+    router.refresh(); // 🔁 Next.js cache refresh
+    setShowQuestions(false); // ❌ close popup
+  };
+
   /* -------------------- UI -------------------- */
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-6">
       <div className="relative w-full max-w-2xl space-y-6 rounded-2xl bg-white p-6 shadow-lg">
-
         {/* Back */}
         <button
           onClick={() => router.back()}
@@ -114,9 +161,7 @@ export default function JobDetails() {
             <Bookmark
               size={20}
               className={
-                isSaved
-                  ? "fill-blue-600 text-blue-600"
-                  : "text-gray-600"
+                isSaved ? "fill-blue-600 text-blue-600" : "text-gray-600"
               }
             />
           </button>
@@ -130,17 +175,28 @@ export default function JobDetails() {
                 : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
-            {job.applied
-              ? "Applied"
-              : isExpired
-              ? "Expired"
-              : "Apply Now"}
+            {job.applied ? "Applied" : isExpired ? "Expired" : "Apply Now"}
           </button>
         </div>
 
         {/* Description */}
         {job.description && (
           <p className="text-sm text-gray-600">{job.description}</p>
+        )}
+
+        {/* 🔥 MODAL YAHAN */}
+        {showQuestions && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            {/* 👇 Sirf isi box ko scrollable banao */}
+            <div className="w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+              <JobQuestionsList
+                jobId={job._id}
+                onNoQuestions={() => {
+                  handleRefreshAfterApply();
+                }}
+              />
+            </div>
+          </div>
         )}
       </div>
     </div>

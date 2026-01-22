@@ -32,11 +32,18 @@ export const getAllApplicant = async (id: string) => {
 };
 
 // Optionally, also export applyJob function
+
+// src/api/jobApplication/applyJob.ts
+
 export const applyJob = async (payload: {
   jobId: string;
-  message?: string;
   resumeUrl?: string;
+  answers: {
+    question: string;
+    answer: string;
+  }[];
 }) => {
-  const res = await api.post("/api/job-apply", payload);
+  const res = await api.post("/api/job-apply", payload); // 👈 payload YAHAN
   return res.data;
 };
+
