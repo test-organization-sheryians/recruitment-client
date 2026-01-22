@@ -5,6 +5,8 @@ import {
 } from "@/api/jobs/getJobsPaginated";
 import { getJobsByCategoryPaginated } from "@/api/jobs/getJobsByCategoryPaginated";
 import type { Job } from "@/types/Job";
+import { BackendPaginatedJobResponse, getAppliedJobsPaginated } from "@/api/jobs/getAppliedJobsPaginated";
+import { AppliedJob } from "@/types/AppliedJob";
 
 const DEFAULT_LIMIT = 10;
 
@@ -46,6 +48,25 @@ export const useInfiniteJobsByCategory = (
       if (!pagination) return undefined;
       const next = (pagination.currentPage ?? 1) + 1;
       return next <= (pagination.totalPages ?? 0) ? next : undefined;
+    },
+  });
+};
+
+export const useInfiniteAppliedJobs = (
+  status: string | null,
+  limit: number = DEFAULT_LIMIT
+) => {
+  return useInfiniteQuery<BackendPaginatedJobResponse<AppliedJob>>({
+    queryKey: ["appliedJobs", {status, limit }],
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) =>
+      getAppliedJobsPaginated(pageParam as number, limit,status ?? undefined),
+
+    getNextPageParam: (lastPage) => {
+      const { pagination } = lastPage;
+
+      const nextPage = pagination.currentPage + 1;
+      return nextPage <= pagination.totalPages ? nextPage : undefined;
     },
   });
 };
