@@ -135,9 +135,8 @@ export default function UsersTable() {
       onSuccess: res => {
         setSelectedUserIds([]);
         const shareId = res.shareLink.split('/').pop();
-        // setLink(`http://localhost:3000/selected-candidates?shareId=${shareId}`);
         setLink(
-          `hire.sheriyans.com/selected-candidates?shareId=${shareId}`
+          `https://hire.sheryians.com/selected-candidates?shareId=${shareId}`
         );
         setShowLink(true);
       },
