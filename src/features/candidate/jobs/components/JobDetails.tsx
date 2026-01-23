@@ -203,16 +203,34 @@ const {
         {showQuestions && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             {/* 👇 Sirf isi box ko scrollable banao */}
-            <div className="w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
-              <JobQuestionsList
-  jobId={job._id}
-  onSuccess={async() => {
-    toast.success("Applied successfully");
-    await handleRefreshAfterApply();
-  }}
-/>
+            <div className="w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col">
 
-            </div>
+  {/* HEADER */}
+  <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-6 py-4">
+    <h2 className="text-lg font-semibold text-gray-900">
+      Pre-Application Questions
+    </h2>
+
+    <button
+      onClick={() => setShowQuestions(false)}
+      className="rounded-full p-2 hover:bg-gray-100 transition"
+    >
+      ❌
+    </button>
+  </div>
+
+  {/* BODY */}
+  <div className="flex-1 overflow-y-auto px-6 py-6">
+    <JobQuestionsList
+      jobId={job._id}
+      onSuccess={async () => {
+        toast.success("Applied successfully");
+        await handleRefreshAfterApply();
+      }}
+    />
+  </div>
+</div>
+
           </div>
         )}
       </div>

@@ -65,7 +65,8 @@ const QuestionWrapper = ({
 );
 
 const OptionWrapper = ({ children }: { children: React.ReactNode }) => (
-  <label className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-blue-50 cursor-pointer">
+  <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200
+hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer shadow-sm">
     {children}
   </label>
 );
@@ -163,14 +164,30 @@ export default function JobQuestionsForm({ jobId, onSuccess }: Props) {
   /* ================= UI ================= */
 
   return (
-    <div className="min-h-screen bg-blue-50 px-4 py-10">
+    <div className="bg-blue-50 px-4 py-6">
       <div className="max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-6">
           <h1 className="text-3xl font-bold text-center">
             Pre Application Questions
           </h1>
 
-          <div className="bg-white rounded-xl p-6 space-y-8 shadow">
+          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden mt-4">
+  <div
+    className="bg-blue-600 h-full transition-all"
+    style={{
+      width: `${(answers.length / questions.length) * 100 || 5}%`,
+    }}
+  />
+</div>
+
+<p className="text-sm text-gray-500 text-center">
+  {answers.length} of {questions.length} answered
+</p>
+
+
+          <div className="bg-white rounded-2xl shadow-lg border flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-8 space-y-10 scrollbar-hide">
+
             {questions.map((q, index) => (
               <div key={q._id}>
                 <QuestionWrapper
@@ -181,7 +198,8 @@ export default function JobQuestionsForm({ jobId, onSuccess }: Props) {
                   {/* TEXT */}
                   {q.inputType === "text" && (
                     <input
-                      className="w-full border px-4 py-2 rounded-lg"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm
+focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
                       onChange={(e) => handleChange(q.title, e.target.value)}
                     />
                   )}
@@ -276,7 +294,7 @@ export default function JobQuestionsForm({ jobId, onSuccess }: Props) {
                   {/* ⭐ STAR RATING */}
                   {q.inputType === "rating" && (
                     <div className="space-y-2">
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 bg-gray-50 p-3 rounded-xl w-fit">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
                             type="button"
@@ -317,8 +335,8 @@ export default function JobQuestionsForm({ jobId, onSuccess }: Props) {
                   {/* FILE */}
                   {q.inputType === "file" && (
                     <div className="flex items-center gap-4">
-                      <label className="bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer">
-                        Upload PDF
+                      <label className="flex items-center gap-2 rounded-xl border border-blue-600 px-5 py-2.5 text-blue-600 hover:bg-blue-50 transition cursor-pointer font-medium">
+  📄 Upload PDF Resume
                         <input
   type="file"
   hidden
@@ -347,19 +365,37 @@ export default function JobQuestionsForm({ jobId, onSuccess }: Props) {
                 )}
               </div>
             ))}
+            </div>
+          <div className="border-t bg-white px-8 py-4">
+  <div className="flex justify-center">
+    <button
+      type="submit"
+      disabled={submitting}
+      className="w-full max-w-sm px-10 py-3 rounded-xl bg-blue-600 text-white font-semibold
+      hover:bg-blue-700 transition shadow-md disabled:bg-gray-400"
+    >
+      {submitting ? "Applying..." : "Continue & Apply"}
+    </button>
+  </div>
+</div>
+
           </div>
 
           {error && <p className="text-red-600 text-center">{error}</p>}
+{/* 
+          <div className="sticky bottom-0 bg-white pt-4 pb-2">
+  <div className="text-center">
+    <button
+      type="submit"
+      disabled={submitting}
+      className="w-full max-w-sm px-10 py-3 rounded-xl bg-blue-600 text-white font-semibold
+      hover:bg-blue-700 transition shadow-lg disabled:bg-gray-400"
+    >
+      {submitting ? "Applying..." : "Continue & Apply"}
+    </button>
+  </div>
+</div> */}
 
-          <div className="text-center">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-10 py-3 rounded-xl bg-blue-600 text-white font-semibold"
-            >
-              {submitting ? "Applying..." : "Continue & Apply"}
-            </button>
-          </div>
         </form>
       </div>
     </div>

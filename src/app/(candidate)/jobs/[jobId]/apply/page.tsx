@@ -1,20 +1,20 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react"
+import { useParams } from "next/navigation"
 
 /* ================= TYPES ================= */
 
 type Question = {
-  _id: string;
-  title: string;
-  inputType: "text" | "number" | "textarea" | "dropdown";
-  description?: string;
-  options?: string[];
-  isRequired: boolean;
-  placeholder?: string;
-  maxLength?: number;
-};
+  _id: string
+  title: string
+  inputType: "text" | "number" | "textarea" | "dropdown"
+  description?: string
+  options?: string[]
+  isRequired: boolean
+  placeholder?: string
+  maxLength?: number
+}
 
 /* ================= JSON DATA ================= */
 
@@ -57,74 +57,68 @@ const QUESTIONS: Question[] = [
     isRequired: true,
     options: ["0-1 years", "2-4 years", "5-7 years", "8+ years"],
   },
-];
+]
 
 /* ================= PAGE ================= */
 
-export default function ApplyPage({ params }: any) {
-  const router = useRouter();
-  const [formData, setFormData] = useState<Record<string, any>>({});
-  const [error, setError] = useState("");
+export default function ApplyPage() {
+  const params = useParams() as { jobId?: string }
+  const [formData, setFormData] = useState<Record<string, string>>({})
+  const [error, setError] = useState("")
 
   /* ---------- handle input change ---------- */
-  const handleChange = (id: string, value: any) => {
+  const handleChange = (id: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [id]: value,
-    }));
-  };
+    }))
+  }
 
   /* ---------- submit ---------- */
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
 
     // required validation
     for (const q of QUESTIONS) {
       if (q.isRequired && !formData[q._id]) {
-        setError(`${q.title} is required`);
-        return;
+        setError(`${q.title} is required`)
+        return
       }
     }
 
-    setError("");
+    setError("")
 
-    console.log("FORM DATA 👉", formData);
+    console.log("FORM DATA 👉", formData)
 
     // test purpose
-    localStorage.setItem(
-      `job-apply-${params.jobId}`,
-      JSON.stringify(formData)
-    );
+    if (params?.jobId) {
+      localStorage.setItem(`job-apply-${params.jobId}`, JSON.stringify(formData))
+    }
 
-    alert("Form submitted successfully!");
+    alert("Form submitted successfully!")
 
     // next step (optional)
     // router.push("/success");
-  };
+  }
 
   /* ================= UI ================= */
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-semibold mb-6">
-        Job Application Form
-      </h1>
+      <h1 className="text-2xl font-semibold mb-6">Job Application Form</h1>
 
-      <form className="space-y-6" onSubmit={handleSubmit}>
+      <form
+        className="space-y-6"
+        onSubmit={handleSubmit}
+      >
         {QUESTIONS.map((q) => (
           <div key={q._id}>
             <label className="block font-medium mb-1">
               {q.title}
-              {q.isRequired && (
-                <span className="text-red-500"> *</span>
-              )}
+              {q.isRequired && <span className="text-red-500"> *</span>}
             </label>
 
-            {q.description && (
-              <p className="text-sm text-gray-500 mb-2">
-                {q.description}
-              </p>
-            )}
+            {q.description && <p className="text-sm text-gray-500 mb-2">{q.description}</p>}
 
             {q.inputType === "text" && (
               <input
@@ -132,9 +126,7 @@ export default function ApplyPage({ params }: any) {
                 placeholder={q.placeholder}
                 maxLength={q.maxLength}
                 className="w-full border px-3 py-2 rounded"
-                onChange={(e) =>
-                  handleChange(q._id, e.target.value)
-                }
+                onChange={(e) => handleChange(q._id, e.target.value)}
               />
             )}
 
@@ -146,21 +138,18 @@ export default function ApplyPage({ params }: any) {
                [&::-webkit-outer-spin-button]:appearance-none 
                [&::-webkit-inner-spin-button]:appearance-none 
                [moz-appearance:textfield]"
-                 min="0"
-                 onKeyDown={(e) => {
-                 if (e.key === "-" || e.key === "e") {
-                 e.preventDefault();
-                 }
-             
+                min="0"
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "e") {
+                    e.preventDefault()
+                  }
                 }}
-
-                
-               onChange={(e) => {
-               const value = e.target.value.replace(/\D/g, "");
-               if (value.length <= 10) {
-               handleChange(q._id, value);
-                }
-            }}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "")
+                  if (value.length <= 10) {
+                    handleChange(q._id, value)
+                  }
+                }}
               />
             )}
 
@@ -170,22 +159,21 @@ export default function ApplyPage({ params }: any) {
                 placeholder={q.placeholder}
                 maxLength={q.maxLength}
                 className="w-full border px-3 py-2 rounded"
-                onChange={(e) =>
-                  handleChange(q._id, e.target.value)
-                }
+                onChange={(e) => handleChange(q._id, e.target.value)}
               />
             )}
 
             {q.inputType === "dropdown" && (
               <select
                 className="w-full border px-3 py-2 rounded"
-                onChange={(e) =>
-                  handleChange(q._id, e.target.value)
-                }
+                onChange={(e) => handleChange(q._id, e.target.value)}
               >
                 <option value="">Select</option>
                 {q.options?.map((opt) => (
-                  <option key={opt} value={opt}>
+                  <option
+                    key={opt}
+                    value={opt}
+                  >
                     {opt}
                   </option>
                 ))}
@@ -194,9 +182,7 @@ export default function ApplyPage({ params }: any) {
           </div>
         ))}
 
-        {error && (
-          <p className="text-red-600 font-medium">{error}</p>
-        )}
+        {error && <p className="text-red-600 font-medium">{error}</p>}
 
         <button
           type="submit"
@@ -206,6 +192,5 @@ export default function ApplyPage({ params }: any) {
         </button>
       </form>
     </div>
-  );
+  )
 }
-
