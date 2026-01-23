@@ -137,7 +137,7 @@ export default function UsersTable() {
         const shareId = res.shareLink.split('/').pop();
         // setLink(`http://localhost:3000/selected-candidates?shareId=${shareId}`);
         setLink(
-          `https://recruitment-client-git-dev-anshu-pandeys-projects.vercel.app/selected-candidates?shareId=${shareId}`
+          `hire.sheriyans.com/selected-candidates?shareId=${shareId}`
         );
         setShowLink(true);
       },
