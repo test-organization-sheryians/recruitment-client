@@ -4,6 +4,7 @@ import React from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import apiClient from "@/lib/api-client";
 import JobDescriptionEditor from "./JobDescriptionEditor";
+import { Briefcase } from "lucide-react";
 
 
 
@@ -145,7 +146,13 @@ export default function CreateJob() {
           {/* ================= Form Card ================= */}
           <section className="bg-white dark:bg-[#1a1e2e] rounded-xl border border-[#dbdde6] dark:border-gray-800 p-6 md:p-8 shadow-sm">
 
-            <h3 className="text-lg font-bold mb-8">Job Details</h3>
+            <div className="flex items-center gap-2 mb-8">
+  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+    <Briefcase size={14} className="text-blue-600" />
+  </div>
+  <h3 className="text-lg font-bold">Job Details</h3>
+</div>
+
 
             <Input
               label="Job Title"
@@ -349,23 +356,62 @@ export default function CreateJob() {
           </section>
 
           {/* Footer */}
-          <div className="flex justify-end">
-           <button
-  onClick={submitJob}
-  className="
-    px-10 py-3
-    bg-[#2b4bee]
-    text-white
-    rounded-lg
-    font-bold
-    shadow-lg shadow-[#2b4bee]/20
-    transition-shadow
-  "
->
-  Next: Screening Questions →
-</button>
+       <div className="flex items-center justify-between mt-10">
+  {/* Left: Save Draft */}
+  <button
+    type="button"
+    className="text-sm font-semibold text-gray-500 hover:text-gray-700 transition"
+    onClick={() => {
+      // TODO: save draft logic later
+      console.log("Save Draft");
+    }}
+  >
+    Save Draft
+  </button>
 
-          </div>
+  {/* Right: Cancel + Next */}
+  <div className="flex items-center gap-4">
+    <button
+      type="button"
+      className="
+        px-6 py-3
+        rounded-lg
+        border
+        border-gray-300
+        bg-white
+        text-gray-700
+        font-semibold
+        hover:bg-gray-50
+        transition
+      "
+      onClick={() => {
+        // TODO: navigate back / reset form
+        console.log("Cancel");
+      }}
+    >
+      Cancel
+    </button>
+
+    <button
+      type="button"
+      onClick={submitJob}
+      className="
+        px-8 py-3
+        bg-[#2b4bee]
+        text-white
+        rounded-lg
+        font-semibold
+        shadow-md shadow-[#2b4bee]/30
+        hover:bg-[#2340c8]
+        transition
+        flex items-center gap-2
+      "
+    >
+      Next Screening Questions
+      <span>→</span>
+    </button>
+  </div>
+</div>
 
         </div>
       </main>
