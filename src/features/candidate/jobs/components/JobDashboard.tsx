@@ -3,6 +3,40 @@
 import { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
 import JobCard, { Job as CardJob } from "./JobCategoryCard";
+
+// Temporary inline JobCategoryCard component
+interface JobCategoryCardProps {
+  title: string;
+  jobCount: number;
+  icon: React.ReactElement;
+  onClick: () => void;
+}
+
+function JobCategoryCard({ title, jobCount, icon, onClick }: JobCategoryCardProps) {
+  return (
+    <div
+      onClick={onClick}
+      className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all duration-200 cursor-pointer group"
+    >
+      <div className="flex flex-col items-center text-center">
+        <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors">
+          {icon}
+        </div>
+        <h3 className="font-semibold text-gray-900 text-sm mb-1">{title}</h3>
+        <p className="text-xs text-gray-500">{jobCount} jobs</p>
+      </div>
+    </div>
+  );
+}
+import {
+  Code,
+  Palette,
+  Megaphone,
+  TrendingUp,
+  Package,
+  Landmark,
+} from "lucide-react";
+
 import HeroSection from "./HeroSection";
 import { Menu, X } from "lucide-react";
 import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
@@ -132,6 +166,49 @@ const jobsCount = jobsPages?.[0]?.pagination.totalRecords || 0;
       {/* Hero with search */}
       <HeroSection searchTerm={searchTerm} setSearchTerm={setSearchTerm}  onSearch={searchHandler} 
      searchLocation={searchLocation} setSearchLocation={setSearchLocation} />
+
+     {/* Explore by Category */}
+<section className="bg-gray-50">
+  <div className="max-w-7xl mx-auto px-4 py-14">
+    {/* Header */}
+    <div className="flex items-center justify-between mb-8">
+      <h2 className="text-2xl font-bold text-gray-900">
+        Explore by Category
+      </h2>
+      <button className="text-sm font-medium text-blue-600 hover:underline">
+        View all →
+      </button>
+    </div>
+
+    {/* Category Cards */}
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6">
+      {categories.slice(0, 6).map((cat, index) => {
+        const icons = [
+          <Code key="code" />,
+          <Palette key="palette" />,
+          <Megaphone key="marketing" />,
+          <TrendingUp key="sales" />,
+          <Package key="product" />,
+          <Landmark key="finance" />,
+        ];
+
+        return (
+          <JobCategoryCard
+            key={cat._id}
+            title={cat.name}
+            jobCount={(cat as any).jobCount || 0}
+            icon={icons[index % icons.length]}
+            onClick={() => {
+              setSelectedCategory(cat._id);
+              setQuery({ q: "", location: "" });
+            }}
+          />
+        );
+      })}
+    </div>
+  </div>
+</section>
+
 
       {/* Mobile Filter Bar */}
       <div className="md:hidden sticky top-0 z-30 bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
