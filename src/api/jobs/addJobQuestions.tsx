@@ -16,14 +16,14 @@ export const getJobQuestions = async (jobId: string) => {
 // Update a single question (backend: POST /api/job-questions/updatejobquestion/:jobId with { questionId, ...data })
 export const updateJobQuestion = async (jobId: string, questionId: string, data: Partial<JobQuestion>) => {
   const payload = { questionId, ...data };
-  const res = await api.post<ApiResponse<JobQuestion>>(`/api/job-questions/updatejobquestion/${jobId}`, payload);
+  const res = await api.patch<ApiResponse<JobQuestion>>(`/api/job-questions/updatejobquestion/${jobId}`, payload);
   return res.data as ApiResponse<JobQuestion>;
 };
 
 // NOTE: backend currently doesn't expose a delete endpoint for job-questions in the updated controller.
 // Keep the old delete call here; callers should handle failures gracefully.
 export const deleteJobQuestion = async (jobId: string, questionId: string) => {
-  const res = await api.post<ApiResponse<null>>(`/api/job-questions/deletejobquestion/${jobId}`, { questionId });
+  const res = await api.delete<ApiResponse<null>>(`/api/job-questions/deletejobquestion/${jobId}`, {data : { questionId }});
   return res.data as ApiResponse<null>;
 };
 

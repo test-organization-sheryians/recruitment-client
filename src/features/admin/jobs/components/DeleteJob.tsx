@@ -69,7 +69,7 @@ export default function DeleteJob({jobId,jobTitle,onJobDeleted}:DeleteJobProps) 
           </svg>
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-106.25">
         <DialogHeader>
           <DialogTitle>Delete Job</DialogTitle>
         </DialogHeader>

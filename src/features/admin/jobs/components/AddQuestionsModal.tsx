@@ -5,6 +5,7 @@ import { Plus, Trash2, X, HelpCircle, CheckCircle2 } from "lucide-react";
 import Select from "@/components/ui/select";
 import { addJobQuestions, updateJobQuestion, deleteJobQuestion } from "@/api/jobs/addJobQuestions";
 import type { JobQuestion } from "@/types/JobQuestion";
+import { useToast } from "@/components/ui/Toast"; // ✅ TOAST IMPORT
 
 type QuestionRow = JobQuestion;
 
@@ -19,6 +20,8 @@ export default function AddQuestionsModal({
   onSaved?: () => void;
   initialQuestions?: QuestionRow[];
 }) {
+  const toast = useToast(); // ✅ TOAST HOOK
+
   const [questions, setQuestions] = useState<QuestionRow[]>(
     initialQuestions?.length
       ? initialQuestions
@@ -26,9 +29,7 @@ export default function AddQuestionsModal({
   );
 
   const [loading, setLoading] = useState(false);
-  const [confirmDeleteIndex, setConfirmDeleteIndex] = useState<number | null>(null);
   const [qErrors, setQErrors] = useState<Record<number, { title?: string; options?: string }>>({});
-  const [deletedIds, setDeletedIds] = useState<string[]>([]);
   const firstInputRef = useRef<HTMLInputElement | null>(null);
   const hasQErrors = Object.values(qErrors).some((r) => !!(r && (r.title || r.options)));
 
@@ -49,7 +50,6 @@ export default function AddQuestionsModal({
     setQuestions((prev) =>
       prev.map((q, idx) => (idx === i ? { ...q, ...patch } : q))
     );
-    // clear title/options errors for this row when editing
     setQErrors((prev) => ({ ...prev, [i]: { ...(prev[i] || {}), title: "", options: "" } }));
   };
 
@@ -58,16 +58,25 @@ export default function AddQuestionsModal({
       ...prev,
       { title: "", inputType: "text", options: [], isRequired: false },
     ]);
-    // no errors for the new row initially
-    setQErrors((prev) => ({ ...prev }));
   };
 
-  const removeRow = (i: number) => {
+  const removeRow = async (i: number) => {
     const id = questions[i]?._id;
-    if (id) setDeletedIds((prev) => [...prev, id]);
-    setQuestions((prev) => prev.filter((_, idx) => idx !== i));
-    // reset errors mapping (indices shift) - clear to be safe
-    setQErrors({});
+    if (id) {
+      try {
+        await deleteJobQuestion(jobId, id);
+        setQuestions((prev) => prev.filter((_, idx) => idx !== i));
+        setQErrors({});
+        toast.success("Question deleted successfully");
+      } catch (error) {
+        toast.error("Failed to delete question");
+      }
+    } else {
+      // If no ID (new question), just remove from UI
+      setQuestions((prev) => prev.filter((_, idx) => idx !== i));
+      setQErrors({});
+      toast.success("Question removed successfully");
+    }
   };
 
   const addOption = (i: number) =>
@@ -79,21 +88,19 @@ export default function AddQuestionsModal({
         idx === oi ? value : opt
       ),
     });
-    // clear option errors for this row while typing
-    setQErrors((prev) => ({ ...prev, [qi]: { ...(prev[qi] || {}), options: "" } }));
   };
 
   const removeOption = (qi: number, oi: number) => {
     updateRow(qi, {
       options: questions[qi].options.filter((_, idx) => idx !== oi),
     });
-    setQErrors((prev) => ({ ...prev, [qi]: { ...(prev[qi] || {}), options: "" } }));
   };
 
   const saveAll = async () => {
-    // validate all questions before saving
     const allValid = questions.every((_, i) => validateQuestion(i));
     if (!allValid) {
+      // ❌ VALIDATION ERROR TOAST
+      toast.error("Please fix all errors before saving");
       return;
     }
 
@@ -102,20 +109,24 @@ export default function AddQuestionsModal({
       const toCreate = questions.filter((q) => !q._id);
       const toUpdate = questions.filter((q) => q._id);
 
-      if (toCreate.length) await addJobQuestions(jobId, toCreate);
-      await Promise.all(
-        toUpdate.map((q) => updateJobQuestion(jobId, q._id!, q))
-      );
-
-      // delete any questions that were removed in the UI
-      if (deletedIds.length) {
-        await Promise.all(
-          deletedIds.map((id) => deleteJobQuestion(jobId, id).catch(() => null))
-        );
+      // Add questions toast
+      if (toCreate.length) {
+        await addJobQuestions(jobId, toCreate);
+        toast.success(`${toCreate.length} question(s) added successfully`);
       }
 
-      onSaved?.();
+      // Update questions toast
+      if (toUpdate.length) {
+        await Promise.all(
+          toUpdate.map((q) => updateJobQuestion(jobId, q._id!, q))
+        );
+        toast.success(`${toUpdate.length} question(s) updated successfully`);
+      }
+
       onClose();
+    } catch (error) {
+      // ❌ ERROR TOAST
+      toast.error("Failed to save questions. Please try again");
     } finally {
       setLoading(false);
     }
@@ -280,7 +291,7 @@ export default function AddQuestionsModal({
                       {/* Move question-level Remove button under options */}
                       <div className="flex justify-end items-center text-sm text-gray-600 mt-2">
                         <button
-                          onClick={() => setConfirmDeleteIndex(idx)}
+                          onClick={() => removeRow(idx)}
                           className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-2 rounded text-red-500 hover:text-red-600 flex items-center gap-1"
                           aria-label={`Remove question ${idx + 1}`}
                           title="Delete question"
@@ -295,7 +306,7 @@ export default function AddQuestionsModal({
                 {!(q.inputType === "radio" || q.inputType === "checkbox" || q.inputType === "dropdown") && (
                   <div className="flex justify-end items-center text-sm text-gray-600">
                     <button
-                      onClick={() => setConfirmDeleteIndex(idx)}
+                      onClick={() => removeRow(idx)}
                       className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-2 rounded text-red-500 hover:text-red-600 flex items-center gap-1"
                       aria-label={`Remove question ${idx + 1}`}
                       title="Delete question"
@@ -338,36 +349,6 @@ export default function AddQuestionsModal({
               {loading ? "Saving..." : "Save Questions"}
             </button>
           </div>
-          {confirmDeleteIndex !== null && (
-            <div className="fixed inset-0 z-1100 flex items-center justify-center">
-              <div
-                className="absolute inset-0 bg-black/40"
-                onClick={() => setConfirmDeleteIndex(null)}
-              />
-              <div className="bg-white rounded-2xl p-6 shadow-lg z-50 w-full max-w-md">
-                <h3 className="text-lg font-semibold text-gray-800">Confirm delete</h3>
-                <p className="mt-2 text-sm text-gray-600">Are you sure you want to delete this question?</p>
-                <div className="mt-4 flex justify-end gap-3">
-                  <button
-                    onClick={() => setConfirmDeleteIndex(null)}
-                    className="px-4 py-2 bg-gray-100 rounded-xl font-medium text-gray-700"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      const idxToDelete = confirmDeleteIndex;
-                      if (idxToDelete !== null) removeRow(idxToDelete);
-                      setConfirmDeleteIndex(null);
-                    }}
-                    className="px-4 py-2 bg-red-600 text-white rounded-xl font-medium"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </>

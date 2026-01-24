@@ -42,7 +42,7 @@ const Navbar = () => {
 
       {openNotif && (
         <div
-          className="fixed inset-0 z-[900] bg-black/20 backdrop-blur-sm"
+          className="fixed inset-0 z-900 bg-black/20 backdrop-blur-sm"
           onClick={() => setOpenNotif(false)}
         />
       )}
@@ -150,7 +150,7 @@ const Navbar = () => {
 
       {/* ---------- MOBILE MENU ---------- */}
       <div
-        className={`absolute top-[73px] left-0 w-full bg-white border-t shadow md:hidden z-40 transition-all ${
+        className={`absolute top-73px left-0 w-full bg-white border-t shadow md:hidden z-40 transition-all ${
           openMenu ? "max-h-screen" : "max-h-0 overflow-hidden"
         }`}
       >
@@ -225,7 +225,7 @@ const Navbar = () => {
 
       {/* ---------- NOTIFICATIONS ---------- */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl border-l z-[999] transition-transform ${
+        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl border-l z-999 transition-transform ${
           openNotif ? "translate-x-0" : "translate-x-full"
         }`}
       >
