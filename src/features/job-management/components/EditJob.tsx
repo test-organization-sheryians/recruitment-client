@@ -13,7 +13,7 @@ interface EditJobProps {
   jobId: string | null
   onClose: () => void
   onJobUpdated: () => void
-} 
+}  
 
 /* ================= COMPONENT ================= */
 
