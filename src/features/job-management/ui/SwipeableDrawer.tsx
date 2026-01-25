@@ -1,85 +1,160 @@
-import * as React from 'react';
+"use client"
+
+import * as React from "react"
 import {
-    Box,
-    SwipeableDrawer as MuiSwipeableDrawer,
-    List,
-    Divider,
-    ListItem,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-} from '@mui/material';
+  Drawer,
+  Box,
+  TextField,
+  Select,
+  MenuItem,
+  Checkbox,
+  Switch,
+  Button,
+  Typography,
+  IconButton,
+} from "@mui/material"
+import CloseIcon from "@mui/icons-material/Close"
 
-type Anchor = 'top' | 'left' | 'bottom' | 'right';
+export type QuestionType = "radio" | "text" | "url"
 
-interface Item {
-    text: string;
-    icon?: React.ReactNode;
+interface Props {
+  open: boolean
+  onClose: () => void
+  onAdd: (q: any) => void
 }
 
-interface Section {
-    items: Item[];
-}
+export default function AddQuestionDrawer({ open, onClose, onAdd }: Props) {
+  const [title, setTitle] = React.useState("")
+  const [description, setDescription] = React.useState("")
+  const [type, setType] = React.useState<QuestionType>("radio")
+  const [options, setOptions] = React.useState<string[]>(["0-2 years", "3-5 years"])
+  const [required, setRequired] = React.useState(true)
+  const [knockout, setKnockout] = React.useState(true)
+const [errors, setErrors] = React.useState<{ title?: string; description?: string }>({})
 
-interface SwipeableDrawerProps {
-    anchor?: Anchor;
-    open: boolean;
-    onClose: () => void;
-    onOpen: () => void;
-    sections: Section[];
-}
 
-export default function SwipeableDrawer({
-    anchor = 'left',
-    open,
-    onClose,
-    onOpen,
-    sections,
-}: SwipeableDrawerProps) {
-    const handleClose = (event: React.KeyboardEvent | React.MouseEvent) => {
-        if (
-            event.type === 'keydown' &&
-            ((event as React.KeyboardEvent).key === 'Tab' ||
-                (event as React.KeyboardEvent).key === 'Shift')
-        ) {
-            return;
-        }
-        onClose();
-    };
 
-    const list = () => (
-        <Box
-            sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 250 }}
-            role="presentation"
-            onClick={handleClose}
-            onKeyDown={handleClose}
-        >
-            {sections.map((section, sectionIndex) => (
-                <React.Fragment key={sectionIndex}>
-                    <List>
-                        {section.items.map((item) => (
-                            <ListItem key={item.text} disablePadding>
-                                <ListItemButton>
-                                    {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
-                                    <ListItemText primary={item.text} />
-                                </ListItemButton>
-                            </ListItem>
-                        ))}
-                    </List>
-                    {sectionIndex < sections.length - 1 && <Divider />}
-                </React.Fragment>
-            ))}
+  const addOption = () => setOptions([...options, ""])
+
+  const updateOption = (i: number, val: string) => {
+    const arr = [...options]
+    arr[i] = val
+    setOptions(arr)
+  }
+
+  return (
+    <Drawer anchor="right" open={open} onClose={onClose}>
+      <Box sx={{ width: 420, p: 3 }}>
+        {/* HEADER */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Box>
+            <Typography fontSize={20} fontWeight={700}>Add New Question</Typography>
+            <Typography fontSize={13} color="gray">Configure screening logic and input details</Typography>
+          </Box>
+          <IconButton onClick={onClose}><CloseIcon /></IconButton>
         </Box>
-    );
 
-    return (
-        <MuiSwipeableDrawer
-            anchor={anchor}
-            open={open}
-            onClose={onClose}
-            onOpen={onOpen}
-        >
-            {list()}
-        </MuiSwipeableDrawer>
-    );
+        {/* FORM */}
+        <Box display="flex" flexDirection="column" gap={2}>
+          <TextField
+  label="Question Title"
+  placeholder="e.g. How many years of experience do you have?"
+  value={title}
+  onChange={(e) => {
+    setTitle(e.target.value)
+    setErrors((prev) => ({ ...prev, title: undefined })) // clear error while typing
+  }}
+  error={!!errors.title}
+  helperText={errors.title}
+/>
+
+
+          <TextField
+  label="Description"
+  placeholder="Provide additional context for the candidate"
+  multiline
+  rows={3}
+  value={description}
+  onChange={(e) => {
+    setDescription(e.target.value)
+    setErrors((prev) => ({ ...prev, description: undefined }))
+  }}
+  error={!!errors.description}
+  helperText={errors.description}
+/>
+
+
+          <Select value={type} onChange={(e) => setType(e.target.value as QuestionType)}>
+            <MenuItem value="radio">Radio Buttons</MenuItem>
+            <MenuItem value="text">Long Text</MenuItem>
+            <MenuItem value="url">URL</MenuItem>
+          </Select>
+
+          {/* OPTIONS */}
+          {type === "radio" && (
+            <Box>
+              <Typography fontSize={13} fontWeight={600}>Options</Typography>
+              {options.map((opt, i) => (
+                <TextField
+                  key={i}
+                  value={opt}
+                  onChange={(e) => updateOption(i, e.target.value)}
+                  fullWidth
+                  sx={{ mt: 1 }}
+                />
+              ))}
+              <Button onClick={addOption} size="small">+ Add Option</Button>
+            </Box>
+          )}
+
+          {/* TOGGLES */}
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography>Is Required</Typography>
+            <Switch checked={required} onChange={(e) => setRequired(e.target.checked)} />
+          </Box>
+
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography>Is Knockout Question</Typography>
+            <Switch checked={knockout} onChange={(e) => setKnockout(e.target.checked)} />
+          </Box>
+
+          {/* FOOTER */}
+          <Box mt={2} display="flex" justifyContent="space-between" alignItems="center">
+            <Button onClick={onClose}>Cancel</Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+  let newErrors: { title?: string;description?: string} = {}
+if (!title.trim()) {
+  newErrors.title = "This field is required"
+}
+
+if (!description.trim()) {
+  newErrors.description = "This field is required"
+}
+
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors)
+    return
+  }
+
+  // ===== SUBMIT =====
+  onAdd({ title, description, type, options, required, knockout })
+
+  // reset
+  setTitle("")
+  setDescription("")
+  setErrors({})
+  onClose()
+}}
+
+              sx={{ borderRadius: 3, px: 4 }}
+            >
+              Create Question
+            </Button>
+          </Box>
+        </Box>
+      </Box>
+    </Drawer>
+  )
 }
