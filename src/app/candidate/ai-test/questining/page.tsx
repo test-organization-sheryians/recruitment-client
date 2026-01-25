@@ -407,7 +407,6 @@ export default function UniversalInterviewPage() {
                       <button onClick={() => setShowCode(false)} className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition-colors ">
                         Hide Code</button>
                     </div>
-
                     {/* EDITOR */}
                     <div className="flex-1"
                       onDragOver={(e) => e.preventDefault()}
@@ -415,49 +414,33 @@ export default function UniversalInterviewPage() {
                       <Editor
                         height="100%" defaultLanguage="javascript" value={code} theme="vs-dark"
                         onMount={(editor, monaco) => {
-  editorRef.current = editor;
-  editor.focus();
-
-  // ----- BLOCK KEYBOARD SHORTCUTS -----
-  const block = () => null;
-  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC, block);
-  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV, block);
-  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyX, block);
-  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyA, block);
-
-  // ----- DISABLE SELECTION DRAGGING -----
-  editor.updateOptions({
-    dragAndDrop: false,
-    selectionClipboard: false,
-  });
-
-  editor.onMouseDown((e) => {
-    if (e.event.leftButton) {
-      e.event.preventDefault();
-      e.event.stopPropagation();
-    }
-  });
-
-  // ----- BLOCK DOM EVENTS -----
-  const domNode = editor.getDomNode();
-  if (!domNode) return;
-
-  const prevent = (e: Event) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  ["copy", "paste", "cut", "dragstart", "drop"].forEach(ev =>
-    domNode.addEventListener(ev, prevent, true)
-  );
-
-  editor.onDidDispose(() => {
-    ["copy", "paste", "cut", "dragstart", "drop"].forEach(ev =>
-      domNode.removeEventListener(ev, prevent, true)
-    );
-  });
-}}
-
+                          editorRef.current = editor;
+                          editor.focus();
+                          // ----- BLOCK KEYBOARD SHORTCUTS ----- //
+                          const block = () => null;
+                          editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC, block);
+                          editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV, block);
+                          editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyX, block);
+                          editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyA, block);
+                          // ----- DISABLE SELECTION DRAGGING ----- //
+                          editor.updateOptions({
+                            dragAndDrop: false,
+                            selectionClipboard: false,});
+                          editor.onMouseDown((e) => {
+                            if (e.event.leftButton) {
+                              e.event.preventDefault();
+                              e.event.stopPropagation();}});
+                          // ----- BLOCK DOM EVENTS ----- //
+                          const domNode = editor.getDomNode();
+                          if (!domNode) return;
+                          const prevent = (e: Event) => {
+                            e.preventDefault();
+                            e.stopPropagation();};
+                          ["copy", "paste", "cut", "dragstart", "drop"].forEach(ev =>
+                            domNode.addEventListener(ev, prevent, true));
+                          editor.onDidDispose(() => {
+                            ["copy", "paste", "cut", "dragstart", "drop"].forEach(ev =>
+                              domNode.removeEventListener(ev, prevent, true));});}}
                         onChange={(v) => setCode(v ?? "")}
                         options={{
                           dragAndDrop: false,
@@ -483,5 +466,4 @@ export default function UniversalInterviewPage() {
         </div>
       </div>
     </div>
-  );
-}
+  );}
