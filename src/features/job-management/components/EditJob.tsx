@@ -7,14 +7,21 @@ import { X } from "lucide-react"
 import { Job } from "@/types/Job"
 import { JobFormData, APIResponse, Skill, Category, LocationForm } from "../types/job.types"
 
+/* ================= TYPES ================= */
+
 interface EditJobProps {
   jobId: string | null
   onClose: () => void
   onJobUpdated: () => void
 } 
 
+/* ================= COMPONENT ================= */
+
 export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) {
   const toast = useToast()
+  
+  /* ================= STATE ================= */
+
   const [formData, setFormData] = useState<JobFormData>({
     title: "",
     description: "",
@@ -36,6 +43,18 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
   const [error, setError] = useState<string | null>(null)
   const [skillSearch, setSkillSearch] = useState("")
 
+  /* ================= QUERIES ================= */
+
+  const { data: job, isLoading, isError } = useGetJobById(jobId || undefined)
+  const { data: categories = [] } = useGetCategories()
+  const { data: skills = [] } = useGetSkills()
+
+  /* ================= MUTATIONS ================= */
+
+  const { mutate: updateJob, isPending } = useUpdateJob()
+
+  /* ================= EFFECTS ================= */
+
   // Disable background scrolling when modal opens
   useEffect(() => {
     if (jobId) {
@@ -45,18 +64,6 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
       }
     }
   }, [jobId])
-
-  // Fetch job data
-  const { data: job, isLoading, isError } = useGetJobById(jobId || undefined)
-
-  // Fetch categories
-  const { data: categories = [] } = useGetCategories()
-
-  // Fetch skills
-  const { data: skills = [] } = useGetSkills()
-
-  // Update mutation
-  const { mutate: updateJob, isPending } = useUpdateJob()
 
   // Populate form when job data is loaded
   useEffect(() => {
@@ -83,12 +90,14 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
     }
   }, [job])
 
+  /* ================= HANDLERS ================= */
+
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       const { name, value } = e.target
       if (name.startsWith("location.")) {
         const field = name.split(".")[1]
-        setFormData((prev) => ({
+        setFormData((prev: JobFormData) => ({
           ...prev,
           location: {
             ...prev.location,
@@ -96,7 +105,7 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
           },
         }))
       } else {
-        setFormData((prev) => ({
+        setFormData((prev: JobFormData) => ({
           ...prev,
           [name]: value,
         }))
@@ -159,7 +168,11 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
     [formData, jobId, updateJob, onJobUpdated, onClose, toast]
   )
 
+  /* ================= UI STATES ================= */
+
   if (!jobId) return null
+
+  /* ================= RENDER ================= */
 
   return (
     <>
@@ -268,7 +281,7 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
                     <button
                       key={level}
                       type="button"
-                      onClick={() => setFormData((prev) => ({ ...prev, requiredExperience: level }))}
+                      onClick={() => setFormData((prev: JobFormData) => ({ ...prev, requiredExperience: level }))}
                       className={`flex-1 py-2 px-3 text-xs font-bold rounded border transition-all ${
                         formData.requiredExperience === level
                           ? "bg-[#2b4bee] text-white border-[#2b4bee]"
@@ -342,7 +355,7 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
                             key={skill._id}
                             type="button"
                             onClick={() => {
-                              setFormData((prev) => ({
+                              setFormData((prev: JobFormData) => ({
                                 ...prev,
                                 skills: [...prev.skills, skill._id],
                               }))
@@ -375,9 +388,9 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
                             <button
                               type="button"
                               onClick={() => {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  skills: prev.skills.filter((id) => id !== skillId),
+                              setFormData((prev: JobFormData) => ({
+                                ...prev,
+                                skills: prev.skills.filter((id: string) => id !== skillId),
                                 }))
                               }}
                               className="hover:text-blue-900 dark:hover:text-blue-100 font-bold ml-0.5"

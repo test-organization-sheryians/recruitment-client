@@ -56,4 +56,19 @@ export type APIResponse<T> = {
   success: boolean;
   data: T;
   message?: string;
-}; 
+};
+
+export type Job = {
+  _id: string
+  title: string
+  requiredExperience?: string
+  category?: Category
+  education?: string
+  description?: string
+  expiry?: string
+  skills?: Skill[]
+  location?: LocationForm
+  status?: "ACTIVE" | "DRAFT" | "INTERVIEWING" | "FILLED"
+  applicantsCount?: number
+  createdAt?: string
+}
