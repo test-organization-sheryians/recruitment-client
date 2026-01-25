@@ -25,39 +25,37 @@ export default function JobDetails() {
   const params = useParams();
   const jobId = params.jobId as string;
 
-
   const toast = useToast();
   const queryClient = useQueryClient();
 
   const [showQuestions, setShowQuestions] = useState(false);
 
   const saveJobMutation = useSaveJob();
-const unsaveJobMutation = useUnsaveJob();
-
-
+  const unsaveJobMutation = useUnsaveJob();
   useEffect(() => {
-    if (showQuestions) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+  if (showQuestions) {
+    // lock background scroll
+    document.documentElement.style.overflow = "hidden"; // html
+    document.body.style.overflow = "hidden"; // body
+  } else {
+    document.documentElement.style.overflow = "";
+    document.body.style.overflow = "";
+  }
 
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [showQuestions]);
+  return () => {
+    document.documentElement.style.overflow = "";
+    document.body.style.overflow = "";
+  };
+}, [showQuestions]);
 
   /* -------------------- Queries -------------------- */
   const { data: job, isLoading, error, refetch } = useGetJobById(jobId);
-const {
-  data: questions,
-  isLoading: questionsLoading,
-} = useGetJobQuestions(jobId);
-
+  console.log(job);
+  const { data: questions, isLoading: questionsLoading } =
+    useGetJobQuestions(jobId);
 
   const { data: profile } = useGetProfile();
   const { data: savedJobs } = useGetSavedJobs();
-
   /* -------------------- Guards -------------------- */
   if (isLoading) {
     return (
@@ -84,67 +82,65 @@ const {
     ) ?? false;
 
   /* -------------------- Handlers -------------------- */
- const applyDirectly = async () => {
-  try {
-    await applyJob({
-      jobId: job._id,
-      resumeUrl: profile?.resumeFile,
-      answers: [],
-    });
+  const applyDirectly = async () => {
+    try {
+      await applyJob({
+        jobId: job._id,
+        resumeUrl: profile?.resumeFile,
+        answers: [],
+      });
 
-    toast.success("Job applied successfully");
-    queryClient.invalidateQueries({ queryKey: ["jobs"] });
-    await handleRefreshAfterApply();
-  } catch {
-    toast.error("Failed to apply");
-  }
-};
-
-
- const handleApply = async () => {
-  if (isExpired || job.applied) return;
-
-  if (!profile?.resumeFile) {
-    toast.error("Please upload your resume before applying.");
-    return;
-  }
-
-  if (questionsLoading) {
-    toast.loading("Checking job questions...");
-    return;
-  }
-
-  try {
-    if (!questions || questions.length === 0) {
-      await applyDirectly();
+      toast.success("Job applied successfully");
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
       await handleRefreshAfterApply();
+    } catch {
+      toast.error("Failed to apply");
+    }
+  };
+
+  const handleApply = async () => {
+    if (isExpired || job.applied) return;
+
+    if (!profile?.resumeFile) {
+      toast.error("Please upload your resume before applying.");
       return;
     }
 
-    setShowQuestions(true);
-  } catch {
-    toast.error("Failed to apply");
-  }
-};
+    if (questionsLoading) {
+      toast.loading("Checking job questions...");
+      return;
+    }
 
+    try {
+      if (!questions || questions.length === 0) {
+        await applyDirectly();
+        await handleRefreshAfterApply();
+        return;
+      }
+
+      setShowQuestions(true);
+    } catch {
+      toast.error("Failed to apply");
+    }
+  };
 
   const handleBookmarkToggle = () => {
-  if (isExpired || !job._id) return;
+    if (isExpired || !job._id) return;
 
-  if (!isSaved) {
-    saveJobMutation.mutate(job._id, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
-      },
-    });
-  } else {
-    unsaveJobMutation.mutate(job._id, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
-      },
-    });
-  }
-};
+    if (!isSaved) {
+      saveJobMutation.mutate(job._id, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
+        },
+      });
+    } else {
+      unsaveJobMutation.mutate(job._id, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
+        },
+      });
+    }
+  };
 
   const handleRefreshAfterApply = async () => {
     await refetch(); // 🔁 job details refetch
@@ -154,86 +150,90 @@ const {
 
   /* -------------------- UI -------------------- */
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-6">
-      <div className="relative w-full max-w-2xl space-y-6 rounded-2xl bg-white p-6 shadow-lg">
-        {/* Back */}
-        <button
-          onClick={() => router.back()}
-          className="absolute left-4 top-4 flex items-center gap-2 text-gray-700 hover:text-gray-900"
-        >
-          <ArrowLeft size={18} />
-          <span className="text-sm font-medium">Back</span>
-        </button>
+    <>
+    <div className="flex h-screen overflow-hidden items-center justify-center bg-gray-50 ">
 
-        <h1 className="mt-6 text-2xl font-bold">{job.title}</h1>
-
-        {/* Actions */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="relative w-full max-w-2xl space-y-6 rounded-2xl bg-white p-6 shadow-lg">
+          {/* Back */}
           <button
-            onClick={handleBookmarkToggle}
-            className="rounded-md border border-gray-300 p-2 hover:bg-gray-100"
+            onClick={() => router.back()}
+            className="absolute left-4 top-4 flex items-center gap-2 text-gray-700 hover:text-gray-900"
           >
-            <Bookmark
-              size={20}
-              className={
-                isSaved ? "fill-blue-600 text-blue-600" : "text-gray-600"
-              }
-            />
+            <ArrowLeft size={18} />
+            <span className="text-sm font-medium">Back</span>
           </button>
 
-          <button
-            onClick={handleApply}
-            disabled={isExpired || job.applied}
-            className={`rounded-lg px-6 py-2.5 text-sm font-medium text-white ${
-              isExpired || job.applied
-                ? "cursor-not-allowed bg-gray-400"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            {job.applied ? "Applied" : isExpired ? "Expired" : "Apply Now"}
-          </button>
-        </div>
+          <h1 className="mt-6 text-2xl font-bold">{job.title}</h1>
 
-        {/* Description */}
-        {job.description && (
-          <p className="text-sm text-gray-600">{job.description}</p>
-        )}
+          {/* Actions */}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleBookmarkToggle}
+              className="rounded-md border border-gray-300 p-2 hover:bg-gray-100"
+            >
+              <Bookmark
+                size={20}
+                className={
+                  isSaved ? "fill-blue-600 text-blue-600" : "text-gray-600"
+                }
+              />
+            </button>
 
-        {/* 🔥 MODAL YAHAN */}
-        {showQuestions && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            {/* 👇 Sirf isi box ko scrollable banao */}
-            <div className="w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col">
-
-  {/* HEADER */}
-  <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-6 py-4">
-    <h2 className="text-lg font-semibold text-gray-900">
-      Pre-Application Questions
-    </h2>
-
-    <button
-      onClick={() => setShowQuestions(false)}
-      className="rounded-full p-2 hover:bg-gray-100 transition"
-    >
-      ❌
-    </button>
-  </div>
-
-  {/* BODY */}
-  <div className="flex-1 overflow-y-auto px-6 py-6">
-    <JobQuestionsList
-      jobId={job._id}
-      onSuccess={async () => {
-        toast.success("Applied successfully");
-        await handleRefreshAfterApply();
-      }}
-    />
-  </div>
-</div>
-
+            <button
+              onClick={handleApply}
+              disabled={isExpired || job.applied}
+              className={`rounded-lg px-6 py-2.5 text-sm font-medium text-white ${
+                isExpired || job.applied
+                  ? "cursor-not-allowed bg-gray-400"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              {job.applied ? "Applied" : isExpired ? "Expired" : "Apply Now"}
+            </button>
           </div>
-        )}
+
+          {/* Description */}
+          {job.description && (
+            <p className="text-sm text-gray-600">{job.description}</p>
+          )}
+
+          {/* 🔥 MODAL YAHAN */}
+          {showQuestions && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+              {/* 👇 Sirf isi box ko scrollable banao */}
+        <div className="w-[95vw] max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col">
+
+                {/* HEADER */}
+
+                {/* BODY */}
+                <div className="flex-1 overflow-y-auto px-6 py-6 hide-scrollbar">
+                  <JobQuestionsList
+                    jobId={job._id}
+                    onSuccess={async () => {
+                      toast.success("Applied successfully");
+                      await handleRefreshAfterApply();
+                    }}
+                    onBack={() => setShowQuestions(false)}
+                    userProfile={profile}
+                    jobDetails={job}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      <style jsx>{`
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+    </>
   );
 }

@@ -1,5 +1,5 @@
-
 "use client";
+import type { Job} from "@/types/Job";
 
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
@@ -21,46 +21,53 @@ interface Skill {
   name: string;
 }
 
-export interface Job {
-  _id: string;
-  title: string;
-  category?: Category | string;
-  requiredExperience?: string;
-  education?: string;
-  expiry?: string | Date;
-  salary?: string;
-  department?: string;
-  skills?: Skill[];
-  applied?: boolean;
-}
-
 interface JobCardProps {
   job: Job;
 }
 
 export default function JobCard({ job }: JobCardProps) {
+  console.log("JOB CARD:", job);
   const router = useRouter();
   const toast = useToast();
-  const { data: profile, isLoading: profileLoading} = useGetProfile();
+  const { data: profile, isLoading: profileLoading } = useGetProfile();
   const [showQuestions, setShowQuestions] = useState(false);
   const queryClient = useQueryClient();
   const [checking, setChecking] = useState(false);
 
-  const { data: questions, isLoading: questionsLoading } =
-  useGetJobQuestions(job._id);
-
-
+  console.log("USER PROFILE --> ",profile);
+  const { data: questions, isLoading: questionsLoading } = useGetJobQuestions(
+    job._id,
+  );
 
   /* 🔒 BODY SCROLL LOCK */
   useEffect(() => {
     if (showQuestions) {
-      document.body.style.overflow = "hidden";
+      const scrollY = window.scrollY;
+
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+
+      document.documentElement.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "";
+      const scrollY = document.body.style.top;
+
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+
+      document.documentElement.style.overflow = "";
+
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || "0") * -1);
+      }
     }
 
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.documentElement.style.overflow = "";
     };
   }, [showQuestions]);
 
@@ -69,75 +76,73 @@ export default function JobCard({ job }: JobCardProps) {
     // router.push(`/job-details?id=${job._id}`);
     router.push(`/jobs/${job._id}`);
 
-   console.log("JOB PARAM:", job._id);
-
-
+    console.log("JOB PARAM:", job._id);
   };
 
   const categoryName =
     typeof job.category === "object" && job.category?.name
       ? job.category.name
       : null;
+ const skillNames =
+  job.skills
+    ?.map((skill) =>
+      typeof skill === "string" ? skill : skill.name
+    )
+    .filter(Boolean) || [];
 
-  const skillNames =
-    job.skills?.map((skill) => skill.name).filter(Boolean) || [];
 
   const isExpired = job.expiry ? new Date(job.expiry) < new Date() : false;
 
- const applyDirectly = async () => {
-  try {
-    await applyJob({
-      jobId: job._id,
-      resumeUrl: profile?.resumeFile,
-      answers: [],
-    });
+  const applyDirectly = async () => {
+    try {
+      await applyJob({
+        jobId: job._id,
+        resumeUrl: profile?.resumeFile,
+        answers: [],
+      });
 
-    toast.success("Applied successfully");
-    queryClient.invalidateQueries({ queryKey: ["jobs"] });
-  } catch {
-    toast.error("Failed to apply");
-  }
-};
-
-
-
-const handleApply = async () => {
-  if (checking) return;
-  setChecking(true);
-
-  try {
-    if (!job._id || isExpired || job.applied) return;
-
-    if (profileLoading) {
-      toast.error("Profile is loading. Please wait.");
-      return;
+      toast.success("Applied successfully");
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    } catch {
+      toast.error("Failed to apply");
     }
+  };
 
-    if (!profile?.resumeFile) {
-      toast.error("Please upload your resume before applying.");
-      return;
+  const handleApply = async () => {
+    if (checking) return;
+    setChecking(true);
+
+    try {
+      if (!job._id || isExpired || job.applied) return;
+
+      if (profileLoading) {
+        toast.error("Profile is loading. Please wait.");
+        return;
+      }
+
+      if (!profile?.resumeFile) {
+        toast.error("Please upload your resume before applying.");
+        return;
+      }
+
+      // 🔥 Questions already fetched by React Query hook
+      if (questionsLoading) {
+        toast.loading("Checking job questions...");
+        return;
+      }
+
+      if (!questions || questions.length === 0) {
+        await applyDirectly();
+        return;
+      }
+
+      setShowQuestions(true);
+    } catch {
+      toast.error("Failed to check job questions");
+    } finally {
+      setChecking(false);
     }
-
-    // 🔥 Questions already fetched by React Query hook
-    if (questionsLoading) {
-      toast.loading("Checking job questions...");
-      return;
-    }
-
-    if (!questions || questions.length === 0) {
-      await applyDirectly();
-      return;
-    }
-
-    setShowQuestions(true);
-  } catch {
-    toast.error("Failed to check job questions");
-  } finally {
-    setChecking(false);
-  }
-};
-
-
+  };
 
   return (
     <>
@@ -172,9 +177,9 @@ const handleApply = async () => {
             </h3>
 
             <div className="text-sm text-gray-600 space-y-1 mb-3">
-              {job.salary && (
-                <p className="font-semibold text-gray-800">{job.salary}</p>
-              )}
+              {/*salary */}
+          
+
               {job.department && <p>{job.department}</p>}
             </div>
 
@@ -218,35 +223,43 @@ const handleApply = async () => {
           <div
             className="absolute inset-0"
             onClick={() => setShowQuestions(false)}
+            onWheel={(e) => e.preventDefault()}
+            onTouchMove={(e) => e.preventDefault()}
           />
 
           {/* MODAL CONTENT */}
           <div
             className="relative bg-white w-full max-w-2xl rounded-xl shadow-xl
                        max-h-[85vh] overflow-y-auto z-[10000]"
+            style={{
+              scrollbarWidth: "none", // Firefox
+              msOverflowStyle: "none", // IE / Edge
+            }}
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={() => setShowQuestions(false)}
-              className="absolute top-4 right-4 text-xl text-gray-500 hover:text-black"
-            >
-              ✕
-            </button>
-
             <JobQuestionsList
-  jobId={job._id}
-  onSuccess={() => {
-    toast.success("Applied successfully");
-    queryClient.invalidateQueries({ queryKey: ["jobs"] });
-    setShowQuestions(false);
-  }}
-/>
-
+              jobId={job._id}
+              onSuccess={() => {
+                toast.success("Applied successfully");
+                queryClient.invalidateQueries({ queryKey: ["jobs"] });
+                setShowQuestions(false);
+              }}
+              onBack={() => setShowQuestions(false)}
+              userProfile={profile}
+              jobDetails={job}
+            />
           </div>
         </div>
       )}
+      <style>
+        {`
+    .relative::-webkit-scrollbar {
+      display: none;
+    }
+  `}
+      </style>
     </>
   );
 }
-
-
