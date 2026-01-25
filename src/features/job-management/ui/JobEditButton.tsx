@@ -1,29 +1,28 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { PlusIcon } from "lucide-react";
-import CreateJob from "@/features/admin/jobs/components/CreateJob";
-import SwipeableDrawer from "./SwipeableDrawer";
+import { useState } from "react"
+import { Pencil } from "lucide-react"
+import SwipeableDrawer from "../ui/SwipeableDrawer"
+import UpdateJob from "@/features/admin/jobs/components/UpdateJob"
 
 interface Props {
-  onJobCreated: () => void;
+  jobId: string
+  onUpdated: () => void
 }
 
-export default function CreateJobButton({ onJobCreated }: Props) {
-  const [open, setOpen] = useState(false);
+export default function JobEditButton({ jobId, onUpdated }: Props) {
+  const [open, setOpen] = useState(false)
 
   return (
-    <div className="flex gap-3">
-      {/* BUTTON */}
+    <>
       <button
         onClick={() => setOpen(true)}
-        className="flex h-10 items-center justify-center gap-2 rounded-lg  text-white px-6 text-sm font-bold shadow-md bg-blue-700 transition-colors cursor-pointer"
+        className="h-11 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition flex justify-center items-center gap-2"
       >
-        <PlusIcon className="w-5 h-5" />
-        <span>Create New Job</span>
+        <Pencil size={16} />
+        Edit Job
       </button>
 
-      {/* DRAWER */}
       <SwipeableDrawer
         anchor="right"
         open={open}
@@ -39,7 +38,7 @@ export default function CreateJobButton({ onJobCreated }: Props) {
                     {/* Header */}
                     <div className="flex items-center justify-between px-5 py-4 border-b">
                       <h2 className="text-lg font-bold text-gray-900">
-                        Create Job
+                        Update Job
                       </h2>
                       <button
                         onClick={() => setOpen(false)}
@@ -51,10 +50,11 @@ export default function CreateJobButton({ onJobCreated }: Props) {
 
                     {/* Content */}
                     <div className="flex-1 overflow-y-auto p-4">
-                      <CreateJob
-                        onJobCreated={() => {
-                          onJobCreated();
-                          setOpen(false);
+                      <UpdateJob
+                        jobId={jobId}
+                        onJobUpdated={() => {
+                          onUpdated()
+                          setOpen(false)
                         }}
                       />
                     </div>
@@ -65,6 +65,6 @@ export default function CreateJobButton({ onJobCreated }: Props) {
           },
         ]}
       />
-    </div>
-  );
+    </>
+  )
 }

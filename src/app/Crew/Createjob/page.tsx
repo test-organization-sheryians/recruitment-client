@@ -1,5 +1,4 @@
-import CreateJob from '@/features/job-management/components/Createjob'
-import Jobs from '@/features/job-management/components/Createjob'
+import CreateJob from '@/features/job-management/components/CreateJob'
 import React from 'react'
 
 const page = () => {
