@@ -81,3 +81,21 @@ export const useGetJobsByCategory = (categoryId: string | null) => {
     retry: 0,
   });
 };
+
+// Fetch all categories
+export const useGetCategories = () => {
+  return useQuery({
+    queryKey: ["categories"],
+    queryFn: () => api.getCategories(),
+    retry: 0,
+  });
+};
+
+// Fetch all skills
+export const useGetSkills = () => {
+  return useQuery({
+    queryKey: ["skills"],
+    queryFn: () => api.getAllSkills(),
+    retry: 0,
+  });
+};
