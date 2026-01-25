@@ -12,6 +12,7 @@ import {
 // import CreateJob from "@/features/admin/jobs/components/CreateJob"
 import DeleteJob from "@/features/admin/jobs/components/DeleteJob"
 import UpdateJob from "@/features/admin/jobs/components/UpdateJob"
+import EditJob from "./EditJob"
 import { useRouter } from "next/navigation"
 import { Archive, CheckCircle2, ChevronDown, Edit3, PlusIcon } from "lucide-react"
 import CreateJobButton from "../ui/CreateJobButton"
@@ -37,6 +38,7 @@ export default function Jobs() {
   const [error, setError] = useState<string | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false)
+  const [isEditPanelOpen, setIsEditPanelOpen] = useState(false)
   const [editingJobId, setEditingJobId] = useState<string | null>(null)
   const [openJobId, setOpenJobId] = useState<string | null>(null)
   const [filter, setFilter] = useState<Status | "ALL">("ALL")
@@ -67,6 +69,7 @@ export default function Jobs() {
     router.refresh()
     setIsCreateDialogOpen(false)
     setIsUpdateDialogOpen(false)
+    setIsEditPanelOpen(false)
     setEditingJobId(null)
   }, [refetch, router])
 
@@ -250,7 +253,7 @@ export default function Jobs() {
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           onClick={() => {
-                            setIsUpdateDialogOpen(true)
+                            setIsEditPanelOpen(true)
                             setEditingJobId(job._id)
                           }}
                           className="h-11 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
@@ -320,6 +323,18 @@ export default function Jobs() {
           )}
         </div>
       </div>
+
+      {/* EDIT JOB SIDE PANEL */}
+      {isEditPanelOpen && (
+        <EditJob
+          jobId={editingJobId}
+          onClose={() => {
+            setIsEditPanelOpen(false)
+            setEditingJobId(null)
+          }}
+          onJobUpdated={handleRefresh}
+        />
+      )}
     </div>
   )
 }

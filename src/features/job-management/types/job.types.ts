@@ -37,3 +37,23 @@ export type CreateJobRequest = {
   clientId: string;
   location: LocationForm;
 };
+
+export type JobFormData = {
+  _id?: string;
+  title: string;
+  description: string;
+  education: string;
+  requiredExperience: string;
+  category: string;
+  skills: string[];
+  expiry: string;
+  clientId: string;
+  location: LocationForm;
+  employmentType?: string;
+};
+
+export type APIResponse<T> = {
+  success: boolean;
+  data: T;
+  message?: string;
+};
