@@ -70,7 +70,14 @@ export default function JobDescriptionEditor({ value, onChange }: Props) {
             editorRef.current?.focus();
 
             const selection = window.getSelection();
-            if (!selection || selection.toString().trim() === "") {
+            if (!selection || selection.rangeCount === 0) {
+              alert("Select text to add link");
+              return;
+            }
+
+            const range = selection.getRangeAt(0);
+            const selectedText = range.toString().trim();
+            if (!selectedText) {
               alert("Select text to add link");
               return;
             }
@@ -78,7 +85,16 @@ export default function JobDescriptionEditor({ value, onChange }: Props) {
             const url = prompt("Enter link URL");
             if (!url) return;
 
-            exec("createLink", url);
+            // Create link HTML
+            const linkHTML = `<a href="${url}" target="_blank" rel="noopener noreferrer">${selectedText}</a>`;
+
+            // Replace selected text with link
+            range.deleteContents();
+            const fragment = range.createContextualFragment(linkHTML);
+            range.insertNode(fragment);
+
+            // Trigger onChange
+            onChange(editorRef.current?.innerHTML || "");
           }}
         >
           <LinkIcon size={16} />
