@@ -79,7 +79,7 @@ const createJob = async (payload: CreateJobPayload) => {
 
 export default function CreateJob() {
 
-     const [skillQuery, setSkillQuery] = React.useState(""); 
+  const [skillQuery, setSkillQuery] = React.useState("");
   const { data: skills = [] } = useQuery({
     queryKey: ["skills"],
     queryFn: fetchSkills,
@@ -90,30 +90,30 @@ export default function CreateJob() {
     queryFn: fetchCategories,
   });
 
-  const mutation = useMutation({ mutationFn: createJob });
+  const { mutate, isPending } = useMutation({ mutationFn: createJob });
 
 
 
   const [form, setForm] = React.useState<CreateJobFormValues>({
-  title: "",
-  requiredExperience: "",
-  category: "",
-  education: "",
-  jobType: "",
-  description: "",
-  expiry: "",
-  skills: [],
-  salary: {
-    min: 0,
-    max: 0,
-  },
-  location: {
-    city: "",
-    state: "",
-    country: "India",
-    pincode: "",
-  },
-});
+    title: "",
+    requiredExperience: "",
+    category: "",
+    education: "",
+    jobType: "",
+    description: "",
+    expiry: "",
+    skills: [],
+    salary: {
+      min: 0,
+      max: 0,
+    },
+    location: {
+      city: "",
+      state: "",
+      country: "India",
+      pincode: "",
+    },
+  });
 
 const pincodeStatus = usePincodeLookup(
   form.location.pincode,
@@ -130,30 +130,30 @@ const pincodeStatus = usePincodeLookup(
 
 
   const submitJob = () => {
-   mutation.mutate({
-  title: form.title,
-  requiredExperience: form.requiredExperience,
-  category: form.category,
-  education: form.education,
-  jobType: form.jobType,
-  description: form.description,
-  expiry: form.expiry,
-  skills: form.skills.map((s) => s._id),
-  salary: form.salary,
-  location: form.location,
-});
+    mutate({
+      title: form.title,
+      requiredExperience: form.requiredExperience,
+      category: form.category,
+      education: form.education,
+      jobType: form.jobType,
+      description: form.description,
+      expiry: form.expiry,
+      skills: form.skills.map((s) => s._id),
+      salary: form.salary,
+      location: form.location,
+    });
 
   };
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-[#111218] dark:text-white min-h-screen">
 
-   
-   
+
+
 
       {/* ================= Main ================= */}
       <main className="flex flex-col items-center py-12 px-4 sm:px-10">
-        <div className="max-w-[800px] w-full flex flex-col gap-10">
+        <div className="max-w-200 w-full flex flex-col gap-10">
 
           {/* Title */}
           <div>
@@ -206,27 +206,43 @@ const pincodeStatus = usePincodeLookup(
       />
     </TwoCol>
 
-    <TwoCol>
-      <Input
-        label="Application Deadline"
-        type="date"
-        value={form.expiry}
-        onChange={(v) => setForm({ ...form, expiry: v })}
-      />
+  <TwoCol>
+  <Input
+    label="Application Deadline"
+    type="date"
+    value={form.expiry}
+    onChange={(v) => setForm({ ...form, expiry: v })}
+  />
 
-       <Input
-        label="Pincode"
-        value={form.location.pincode}
-        onChange={(v) =>
-          setForm({
-            ...form,
-            location: { ...form.location, pincode: v },
-          })
-        }
-      />
+  <div>
+    <Input
+      label="Pincode"
+      value={form.location.pincode}
+      onChange={(v) =>
+        setForm({
+          ...form,
+          location: { ...form.location, pincode: v },
+        })
+      }
+    />
 
-     
-    </TwoCol>
+    {pincodeStatus.message && (
+      <p
+        className={`text-xs mt-1 ${
+          pincodeStatus.type === "error"
+            ? "text-red-600"
+            : "text-blue-600"
+        }`}
+      >
+        {pincodeStatus.loading && (
+          <span className="inline-block w-3 h-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin align-middle" />
+        )}
+        {pincodeStatus.message}
+      </p>
+    )}
+  </div>
+</TwoCol>
+
 
     <TwoCol>
 
@@ -382,24 +398,24 @@ const pincodeStatus = usePincodeLookup(
 
 
           {/* Footer */}
-       <div className="flex items-center justify-between mt-10">
-  {/* Left: Save Draft */}
-  <button
-    type="button"
-    className="text-sm font-semibold text-gray-500 hover:text-gray-700 transition"
-    onClick={() => {
-      // TODO: save draft logic later
-      console.log("Save Draft");
-    }}
-  >
-    Save Draft
-  </button>
+          <div className="flex items-center justify-between mt-10">
+            {/* Left: Save Draft */}
+            <button
+              type="button"
+              className="text-sm font-semibold text-gray-500 hover:text-gray-700 transition"
+              onClick={() => {
+                // TODO: save draft logic later
+                console.log("Save Draft");
+              }}
+            >
+              Save Draft
+            </button>
 
-  {/* Right: Cancel + Next */}
-  <div className="flex items-center gap-4">
-    <button
-      type="button"
-      className="
+            {/* Right: Cancel + Next */}
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                className="
         px-6 py-3
         rounded-lg
         border
@@ -410,18 +426,19 @@ const pincodeStatus = usePincodeLookup(
         hover:bg-gray-50
         transition
       "
-      onClick={() => {
-        // TODO: navigate back / reset form
-        console.log("Cancel");
-      }}
-    >
-      Cancel
-    </button>
+                onClick={() => {
+                  // TODO: navigate back / reset form
+                  console.log("Cancel");
+                }}
+              >
+                Cancel
+              </button>
 
-    <button
-      type="button"
-      onClick={submitJob}
-      className="
+              <button
+                type="button"
+                onClick={submitJob}
+                disabled={isPending}
+                className="
         px-8 py-3
         bg-[#2b4bee]
         text-white
@@ -431,13 +448,14 @@ const pincodeStatus = usePincodeLookup(
         hover:bg-[#2340c8]
         transition
         flex items-center gap-2
+        disabled:opacity-50 disabled:cursor-not-allowed
       "
-    >
-      Next Screening Questions
-      <span>→</span>
-    </button>
-  </div>
-</div>
+              >
+                {isPending ? 'Creating...' : 'Next Screening Questions'}
+                {!isPending && <span>→</span>}
+              </button>
+            </div>
+          </div>
 
         </div>
       </main>
