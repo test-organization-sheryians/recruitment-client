@@ -98,4 +98,4 @@ export const useGetSkills = () => {
     queryFn: () => api.getAllSkills(),
     retry: 0,
   });
-};
+}; 

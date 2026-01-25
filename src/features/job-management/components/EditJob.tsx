@@ -11,7 +11,7 @@ interface EditJobProps {
   jobId: string | null
   onClose: () => void
   onJobUpdated: () => void
-}
+} 
 
 export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) {
   const toast = useToast()
