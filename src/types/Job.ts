@@ -2,7 +2,7 @@ export interface Job {
   id: string;
   title: string;
   location:
-    | string
+     string
     | {
         city: string;
         state: string;

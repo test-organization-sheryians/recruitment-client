@@ -4,7 +4,10 @@ import { useEffect, useMemo, useRef } from "react";
 import VacancyCard, { JobData } from "./VacancyCard";
 import type { Job } from "@/types/Job";
 
-type ExtendedJob = Job & { applicantsCount?: number; salary?: number | string | null };
+type ExtendedJob = Job & {
+  applicantsCount?: number;
+  salary?: number | string | null;
+};
 import { useInfiniteJobsAdmin } from "../jobs/hooks/useJobApi";
 import { Briefcase, Loader2, AlertCircle } from "lucide-react";
 
@@ -39,12 +42,14 @@ const VacanciesSection = ({ width, height }: VacanciesSectionProps) => {
   /* 🔥 FLATTEN ALL PAGES */
   const jobs: ExtendedJob[] = useMemo(
     () => data?.pages.flatMap((page) => page.data as ExtendedJob[]) ?? [],
-    [data]
+    [data],
   );
 
   const normalizeJob = (job: ExtendedJob): JobData => {
     const skillsNormalized = Array.isArray(job.skills)
-      ? job.skills.map((s) => (typeof s === "string" ? s : { _id: s._id, name: s.name }))
+      ? job.skills.map((s) =>
+          typeof s === "string" ? s : { _id: s._id, name: s.name },
+        )
       : undefined;
 
     return {
@@ -52,8 +57,12 @@ const VacanciesSection = ({ width, height }: VacanciesSectionProps) => {
       title: job.title,
       education: job.education,
       skills: skillsNormalized,
-      salary: job.salary === undefined || job.salary === null ? undefined : String(job.salary),
-      location: job.location,
+      salary:
+        job.salary === undefined || job.salary === null
+          ? undefined
+          : String(job.salary),
+      location: typeof job.location === "string" ? undefined : job.location,
+
       applicantsCount: job.applicantsCount,
       createdAt: job.createdAt,
     };
@@ -78,7 +87,7 @@ const VacanciesSection = ({ width, height }: VacanciesSectionProps) => {
         root: scrollRef.current,
         rootMargin: "200px",
         threshold: 0.1,
-      }
+      },
     );
 
     observer.observe(target);
@@ -105,9 +114,7 @@ const VacanciesSection = ({ width, height }: VacanciesSectionProps) => {
         className="bg-white rounded-3xl p-6 border flex items-center justify-center"
       >
         <AlertCircle className="text-red-400 mr-2" />
-        <span className="text-red-500 text-sm">
-          Failed to load vacancies
-        </span>
+        <span className="text-red-500 text-sm">Failed to load vacancies</span>
       </div>
     );
   }
@@ -122,12 +129,8 @@ const VacanciesSection = ({ width, height }: VacanciesSectionProps) => {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between shrink-0">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">
-            Current Vacancies
-          </h2>
-          <p className="text-xs text-gray-400 mt-1">
-            Active job openings
-          </p>
+          <h2 className="text-xl font-bold text-gray-900">Current Vacancies</h2>
+          <p className="text-xs text-gray-400 mt-1">Active job openings</p>
         </div>
 
         <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 font-semibold">
@@ -156,10 +159,7 @@ const VacanciesSection = ({ width, height }: VacanciesSectionProps) => {
         )}
 
         {/* Infinite Scroll Trigger */}
-        <div
-          ref={loadMoreRef}
-          className="h-8 flex justify-center items-center"
-        >
+        <div ref={loadMoreRef} className="h-8 flex justify-center items-center">
           {isFetchingNextPage && (
             <Loader2 className="animate-spin text-gray-400" size={18} />
           )}
