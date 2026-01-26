@@ -60,7 +60,7 @@ export default function UpdateJob({
             if (res.success) {
               onJobUpdated?.()
               
-    router.push(`/admin/job-management/${jobId}/screening-questions`)
+     router.refresh()
 
               resolve()
             } else {

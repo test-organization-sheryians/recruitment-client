@@ -22,7 +22,7 @@ const handleSubmit = async (data: JobFormData) => {
     if (res.success || res.data) { 
       const jobId = res.data._id; // assume API response me _id hai
       onJobCreated?.();
-      router.push(`/admin/job-management/${jobId}/screening-questions`);
+      router.push(`/admin/job-management/${jobId}/screening-questions`)
     }
     }
    catch (error) {

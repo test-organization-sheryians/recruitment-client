@@ -75,12 +75,15 @@ const ScreeningQuestions: React.FC = () => {
             </p>
           </div>
 
-          <button
-            onClick={() => setIsDrawerOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            + Add Question
-          </button>
+       <div className="flex justify-center mt-8">
+  <button
+    onClick={() => setIsDrawerOpen(true)}
+    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl shadow-md hover:bg-blue-700 transition transform hover:scale-105"
+  >
+    + Add New Question
+  </button>
+</div>
+
         </div>
 
         {/* QUESTIONS LIST */}

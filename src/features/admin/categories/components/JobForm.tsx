@@ -44,6 +44,12 @@ export interface JobFormData {
   expiry: string;
   clientId: string;
   location: Location; // added Location
+    // ✅ REQUIRED BY BACKEND
+  jobType: string;
+  salary: {
+    min: number;
+    max: number;
+  };
 }
 
 interface JobFormProps {
@@ -99,6 +105,13 @@ export default function JobForm({
       ? new Date(safeInitialData.expiry).toISOString().split("T")[0]
       : "",
     clientId: safeInitialData.clientId || "6915b90df6594de75060410b",
+     // ✅ ADD ONLY FUNCTIONAL FIELDS (NO UI)
+jobType: safeInitialData.jobType || "Full-Time",
+
+salary: {
+  min: (safeInitialData as any)?.salary?.min || 10000,
+  max: (safeInitialData as any)?.salary?.max || 30000,
+},
   });
 
   useEffect(() => {
@@ -231,6 +244,8 @@ export default function JobForm({
       "expiry",
       "category",
       "skills",
+      "jobType",   // ✅
+  "salary",
     ];
 
     const missingFields = requiredFields.filter((field) => {
@@ -268,6 +283,16 @@ export default function JobForm({
         return;
       }
     }
+  if (!formData.salary) {
+  setError("Salary is required");
+  return;
+}
+
+if (!formData.jobType) {
+  setError("Job type is required");
+  return;
+}
+
     try {
       console.log("Submitting Payload:", formData);
       await onSubmit(formData);
