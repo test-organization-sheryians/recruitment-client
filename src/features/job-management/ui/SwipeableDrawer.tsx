@@ -1,208 +1,99 @@
-"use client"
+import * as React from 'react';
+import Box from '@mui/material/Box';
+import SwipeableDrawer from '@mui/material/SwipeableDrawer';
+import Button from '@mui/material/Button';
+import List from '@mui/material/List';
+import Divider from '@mui/material/Divider';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
 
-import * as React from "react"
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Select,
-  MenuItem,
-  Switch,
-  Button,
-  Typography,
-  IconButton,
-  Box,
-  Divider,
-} from "@mui/material"
-import CloseIcon from "@mui/icons-material/Close"
-import AddIcon from "@mui/icons-material/Add"
-import DeleteIcon from "@mui/icons-material/Delete"
+export type Anchor = 'top' | 'left' | 'bottom' | 'right';
 
-export type QuestionType = "radio" | "text" | "url"
-
-interface Props {
-  open: boolean
-  onClose: () => void
-  onAdd: (q: any) => void
+interface DrawerItem {
+  label: string;
+  icon?: React.ReactNode;
 }
 
-export default function AddQuestionDialog({ open, onClose, onAdd }: Props) {
-  const [title, setTitle] = React.useState("")
-  const [description, setDescription] = React.useState("")
-  const [type, setType] = React.useState<QuestionType>("radio")
-  const [options, setOptions] = React.useState<string[]>(["0-2 years", "3-5 years"])
-  const [required, setRequired] = React.useState(true)
-  const [knockout, setKnockout] = React.useState(false)
-  const [errors, setErrors] = React.useState<{ title?: string; description?: string }>({})
+interface ReusableDrawerProps {
+  anchor?: Anchor;
+  buttonLabel?: string;
+  width?: number;
+  items: DrawerItem[];
+  extraItems?: DrawerItem[];
+}
 
-  const addOption = () => setOptions([...options, ""])
-  const removeOption = (i: number) => setOptions(options.filter((_, index) => index !== i))
-  const updateOption = (i: number, val: string) => {
-    const arr = [...options]
-    arr[i] = val
-    setOptions(arr)
-  }
+const ReusableDrawer: React.FC<ReusableDrawerProps> = ({
+  anchor = 'left',
+  buttonLabel = 'Open Drawer',
+  width = 250,
+  items,
+  extraItems = [],
+}) => {
+  const [open, setOpen] = React.useState(false);
+
+  const toggleDrawer =
+    (open: boolean) =>
+    (event: React.KeyboardEvent | React.MouseEvent) => {
+      if (
+        event.type === 'keydown' &&
+        ((event as React.KeyboardEvent).key === 'Tab' ||
+          (event as React.KeyboardEvent).key === 'Shift')
+      ) {
+        return;
+      }
+      setOpen(open);
+    };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 3,
-          overflow: "hidden",
-          boxShadow: 6,
-        },
-      }}
-    >
-      {/* HEADER */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          px: 3,
-          py: 2,
-          backgroundColor: "#f9f9f9",
-        }}
+    <>
+      <Button onClick={toggleDrawer(true)}>{buttonLabel}</Button>
+
+      <SwipeableDrawer
+        anchor={anchor}
+        open={open}
+        onClose={toggleDrawer(false)}
+        onOpen={toggleDrawer(true)}
       >
-        <Box>
-          <Typography fontSize={20} fontWeight={700}>
-            Add New Question
-          </Typography>
-          <Typography fontSize={13} color="text.secondary">
-            Configure screening logic and input details
-          </Typography>
-        </Box>
-        <IconButton onClick={onClose} size="small">
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </Box>
-
-      {/* CONTENT */}
-      <DialogContent sx={{ p: 3, maxHeight: "70vh", overflowY: "auto" }}>
-        {/* QUESTION TITLE */}
-        <Box display="flex" flexDirection="column" gap={2}>
-          <TextField
-            label="Question Title"
-            placeholder="e.g. How many years of experience do you have?"
-            value={title}
-            onChange={(e) => {
-              setTitle(e.target.value)
-              setErrors((prev) => ({ ...prev, title: undefined }))
-            }}
-            error={!!errors.title}
-            helperText={errors.title}
-            fullWidth
-          />
-
-          <TextField
-            label="Description"
-            placeholder="Provide additional context for the candidate"
-            multiline
-            rows={3}
-            value={description}
-            onChange={(e) => {
-              setDescription(e.target.value)
-              setErrors((prev) => ({ ...prev, description: undefined }))
-            }}
-            error={!!errors.description}
-            helperText={errors.description}
-            fullWidth
-          />
-
-          <Select
-            value={type}
-            onChange={(e) => setType(e.target.value as QuestionType)}
-            fullWidth
-          >
-            <MenuItem value="radio">Radio Buttons</MenuItem>
-            <MenuItem value="text">Long Text</MenuItem>
-            <MenuItem value="url">URL</MenuItem>
-          </Select>
-
-          {/* OPTIONS */}
-          {type === "radio" && (
-            <Box mt={2}>
-              <Typography fontWeight={600} mb={1}>
-                Options
-              </Typography>
-              {options.map((opt, i) => (
-                <Box key={i} display="flex" alignItems="center" gap={1} mb={1}>
-                  <TextField
-                    value={opt}
-                    onChange={(e) => updateOption(i, e.target.value)}
-                    fullWidth
-                    size="small"
-                  />
-                  <IconButton onClick={() => removeOption(i)} color="error" size="small">
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              ))}
-              <Button
-                startIcon={<AddIcon />}
-                variant="outlined"
-                size="small"
-                onClick={addOption}
-              >
-                Add Option
-              </Button>
-            </Box>
-          )}
-
-          <Divider sx={{ my: 3 }} />
-
-          {/* TOGGLES */}
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-            <Typography fontSize={14}>Required Question</Typography>
-            <Switch checked={required} onChange={(e) => setRequired(e.target.checked)} />
-          </Box>
-
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography fontSize={14}>Knockout Question</Typography>
-            <Switch checked={knockout} onChange={(e) => setKnockout(e.target.checked)} />
-          </Box>
-        </Box>
-      </DialogContent>
-
-      {/* FOOTER */}
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} sx={{ textTransform: "none" }}>
-          Cancel
-        </Button>
-        <Button
-          variant="contained"
-          sx={{ borderRadius: 3, px: 4, textTransform: "none" }}
-          onClick={() => {
-            let newErrors: { title?: string; description?: string } = {}
-            if (!title.trim()) newErrors.title = "This field is required"
-            if (!description.trim()) newErrors.description = "This field is required"
-
-            if (Object.keys(newErrors).length > 0) {
-              setErrors(newErrors)
-              return
-            }
-
-            onAdd({ title, description, type, options, required, knockout })
-
-            // reset
-            setTitle("")
-            setDescription("")
-            setErrors({})
-            setOptions(["0-2 years", "3-5 years"])
-            setRequired(true)
-            setKnockout(false)
-            onClose()
-          }}
+        <Box
+          sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : width }}
+          role="presentation"
+          onClick={toggleDrawer(false)}
+          onKeyDown={toggleDrawer(false)}
         >
-          Create Question
-        </Button>
-      </DialogActions>
-    </Dialog>
-  )
-}
+          <List>
+            {items.map((item, index) => (
+              <ListItem key={index} disablePadding>
+                <ListItemButton>
+                  {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+
+          {extraItems.length > 0 && (
+            <>
+              <Divider />
+              <List>
+                {extraItems.map((item, index) => (
+                  <ListItem key={index} disablePadding>
+                    <ListItemButton>
+                      {item.icon && (
+                        <ListItemIcon>{item.icon}</ListItemIcon>
+                      )}
+                      <ListItemText primary={item.label} />
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+              </List>
+            </>
+          )}
+        </Box>
+      </SwipeableDrawer>
+    </>
+  );
+};
+
+export default SwipeableDrawer;

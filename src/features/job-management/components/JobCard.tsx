@@ -17,6 +17,7 @@ import JobEditButton from "../ui/JobEditButton"
 import JobQuestionsButton from "../ui/JobQuestionsButton"
 import JobShareButton from "../ui/JobShareButton"
 import JobDeleteButton from "../ui/JobDeleteButton"
+import ScreeningQuestions from "./ScreeningQuestion"
 
 /* ================= TYPES ================= */
 
@@ -161,7 +162,7 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete,onShar
                 onUpdated={onDelete}
               />
 
-              <JobQuestionsButton jobId={job._id} />
+              <JobQuestionsButton jobId={job._id}/>
 
               <JobShareButton onClick={onShare} />
 
