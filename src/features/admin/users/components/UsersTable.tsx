@@ -1,7 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { Check, Copy, LinkIcon, Loader2, MoreVertical, Pencil, Trash2, Users } from 'lucide-react';
+import { Check, Copy, LinkIcon, Loader2, MoreVertical, Pencil, Trash2, Upload, ArrowRightLeft, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -71,6 +71,17 @@ const getAvatarColor = (name = "A") =>
   const toggleUserSelection = (id: string) => {
     setSelectedUserIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
   };
+
+  const toggleSelectAll = () => {
+    if (selectedUserIds.length === users.length && users.length > 0) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(users.map(user => user._id));
+    }
+  };
+
+  const isAllSelected = users.length > 0 && selectedUserIds.length === users.length;
+  const isSomeSelected = selectedUserIds.length > 0 && selectedUserIds.length < users.length;
 
   /* ---------------- SHARE ---------------- */
   const { mutate: shareCandidates, isPending } = useCreateShareCandidate();
@@ -301,24 +312,15 @@ const handleBulkDelete = async () => {
         />
 
         <div className="space-y-3">
-          {selectedUserIds.length > 0 && (
-            <button
-              onClick={handleViewSelected}
-              disabled={selectedUserIds.length === 0 || isPending}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:bg-gray-400"
-            >
-              <Users className="h-4 w-4" />
-              Share Selected ({selectedUserIds.length})
-            </button>
-          )}
-
-          {/* {showLink && (
-            <div className="flex max-w-xl items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm">
+          {showLink && (
+            <div className="relative flex max-w-xl items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm">
+              {/* Link section */}
               <div className="flex flex-1 items-center gap-2 overflow-hidden">
                 <LinkIcon className="h-4 w-4 text-gray-400" />
                 <p className="truncate text-sm font-medium text-gray-700">{link}</p>
               </div>
 
+              {/* Copy button */}
               <button
                 onClick={handleCopy}
                 className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition"
@@ -335,52 +337,16 @@ const handleBulkDelete = async () => {
                   </>
                 )}
               </button>
+
+              {/* Cross button */}
+              <button
+                onClick={() => setShowLink(false)}
+                className="ml-1 flex h-6 w-6 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+              >
+                ✕
+              </button>
             </div>
-          )} */}
-
-
-
-{showLink && (
-  <div className="relative flex max-w-xl items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm">
-    
-    {/* Link section */}
-    <div className="flex flex-1 items-center gap-2 overflow-hidden">
-      <LinkIcon className="h-4 w-4 text-gray-400" />
-      <p className="truncate text-sm font-medium text-gray-700">{link}</p>
-    </div>
-
-    {/* Copy button */}
-    <button
-      onClick={handleCopy}
-      className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition"
-    >
-      {copied ? (
-        <>
-          <Check className="h-3 w-3" />
-          Copied
-        </>
-      ) : (
-        <>
-          <Copy className="h-3 w-3" />
-          Copy
-        </>
-      )}
-    </button>
-
-    {/* Cross button */}
-    <button
-      onClick={() => setShowLink(false)}
-      className="ml-1 flex h-6 w-6 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
-    >
-      ✕
-    </button>
-  </div>
-)}
-
-
-
-
-
+          )}
         </div>
       </div>
 
@@ -390,7 +356,15 @@ const handleBulkDelete = async () => {
     <thead>
       <tr className="bg-slate-50 border-b">
         <th className="pl-6 pr-4 py-5 w-12 text-left">
-          <input type="checkbox" className="h-4 w-4 accent-blue-600" />
+          <input 
+            type="checkbox" 
+            checked={isAllSelected}
+            ref={(el) => {
+              if (el) el.indeterminate = isSomeSelected;
+            }}
+            onChange={toggleSelectAll}
+            className="h-4 w-4 accent-blue-600 cursor-pointer" 
+          />
         </th>
         <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">Name</th>
         <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">Email</th>
@@ -445,7 +419,7 @@ const handleBulkDelete = async () => {
                   onClick={() => toggleEmailVisibility(user._id)}
                   className="text-blue-600 text-xs font-semibold hover:text-blue-500 uppercase transition"
                 >
-                  Click to view
+                 <span>👁</span> Click to view
                 </button>
               )}
             </td>
@@ -459,7 +433,7 @@ const handleBulkDelete = async () => {
                   onClick={() => togglePhoneVisibility(user._id)}
                   className="text-blue-600 text-xs uppercase font-semibold hover:text-blue-500 transition"
                 >
-                  Click to view
+                <span>👁</span> Click to view
                 </button>
               )}
             </td>
@@ -524,43 +498,57 @@ const handleBulkDelete = async () => {
 {/* FLOATING ACTION BAR */}
 {selectedUserIds.length > 0 && (
   <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
-    <div className="bg-white/90 backdrop-blur-xl border shadow-xl px-6 py-3 rounded-full flex items-center gap-4">
-
-      <div className="flex items-center gap-3 pr-4 border-r">
-        <div className="w-6 h-6 rounded bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold">
+    <div className="bg-white border border-slate-200 shadow-2xl px-8 py-4 rounded-full flex items-center gap-10">
+      {/* Selected count */}
+      <div className="flex items-center gap-3">
+        <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
           {selectedUserIds.length}
         </div>
-        <span className="text-xs font-semibold text-slate-600">
-          Selected
-        </span>
+        <span className="text-sm font-semibold text-slate-700">Selected</span>
       </div>
 
+      {/* Action buttons */}
+      <div className="flex items-center gap-8">
+        <button
+          onClick={handleViewSelected}
+          className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
+          title="Share selected candidates"
+        >
+          <Upload className="h-4 w-4" />
+          <span className="text-xs font-semibold uppercase tracking-wide">Share</span>
+        </button>
+
+        <button
+          onClick={openBulkRoleModal}
+          className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
+          title="Edit role for selected"
+        >
+          <ArrowRightLeft className="h-4 w-4" />
+          <span className="text-xs font-semibold uppercase tracking-wide">Edit Role</span>
+        </button>
+
+        <button
+          className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
+          title="Blast email"
+        >
+          <Mail className="h-4 w-4" />
+          <span className="text-xs font-semibold uppercase tracking-wide">Blast</span>
+        </button>
+
+        <button
+          onClick={handleBulkDelete}
+          className="flex flex-col items-center gap-1 text-red-500 hover:text-red-600 transition"
+          title="Delete selected"
+        >
+          <Trash2 className="h-4 w-4" />
+          <span className="text-xs font-semibold uppercase tracking-wide">Delete</span>
+        </button>
+      </div>
+
+      {/* Apply actions button */}
       <button
         onClick={handleViewSelected}
-        className="text-xs font-bold uppercase tracking-wider text-blue-600 hover:text-blue-500"
-      >
-        Share
-      </button>
-
-     <button
-  onClick={openBulkRoleModal}
-  className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-800"
->
-  Edit Role
-</button>
-
-
-     <button
-  onClick={handleBulkDelete}
-  className="text-xs font-bold uppercase tracking-wider text-red-500 hover:text-red-600"
->
-  Delete
-</button>
-
-
-      <button
-        onClick={handleViewSelected}
-        className="bg-blue-600 text-white text-xs font-black uppercase tracking-widest px-6 py-3 rounded-full shadow-lg shadow-blue-600/30 hover:shadow-blue-600/40 active:scale-95 transition-all"
+        className="ml-6 bg-blue-600 text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-full shadow-lg shadow-blue-600/30 hover:shadow-blue-600/40 hover:bg-blue-700 active:scale-95 transition-all whitespace-nowrap"
       >
         Apply Actions
       </button>
