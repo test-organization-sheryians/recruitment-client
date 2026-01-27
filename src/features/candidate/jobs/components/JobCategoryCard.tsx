@@ -120,7 +120,11 @@ export default function JobCard({ job }: JobCardProps) {
           {/* Salary & Department */}
           <div className="text-sm text-gray-600 space-y-1 mb-3">
             {job.salary && (
-              <p className="font-semibold text-gray-800">{job.salary}</p>
+              <p>
+  {typeof job.salary === "object"
+    ? `${job.salary.min} - ${job.salary.max} ${job.salary.currency}`
+    : job.salary}
+</p>
             )}
             {job.department && <p>{job.department}</p>}
           </div>
