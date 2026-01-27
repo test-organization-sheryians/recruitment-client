@@ -1,87 +1,105 @@
-'use client';
+"use client";
 
-import { useQueryClient } from '@tanstack/react-query';
-import { Check, Copy, LinkIcon, Loader2, MoreVertical, Pencil, Trash2, Upload, ArrowRightLeft, Mail, Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  Check,
+  Copy,
+  LinkIcon,
+  Loader2,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  Upload,
+  ArrowRightLeft,
+  Mail,
+  Search,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { useToast } from '@/components/ui/Toast';
-import { useDebounce } from '@/features/admin/users/hooks/useDebounce';
-import { useCreateShareCandidate } from '@/features/admin/users/hooks/useShareuser';
+import { useToast } from "@/components/ui/Toast";
+import { useDebounce } from "@/features/admin/users/hooks/useDebounce";
+import { useCreateShareCandidate } from "@/features/admin/users/hooks/useShareuser";
 import {
   useDeleteUser,
   useInfiniteUsers,
   User,
   useUpdateUserRole,
-} from '@/features/admin/users/hooks/useUser';
+} from "@/features/admin/users/hooks/useUser";
+import { FiEye } from "react-icons/fi";
 
 export default function UsersTable() {
+  const nameColors = [
+    "from-pink-500/20 to-rose-500/20 text-rose-700 border-rose-200",
+    "from-purple-500/20 to-indigo-500/20 text-indigo-700 border-indigo-200",
+    "from-blue-500/20 to-cyan-500/20 text-cyan-700 border-cyan-200",
+    "from-green-500/20 to-emerald-500/20 text-emerald-700 border-emerald-200",
+    "from-yellow-500/20 to-orange-500/20 text-orange-700 border-orange-200",
+    "from-fuchsia-500/20 to-pink-500/20 text-pink-700 border-pink-200",
+  ];
 
-const nameColors = [
-  "from-pink-500/20 to-rose-500/20 text-rose-700 border-rose-200",
-  "from-purple-500/20 to-indigo-500/20 text-indigo-700 border-indigo-200",
-  "from-blue-500/20 to-cyan-500/20 text-cyan-700 border-cyan-200",
-  "from-green-500/20 to-emerald-500/20 text-emerald-700 border-emerald-200",
-  "from-yellow-500/20 to-orange-500/20 text-orange-700 border-orange-200",
-  "from-fuchsia-500/20 to-pink-500/20 text-pink-700 border-pink-200",
-];
+  const avatarColors = [
+    "bg-pink-100 text-pink-700",
+    "bg-purple-100 text-purple-700",
+    "bg-indigo-100 text-indigo-700",
+    "bg-blue-100 text-blue-700",
+    "bg-cyan-100 text-cyan-700",
+    "bg-emerald-100 text-emerald-700",
+    "bg-green-100 text-green-700",
+    "bg-yellow-100 text-yellow-700",
+    "bg-orange-100 text-orange-700",
+    "bg-rose-100 text-rose-700",
+    "bg-fuchsia-100 text-fuchsia-700",
+  ];
 
-const avatarColors = [
-  "bg-pink-100 text-pink-700",
-  "bg-purple-100 text-purple-700",
-  "bg-indigo-100 text-indigo-700",
-  "bg-blue-100 text-blue-700",
-  "bg-cyan-100 text-cyan-700",
-  "bg-emerald-100 text-emerald-700",
-  "bg-green-100 text-green-700",
-  "bg-yellow-100 text-yellow-700",
-  "bg-orange-100 text-orange-700",
-  "bg-rose-100 text-rose-700",
-  "bg-fuchsia-100 text-fuchsia-700",
-];
+  const getSafeIndex = (name = "A", length: number) => {
+    const safe = name || "A";
+    return safe.charCodeAt(0) % length;
+  };
 
-const getSafeIndex = (name = "A", length: number) => {
-  const safe = name || "A";
-  return safe.charCodeAt(0) % length;
-};
+  const getNameColor = (name = "A") =>
+    nameColors[getSafeIndex(name, nameColors.length)];
 
-const getNameColor = (name = "A") =>
-  nameColors[getSafeIndex(name, nameColors.length)];
-
-const getAvatarColor = (name = "A") =>
-  avatarColors[getSafeIndex(name, avatarColors.length)];
-
-
-
-
+  const getAvatarColor = (name = "A") =>
+    avatarColors[getSafeIndex(name, avatarColors.length)];
 
   /* ---------------- SEARCH ---------------- */
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 400);
-  const normalizedSearch = debouncedSearch.trim().replace(/\s+/g, ' ');
+  const normalizedSearch = debouncedSearch.trim().replace(/\s+/g, " ");
 
   /* ---------------- DATA ---------------- */
-  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteUsers(normalizedSearch);
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteUsers(normalizedSearch);
 
-  const users = useMemo(() => data?.pages.flatMap(p => p.data) ?? [], [data]);
+  const users = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
 
   /* ---------------- SELECTION ---------------- */
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const toggleUserSelection = (id: string) => {
-    setSelectedUserIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+    setSelectedUserIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
   };
 
   const toggleSelectAll = () => {
     if (selectedUserIds.length === users.length && users.length > 0) {
       setSelectedUserIds([]);
     } else {
-      setSelectedUserIds(users.map(user => user._id));
+      setSelectedUserIds(users.map((user) => user._id));
     }
   };
 
-  const isAllSelected = users.length > 0 && selectedUserIds.length === users.length;
-  const isSomeSelected = selectedUserIds.length > 0 && selectedUserIds.length < users.length;
+  const isAllSelected =
+    users.length > 0 && selectedUserIds.length === users.length;
+  const isSomeSelected =
+    selectedUserIds.length > 0 && selectedUserIds.length < users.length;
 
   /* ---------------- SHARE ---------------- */
   const { mutate: shareCandidates, isPending } = useCreateShareCandidate();
@@ -89,10 +107,10 @@ const getAvatarColor = (name = "A") =>
   /* ---------------- ACTION STATE ---------------- */
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState('');
+  const [selectedRole, setSelectedRole] = useState("");
   const [openDeleteMenu, setOpenDeleteMenu] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [link, setLink] = useState<string>('');
+  const [link, setLink] = useState<string>("");
   const [showLink, setShowLink] = useState(false);
   const [copied, setCopied] = useState(false);
   const loadMoreRef = useRef<HTMLTableRowElement | null>(null);
@@ -102,20 +120,19 @@ const getAvatarColor = (name = "A") =>
   const queryClient = useQueryClient();
   const { success, error } = useToast();
   const router = useRouter();
-  const [visibleEmails, setVisibleEmails] = useState<Record<string, boolean>>({});
-  const [visiblePhones, setVisiblePhones] = useState<Record<string, boolean>>({});
-
-
+  const [visibleEmails, setVisibleEmails] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [visiblePhones, setVisiblePhones] = useState<Record<string, boolean>>(
+    {},
+  );
 
   /* ---------------- URL SYNC ---------------- */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    searchQuery ? params.set('search', searchQuery) : params.delete('search');
-    window.history.replaceState(null, '', `?${params.toString()}`);
-    
+    searchQuery ? params.set("search", searchQuery) : params.delete("search");
+    window.history.replaceState(null, "", `?${params.toString()}`);
   }, [searchQuery]);
-
-  
 
   /* ---------------- INFINITE SCROLL ---------------- */
   useEffect(() => {
@@ -128,10 +145,8 @@ const getAvatarColor = (name = "A") =>
           fetchNextPage();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
-
-
 
     observer.observe(el);
     return () => observer.disconnect();
@@ -140,147 +155,138 @@ const getAvatarColor = (name = "A") =>
   /* ---------------- EDIT ROLE ---------------- */
   const openModal = (user: User) => {
     setSelectedUserId(user._id);
-    setSelectedRole(user.role?._id || '');
+    setSelectedRole(user.role?._id || "");
     setIsModalOpen(true);
   };
 
-const handleSaveRole = () => {
-  if (!selectedRole) {
-    error('Please select a role');
-    return;
-  }
-
-  setIsSaving(true);
-
-  // 🔥 BULK UPDATE
-  if (!selectedUserId) {
-    Promise.all(
-      selectedUserIds.map(id =>
-        updateUserRole.mutateAsync({ userId: id, role: selectedRole })
-      )
-    )
-      .then(() => {
-        success('Roles updated successfully');
-        setIsModalOpen(false);
-        setSelectedUserIds([]);
-        queryClient.invalidateQueries({ queryKey: ['users'] });
-      })
-      .catch(() => error('Bulk role update failed'))
-      .finally(() => setIsSaving(false));
-
-    return;
-  }
-
-  // ✅ SINGLE USER UPDATE
-  updateUserRole.mutate(
-    { userId: selectedUserId, role: selectedRole },
-    {
-      onSuccess: () => {
-        success('Role updated successfully');
-        setIsModalOpen(false);
-        queryClient.invalidateQueries({ queryKey: ['users'] });
-      },
-      onError: () => error('Failed to update role'),
-      onSettled: () => setIsSaving(false),
+  const handleSaveRole = () => {
+    if (!selectedRole) {
+      error("Please select a role");
+      return;
     }
-  );
-};
 
+    setIsSaving(true);
 
+    // 🔥 BULK UPDATE
+    if (!selectedUserId) {
+      Promise.all(
+        selectedUserIds.map((id) =>
+          updateUserRole.mutateAsync({ userId: id, role: selectedRole }),
+        ),
+      )
+        .then(() => {
+          success("Roles updated successfully");
+          setIsModalOpen(false);
+          setSelectedUserIds([]);
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+        })
+        .catch(() => error("Bulk role update failed"))
+        .finally(() => setIsSaving(false));
+
+      return;
+    }
+
+    // ✅ SINGLE USER UPDATE
+    updateUserRole.mutate(
+      { userId: selectedUserId, role: selectedRole },
+      {
+        onSuccess: () => {
+          success("Role updated successfully");
+          setIsModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+        },
+        onError: () => error("Failed to update role"),
+        onSettled: () => setIsSaving(false),
+      },
+    );
+  };
 
   const toggleEmailVisibility = (userId: string) => {
-  setVisibleEmails((prev) => ({
-    ...prev,
-    [userId]: !prev[userId],
-  }));
-  setTimeout(() => {
-    setVisiblePhones((prev) => ({ ...prev, [userId]: false }));
-  }, 10000);
-};
+    setVisibleEmails((prev) => ({
+      ...prev,
+      [userId]: !prev[userId],
+    }));
+    setTimeout(() => {
+      setVisiblePhones((prev) => ({ ...prev, [userId]: false }));
+    }, 10000);
+  };
 
+  const togglePhoneVisibility = (userId: string) => {
+    setVisiblePhones((prev) => ({
+      ...prev,
+      [userId]: !prev[userId],
+    }));
+    setTimeout(() => {
+      setVisiblePhones((prev) => ({ ...prev, [userId]: false }));
+    }, 10000);
+  };
 
-const togglePhoneVisibility = (userId: string) => {
-  setVisiblePhones((prev) => ({
-    ...prev,
-    [userId]: !prev[userId],
-  }));
-  setTimeout(() => {
-    setVisiblePhones((prev) => ({ ...prev, [userId]: false }));
-  }, 10000);
-};
+  const openBulkRoleModal = () => {
+    if (!selectedUserIds.length) {
+      error("Select at least one user");
+      return;
+    }
 
-const openBulkRoleModal = () => {
-  if (!selectedUserIds.length) {
-    error("Select at least one user");
-    return;
-  }
-
-  setSelectedUserId(null); // null means BULK MODE
-  setSelectedRole('');
-  setIsModalOpen(true);
-};
-
-
-
+    setSelectedUserId(null); // null means BULK MODE
+    setSelectedRole("");
+    setIsModalOpen(true);
+  };
 
   /* ---------------- DELETE ---------------- */
- const handleDeleteUser = (userId: string) => {
-  if (!confirm("Are you sure you want to delete this user?")) return;
+  const handleDeleteUser = (userId: string) => {
+    if (!confirm("Are you sure you want to delete this user?")) return;
 
-  deleteUser.mutate(
-    { userId },
-    {
-      onSuccess: () => {
-        setOpenDeleteMenu(null);
-        success("User deleted successfully");
-        queryClient.invalidateQueries({ queryKey: ["users"] });
+    deleteUser.mutate(
+      { userId },
+      {
+        onSuccess: () => {
+          setOpenDeleteMenu(null);
+          success("User deleted successfully");
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+        },
+        onError: () => error("Failed to delete user"),
       },
-      onError: () => error("Failed to delete user"),
-    }
-  );
-};
-
-const handleBulkDelete = async () => {
-  if (!selectedUserIds.length) {
-    error("Select at least one user");
-    return;
-  }
-
-  if (!confirm(`Delete ${selectedUserIds.length} users permanently?`)) return;
-
-  try {
-    await Promise.all(
-      selectedUserIds.map(id =>
-        deleteUser.mutateAsync({ userId: id })
-      )
     );
+  };
 
-    success("Users deleted successfully");
-    setSelectedUserIds([]);
-    queryClient.invalidateQueries({ queryKey: ["users"] });
-  } catch {
-    error("Bulk delete failed");
-  }
-};
+  const handleBulkDelete = async () => {
+    if (!selectedUserIds.length) {
+      error("Select at least one user");
+      return;
+    }
 
+    if (!confirm(`Delete ${selectedUserIds.length} users permanently?`)) return;
+
+    try {
+      await Promise.all(
+        selectedUserIds.map((id) => deleteUser.mutateAsync({ userId: id })),
+      );
+
+      success("Users deleted successfully");
+      setSelectedUserIds([]);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    } catch {
+      error("Bulk delete failed");
+    }
+  };
 
   /* ---------------- SHARE ---------------- */
   const handleViewSelected = () => {
     if (selectedUserIds.length === 0) {
-      error('Please select at least one user');
+      error("Please select at least one user");
       return;
     }
-    const payload = selectedUserIds.map(id => ({ candidateId: id }));
+    const payload = selectedUserIds.map((id) => ({ candidateId: id }));
     shareCandidates(payload, {
-      onSuccess: res => {
+      onSuccess: (res) => {
         setSelectedUserIds([]);
-        const shareId = res.shareLink.split('/').pop();
+        const shareId = res.shareLink.split("/").pop();
         setLink(
-          `https://hire.sheryians.com/selected-candidates?shareId=${shareId}`
+          `https://hire.sheryians.com/selected-candidates?shareId=${shareId}`,
         );
         setShowLink(true);
       },
-      onError: () => error('Failed to share candidates'),
+      onError: () => error("Failed to share candidates"),
     });
   };
   const handleCopy = async () => {
@@ -289,15 +295,16 @@ const handleBulkDelete = async () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy', err);
+      console.error("Failed to copy", err);
     }
   };
 
-
-
   /* ---------------- STATES ---------------- */
   if (isLoading) return <p className="py-10 text-center">Loading users…</p>;
-  if (isError) return <p className="py-10 text-center text-red-500">Failed to load users</p>;
+  if (isError)
+    return (
+      <p className="py-10 text-center text-red-500">Failed to load users</p>
+    );
 
   return (
     <>
@@ -309,7 +316,9 @@ const handleBulkDelete = async () => {
               {/* Link section */}
               <div className="flex flex-1 items-center gap-2 overflow-hidden">
                 <LinkIcon className="h-4 w-4 text-gray-400" />
-                <p className="truncate text-sm font-medium text-gray-700">{link}</p>
+                <p className="truncate text-sm font-medium text-gray-700">
+                  {link}
+                </p>
               </div>
 
               {/* Copy button */}
@@ -348,108 +357,123 @@ const handleBulkDelete = async () => {
             placeholder="Search by email…"
             className="w-full rounded-lg bg-white border border-slate-200 px-4 py-3 pl-12 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
 
       {/* TABLE */}
-<div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-  <table className="w-full border-collapse">
-    <thead>
-      <tr className="bg-slate-50 border-b">
-        <th className="pl-6 pr-4 py-5 w-12 text-left">
-          <input 
-            type="checkbox" 
-            checked={isAllSelected}
-            ref={(el) => {
-              if (el) el.indeterminate = isSomeSelected;
-            }}
-            onChange={toggleSelectAll}
-            className="h-4 w-4 accent-blue-600 cursor-pointer" 
-          />
-        </th>
-        <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">Name</th>
-        <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">Email</th>
-        <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">Phone</th>
-        <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">Role</th>
-      </tr>
-    </thead>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-slate-50 border-b">
+              <th className="pl-6 pr-4 py-5 w-12 text-left">
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = isSomeSelected;
+                  }}
+                  onChange={toggleSelectAll}
+                  className="h-4 w-4 accent-blue-600 cursor-pointer"
+                />
+              </th>
+              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
+                Name
+              </th>
+              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
+                Email
+              </th>
+              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
+                Phone
+              </th>
+              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
+                Role
+              </th>
+            </tr>
+          </thead>
 
-    <tbody className="divide-y">
-      {users.map(user => {
-        const isSelected = selectedUserIds.includes(user._id);
-        const initials =
-    `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase();
+          <tbody className="divide-y">
+            {users.map((user) => {
+              const isSelected = selectedUserIds.includes(user._id);
+              const initials =
+                `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase();
 
-  const fullName = `${user.firstName || ''}${user.lastName || ''}`;
+              const fullName = `${user.firstName || ""}${user.lastName || ""}`;
 
-        return (
-          <tr
-            key={user._id}
-            className={`group transition-colors ${
-              isSelected ? 'bg-blue-50/60' : 'hover:bg-slate-50'
-            }`}
-          >
-            {/* CHECKBOX */}
-            <td className="pl-6 pr-4 py-5">
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={() => toggleUserSelection(user._id)}
-                className="h-4 w-4 accent-blue-600 cursor-pointer"
-              />
-            </td>
-
-            {/* NAME */}
-            <td className="px-4 py-5">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm ${getAvatarColor(fullName)}`}>
-                  {initials}
-                </div>
-                <div className="inline-flex items-center rounded-xl border bg-gradient-to-r px-3 py-1 text-sm font-semibold">
-                  {user.firstName} {user.lastName}
-                </div>
-              </div>
-            </td>
-
-            {/* EMAIL */}
-            <td className="px-4 py-5">
-              {visibleEmails[user._id] ? (
-                <span className="text-sm text-slate-700">{user.email}</span>
-              ) : (
-                <button
-                  onClick={() => toggleEmailVisibility(user._id)}
-                  className="text-blue-600 text-xs font-semibold hover:text-blue-500 uppercase transition"
+              return (
+                <tr
+                  key={user._id}
+                  className={`group transition-colors ${
+                    isSelected ? "bg-blue-50/60" : "hover:bg-slate-50"
+                  }`}
                 >
-                 <span>👁</span> Click to view
-                </button>
-              )}
-            </td>
+                  {/* CHECKBOX */}
+                  <td className="pl-6 pr-4 py-5">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleUserSelection(user._id)}
+                      className="h-4 w-4 accent-blue-600 cursor-pointer"
+                    />
+                  </td>
 
-            {/* PHONE */}
-            <td className="px-4 py-5">
-              {visiblePhones[user._id] ? (
-                <span className="text-sm text-slate-700 uppercase">{user.phoneNumber}</span>
-              ) : (
-                <button
-                  onClick={() => togglePhoneVisibility(user._id)}
-                  className="text-blue-600 text-xs uppercase font-semibold hover:text-blue-500 transition"
-                >
-                <span>👁</span> Click to view
-                </button>
-              )}
-            </td>
+                  {/* NAME */}
+                  <td className="px-4 py-5">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm ${getAvatarColor(fullName)}`}
+                      >
+                        {initials}
+                      </div>
+                      <div className="inline-flex items-center rounded-xl border bg-gradient-to-r px-3 py-1 text-sm font-semibold">
+                        {user.firstName} {user.lastName}
+                      </div>
+                    </div>
+                  </td>
 
-            {/* ROLE */}
-            <td className="px-4 py-5">
-              <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">
-                {user.role?.name || 'no-role'}
-              </span>
-            </td>
+                  {/* EMAIL */}
+                  <td className="px-4 py-5">
+                    {visibleEmails[user._id] ? (
+                      <span className="text-sm text-slate-700">
+                        {user.email}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => toggleEmailVisibility(user._id)}
+                        className="text-blue-600 text-xs font-semibold hover:text-blue-500 uppercase transition flex items-center gap-2"
+                      >
+                        <FiEye />
+                        <span>Click to view</span>
+                      </button>
+                    )}
+                  </td>
 
-            {/* ACTIONS */}
-            {/* <td className="relative px-4 py-5 text-right">
+                  {/* PHONE */}
+                  <td className="px-4 py-5">
+                    {visiblePhones[user._id] ? (
+                      <span className="text-sm text-slate-700 uppercase">
+                        {user.phoneNumber}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => togglePhoneVisibility(user._id)}
+                        className="text-blue-600 text-xs uppercase font-semibold hover:text-blue-500 transition flex items-center gap-2"
+                      >
+                        <FiEye />
+                        <span>Click to view</span>
+                      </button>
+                    )}
+                  </td>
+                  {/* ROLE */}
+                  <td className="px-4 py-5">
+                    <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                      {user.role?.name || "no-role"}
+                    </span>
+                  </td>
+
+                  {/* ACTIONS */}
+                  {/* <td className="relative px-4 py-5 text-right">
               <button
                 onClick={() =>
                   setOpenDeleteMenu(prev => (prev === user._id ? null : user._id))
@@ -479,86 +503,95 @@ const handleBulkDelete = async () => {
                 </div>
               )}
             </td> */}
-          </tr>
-        );
-      })}
+                </tr>
+              );
+            })}
 
-      <tr ref={loadMoreRef}>
-        <td colSpan={5} />
-      </tr>
+            <tr ref={loadMoreRef}>
+              <td colSpan={5} />
+            </tr>
 
-      {isFetchingNextPage && (
-        <tr>
-          <td colSpan={5} className="py-6 text-center text-slate-400">
-            Loading more users…
-          </td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-</div>
+            {isFetchingNextPage && (
+              <tr>
+                <td colSpan={5} className="py-6 text-center text-slate-400">
+                  Loading more users…
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-{/* FLOATING ACTION BAR */}
-{selectedUserIds.length > 0 && (
-  <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
-    <div className="bg-white border border-slate-200 shadow-2xl px-8 py-4 rounded-full flex items-center gap-10">
-      {/* Selected count */}
-      <div className="flex items-center gap-3">
-        <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
-          {selectedUserIds.length}
+      {/* FLOATING ACTION BAR */}
+      {selectedUserIds.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+          <div className="bg-white border border-slate-200 shadow-2xl px-8 py-4 rounded-full flex items-center gap-10">
+            {/* Selected count */}
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                {selectedUserIds.length}
+              </div>
+              <span className="text-sm font-semibold text-slate-700">
+                Selected
+              </span>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-8">
+              <button
+                onClick={handleViewSelected}
+                className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
+                title="Share selected candidates"
+              >
+                <Upload className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide">
+                  Share
+                </span>
+              </button>
+
+              <button
+                onClick={openBulkRoleModal}
+                className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
+                title="Edit role for selected"
+              >
+                <ArrowRightLeft className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide">
+                  Edit Role
+                </span>
+              </button>
+
+              <button
+                className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
+                title="Blast email"
+              >
+                <Mail className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide">
+                  Blast
+                </span>
+              </button>
+
+              <button
+                onClick={handleBulkDelete}
+                className="flex flex-col items-center gap-1 text-red-500 hover:text-red-600 transition"
+                title="Delete selected"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide">
+                  Delete
+                </span>
+              </button>
+            </div>
+
+            {/* Apply actions button */}
+            <button
+              onClick={handleViewSelected}
+              className="ml-6 bg-blue-600 text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-full shadow-lg shadow-blue-600/30 hover:shadow-blue-600/40 hover:bg-blue-700 active:scale-95 transition-all whitespace-nowrap"
+            >
+              Apply Actions
+            </button>
+          </div>
         </div>
-        <span className="text-sm font-semibold text-slate-700">Selected</span>
-      </div>
-
-      {/* Action buttons */}
-      <div className="flex items-center gap-8">
-        <button
-          onClick={handleViewSelected}
-          className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
-          title="Share selected candidates"
-        >
-          <Upload className="h-4 w-4" />
-          <span className="text-xs font-semibold uppercase tracking-wide">Share</span>
-        </button>
-
-        <button
-          onClick={openBulkRoleModal}
-          className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
-          title="Edit role for selected"
-        >
-          <ArrowRightLeft className="h-4 w-4" />
-          <span className="text-xs font-semibold uppercase tracking-wide">Edit Role</span>
-        </button>
-
-        <button
-          className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
-          title="Blast email"
-        >
-          <Mail className="h-4 w-4" />
-          <span className="text-xs font-semibold uppercase tracking-wide">Blast</span>
-        </button>
-
-        <button
-          onClick={handleBulkDelete}
-          className="flex flex-col items-center gap-1 text-red-500 hover:text-red-600 transition"
-          title="Delete selected"
-        >
-          <Trash2 className="h-4 w-4" />
-          <span className="text-xs font-semibold uppercase tracking-wide">Delete</span>
-        </button>
-      </div>
-
-      {/* Apply actions button */}
-      <button
-        onClick={handleViewSelected}
-        className="ml-6 bg-blue-600 text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-full shadow-lg shadow-blue-600/30 hover:shadow-blue-600/40 hover:bg-blue-700 active:scale-95 transition-all whitespace-nowrap"
-      >
-        Apply Actions
-      </button>
-    </div>
-  </div>
-)}
-
+      )}
 
       {/* ROLE MODAL */}
       {isModalOpen && (
@@ -568,7 +601,7 @@ const handleBulkDelete = async () => {
 
             <select
               value={selectedRole}
-              onChange={e => setSelectedRole(e.target.value)}
+              onChange={(e) => setSelectedRole(e.target.value)}
               className="w-full rounded-lg border px-3 py-2"
             >
               <option value="">Select role</option>
@@ -584,15 +617,16 @@ const handleBulkDelete = async () => {
                 disabled={isSaving}
                 className="rounded-lg bg-blue-600 px-4 py-2 text-white"
               >
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Save"
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
-
-      
     </>
   );
 }
-
