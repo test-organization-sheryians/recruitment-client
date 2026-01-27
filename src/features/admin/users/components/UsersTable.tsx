@@ -16,6 +16,45 @@ import {
 } from '@/features/admin/users/hooks/useUser';
 
 export default function UsersTable() {
+
+const nameColors = [
+  "from-pink-500/20 to-rose-500/20 text-rose-700 border-rose-200",
+  "from-purple-500/20 to-indigo-500/20 text-indigo-700 border-indigo-200",
+  "from-blue-500/20 to-cyan-500/20 text-cyan-700 border-cyan-200",
+  "from-green-500/20 to-emerald-500/20 text-emerald-700 border-emerald-200",
+  "from-yellow-500/20 to-orange-500/20 text-orange-700 border-orange-200",
+  "from-fuchsia-500/20 to-pink-500/20 text-pink-700 border-pink-200",
+];
+
+const avatarColors = [
+  "bg-pink-100 text-pink-700",
+  "bg-purple-100 text-purple-700",
+  "bg-indigo-100 text-indigo-700",
+  "bg-blue-100 text-blue-700",
+  "bg-cyan-100 text-cyan-700",
+  "bg-emerald-100 text-emerald-700",
+  "bg-green-100 text-green-700",
+  "bg-yellow-100 text-yellow-700",
+  "bg-orange-100 text-orange-700",
+  "bg-rose-100 text-rose-700",
+  "bg-fuchsia-100 text-fuchsia-700",
+];
+
+const getSafeIndex = (name = "A", length: number) => {
+  const safe = name || "A";
+  return safe.charCodeAt(0) % length;
+};
+
+const getNameColor = (name = "A") =>
+  nameColors[getSafeIndex(name, nameColors.length)];
+
+const getAvatarColor = (name = "A") =>
+  avatarColors[getSafeIndex(name, avatarColors.length)];
+
+
+
+
+
   /* ---------------- SEARCH ---------------- */
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -52,13 +91,20 @@ export default function UsersTable() {
   const queryClient = useQueryClient();
   const { success, error } = useToast();
   const router = useRouter();
+  const [visibleEmails, setVisibleEmails] = useState<Record<string, boolean>>({});
+  const [visiblePhones, setVisiblePhones] = useState<Record<string, boolean>>({});
+
+
 
   /* ---------------- URL SYNC ---------------- */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     searchQuery ? params.set('search', searchQuery) : params.delete('search');
     window.history.replaceState(null, '', `?${params.toString()}`);
+    
   }, [searchQuery]);
+
+  
 
   /* ---------------- INFINITE SCROLL ---------------- */
   useEffect(() => {
@@ -74,6 +120,8 @@ export default function UsersTable() {
       { threshold: 0.1 }
     );
 
+
+
     observer.observe(el);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
@@ -85,44 +133,125 @@ export default function UsersTable() {
     setIsModalOpen(true);
   };
 
-  const handleSaveRole = () => {
-    if (!selectedUserId || !selectedRole) {
-      error('Please select a role');
-      return;
-    }
+const handleSaveRole = () => {
+  if (!selectedRole) {
+    error('Please select a role');
+    return;
+  }
 
-    setIsSaving(true);
-    updateUserRole.mutate(
-      { userId: selectedUserId, role: selectedRole },
-      {
-        onSuccess: () => {
-          setIsSaving(false);
-          setIsModalOpen(false);
-          success('Role updated successfully');
-          queryClient.invalidateQueries({ queryKey: ['users'] });
-        },
-        onError: () => {
-          setIsSaving(false);
-          error('Failed to update role');
-        },
-      }
-    );
-  };
+  setIsSaving(true);
+
+  // 🔥 BULK UPDATE
+  if (!selectedUserId) {
+    Promise.all(
+      selectedUserIds.map(id =>
+        updateUserRole.mutateAsync({ userId: id, role: selectedRole })
+      )
+    )
+      .then(() => {
+        success('Roles updated successfully');
+        setIsModalOpen(false);
+        setSelectedUserIds([]);
+        queryClient.invalidateQueries({ queryKey: ['users'] });
+      })
+      .catch(() => error('Bulk role update failed'))
+      .finally(() => setIsSaving(false));
+
+    return;
+  }
+
+  // ✅ SINGLE USER UPDATE
+  updateUserRole.mutate(
+    { userId: selectedUserId, role: selectedRole },
+    {
+      onSuccess: () => {
+        success('Role updated successfully');
+        setIsModalOpen(false);
+        queryClient.invalidateQueries({ queryKey: ['users'] });
+      },
+      onError: () => error('Failed to update role'),
+      onSettled: () => setIsSaving(false),
+    }
+  );
+};
+
+
+
+  const toggleEmailVisibility = (userId: string) => {
+  setVisibleEmails((prev) => ({
+    ...prev,
+    [userId]: !prev[userId],
+  }));
+  setTimeout(() => {
+    setVisiblePhones((prev) => ({ ...prev, [userId]: false }));
+  }, 10000);
+};
+
+
+const togglePhoneVisibility = (userId: string) => {
+  setVisiblePhones((prev) => ({
+    ...prev,
+    [userId]: !prev[userId],
+  }));
+  setTimeout(() => {
+    setVisiblePhones((prev) => ({ ...prev, [userId]: false }));
+  }, 10000);
+};
+
+const openBulkRoleModal = () => {
+  if (!selectedUserIds.length) {
+    error("Select at least one user");
+    return;
+  }
+
+  setSelectedUserId(null); // null means BULK MODE
+  setSelectedRole('');
+  setIsModalOpen(true);
+};
+
+
+
 
   /* ---------------- DELETE ---------------- */
-  const handleDeleteUser = (userId: string) => {
-    deleteUser.mutate(
-      { userId },
-      {
-        onSuccess: () => {
-          setOpenDeleteMenu(null);
-          success('User deleted successfully');
-          queryClient.invalidateQueries({ queryKey: ['users'] });
-        },
-        onError: () => error('Failed to delete user'),
-      }
+ const handleDeleteUser = (userId: string) => {
+  if (!confirm("Are you sure you want to delete this user?")) return;
+
+  deleteUser.mutate(
+    { userId },
+    {
+      onSuccess: () => {
+        setOpenDeleteMenu(null);
+        success("User deleted successfully");
+        queryClient.invalidateQueries({ queryKey: ["users"] });
+      },
+      onError: () => error("Failed to delete user"),
+    }
+  );
+};
+
+const handleBulkDelete = async () => {
+  if (!selectedUserIds.length) {
+    error("Select at least one user");
+    return;
+  }
+
+  if (!confirm(`Delete ${selectedUserIds.length} users permanently?`)) return;
+
+  try {
+    await Promise.all(
+      selectedUserIds.map(id =>
+        deleteUser.mutateAsync({ userId: id })
+      )
     );
-  };
+
+    success("Users deleted successfully");
+    setSelectedUserIds([]);
+    queryClient.invalidateQueries({ queryKey: ["users"] });
+  } catch {
+    error("Bulk delete failed");
+  }
+};
+
 
   /* ---------------- SHARE ---------------- */
   const handleViewSelected = () => {
@@ -152,6 +281,9 @@ export default function UsersTable() {
       console.error('Failed to copy', err);
     }
   };
+
+
+
   /* ---------------- STATES ---------------- */
   if (isLoading) return <p className="py-10 text-center">Loading users…</p>;
   if (isError) return <p className="py-10 text-center text-red-500">Failed to load users</p>;
@@ -253,83 +385,189 @@ export default function UsersTable() {
       </div>
 
       {/* TABLE */}
-      <div className="overflow-hidden rounded-xl border bg-white">
-        <table className="w-full">
-          <thead className="sticky top-0 bg-gray-100 text-sm">
-            <tr>
-              <th className="px-4 py-3 text-center">Select</th>
-              <th className="px-4 py-3 text-left">Name</th>
-              <th className="px-4 py-3 text-left">Email</th>
-              <th className="px-4 py-3 text-left">Phone</th>
-              <th className="px-4 py-3 text-left">Role</th>
-              <th className="px-4 py-3 text-center">Actions</th>
-            </tr>
-          </thead>
+<div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+  <table className="w-full border-collapse">
+    <thead>
+      <tr className="bg-slate-50 border-b">
+        <th className="pl-6 pr-4 py-5 w-12 text-left">
+          <input type="checkbox" className="h-4 w-4 accent-blue-600" />
+        </th>
+        <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">Name</th>
+        <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">Email</th>
+        <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">Phone</th>
+        <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">Role</th>
+      </tr>
+    </thead>
 
-          <tbody>
-            {users.map(user => (
-              <tr key={user._id} className="border-t hover:bg-gray-50">
-                <td className="px-4 py-3 text-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedUserIds.includes(user._id)}
-                    onChange={() => toggleUserSelection(user._id)}
-                    className="h-4 w-4 accent-blue-600"
-                  />
-                </td>
+    <tbody className="divide-y">
+      {users.map(user => {
+        const isSelected = selectedUserIds.includes(user._id);
+        const initials =
+    `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase();
 
-                <td className="px-4 py-3 font-medium">
+  const fullName = `${user.firstName || ''}${user.lastName || ''}`;
+
+        return (
+          <tr
+            key={user._id}
+            className={`group transition-colors ${
+              isSelected ? 'bg-blue-50/60' : 'hover:bg-slate-50'
+            }`}
+          >
+            {/* CHECKBOX */}
+            <td className="pl-6 pr-4 py-5">
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={() => toggleUserSelection(user._id)}
+                className="h-4 w-4 accent-blue-600 cursor-pointer"
+              />
+            </td>
+
+            {/* NAME */}
+            <td className="px-4 py-5">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm ${getAvatarColor(fullName)}`}>
+                  {initials}
+                </div>
+                <div className="inline-flex items-center rounded-xl border bg-gradient-to-r px-3 py-1 text-sm font-semibold">
                   {user.firstName} {user.lastName}
-                </td>
-                <td className="px-4 py-3">{user.email}</td>
-                <td className="px-4 py-3">{user.phoneNumber || 'N/A'}</td>
-                <td className="px-4 py-3">{user.role?.name || 'No Role'}</td>
+                </div>
+              </div>
+            </td>
 
-                <td className="relative px-4 py-3 text-center">
+            {/* EMAIL */}
+            <td className="px-4 py-5">
+              {visibleEmails[user._id] ? (
+                <span className="text-sm text-slate-700">{user.email}</span>
+              ) : (
+                <button
+                  onClick={() => toggleEmailVisibility(user._id)}
+                  className="text-blue-600 text-xs font-semibold hover:text-blue-500 uppercase transition"
+                >
+                  Click to view
+                </button>
+              )}
+            </td>
+
+            {/* PHONE */}
+            <td className="px-4 py-5">
+              {visiblePhones[user._id] ? (
+                <span className="text-sm text-slate-700 uppercase">{user.phoneNumber}</span>
+              ) : (
+                <button
+                  onClick={() => togglePhoneVisibility(user._id)}
+                  className="text-blue-600 text-xs uppercase font-semibold hover:text-blue-500 transition"
+                >
+                  Click to view
+                </button>
+              )}
+            </td>
+
+            {/* ROLE */}
+            <td className="px-4 py-5">
+              <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                {user.role?.name || 'no-role'}
+              </span>
+            </td>
+
+            {/* ACTIONS */}
+            {/* <td className="relative px-4 py-5 text-right">
+              <button
+                onClick={() =>
+                  setOpenDeleteMenu(prev => (prev === user._id ? null : user._id))
+                }
+                className="rounded-lg p-2 hover:bg-slate-100"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </button>
+
+              {openDeleteMenu === user._id && (
+                <div className="absolute right-6 top-12 z-20 w-40 rounded-xl border bg-white shadow-lg overflow-hidden">
                   <button
-                    onClick={() => setOpenDeleteMenu(prev => (prev === user._id ? null : user._id))}
-                    className="rounded-md p-2 hover:bg-gray-100"
+                    onClick={() => openModal(user)}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-slate-50"
                   >
-                    <MoreVertical className="h-4 w-4" />
+                    <Pencil className="h-4 w-4" />
+                    Edit Role
                   </button>
 
-                  {openDeleteMenu === user._id && (
-                    <div className="absolute right-6 top-10 z-20 w-36 rounded-lg border bg-white shadow-lg">
-                      <button
-                        onClick={() => openModal(user)}
-                        className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
-                      >
-                        <Pencil className="h-4 w-4" />
-                        Edit
-                      </button>
+                  <button
+                    onClick={() => handleDeleteUser(user._id)}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </button>
+                </div>
+              )}
+            </td> */}
+          </tr>
+        );
+      })}
 
-                      <button
-                        onClick={() => handleDeleteUser(user._id)}
-                        className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
+      <tr ref={loadMoreRef}>
+        <td colSpan={5} />
+      </tr>
 
-            <tr ref={loadMoreRef}>
-              <td colSpan={6} />
-            </tr>
+      {isFetchingNextPage && (
+        <tr>
+          <td colSpan={5} className="py-6 text-center text-slate-400">
+            Loading more users…
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
 
-            {isFetchingNextPage && (
-              <tr>
-                <td colSpan={6} className="py-6 text-center text-gray-500">
-                  Loading more users…
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+{/* FLOATING ACTION BAR */}
+{selectedUserIds.length > 0 && (
+  <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+    <div className="bg-white/90 backdrop-blur-xl border shadow-xl px-6 py-3 rounded-full flex items-center gap-4">
+
+      <div className="flex items-center gap-3 pr-4 border-r">
+        <div className="w-6 h-6 rounded bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold">
+          {selectedUserIds.length}
+        </div>
+        <span className="text-xs font-semibold text-slate-600">
+          Selected
+        </span>
       </div>
+
+      <button
+        onClick={handleViewSelected}
+        className="text-xs font-bold uppercase tracking-wider text-blue-600 hover:text-blue-500"
+      >
+        Share
+      </button>
+
+     <button
+  onClick={openBulkRoleModal}
+  className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-800"
+>
+  Edit Role
+</button>
+
+
+     <button
+  onClick={handleBulkDelete}
+  className="text-xs font-bold uppercase tracking-wider text-red-500 hover:text-red-600"
+>
+  Delete
+</button>
+
+
+      <button
+        onClick={handleViewSelected}
+        className="bg-blue-600 text-white text-xs font-black uppercase tracking-widest px-6 py-3 rounded-full shadow-lg shadow-blue-600/30 hover:shadow-blue-600/40 active:scale-95 transition-all"
+      >
+        Apply Actions
+      </button>
+    </div>
+  </div>
+)}
+
 
       {/* ROLE MODAL */}
       {isModalOpen && (
@@ -361,6 +599,8 @@ export default function UsersTable() {
           </div>
         </div>
       )}
+
+      
     </>
   );
 }
