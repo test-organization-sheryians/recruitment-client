@@ -170,7 +170,7 @@ const ScreeningQuestions: React.FC = () => {
       </div>
 
       {/* ================= DRAWER ================= */}
-      <SwipeableDrawer
+      {/* <SwipeableDrawer
         open={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         onAdd={(q) => {
@@ -182,7 +182,7 @@ const ScreeningQuestions: React.FC = () => {
           }
           setQuestions((prev) => [...prev, newQuestion])
         }}
-      />
+      /> */}
     </div>
   )
 }
