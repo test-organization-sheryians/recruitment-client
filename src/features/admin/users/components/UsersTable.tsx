@@ -303,17 +303,6 @@ const handleBulkDelete = async () => {
     <>
       {/* HEADER */}
       <div className="mb-6 flex items-center justify-between">
-        <div className="relative w-full max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search by email…"
-            className="w-full rounded-lg bg-white border border-slate-200 px-4 py-3 pl-12 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-        </div>
-
         <div className="space-y-3">
           {showLink && (
             <div className="relative flex max-w-xl items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm">
@@ -350,6 +339,17 @@ const handleBulkDelete = async () => {
               </button>
             </div>
           )}
+        </div>
+
+        <div className="relative w-full max-w-md ml-auto">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by email…"
+            className="w-full rounded-lg bg-white border border-slate-200 px-4 py-3 pl-12 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
         </div>
       </div>
 
