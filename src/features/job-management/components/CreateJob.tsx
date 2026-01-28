@@ -115,18 +115,18 @@ export default function CreateJob() {
     },
   });
 
-const pincodeStatus = usePincodeLookup(
-  form.location.pincode,
-  (location) => {
-    setForm((prev) => ({
-      ...prev,
-      location: {
-        ...prev.location,
-        ...location,
-      },
-    }));
-  }
-);
+  const pincodeStatus = usePincodeLookup(
+    form.location.pincode,
+    (location) => {
+      setForm((prev) => ({
+        ...prev,
+        location: {
+          ...prev.location,
+          ...location,
+        },
+      }));
+    }
+  );
 
 
   const submitJob = () => {
@@ -167,234 +167,233 @@ const pincodeStatus = usePincodeLookup(
           </div>
 
           {/* ================= Form Card ================= */}
-       <section className="bg-white dark:bg-[#1a1e2e] rounded-xl border border-[#dbdde6] dark:border-gray-800 p-6 md:p-8 shadow-sm">
-  
-  {/* Header */}
-  <div className="flex items-center gap-3 mb-6">
-    <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">
-      <Briefcase size={14} className="text-blue-600" />
-    </div>
-    <h3 className="text-lg font-bold">Job Details</h3>
-  </div>
+          <section className="bg-white dark:bg-[#1a1e2e] rounded-xl border border-[#dbdde6] dark:border-gray-800 p-6 md:p-8 shadow-sm">
 
-  {/* FORM CONTENT WRAPPER */}
-  <div className="flex flex-col gap-5">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">
+                <Briefcase size={14} className="text-blue-600" />
+              </div>
+              <h3 className="text-lg font-bold">Job Details</h3>
+            </div>
 
-    <Input
-      label="Job Title"
-      value={form.title}
-      onChange={(v) => setForm({ ...form, title: v })}
-    />
+            {/* FORM CONTENT WRAPPER */}
+            <div className="flex flex-col gap-5">
 
-    <TwoCol>
-      <Select
-        label="Job Type"
-        value={form.jobType}
-        options={[
-          { _id: "Remote", name: "Remote" },
-          { _id: "Full-Time", name: "Full-Time" },
-          { _id: "Part-Time", name: "Part-Time" },
-          { _id: "Hybrid", name: "Hybrid" },
-        ]}
-        onChange={(v) => setForm({ ...form, jobType: v })}
-      />
+              <Input
+                label="Job Title"
+                value={form.title}
+                onChange={(v) => setForm({ ...form, title: v })}
+              />
 
-      <Input
-        label="Experience Level"
-        value={form.requiredExperience}
-        onChange={(v) => setForm({ ...form, requiredExperience: v })}
-      />
-    </TwoCol>
+              <TwoCol>
+                <Select
+                  label="Job Type"
+                  value={form.jobType}
+                  options={[
+                    { _id: "Remote", name: "Remote" },
+                    { _id: "Full-Time", name: "Full-Time" },
+                    { _id: "Part-Time", name: "Part-Time" },
+                    { _id: "Hybrid", name: "Hybrid" },
+                  ]}
+                  onChange={(v) => setForm({ ...form, jobType: v })}
+                />
 
-  <TwoCol>
-  <Input
-    label="Application Deadline"
-    type="date"
-    value={form.expiry}
-    onChange={(v) => setForm({ ...form, expiry: v })}
-  />
+                <Input
+                  label="Experience Level"
+                  value={form.requiredExperience}
+                  onChange={(v) => setForm({ ...form, requiredExperience: v })}
+                />
+              </TwoCol>
 
-  <div>
-    <Input
-      label="Pincode"
-      value={form.location.pincode}
-      onChange={(v) =>
-        setForm({
-          ...form,
-          location: { ...form.location, pincode: v },
-        })
-      }
-    />
+              <TwoCol>
+                <Input
+                  label="Application Deadline"
+                  type="date"
+                  value={form.expiry}
+                  onChange={(v) => setForm({ ...form, expiry: v })}
+                />
 
-    {pincodeStatus.message && (
-      <p
-        className={`text-xs mt-1 ${
-          pincodeStatus.type === "error"
-            ? "text-red-600"
-            : "text-blue-600"
-        }`}
-      >
-        {pincodeStatus.loading && (
-          <span className="inline-block w-3 h-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin align-middle" />
-        )}
-        {pincodeStatus.message}
-      </p>
-    )}
-  </div>
-</TwoCol>
+                <div>
+                  <Input
+                    label="Pincode"
+                    value={form.location.pincode}
+                    onChange={(v) =>
+                      setForm({
+                        ...form,
+                        location: { ...form.location, pincode: v },
+                      })
+                    }
+                  />
 
-
-    <TwoCol>
+                  {pincodeStatus.message && (
+                    <p
+                      className={`text-xs mt-1 ${pincodeStatus.type === "error"
+                          ? "text-red-600"
+                          : "text-blue-600"
+                        }`}
+                    >
+                      {pincodeStatus.loading && (
+                        <span className="inline-block w-3 h-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin align-middle" />
+                      )}
+                      {pincodeStatus.message}
+                    </p>
+                  )}
+                </div>
+              </TwoCol>
 
 
+              <TwoCol>
 
-         <Input
-        label="City"
-        value={form.location.city}
-        onChange={(v) =>
-          setForm({
-            ...form,
-            location: { ...form.location, city: v },
-          })
-        }
-      />
-      <Input
-        label="State"
-        value={form.location.state}
-        onChange={(v) =>
-          setForm({
-            ...form,
-            location: { ...form.location, state: v },
-          })
-        }
-      />
 
-   
 
-     
-    </TwoCol>
+                <Input
+                  label="City"
+                  value={form.location.city}
+                  onChange={(v) =>
+                    setForm({
+                      ...form,
+                      location: { ...form.location, city: v },
+                    })
+                  }
+                />
+                <Input
+                  label="State"
+                  value={form.location.state}
+                  onChange={(v) =>
+                    setForm({
+                      ...form,
+                      location: { ...form.location, state: v },
+                    })
+                  }
+                />
 
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Input
-        label="Education"
-        value={form.education}
-        onChange={(v) =>
-          setForm({
-            ...form,
-            education: v,
-          })
-        }
-      />
 
-      <Input
-        label="Min Salary (INR)"
-        type="number"
-        value={form.salary.min.toString()}
-        onChange={(v) =>
-          setForm({
-            ...form,
-            salary: {
-              ...form.salary,
-              min: Number(v),
-            },
-          })
-        }
-      />
 
-      <Input
-        label="Max Salary (INR)"
-        type="number"
-        value={form.salary.max.toString()}
-        onChange={(v) =>
-          setForm({
-            ...form,
-            salary: {
-              ...form.salary,
-              max: Number(v),
-            },
-          })
-        }
-      />
-    </div>
 
-    {/* Skills */}
-    <div className="flex flex-col gap-2">
-      <label className="text-sm font-bold">Required Skills</label>
+              </TwoCol>
 
-      <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 items-center">
-        {form.skills.map((s) => (
-          <span
-            key={s._id}
-            className="flex items-center gap-1 px-3 py-1 bg-white dark:bg-gray-700 border rounded-full text-xs font-semibold cursor-pointer"
-            onClick={() =>
-              setForm({
-                ...form,
-                skills: form.skills.filter((x) => x._id !== s._id),
-              })
-            }
-          >
-            {s.name}
-            <span className="text-gray-400 hover:text-red-500">✕</span>
-          </span>
-        ))}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Input
+                  label="Education"
+                  value={form.education}
+                  onChange={(v) =>
+                    setForm({
+                      ...form,
+                      education: v,
+                    })
+                  }
+                />
 
-        <input
-          value={skillQuery}
-          onChange={(e) => setSkillQuery(e.target.value)}
-          placeholder="Type to search skills..."
-          className="flex-grow min-w-[140px] bg-transparent outline-none text-sm"
-        />
-      </div>
+                <Input
+                  label="Min Salary (INR)"
+                  type="number"
+                  value={form.salary.min.toString()}
+                  onChange={(v) =>
+                    setForm({
+                      ...form,
+                      salary: {
+                        ...form.salary,
+                        min: Number(v),
+                      },
+                    })
+                  }
+                />
 
-      {skillQuery && (
-        <div className="flex flex-wrap gap-2">
-          {skills
-            .filter(
-              (s) =>
-                s.name.toLowerCase().includes(skillQuery.toLowerCase()) &&
-                !form.skills.some((x) => x._id === s._id)
-            )
-            .slice(0, 8)
-            .map((s) => (
-              <button
-                key={s._id}
-                onClick={() => {
-                  setForm({ ...form, skills: [...form.skills, s] });
-                  setSkillQuery("");
-                }}
-                className="px-3 py-1 text-xs rounded-full border border-dashed border-primary text-primary hover:bg-primary/10 transition"
-              >
-                + {s.name}
-              </button>
-            ))}
-        </div>
-      )}
-    </div>
+                <Input
+                  label="Max Salary (INR)"
+                  type="number"
+                  value={form.salary.max.toString()}
+                  onChange={(v) =>
+                    setForm({
+                      ...form,
+                      salary: {
+                        ...form.salary,
+                        max: Number(v),
+                      },
+                    })
+                  }
+                />
+              </div>
 
-    <Select
-      label="Job Category"
-      value={form.category}
-      options={categories}
-      onChange={(v) =>
-        setForm({
-          ...form,
-          category: v,
-        })
-      }
-    />
+              {/* Skills */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-bold">Required Skills</label>
 
-    <JobDescriptionEditor
-      value={form.description}
-      onChange={(html) =>
-        setForm({
-          ...form,
-          description: html,
-        })
-      }
-    />
+                <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 items-center">
+                  {form.skills.map((s) => (
+                    <span
+                      key={s._id}
+                      className="flex items-center gap-1 px-3 py-1 bg-white dark:bg-gray-700 border rounded-full text-xs font-semibold cursor-pointer"
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          skills: form.skills.filter((x) => x._id !== s._id),
+                        })
+                      }
+                    >
+                      {s.name}
+                      <span className="text-gray-400 hover:text-red-500">✕</span>
+                    </span>
+                  ))}
 
-  </div>
-</section>
+                  <input
+                    value={skillQuery}
+                    onChange={(e) => setSkillQuery(e.target.value)}
+                    placeholder="Type to search skills..."
+                    className="flex-grow min-w-[140px] bg-transparent outline-none text-sm"
+                  />
+                </div>
+
+                {skillQuery && (
+                  <div className="flex flex-wrap gap-2">
+                    {skills
+                      .filter(
+                        (s) =>
+                          s.name.toLowerCase().includes(skillQuery.toLowerCase()) &&
+                          !form.skills.some((x) => x._id === s._id)
+                      )
+                      .slice(0, 8)
+                      .map((s) => (
+                        <button
+                          key={s._id}
+                          onClick={() => {
+                            setForm({ ...form, skills: [...form.skills, s] });
+                            setSkillQuery("");
+                          }}
+                          className="px-3 py-1 text-xs rounded-full border border-dashed border-primary text-primary hover:bg-primary/10 transition"
+                        >
+                          + {s.name}
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              <Select
+                label="Job Category"
+                value={form.category}
+                options={categories}
+                onChange={(v) =>
+                  setForm({
+                    ...form,
+                    category: v,
+                  })
+                }
+              />
+
+              <JobDescriptionEditor
+                value={form.description}
+                onChange={(html) =>
+                  setForm({
+                    ...form,
+                    description: html,
+                  })
+                }
+              />
+
+            </div>
+          </section>
 
 
           {/* Footer */}

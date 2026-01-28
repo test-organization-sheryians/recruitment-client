@@ -18,6 +18,7 @@ import JobQuestionsButton from "../ui/JobQuestionsButton"
 import JobShareButton from "../ui/JobShareButton"
 import JobDeleteButton from "../ui/JobDeleteButton"
 import ScreeningQuestions from "./ScreeningQuestion"
+import DeletejobTest from "./DeletejobTest"
 
 /* ================= TYPES ================= */
 
@@ -170,6 +171,7 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete,onShar
                 jobId={job._id}
                 onDeleted={onDelete}
               />
+              <DeletejobTest jobId={job._id} jobTitle={job.title} />
             </div>
           </div>
         </div>
