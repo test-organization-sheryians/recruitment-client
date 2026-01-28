@@ -41,6 +41,15 @@ export default function JobDescriptionEditor({
     ],
     content: value,
     immediatelyRender: false,
+
+    // 🔥 THIS IS THE REAL FIX
+    editorProps: {
+      attributes: {
+        class:
+          "prosemirror-editor min-h-[250px] p-4 text-sm bg-white dark:bg-gray-800 outline-none focus:outline-none focus:ring-0",
+      },
+    },
+
     onUpdate({ editor }) {
       onChange(editor.getHTML());
     },
@@ -75,68 +84,69 @@ export default function JobDescriptionEditor({
   };
 
   return (
-    <div className="flex flex-col gap-2 mt-2 relative">
+    <div className="flex flex-col gap-2 mt-2">
       <label className="text-sm font-bold">Job Description</label>
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 p-2 border rounded-t-lg bg-white dark:bg-gray-900">
-        <Btn onClick={() => editor.chain().focus().toggleBold().run()}>
-          <Bold size={16} />
-        </Btn>
+      {/* 🔲 SINGLE CLEAN CONTAINER */}
+      <div className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900">
 
-        <Btn onClick={() => editor.chain().focus().toggleItalic().run()}>
-          <Italic size={16} />
-        </Btn>
+        {/* Toolbar */}
+        <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-white dark:bg-gray-900">
+          <Btn onClick={() => editor.chain().focus().toggleBold().run()}>
+            <Bold size={16} />
+          </Btn>
 
-        <Btn onClick={() => editor.chain().focus().toggleBulletList().run()}>
-          <List size={16} />
-        </Btn>
+          <Btn onClick={() => editor.chain().focus().toggleItalic().run()}>
+            <Italic size={16} />
+          </Btn>
 
-        <Btn onClick={() => editor.chain().focus().toggleOrderedList().run()}>
-          <ListOrdered size={16} />
-        </Btn>
+          <Btn onClick={() => editor.chain().focus().toggleBulletList().run()}>
+            <List size={16} />
+          </Btn>
 
-        <Btn onClick={() => setShowLinkUI((v) => !v)}>
-          <LinkIcon size={16} />
-        </Btn>
-      </div>
+          <Btn onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+            <ListOrdered size={16} />
+          </Btn>
 
-      {/* 🔗 LINK INPUT UI (THEME MATCHING) */}
-      {showLinkUI && (
-        <div className="flex items-center gap-2 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800">
-          <input
-            value={linkUrl}
-            onChange={(e) => setLinkUrl(e.target.value)}
-            placeholder="Enter URL (e.g. https://example.com)"
-            className="flex-1 px-3 py-2 rounded-md border text-sm bg-white dark:bg-gray-700 outline-none"
-          />
-
-          <button
-            type="button"
-            onClick={applyLink}
-            className="p-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
-          >
-            <Check size={16} />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setShowLinkUI(false);
-              setLinkUrl("");
-            }}
-            className="p-2 rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500"
-          >
-            <X size={16} />
-          </button>
+          <Btn onClick={() => setShowLinkUI((v) => !v)}>
+            <LinkIcon size={16} />
+          </Btn>
         </div>
-      )}
 
-      {/* Editor */}
-      <EditorContent
-        editor={editor}
-        className="min-h-[250px] p-4 border rounded-b-lg bg-white dark:bg-gray-800 text-sm"
-      />
+        {/* 🔗 LINK INPUT */}
+        {showLinkUI && (
+          <div className="flex items-center gap-2 p-3 border-b bg-gray-50 dark:bg-gray-800">
+            <input
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              placeholder="Enter URL (e.g. https://example.com)"
+              className="flex-1 px-3 py-2 rounded-md border text-sm bg-white dark:bg-gray-700 outline-none"
+            />
+
+            <button
+              type="button"
+              onClick={applyLink}
+              className="p-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+            >
+              <Check size={16} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowLinkUI(false);
+                setLinkUrl("");
+              }}
+              className="p-2 rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
+        {/* Editor */}
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 }
