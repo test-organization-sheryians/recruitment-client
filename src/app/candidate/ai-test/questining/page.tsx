@@ -73,7 +73,7 @@ export default function UniversalInterviewPage() {
   /* ---------- API MUTATIONS ---------- */
   const evaluateMutation = useEvaluateAnswers();
   const submitMutation = useSubmitResult();
-  const { data: rqQuestions } = useActiveQuestions();
+  const { data: rqQuestions, refetch } = useActiveQuestions();
   const { containerRef, width, startDrag } = useSplitEditor();
 
   const STORAGE_KEY =
@@ -89,17 +89,24 @@ export default function UniversalInterviewPage() {
   const savedSteps = new Set(state.saved);
   const reviewSteps = new Set(state.review);
   const activeQuestion = savedQuestions[step] ?? null;
+  const initializedRef = useRef(false);
+
 
   useEffect(() => {
-    if (!restored) return;
-    if (state.questions.length > 0) return;
-    if (!rqQuestions?.length) return;
+  if (!restored) return;
+  if (!rqQuestions?.length) return;
+  if (initializedRef.current) return;
+  if (state.questions.length > 0) return; // ✅ ADD THIS
 
-    persist({
-      questions: rqQuestions,
-      visited: [0],
-    });
-  }, [restored, rqQuestions]);
+  initializedRef.current = true;
+
+  persist({
+    questions: rqQuestions,
+    visited: [0],
+    step: 0,
+  });
+}, [restored, rqQuestions, state.questions.length]);
+
 
 
 
