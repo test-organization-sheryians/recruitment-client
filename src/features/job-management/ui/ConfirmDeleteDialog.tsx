@@ -62,13 +62,13 @@ export default function ConfirmDeleteDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 text-red-600 hover:bg-red-100">
+        <button className="h-11 rounded-lg bg-red-50 text-red-800 font-semibold hover:bg-red-100 transition flex justify-center items-center gap-2 border border-red-200">
           <Trash2 className="w-4 h-4" />
           {triggerLabel}
         </button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-[500px] p-0 rounded-2xl">
+      <DialogContent className="max-w-[500px] p-0 rounded-2xl [&>button]:hidden">
         {/* Header */}
         <DialogHeader className="p-6 pb-4">
           <div className="flex items-start gap-4">
