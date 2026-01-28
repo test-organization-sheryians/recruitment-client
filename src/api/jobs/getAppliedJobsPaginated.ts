@@ -1,7 +1,7 @@
 // api/appliedJobs/getAppliedJobsPaginated.ts
 import api from "@/config/axios/index";
 import { AppliedJob } from "@/types/AppliedJob";
-import type { Job } from "@/types/Job";
+// import type { Job } from "@/types/Job";
 
 export interface BackendPagination {
   currentPage: number;
