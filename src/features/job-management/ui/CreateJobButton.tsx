@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { PlusIcon } from "lucide-react";
-import CreateJob from "@/features/admin/jobs/components/CreateJob";
-// import ReusableDrawer from "./ReusableDrawer";
 import SwipeableDrawer from "./SwipeableDrawer";
+import CreateJob from "../components/CreateJob";
 
 interface Props {
   onJobCreated: () => void;
@@ -48,12 +47,7 @@ export default function CreateJobButton({ onJobCreated }: Props) {
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-4">
-            <CreateJob
-              onJobCreated={() => {
-                onJobCreated();
-                setOpen(false);
-              }}
-            />
+            <CreateJob />
           </div>
         </div>
       </SwipeableDrawer>
