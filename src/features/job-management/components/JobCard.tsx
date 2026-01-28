@@ -140,9 +140,9 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete,onShar
                 />
                 Job Description
               </h4>
-              <div className="mt-2 bg-white border rounded-lg p-4 text-sm text-gray-600 leading-relaxed">
-                {job.description || "No description provided."}
-              </div>
+              <div className="mt-2 bg-white border rounded-lg p-4 text-sm text-gray-600 leading-relaxed prose prose-sm max-w-none max-h-48 overflow-hidden line-clamp-6"
+                dangerouslySetInnerHTML={{ __html: job.description || "<p>No description provided.</p>" }}
+              />
             </div>
           </div>
 
