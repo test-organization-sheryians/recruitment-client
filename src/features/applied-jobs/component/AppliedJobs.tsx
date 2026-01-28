@@ -45,7 +45,7 @@ const filteredJobs =
   const totalCount = pages[0]?.pagination?.totalRecords ?? 0;
 
   const counts: Record<StatusKey, number> = {
-  all: allJobs.length,
+  all: totalCount,
   shortlisted: allJobs.filter((j) => j.status === "shortlisted").length,
   rejected: allJobs.filter((j) => j.status === "rejected").length,
   forwareded: allJobs.filter((j) => j.status === "forwareded").length,
