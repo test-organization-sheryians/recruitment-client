@@ -50,7 +50,13 @@ const ScreeningQuestions: React.FC = () => {
 
   const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  
+  const [title, setTitle] = useState("");
+const [description, setDescription] = useState("");
+const [type, setType] = useState<QuestionType>("radio");
+const [options, setOptions] = useState<string[]>(["Option 1", "Option 2"]);
+const [required, setRequired] = useState(false);
+const [isKnockout, setIsKnockout] = useState(false);
+
 const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
@@ -83,6 +89,35 @@ const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   localStorage.setItem("screening_questions", JSON.stringify(questions))
   
 }
+const handleOptionChange = (index: number, value: string) => {
+  setOptions(prev => {
+    const newOptions = [...prev];
+    newOptions[index] = value;
+    return newOptions;
+  });
+};
+
+const handleDeleteOption = (index: number) => {
+  setOptions(prev => prev.filter((_, i) => i !== index));
+};
+
+const handleAddOption = () => {
+  setOptions(prev => [...prev, `Option ${prev.length + 1}`]);
+};
+const handleSave = () => {
+  if (editingQuestionId) {
+    // Update existing question
+    setQuestions(prev =>
+      prev.map(q =>
+        q.id === editingQuestionId
+          ? { ...q, title, type, required }
+          : q
+      )
+    );
+    setIsEditDialogOpen(false);
+  }
+};
+
 
   /*const handleAddQuestion = () => {
   const id = Date.now()
@@ -171,14 +206,27 @@ const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
                 <div className="flex gap-2">
                   <button
-                    onClick={() => {
-                      setEditingQuestionId(q.id)
-                      setIsEditDialogOpen(true)
-                    }}
-                    className="p-2 text-blue-600 hover:bg-gray-100 rounded-lg transition"
-                  >
-                    <EditIcon fontSize="small" />
-                  </button>
+  onClick={() => {
+    setEditingQuestionId(q.id)
+
+    //  prefill form data
+    setTitle(q.title)
+    setType(q.type)
+    setRequired(q.required)
+
+    if (q.type === "radio") {
+      setOptions(["Option 1", "Option 2"])
+    } else {
+      setOptions([])
+    }
+
+    setIsEditDialogOpen(true)
+  }}
+  className="p-2 text-blue-600 hover:bg-gray-100 rounded-lg transition"
+>
+  <EditIcon fontSize="small" />
+</button>
+
                   <button
                     onClick={() => deleteQuestion(q.id)}
                     className="p-2 text-red-500 hover:bg-gray-100 rounded-lg transition"
@@ -190,63 +238,6 @@ const [isDrawerOpen, setIsDrawerOpen] = useState(false)
               {/* ================= PREVIEW MODAL ================= */}
 {/* ================= PREVIEW MODAL ================= */}
 {/* ================= PREVIEW MODAL ================= */}
-<Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-  <DialogContent className="max-w-2xl">
-    <DialogHeader>
-      <DialogTitle>Application Preview</DialogTitle>
-    </DialogHeader>
-
-    <div className="space-y-4 mt-4">
-      {questions.length === 0 ? (
-        <p className="text-gray-500">No questions added yet.</p>
-      ) : (
-        questions.map((q, i) => (
-          <div key={q.id} className="border p-4 rounded-lg">
-            <p className="font-semibold">
-              {i + 1}. {q.title}
-              {q.required && <span className="text-red-500"> *</span>}
-            </p>
-
-            {q.type === "radio" && (
-              <div className="mt-2 space-y-1">
-                <label className="flex items-center gap-2">
-                  <input type="radio" name={`q${q.id}`} /> Option 1
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" name={`q${q.id}`} /> Option 2
-                </label>
-              </div>
-            )}
-
-            {q.type === "text" && (
-              <textarea
-                className="w-full border rounded-lg mt-2 p-2 bg-gray-50"
-                placeholder="Your answer..."
-              />
-            )}
-
-            {q.type === "url" && (
-              <input
-                type="url"
-                className="w-full border rounded-lg mt-2 p-2 bg-gray-50"
-                placeholder="https://example.com"
-              />
-            )}
-          </div>
-        ))
-      )}
-    </div>
-
-    <div className="mt-6 flex justify-end">
-      <button
-        onClick={() => setIsPreviewOpen(false)}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-      >
-        Submit
-      </button>
-    </div>
-  </DialogContent>
-</Dialog>
 
 
 
@@ -259,33 +250,137 @@ const [isDrawerOpen, setIsDrawerOpen] = useState(false)
               </div>
 
               {/* EDIT DIALOG */}
+              
               <Dialog
                 open={isEditDialogOpen && editingQuestionId === q.id}
                 onOpenChange={(open) => {
                   if (!open) setIsEditDialogOpen(false)
                 }}
               >
-                <DialogContent className="w-full max-w-lg">
-                  <DialogHeader>
-                    <DialogTitle>Edit Question</DialogTitle>
-                  </DialogHeader>
-                  <div className="flex flex-col gap-3 mt-4">
-                    <input
-                      type="text"
-                      value={q.title}
-                      onChange={(e) => updateQuestion(q.id, e.target.value)}
-                      className="border rounded-lg p-2 w-full"
-                    />
-                    <button
-                      onClick={() => setIsEditDialogOpen(false)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                <DialogContent className="w-[35%] max-h-[100vh] overflow-y-auto rounded p-6">
+  <DialogHeader>
+    <DialogTitle className="text-xl font-semibold text-gray-800">
+      Edit Question
+    </DialogTitle>
+   
+  </DialogHeader>
+
+  {/* Form */}
+  <div className="space-y-5 mt-4">
+
+    {/* Question */}
+    <div>
+      <label className="text-sm font-medium text-gray-700">Question</label>
+      <input
+        placeholder="Enter your question"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="w-full mt-1 border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+
+    {/* Input Type */}
+    <div>
+      <label className="text-sm font-medium text-gray-700">Input Type</label>
+      <select
+        value={type}
+        onChange={(e) => {
+          const selectedType = e.target.value as "radio" | "text" | "url"
+          setType(selectedType)
+
+          if (selectedType !== "radio") {
+            setOptions([])
+          } else {
+            setOptions(["Option 1", "Option 2"])
+          }
+        }}
+        className="w-full mt-1 border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+      >
+        <option value="radio">Radio Button</option>
+        <option value="text">Long Text</option>
+        <option value="url">URL</option>
+      </select>
+    </div>
+
+    {/* Options */}
+    {type === "radio" && (
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-700">Options</label>
+
+        {options.map((opt, i) => (
+          <div key={i} className="flex gap-3 items-center">
+            <input
+              className="flex-1 border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={opt}
+              onChange={(e) => handleOptionChange(i, e.target.value)}
+              placeholder={`Option ${i + 1}`}
+            />
+
+            <button
+              type="button"
+              onClick={() => handleDeleteOption(i)}
+              className="p-2 text-red-600 rounded-lg hover:bg-red-50 transition"
+            >
+              <DeleteIcon fontSize="small" />
+            </button>
+          </div>
+        ))}
+
+        <button
+          className="text-blue-600 text-sm font-medium hover:underline mt-1"
+          onClick={handleAddOption}
+          type="button"
+        >
+          + Add option
+        </button>
+      </div>
+    )}
+
+    {/* Toggles */}
+    <div className="grid grid-cols-2 gap-4 pt-2">
+      <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+        <input
+          type="checkbox"
+          checked={required}
+          onChange={() => setRequired(!required)}
+          className="w-4 h-4"
+        />
+        <span className="text-sm text-gray-700">Required</span>
+      </div>
+
+      <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+        <input
+          type="checkbox"
+          checked={isKnockout}
+          onChange={() => setIsKnockout(!isKnockout)}
+          className="w-4 h-4"
+        />
+        <span className="text-sm text-gray-700">Knockout Question</span>
+      </div>
+    </div>
+  </div>
+
+  {/* Footer */}
+  <div className="flex justify-end gap-4 mt-8 border-t pt-4">
+    <button
+      type="button"
+      className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
+      onClick={() => setIsEditDialogOpen(false)}
+    >
+      Cancel
+    </button>
+
+    <button
+      className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition shadow-md"
+      onClick={handleSave}
+    >
+      Save Changes
+    </button>
+  </div>
+</DialogContent>
+  </Dialog>
             </div>
+           
           ))}
          <div className="px-10 flex justify-center items-center">
   <button

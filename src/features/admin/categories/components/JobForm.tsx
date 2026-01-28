@@ -123,8 +123,15 @@ salary: {
     }
   }, [categories]);
 
-  const handleChange = (e: { target: { name: string; value: string } }) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (
+  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+) => {
+  const { name, value } = e.target
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }))
+}
 
   const handleSkillToggle = (skillId: string) => {
     setFormData((prev) => ({
