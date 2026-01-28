@@ -7,12 +7,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-
+import AddQuestion from "./AddQuestion"  // path adjust if needed
 import SwipeableDrawer from "@/features/job-management/ui/SwipeableDrawer"
+import AddIcon from "@mui/icons-material/Add"
+
 import EditIcon from "@mui/icons-material/Edit"
 import DeleteIcon from "@mui/icons-material/Delete"
 
-// ================= TYPES =================
+// ================= TYPEimport AddQuestionModal from "./AddQuestionModal"  // path adjust if needed
+
 export type QuestionType = "radio" | "text" | "url"
 
 export interface ScreeningQuestion {
@@ -47,7 +50,24 @@ const ScreeningQuestions: React.FC = () => {
 
   const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  
+const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+
+  const [newQuestion, setNewQuestion] = useState<{
+  title: string
+  description: string
+  type: QuestionType
+  options: string[]
+  required: boolean
+}>({
+  title: "",
+  description: "",
+  type: "radio",
+  options: [""],
+  required: false,
+})
+
 
   // ================= FUNCTIONS =================
   const deleteQuestion = (id: number) => {
@@ -59,6 +79,33 @@ const ScreeningQuestions: React.FC = () => {
       prev.map((q) => (q.id === id ? { ...q, title: newTitle } : q))
     )
   }
+  const handleSaveChanges = () => {
+  localStorage.setItem("screening_questions", JSON.stringify(questions))
+  
+}
+
+  /*const handleAddQuestion = () => {
+  const id = Date.now()
+  const questionToAdd: ScreeningQuestion = {
+    id,
+    title: newQuestion.title,
+    type: newQuestion.type,
+    required: newQuestion.required,
+  }*/
+  /*setQuestions((prev) => [...prev, questionToAdd])
+ 
+  setNewQuestion({
+    title: "",
+    description: "",
+    type: "radio",
+    options: [""],
+    required: false,
+  })
+}*/
+
+
+
+
 
   // ================= UI =================
   return (
@@ -76,15 +123,25 @@ const ScreeningQuestions: React.FC = () => {
           </div>
 
        <div className="flex justify-center mt-8">
-  <button
-    onClick={() => setIsDrawerOpen(true)}
-    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl shadow-md hover:bg-blue-700 transition transform hover:scale-105"
-  >
-    + Add New Question
-  </button>
-</div>
 
         </div>
+  <div className="flex items-center justify-between gap-5">
+    <button
+  onClick={() => setIsPreviewOpen(true)}
+  className="flex items-center  px-6 py-3 bg-white text-gray-500 font-semibold rounded-xl shadow-md hover:scale-105 transition"
+>
+  Preview
+</button>
+<button
+  onClick={handleSaveChanges}
+  className="flex items-center  px-3 py-3 bg-blue-600 text-white font-semibold rounded-xl shadow-md hover:bg-blue-700 transition hover:scale-105"
+>
+  Save Changes
+</button>
+  </div>
+
+  
+</div>
 
         {/* QUESTIONS LIST */}
         <div className="space-y-4">
@@ -111,6 +168,7 @@ const ScreeningQuestions: React.FC = () => {
                   </div>
                 </div>
 
+
                 <div className="flex gap-2">
                   <button
                     onClick={() => {
@@ -129,6 +187,69 @@ const ScreeningQuestions: React.FC = () => {
                   </button>
                 </div>
               </div>
+              {/* ================= PREVIEW MODAL ================= */}
+{/* ================= PREVIEW MODAL ================= */}
+{/* ================= PREVIEW MODAL ================= */}
+<Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+  <DialogContent className="max-w-2xl">
+    <DialogHeader>
+      <DialogTitle>Application Preview</DialogTitle>
+    </DialogHeader>
+
+    <div className="space-y-4 mt-4">
+      {questions.length === 0 ? (
+        <p className="text-gray-500">No questions added yet.</p>
+      ) : (
+        questions.map((q, i) => (
+          <div key={q.id} className="border p-4 rounded-lg">
+            <p className="font-semibold">
+              {i + 1}. {q.title}
+              {q.required && <span className="text-red-500"> *</span>}
+            </p>
+
+            {q.type === "radio" && (
+              <div className="mt-2 space-y-1">
+                <label className="flex items-center gap-2">
+                  <input type="radio" name={`q${q.id}`} /> Option 1
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name={`q${q.id}`} /> Option 2
+                </label>
+              </div>
+            )}
+
+            {q.type === "text" && (
+              <textarea
+                className="w-full border rounded-lg mt-2 p-2 bg-gray-50"
+                placeholder="Your answer..."
+              />
+            )}
+
+            {q.type === "url" && (
+              <input
+                type="url"
+                className="w-full border rounded-lg mt-2 p-2 bg-gray-50"
+                placeholder="https://example.com"
+              />
+            )}
+          </div>
+        ))
+      )}
+    </div>
+
+    <div className="mt-6 flex justify-end">
+      <button
+        onClick={() => setIsPreviewOpen(false)}
+        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+      >
+        Submit
+      </button>
+    </div>
+  </DialogContent>
+</Dialog>
+
+
+
 
               {/* DETAILS (optional) */}
               <div className="px-6 pb-6 pt-2 bg-gray-50 rounded-b-xl">
@@ -166,7 +287,53 @@ const ScreeningQuestions: React.FC = () => {
               </Dialog>
             </div>
           ))}
+         <div className="px-10 flex justify-center items-center">
+  <button
+  onClick={() => setIsDrawerOpen(true)}
+  className="mt-10 px-6 py-3 w-full bg-white text-gray-600 font-semibold rounded-xl shadow-md transition transform hover:scale-105 flex items-center justify-center gap-3"
+>
+  {/* circle icon */}
+  <span className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-600 text-white">
+    <AddIcon fontSize="small" />
+  </span>
+
+  <span>Add New Question</span>
+</button>
+
+</div>
+
         </div>
+ {/* ================= ADD QUESTION SLIDE PAGE ================= */}
+{isDrawerOpen && (
+  <div className="fixed inset-0 z-50">
+    
+    {/* background overlay */}
+    <div
+      className="absolute inset-0 bg-black/40"
+      onClick={() => setIsDrawerOpen(false)}
+    />
+
+    {/* slide page */}
+    <div className="absolute right-0 top-0 h-full w-[420px] bg-white shadow-2xl animate-slideInRight
+">
+      <AddQuestion
+        onClose={() => setIsDrawerOpen(false)}
+        onAdd={(q) => {
+          const newQuestion = {
+            id: Date.now(),
+            title: q.title,
+            type: q.type,
+            required: q.required,
+          }
+          setQuestions((prev) => [...prev, newQuestion])
+          setIsDrawerOpen(false)
+        }}
+      />
+    </div>
+  </div>
+)}
+
+
       </div>
 
       {/* ================= DRAWER ================= */}
@@ -183,6 +350,8 @@ const ScreeningQuestions: React.FC = () => {
           setQuestions((prev) => [...prev, newQuestion])
         }}
       /> */}
+      
+
     </div>
   )
 }
