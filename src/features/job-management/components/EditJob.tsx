@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { useGetJobById, useUpdateJob, useGetCategories, useGetSkills } from "@/features/job-management/hooks/useJobApi"
 import { useToast } from "@/components/ui/Toast"
+import JobDescriptionEditor from "@/features/job-management/components/JobDescriptionEditor"
 import { X } from "lucide-react"
 import { Job } from "@/types/Job"
 import { JobFormData, APIResponse, Skill, Category, LocationForm } from "../types/job.types"
@@ -38,6 +39,11 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
       country: "",
     },
     employmentType: "Full-time",
+    salary: {
+      min: 0,
+      max: 0,
+      currency: "INR",
+    },
   })
 
   const [error, setError] = useState<string | null>(null)
@@ -85,6 +91,11 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
           country: "",
         },
         employmentType: ((job as Job & { employmentType?: string })?.employmentType) || "Full-time",
+        salary: ((job as any)?.salary) || {
+          min: 0,
+          max: 0,
+          currency: "INR",
+        },
       })
       setError(null)
     }
@@ -135,6 +146,11 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
             state: formData.location.state,
             country: formData.location.country,
             pincode: formData.location.pincode,
+          },
+          salary: {
+            min: formData.salary?.min || 0,
+            max: formData.salary?.max || 0,
+            currency: formData.salary?.currency || "INR",
           },
         }
 
@@ -311,16 +327,9 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
 
               {/* Job Description */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-[#111218] dark:text-gray-300">
-                  Job Description
-                </label>
-                <textarea
-                  name="description"
+                <JobDescriptionEditor
                   value={formData.description}
-                  onChange={handleInputChange}
-                  rows={8}
-                  className="w-full px-4 py-4 border border-[#dbdde6] dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800/50 text-[#111218] dark:text-white text-sm leading-relaxed resize-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                  placeholder="Enter job description..."
+                  onChange={(content:string) => setFormData((prev: JobFormData) => ({ ...prev, description: content }))}
                 />
               </div>
 
@@ -403,6 +412,80 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Salary Section */}
+              <div className="space-y-4">
+                <label className="text-sm font-semibold text-[#111218] dark:text-gray-300 block">
+                  Salary
+                </label>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium text-[#616889] dark:text-gray-400">
+                      Minimum
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.salary?.min ? formData.salary.min : ""}
+                      onChange={(e) => setFormData((prev: JobFormData) => ({
+                        ...prev,
+                        salary: {
+                          min: e.target.value ? parseInt(e.target.value) : 0,
+                          max: prev.salary?.max || 0,
+                          currency: prev.salary?.currency || "INR",
+                        },
+                      }))}
+                      className="w-full px-4 py-3 rounded-lg border border-[#dbdde6] dark:border-gray-700 bg-white dark:bg-gray-800/50 text-[#111218] dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                      placeholder="Min salary"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium text-[#616889] dark:text-gray-400">
+                      Maximum
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.salary?.max ? formData.salary.max : ""}
+                      onChange={(e) => setFormData((prev: JobFormData) => ({
+                        ...prev,
+                        salary: {
+                          min: prev.salary?.min || 0,
+                          max: e.target.value ? parseInt(e.target.value) : 0,
+                          currency: prev.salary?.currency || "INR",
+                        },
+                      }))}
+                      className="w-full px-4 py-3 rounded-lg border border-[#dbdde6] dark:border-gray-700 bg-white dark:bg-gray-800/50 text-[#111218] dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                      placeholder="Max salary"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium text-[#616889] dark:text-gray-400">
+                      Currency
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={formData.salary?.currency || "INR"}
+                        onChange={(e) => setFormData((prev: JobFormData) => ({
+                          ...prev,
+                          salary: {
+                            min: prev.salary?.min || 0,
+                            max: prev.salary?.max || 0,
+                            currency: e.target.value,
+                          },
+                        }))}
+                        className="w-full px-4 py-3 rounded-lg border border-[#dbdde6] dark:border-gray-700 bg-white dark:bg-gray-800/50 text-[#111218] dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-all appearance-none pr-10"
+                      >
+                        <option value="INR">INR</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                      </select>
+                      <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#616889] dark:text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Location Fields */}

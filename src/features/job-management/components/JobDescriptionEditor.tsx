@@ -46,6 +46,13 @@ export default function JobDescriptionEditor({
     },
   });
 
+  // Update editor content when value prop changes
+  React.useEffect(() => {
+    if (editor && value && editor.getHTML() !== value) {
+      editor.commands.setContent(value);
+    }
+  }, [value, editor]);
+
   if (!editor) return null;
 
   const applyLink = () => {

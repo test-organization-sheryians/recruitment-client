@@ -50,6 +50,11 @@ export type JobFormData = {
   clientId: string;
   location: LocationForm;
   employmentType?: string;
+  salary?: {
+    min: number;
+    max: number;
+    currency: string;
+  };
 };
 
 export type APIResponse<T> = {
