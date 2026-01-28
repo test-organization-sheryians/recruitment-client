@@ -4,6 +4,7 @@ import {
   BarChart3,
   GraduationCap,
   Calendar,
+  Info,
 } from "lucide-react";
 
 interface JobMetaItem {
@@ -32,9 +33,7 @@ export default function JobMeta({ items }: JobMetaProps) {
   return (
     <div className="bg-white rounded-lg p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-          <span className="text-blue-600 font-bold text-sm">ℹ</span>
-        </div>
+        <Info size={22} className="text-blue-600" />
         <h3 className="font-bold text-gray-900 text-lg">Job Overview</h3>
       </div>
 

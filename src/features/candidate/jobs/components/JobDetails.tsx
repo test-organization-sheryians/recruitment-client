@@ -129,41 +129,50 @@ export default function JobDetails() {
     },
   ];
 
+  /* -------------------- Format Location -------------------- */
+  const getLocationString = () => {
+    if (!job.location) return job.department || null;
+    
+    const parts = [];
+    if (job.location.city) parts.push(job.location.city);
+    if (job.location.state) parts.push(job.location.state);
+    
+    const locationStr = parts.join(", ");
+    return job.isRemote ? `${locationStr} (Remote)` : locationStr;
+  };
+
   /* -------------------- UI -------------------- */
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F6F6F8] py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
+        {/* Header with integrated action buttons */}
         <JobHeader
           title={job.title}
           company={typeof job.category === "string" ? job.category : job.category?.name}
-          location={job.department}
+          location={getLocationString()}
           salary={job.salary ? String(job.salary) : undefined}
           postedTime="2 hours ago"
+          isSaved={isSaved}
+          isExpired={isExpired}
+          isApplied={job.applied ?? false}
+          onBookmarkClick={handleBookmarkToggle}
+          onApplyClick={handleApply}
+          isLoadingBookmark={
+            saveJobMutation.isPending || unsaveJobMutation.isPending
+          }
+          isLoadingApply={applyJobMutation.isPending}
         />
 
         {/* Main Content + Sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Actions */}
-            <JobActions
-              isSaved={isSaved}
-              isExpired={isExpired}
-              isApplied={job.applied ?? false}
-              onBookmarkClick={handleBookmarkToggle}
-              onApplyClick={handleApply}
-              isLoadingBookmark={
-                saveJobMutation.isPending || unsaveJobMutation.isPending
-              }
-              isLoadingApply={applyJobMutation.isPending}
-            />
 
             {/* Description */}
             {job.description && (
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <JobSection title="About the Role">
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className="text-gray-700 leading-relaxed">
                     {job.description}
                   </p>
                 </JobSection>
@@ -184,22 +193,44 @@ export default function JobDetails() {
             <JobMeta items={metaItems} />
 
             {/* About the Company Card */}
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <JobSection title="About the Company">
-                <p className="text-gray-600 leading-relaxed text-sm">
-                  {typeof job.category === "string"
-                    ? job.category
-                    : job.category?.name} is a company building tools that streamline
-                  recruitment processes. We are committed to finding top talent and
-                  providing exceptional career opportunities for professionals in the
-                  tech industry.
-                </p>
-              </JobSection>
-            </div>
+            <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
+              {/* Header with Icon */}
+              <div className="flex items-center gap-3 mb-6">
+                <svg className="w-7 h-7 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75-3.54-4.04 5.07-1.42-1.42 5.46-6.82 2.75 3.54 5.73-7.25 1.41 1.41-6.74 8.57z"/>
+                </svg>
+                <h2 className="text-2xl font-bold text-gray-900">About Company</h2>
+              </div>
 
-            {/* View Company Profile Button */}
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <button className="w-full text-center text-blue-600 font-bold hover:text-blue-700 py-2 text-base">
+              {/* Company Info */}
+              <div className="flex items-start gap-4 mb-6">
+                {/* Company Logo */}
+                <div className="w-16 h-16 rounded-lg bg-gray-800 flex items-center justify-center shrink-0">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+
+                {/* Company Details */}
+                <div className="flex-1">
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    {typeof job.category === "string"
+                      ? job.category
+                      : job.category?.name || "Company Name"}
+                  </h3>
+                  <p className="text-gray-500 text-sm mt-1">500-1000 employees</p>
+                </div>
+              </div>
+
+              {/* Company Description */}
+              <p className="text-gray-700 leading-relaxed mb-8">
+                {job.description || `${typeof job.category === "string"
+                  ? job.category
+                  : job.category?.name} is a leading enterprise software company building tools that streamline workflow automation for creative teams globally. We're on a mission to empower designers through better technology.`}
+              </p>
+
+              {/* View Company Profile Button */}
+              <button className="w-full text-center text-gray-900 font-bold bg-gray-100 hover:bg-gray-200 py-4 px-4 rounded-lg text-base transition-colors">
                 View Company Profile
               </button>
             </div>
