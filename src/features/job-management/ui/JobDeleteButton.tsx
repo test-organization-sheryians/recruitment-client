@@ -7,11 +7,11 @@ import ConfirmDeleteDialog from '../ui/ConfirmDeleteDialog';
 export default function JobDeleteButton({
   jobId,
   jobTitle,
-  onJobDeleted,
+  onDeleted,
 }: {
   jobId: string;
   jobTitle?: string;
-  onJobDeleted?: () => void;
+  onDeleted?: () => void;
 }) {
   const router = useRouter();
 
@@ -26,9 +26,9 @@ export default function JobDeleteButton({
         const res = await deleteJob(jobId);
         return !!res; // ✅ MUST RETURN BOOLEAN
       }}
-      onDeleted={onJobDeleted}
+      onDeleted={onDeleted}
       redirectAfterDelete={() => {
-        router.push('/admin/jobs');
+        router.push('/Crew/getJob');
         router.refresh();
       }}
     />

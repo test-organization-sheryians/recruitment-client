@@ -169,9 +169,10 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete,onShar
 
               <JobDeleteButton
                 jobId={job._id}
+                jobTitle={job.title}
                 onDeleted={onDelete}
               />
-              <DeletejobTest jobId={job._id} jobTitle={job.title} />
+              {/* <DeletejobTest jobId={job._id} jobTitle={job.title} /> */}
             </div>
           </div>
         </div>
