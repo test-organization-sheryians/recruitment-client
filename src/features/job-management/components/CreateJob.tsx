@@ -3,6 +3,8 @@
 import React from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import apiClient from "@/lib/api-client";
+import { createJob } from "../hooks/jobs.api";
+
 import JobDescriptionEditor from "./JobDescriptionEditor";
 import { Briefcase } from "lucide-react";
 import { usePincodeLookup } from "../hooks/usePincodeLookup";
@@ -45,7 +47,9 @@ type CreateJobFormValues = {
     max: number;
   };
   location: LocationForm;
+  clientId: string; // ✅ ADD
 };
+
 
 type CreateJobPayload = Omit<CreateJobFormValues, "skills"> & {
   skills: string[];
@@ -67,10 +71,7 @@ const fetchCategories = async (): Promise<Category[]> => {
 };
 
 
-const createJob = async (payload: CreateJobPayload) => {
-  const res = await apiClient.post("/jobs", payload);
-  return res.data;
-};
+
 
 
 
@@ -90,30 +91,37 @@ export default function CreateJob() {
     queryFn: fetchCategories,
   });
 
-  const { mutate, isPending } = useMutation({ mutationFn: createJob });
+const { mutate, isPending } = useMutation({
+  mutationFn: createJob,
+});
 
 
 
-  const [form, setForm] = React.useState<CreateJobFormValues>({
-    title: "",
-    requiredExperience: "",
-    category: "",
-    education: "",
-    jobType: "",
-    description: "",
-    expiry: "",
-    skills: [],
-    salary: {
-      min: 0,
-      max: 0,
-    },
-    location: {
-      city: "",
-      state: "",
-      country: "India",
-      pincode: "",
-    },
-  });
+
+const [form, setForm] = React.useState<CreateJobFormValues>({
+  title: "",
+  requiredExperience: "",
+  category: "",
+  education: "",
+  jobType: "Full-Time", // ✅ default (backend expects this)
+  description: "",
+  expiry: "",
+  skills: [],
+
+  salary: {
+    min: 0, // ✅ backend-safe default
+    max: 0, // ✅ backend-safe default
+  },
+
+  location: {
+    city: "",
+    state: "",
+    pincode: "",
+    country: "India", // ✅ same as JobForm
+  },
+
+  clientId: "6915b90df6594de75060410b", // ✅ REQUIRED by backend
+});
 
   const pincodeStatus = usePincodeLookup(
     form.location.pincode,
@@ -128,22 +136,51 @@ export default function CreateJob() {
     }
   );
 
+const submitJob = () => {
+  // basic validation (JobForm jaisa)
+  if (
+    !form.title ||
+    !form.description ||
+    !form.education ||
+    !form.requiredExperience ||
+    !form.expiry ||
+    !form.category ||
+    form.skills.length === 0
+  ) {
+    alert("Please fill all required fields");
+    return;
+  }
 
-  const submitJob = () => {
-    mutate({
-      title: form.title,
-      requiredExperience: form.requiredExperience,
-      category: form.category,
-      education: form.education,
-      jobType: form.jobType,
-      description: form.description,
-      expiry: form.expiry,
-      skills: form.skills.map((s) => s._id),
-      salary: form.salary,
-      location: form.location,
-    });
+  mutate({
+    title: form.title,
+    description: form.description,
+    education: form.education,
+    requiredExperience: form.requiredExperience,
+    expiry: form.expiry,
+    category: form.category,
 
-  };
+    skills: form.skills.map((s) => s._id), // ✅ IDs only
+
+    jobType: form.jobType || "Full-Time",
+
+    salary: {
+      min: form.salary.min,
+      max: form.salary.max,
+    },
+
+    location: {
+      city: form.location.city,
+      state: form.location.state,
+      pincode: form.location.pincode,
+      country: form.location.country || "India",
+    },
+
+    clientId: form.clientId, // ✅ REQUIRED
+  });
+};
+
+
+
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-[#111218] dark:text-white min-h-screen">
