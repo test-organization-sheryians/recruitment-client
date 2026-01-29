@@ -3,9 +3,6 @@
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
-import BulletList from "@tiptap/extension-bullet-list";
-import OrderedList from "@tiptap/extension-ordered-list";
-import ListItem from "@tiptap/extension-list-item";
 import {
   Bold,
   Italic,
@@ -29,20 +26,12 @@ export default function JobDescriptionEditor({
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        bulletList: false,
-        orderedList: false,
-        listItem: false,
-      }),
-      BulletList,
-      OrderedList,
-      ListItem,
+      StarterKit,
       Link.configure({ openOnClick: false }),
     ],
     content: value,
     immediatelyRender: false,
 
-    // 🔥 THIS IS THE REAL FIX
     editorProps: {
       attributes: {
         class:
@@ -55,7 +44,7 @@ export default function JobDescriptionEditor({
     },
   });
 
-  // Update editor content when value prop changes
+  // Keep editor in sync with external value
   React.useEffect(() => {
     if (editor && value && editor.getHTML() !== value) {
       editor.commands.setContent(value);
@@ -87,7 +76,6 @@ export default function JobDescriptionEditor({
     <div className="flex flex-col gap-2 mt-2">
       <label className="text-sm font-bold">Job Description</label>
 
-      {/* 🔲 SINGLE CLEAN CONTAINER */}
       <div className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900">
 
         {/* Toolbar */}
@@ -113,7 +101,7 @@ export default function JobDescriptionEditor({
           </Btn>
         </div>
 
-        {/* 🔗 LINK INPUT */}
+        {/* Link Input */}
         {showLinkUI && (
           <div className="flex items-center gap-2 p-3 border-b bg-gray-50 dark:bg-gray-800">
             <input
@@ -147,6 +135,23 @@ export default function JobDescriptionEditor({
         {/* Editor */}
         <EditorContent editor={editor} />
       </div>
+
+      {/* 🔥 LIST STYLES — IN SAME FILE */}
+      <style jsx global>{`
+        .prosemirror-editor ul {
+          list-style-type: disc;
+          padding-left: 1.5rem;
+        }
+
+        .prosemirror-editor ol {
+          list-style-type: decimal;
+          padding-left: 1.5rem;
+        }
+
+        .prosemirror-editor li {
+          margin: 0.25rem 0;
+        }
+      `}</style>
     </div>
   );
 }
