@@ -1,98 +1,46 @@
+'use client';
+
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import SwipeableDrawer from '@mui/material/SwipeableDrawer';
-import Button from '@mui/material/Button';
-import List from '@mui/material/List';
-import Divider from '@mui/material/Divider';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
+import MuiSwipeableDrawer from '@mui/material/SwipeableDrawer';
 
 export type Anchor = 'top' | 'left' | 'bottom' | 'right';
 
-interface DrawerItem {
-  label: string;
-  icon?: React.ReactNode;
-}
-
-interface ReusableDrawerProps {
+interface SwipeableDrawerProps {
   anchor?: Anchor;
-  buttonLabel?: string;
-  width?: number;
-  items: DrawerItem[];
-  extraItems?: DrawerItem[];
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+  children: React.ReactNode;
 }
 
-const ReusableDrawer: React.FC<ReusableDrawerProps> = ({
-  anchor = 'left',
-  buttonLabel = 'Open Drawer',
-  width = 250,
-  items,
-  extraItems = [],
+const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
+  anchor = 'right', // ✅ UX: right side drawer
+  open,
+  onOpen,
+  onClose,
+  children,
 }) => {
-  const [open, setOpen] = React.useState(false);
-
-  const toggleDrawer =
-    (open: boolean) =>
-    (event: React.KeyboardEvent | React.MouseEvent) => {
-      if (
-        event.type === 'keydown' &&
-        ((event as React.KeyboardEvent).key === 'Tab' ||
-          (event as React.KeyboardEvent).key === 'Shift')
-      ) {
-        return;
-      }
-      setOpen(open);
-    };
-
   return (
-    <>
-      <Button onClick={toggleDrawer(true)}>{buttonLabel}</Button>
-
-      <SwipeableDrawer
-        anchor={anchor}
-        open={open}
-        onClose={toggleDrawer(false)}
-        onOpen={toggleDrawer(true)}
+    <MuiSwipeableDrawer
+      anchor={anchor}
+      open={open}
+      onOpen={onOpen}
+      onClose={onClose}
+    >
+      <Box
+        sx={{
+          // ✅ FULL height + proper coverage
+          width: { xs: '100vw', md: '50vw' }, // minimum ~65–70%
+          height: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
       >
-        <Box
-          sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : width }}
-          role="presentation"
-          onClick={toggleDrawer(false)}
-          onKeyDown={toggleDrawer(false)}
-        >
-          <List>
-            {items.map((item, index) => (
-              <ListItem key={index} disablePadding>
-                <ListItemButton>
-                  {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
-                  <ListItemText primary={item.label} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-
-          {extraItems.length > 0 && (
-            <>
-              <Divider />
-              <List>
-                {extraItems.map((item, index) => (
-                  <ListItem key={index} disablePadding>
-                    <ListItemButton>
-                      {item.icon && (
-                        <ListItemIcon>{item.icon}</ListItemIcon>
-                      )}
-                      <ListItemText primary={item.label} />
-                    </ListItemButton>
-                  </ListItem>
-                ))}
-              </List>
-            </>
-          )}
-        </Box>
-      </SwipeableDrawer>
-    </>
+        {children}
+      </Box>
+    </MuiSwipeableDrawer>
   );
 };
 

@@ -25,15 +25,17 @@ export default function CreateJobButton({ onJobCreated }: Props) {
 
       {/* REUSABLE DRAWER */}
       <SwipeableDrawer
-        anchor="right"
-        open={open}
-        onOpen={() => setOpen(true)}
-        onClose={() => setOpen(false)}
-        width={520}
-      >
-        <div className="flex h-full w-[520px] flex-col">
+  anchor="right"
+  open={open}
+  onOpen={() => setOpen(true)}
+  onClose={() => setOpen(false)}
+>
+ 
+        <div className="flex h-full w-full flex-col">
+
           {/* Header */}
-          <div className="flex items-center justify-between border-b px-5 py-4">
+          <div className="flex items-center justify-between border-b px-8 py-4">
+
             <h2 className="text-lg font-bold text-gray-900">
               Create Job
             </h2>
@@ -46,7 +48,7 @@ export default function CreateJobButton({ onJobCreated }: Props) {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto px-8 py-6">
             <CreateJob />
           </div>
         </div>
