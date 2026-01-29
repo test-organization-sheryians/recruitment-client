@@ -12,7 +12,7 @@ import type { Job } from "@/types/Job";
 
 type Props = {
   jobId: string;
-  onSuccess: () => void;
+  onSuccess?: () => void;
   onBack: () => void;
   userProfile?: CandidateProfile;
   jobDetails: Job;
@@ -66,10 +66,7 @@ const QuestionWrapper = ({
 );
 
 const OptionWrapper = ({ children }: { children: React.ReactNode }) => (
-  <label
-    className="flex items-center gap-3 p-4 rounded-xl border border-gray-200
-hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer shadow-sm"
-  >
+  <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer shadow-sm">
     {children}
   </label>
 );
@@ -78,6 +75,7 @@ hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer shadow-sm"
 
 export default function JobQuestionsForm({
   jobId,
+
   onSuccess,
   onBack,
   userProfile,
@@ -181,12 +179,11 @@ export default function JobQuestionsForm({
     });
 
     setSubmitting(false);
-    onSuccess();
+    onSuccess?.();
   };
 
   if (isLoading) return null;
   if (isError) return <p className="text-red-500">Failed to load</p>;
-
   /* ================= UI ================= */
 
   return (
@@ -211,11 +208,10 @@ export default function JobQuestionsForm({
         </div>
       </header>
 
-      <div className="text-center space-y-1  mt-6">
+      <div className="text-center space-y-1 mt-6">
         <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">
-          {`${jobDetails?.title ?? ""}`}
+          {jobDetails?.title}
         </h1>
-
         <p className="text-sm text-gray-500">
           {typeof jobDetails.location === "object"
             ? `${jobDetails.location.city}, ${jobDetails.location.state}, ${jobDetails.location.country}`
@@ -223,10 +219,51 @@ export default function JobQuestionsForm({
         </p>
       </div>
 
-      <div className="bg-gray-50 min-h-screen px-4 py-8 hide-scrollbar">
+      {/* Auto-filled Profile Info */}
+      <div className="px-4 py-8">
+        <div className="max-w-3xl mx-auto  rounded-xl border border-gray-200 bg-white shadow-sm">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+            <h2 className="text-sm font-semibold text-gray-900">
+              Personal Information
+            </h2>
+
+            <span className="rounded-md bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+              Auto-filled
+            </span>
+          </div>
+
+          {/* Content */}
+          <div className="divide-y divide-gray-200">
+            {/* Row 1 */}
+            <div className="grid grid-cols-2 px-6 py-4">
+              <p className="text-sm text-gray-500">Full Name</p>
+              <p className="text-sm font-medium text-gray-900">{`${profile?.user?.firstName ?? ""} ${profile?.user?.lastName ?? ""}`}</p>
+            </div>
+
+            {/* Row 2 */}
+            <div className="grid grid-cols-2 px-6 py-4">
+              <p className="text-sm text-gray-500">Email Address</p>
+              <p className="text-sm font-medium text-gray-900">
+               {`${profile?.user?.email ?? ""}`}
+              </p>
+            </div>
+
+            {/* Row 3 */}
+            <div className="grid grid-cols-2 px-6 py-4">
+              <p className="text-sm text-gray-500">Phone Number</p>
+              <p className="text-sm font-medium text-gray-900">
+                {userProfile?.user?.phoneNumber || "Phone number not available"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className=" min-h-screen px-4 py-8 hide-scrollbar">
         <div className="max-w-3xl mx-auto space-y-6">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-white rounded-2xl shadow-lg border flex flex-col overflow-hidden">
+            <div className="bg-white rounded-2xl  border flex flex-col overflow-hidden">
               {/* card header */}
               <div className="px-6 py-4 border-b">
                 <h2 className="text-lg font-semibold text-gray-900">
@@ -253,10 +290,14 @@ export default function JobQuestionsForm({
                     {/* TEXT */}
                     {q.inputType === "text" && (
                       <input
-                        className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm
-focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
-                        onChange={(e) => handleChange(q.title, e.target.value.replace(/[^a-zA-Z\s]/g, "")
-)}
+                        className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
+                        placeholder="Type your answer here"
+                        onChange={(e) =>
+                          handleChange(
+                            q.title,
+                            e.target.value.replace(/[^a-zA-Z\s]/g, ""),
+                          )
+                        }
                       />
                     )}
 
@@ -332,7 +373,7 @@ focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
                                 className="h-4 w-4 accent-blue-600"
                               />
 
-                              <span className="text-sm font-medium text-gray-900">
+                              <span className="text-sm font-normal text-slate-600">
                                 {value}
                               </span>
                             </label>
@@ -351,7 +392,9 @@ focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
                               name={q._id}
                               onChange={() => handleChange(q.title, opt)}
                             />
-                            <span>{opt}</span>
+                            <span className="text-sm font-normal text-slate-600">
+                              {opt}
+                            </span>
                           </OptionWrapper>
                         ))}
                       </div>
@@ -373,7 +416,7 @@ focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
                                 handleCheckboxChange(q.title, opt)
                               }
                             />
-                            <span className="text-sm font-medium text-gray-900">
+                            <span className="text-sm font-normal text-slate-600">
                               {opt}
                             </span>
                           </label>
@@ -471,11 +514,18 @@ focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full max-w-sm px-10 py-3 rounded-xl bg-blue-600 text-white
-               text-base font-semibold hover:bg-blue-700 transition shadow-md
-               disabled:bg-gray-400"
+                    className="
+    inline-flex items-center justify-center
+    px-6 py-2.5
+    rounded-lg
+    bg-blue-600 hover:bg-blue-700
+    text-sm font-semibold uppercase tracking-wide text-white
+    shadow-sm hover:shadow-md
+    transition-all
+    disabled:opacity-60 disabled:cursor-not-allowed
+  "
                   >
-                    {submitting ? "Applying..." : "Continue & Apply"}
+                    {submitting ? "Submitting..." : "Submit Application"}
                   </button>
                 </div>
               </div>
@@ -483,30 +533,6 @@ focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
           </form>
         </div>
       </div>
-
-      <style>
-        {`
-    body.hide-body-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-  `}
-      </style>
     </>
   );
-}
-
-{
-  /* 
-          <div className="sticky bottom-0 bg-white pt-4 pb-2">
-  <div className="text-center">
-    <button
-      type="submit"
-      disabled={submitting}
-      className="w-full max-w-sm px-10 py-3 rounded-xl bg-blue-600 text-white font-semibold
-      hover:bg-blue-700 transition shadow-lg disabled:bg-gray-400"
-    >
-      {submitting ? "Applying..." : "Continue & Apply"}
-    </button>
-  </div>
-</div> */
 }

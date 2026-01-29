@@ -216,6 +216,8 @@ export default function JobDetails() {
                     onBack={() => setShowQuestions(false)}
                     userProfile={profile}
                     jobDetails={job}
+                   
+                    
                   />
                 </div>
               </div>
