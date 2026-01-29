@@ -19,6 +19,13 @@ export * from "./category/addCategory";
 export * from "./category/deleteCategory";
 export * from "./category/updateCategory";
 
+/* ================= CATEGORIESBYHIMANSHU ================= */
+export * from "./categorybyh/getCategoriesbyh";
+export * from "./categorybyh/addCategorybyh";
+export * from "./categorybyh/deleteCategorybyh";
+export * from "./categorybyh/getCategoriesPaginatedbyh"
+export * from "./categorybyh/updateCategorybyh"
+
 /* ================= JOBS ================= */
 export * from "./jobs/getjobs";
 export * from "./jobs/createJob";

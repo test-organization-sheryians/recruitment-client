@@ -3,8 +3,8 @@ import CategoriesBox from '@/features/admin/categories/CategoriesBox'
 
 const page = () => {
   return (
-    <div><CategoriesBox/> </div>
+    <div><CategoriesBox/></div>
   )
 }
 
-export default page
+export default page;
