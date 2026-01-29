@@ -6,10 +6,31 @@ import { EnrollUsersResponse } from "@/types/Enrollment";
 import { AxiosError } from "axios";
 import toast from "react-hot-toast";
 
+
 type EnrollPayload = {
   testId: string;
   emails: string[];
 };
+
+
+
+
+
+export const useDeleteTest = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["deleteTest"],
+    mutationFn: (id: string) => api.deleteTest(id),
+
+    onSuccess: () => {
+      // tests list refresh
+      queryClient.invalidateQueries({ queryKey: ["tests"] });
+    },
+  });
+};
+
+
 
 export const useCreateTest = () => {
   const queryClient = useQueryClient();
@@ -22,6 +43,7 @@ export const useCreateTest = () => {
     },
   });
 };
+
 
 export const useGetAllTests = () => {
   return useQuery({
@@ -126,3 +148,16 @@ export const usePublishTestResult = ()=>{
     },
   })
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -4,15 +4,14 @@ import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Clock, GraduationCap, EllipsisVertical, Search } from "lucide-react";
 import Modal from "@/components/ui/Modal"; // Add this import
-
-import {
-  useGetAllTests,
-  usePublishTestResult
-} from "@/features/admin/test/hooks/useTest";
+import {useGetAllTests, usePublishTestResult} from "@/features/admin/test/hooks/useTest";
 
 import EnrolledPopup from "@/features/admin/test/components/EnrolledPopUp";
 import TestDetails from "./TestDetails";
 import CreateTestModal from "./CreateTestForm";
+import DeleteTestButton  from "./DeleteTestButton"; 
+
+
 
 /* ---------- TYPES ---------- */
 interface Test {
@@ -24,6 +23,7 @@ interface Test {
   showResults: boolean;
   skills?: string[];
 }
+
 
 export default function TestList() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -104,6 +104,9 @@ const selectedTest = tests.find(test => test._id === disclosingTestId);
     setOpenMenu(null);
   };
 
+  
+
+
   return (
     <div className="min-h-screen bg-white relative">
       {openMenu && (
@@ -183,8 +186,20 @@ const selectedTest = tests.find(test => test._id === disclosingTestId);
                         onClick={() => openDiscloseModal(test._id)}
                       >
                         Disclose Result
-                      </button>
+                      </button> 
                     )}
+
+                    {/* ✅ DELETE TEST (NEW – CORRECT) */}
+    <DeleteTestButton
+      testId={test._id}
+      onSuccess={() => setOpenMenu(null)}
+    />
+
+
+
+   
+
+                    
                   </div>
                 )}
               </div>
@@ -308,10 +323,28 @@ const selectedTest = tests.find(test => test._id === disclosingTestId);
               >
                 Disclose Results
               </Button>
+
+
+            
+
+
+             
+
+
             </div>
           )}
         </div>
       </Modal>
     </div>
+    
   );
 }
+
+
+
+
+
+
+
+
+
