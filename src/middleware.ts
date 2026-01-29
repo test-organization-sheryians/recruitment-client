@@ -18,6 +18,7 @@ export function middleware(req: NextRequest) {
     pathname.startsWith("/favicon.ico")
   ) {
     return NextResponse.next();
+
   }
 
   const token = req.cookies.get("access");
@@ -33,6 +34,7 @@ export function middleware(req: NextRequest) {
     '/reset-password',
     '/user-verification',
     '/selected-candidates',
+    '/product_'
   ];
 
   const isPublic = publicRoutes.some(
