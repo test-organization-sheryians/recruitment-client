@@ -18,19 +18,23 @@ export function middleware(req: NextRequest) {
     pathname.startsWith("/favicon.ico")
   ) {
     return NextResponse.next();
+
   }
 
   const token = req.cookies.get("access");
   const role = req.cookies.get("role");
 
   const publicRoutes = [
-    "/",
-    "/login",
-    "/register",
-    "/forgot-password",
-    "/un-verified",
-    "/unauthorized",
-    "/reset-password"
+    '/',
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/un-verified',
+    '/unauthorized',
+    '/reset-password',
+    '/user-verification',
+    '/selected-candidates',
+    '/product_'
   ];
 
   const isPublic = publicRoutes.some(

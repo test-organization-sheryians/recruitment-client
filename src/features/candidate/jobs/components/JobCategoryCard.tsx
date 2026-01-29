@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
 import { useToast } from "@/components/ui/Toast";
 import { useGetProfile } from "../../Profile/hooks/useProfileApi";
-import CandidateProfile from "../../Profile/components/CandidateProfile";
 
 interface Category {
   _id: string;
@@ -41,7 +40,12 @@ export default function JobCard({ job }: JobCardProps) {
   const handleCardClick = (e: React.MouseEvent) => {
     // Prevent navigation when clicking "Apply" button
     if ((e.target as HTMLElement).closest("button")) return;
-    router.push(`/job-details?id=${job._id}`);
+    // router.push(`/job-details?id=${job._id}`);
+    router.push(`/jobs/${job._id}`);
+
+   console.log("JOB PARAM:", job._id);
+
+
   };
 
   // Safely extract category name

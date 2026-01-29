@@ -2,7 +2,14 @@ import * as api from "@/api";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Test, TestFormValues } from "@/types/Test"; 
 import { searchUserTest } from "@/api";
+import { EnrollUsersResponse } from "@/types/Enrollment";
+import { AxiosError } from "axios";
+import toast from "react-hot-toast";
 
+type EnrollPayload = {
+  testId: string;
+  emails: string[];
+};
 
 export const useCreateTest = () => {
   const queryClient = useQueryClient();
@@ -63,10 +70,13 @@ export const useEnRollTest = () => {
 
 
 export const useEnrollTestuser = () => {
-  return useMutation({
+  return useMutation<
+    EnrollUsersResponse,                 // ✅ success response
+    AxiosError<{ message?: string }>,    // ✅ error type
+    EnrollPayload                        // ✅ payload
+  >({
     mutationKey: ["enrollTestuser"],
-    mutationFn: (data: { testId: string; emails: string[] }) =>
-      api.enrollTestuser(data),
+    mutationFn: (data) => api.enrollTestuser(data),
     retry: 0,
   });
 };
@@ -93,3 +103,26 @@ export const useGetUserAttempts = (id: string) => {
     retry: 0,
   });
 };
+
+export const usePublishTestResult = ()=>{
+  const queryClient=useQueryClient();
+  return useMutation({
+    mutationKey:["PublishTest"],
+    mutationFn:api.publishResult,
+    onSuccess:(testId)=>{
+            toast.success("Results published successfully");
+        queryClient.invalidateQueries({
+        queryKey: ["tests"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["testAttempts", testId],
+      });
+
+    },
+    onError: () => {
+      toast.error(
+        "Failed to publish results"
+      );
+    },
+  })
+}
