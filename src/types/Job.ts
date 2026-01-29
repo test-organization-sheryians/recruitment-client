@@ -21,6 +21,7 @@ export interface Job {
     department?: string;
     expiry?: string;
     applied?: boolean
+    
 }   
 // Category can be an object or string
 interface Category {
@@ -74,3 +75,14 @@ export type SearchQuery = {
   q: string;
   location: string;
 };
+
+export interface SearchParams {
+  q?: string;
+  location?: string;
+
+  jobType?: string[];
+  experience?: string[];
+
+  minSalary?: number;
+  maxSalary?: number;
+}

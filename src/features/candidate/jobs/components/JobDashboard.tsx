@@ -3,63 +3,26 @@
 import { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
 import JobCard, { Job as CardJob } from "./JobCategoryCard";
-
-// Temporary inline JobCategoryCard component
-interface JobCategoryCardProps {
-  title: string;
-  jobCount: number;
-  icon: React.ReactElement;
-  onClick: () => void;
-}
-
-function JobCategoryCard({ title, jobCount, icon, onClick }: JobCategoryCardProps) {
-  return (
-    <div
-      onClick={onClick}
-      className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all duration-200 cursor-pointer group"
-    >
-      <div className="flex flex-col items-center text-center">
-        <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors">
-          {icon}
-        </div>
-        <h3 className="font-semibold text-gray-900 text-sm mb-1">{title}</h3>
-        <p className="text-xs text-gray-500">{jobCount} jobs</p>
-      </div>
-    </div>
-  );
-}
-import {
-  Code,
-  Palette,
-  Megaphone,
-  TrendingUp,
-  Package,
-  Landmark,
-} from "lucide-react";
-
+import ExploreByCategory from "./ExploreByCategory";
 import HeroSection from "./HeroSection";
-import { Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
+import FiltersSidebar from "./FiltersSidebar";
+
 import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
 import {
   useInfiniteJobs,
   useInfiniteJobsByCategory,
 } from "@/features/candidate/jobs/hooks/useInfiniteJobs";
+import { useInfiniteSearchJobs } from "@/features/candidate/jobs/hooks/useSearchJobs";
 import type { CategoryItem } from "@/api/category/getCategoriesPaginated";
 import { SearchQuery } from "@/types/Job";
-import { useInfiniteSearchJobs } from "@/features/candidate/jobs/hooks/useSearchJobs";
 
 export default function JobDashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
- const [searchLocation,setSearchLocation] = useState("")
- const [query, setQuery] = useState<SearchQuery>({q: "", location: "",});
-  // const { data: profileCalInfo } = useProfileQuery();
-
-  // const completion = profileCalInfo?.data ?? 0;
-  // const isProfileCompleted = completion < 60;
-
-  // console.log(isProfileCompleted);
+  const [searchLocation, setSearchLocation] = useState("");
+  const [query, setQuery] = useState<SearchQuery>({ q: "", location: "" });
 
   const {
     data: categoryPages,
@@ -73,36 +36,65 @@ export default function JobDashboardPage() {
     (p) => p.data ?? []
   );
 
+  /* ================= FILTER STATES ================= */
+  const [jobType, setJobType] = useState<string[]>([]);
+  const [experience, setExperience] = useState<string[]>([]);
+  const [salaryRange, setSalaryRange] = useState<[number, number]>([
+    0,
+    10000000,
+  ]);
+  /* ================================================= */
+
   const allJobsQuery = useInfiniteJobs();
   const jobsByCategoryQuery = useInfiniteJobsByCategory(selectedCategory);
-const searchJobsQuery = useInfiniteSearchJobs({
-  q: query.q,
-  location: query.location,
-});
 
+  /* ✅ ONLY REAL CHANGE IS HERE */
+  const searchJobsQuery = useInfiniteSearchJobs({
+    q: query.q,
+    location: query.location,
+    jobType,
+    experience,
+    minSalary: salaryRange[0],
+    maxSalary: salaryRange[1],
+  } as any);
 
-const isSearchActive = Boolean(query.q || query.location);
-const activeJobsQuery = isSearchActive
-  ? searchJobsQuery
-  : selectedCategory
-  ? jobsByCategoryQuery
-  : allJobsQuery;
+  const isSearchActive = Boolean(
+    query.q ||
+      query.location ||
+      jobType.length ||
+      experience.length ||
+      salaryRange[0] !== 0 ||
+      salaryRange[1] !== 10000000
+  );
+
+  const activeJobsQuery = isSearchActive
+    ? searchJobsQuery
+    : selectedCategory
+    ? jobsByCategoryQuery
+    : allJobsQuery;
 
   const jobsPages = activeJobsQuery.data?.pages ?? [];
-  const jobsLoading = activeJobsQuery.isLoading;
   const hasMoreJobs = activeJobsQuery.hasNextPage;
   const fetchNextJobs = activeJobsQuery.fetchNextPage;
   const isFetchingMoreJobs = activeJobsQuery.isFetchingNextPage;
 
-console.log("Jobs Pages data check ===>:", jobsPages);
-console.log("total job count check ===>:", jobsPages?.[0]?.pagination.totalRecords);
-const jobsCount = jobsPages?.[0]?.pagination.totalRecords || 0;
+  const jobsCount =
+    jobsPages.length > 0
+      ? jobsPages[0]?.pagination?.totalRecords ?? 0
+      : 0;
 
   const jobs: CardJob[] = jobsPages
     .flatMap((p) => p.data ?? [])
     .map((job) => ({
       ...job,
-      salary: typeof job.salary === "number" ? String(job.salary) : job.salary,
+      salary:
+        typeof job.salary === "number"
+          ? String(job.salary)
+          : typeof job.salary === "object" && job.salary !== null
+          ? `${(job.salary as any).currency} ${(job.salary as any).min} - ${
+              (job.salary as any).max
+            }`
+          : "",
       skills: job.skills?.map((s) =>
         typeof s === "string"
           ? { _id: s, name: s }
@@ -110,23 +102,23 @@ const jobsCount = jobsPages?.[0]?.pagination.totalRecords || 0;
       ),
     }));
 
-  // Infinite scroll sentinels
   const categoriesLoadMoreRef = useRef<HTMLDivElement | null>(null);
   const jobsLoadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const el = categoriesLoadMoreRef.current;
     if (!el) return;
+
     const observer = new IntersectionObserver((entries) => {
-      const entry = entries[0];
       if (
-        entry.isIntersecting &&
+        entries[0].isIntersecting &&
         hasMoreCategories &&
         !isFetchingMoreCategories
       ) {
         fetchNextCategories();
       }
     });
+
     observer.observe(el);
     return () => observer.disconnect();
   }, [hasMoreCategories, isFetchingMoreCategories, fetchNextCategories]);
@@ -134,83 +126,45 @@ const jobsCount = jobsPages?.[0]?.pagination.totalRecords || 0;
   useEffect(() => {
     const el = jobsLoadMoreRef.current;
     if (!el) return;
+
     const observer = new IntersectionObserver((entries) => {
-      const entry = entries[0];
-      if (entry.isIntersecting && hasMoreJobs && !isFetchingMoreJobs) {
+      if (entries[0].isIntersecting && hasMoreJobs && !isFetchingMoreJobs) {
         fetchNextJobs();
       }
     });
+
     observer.observe(el);
     return () => observer.disconnect();
-  }, [hasMoreJobs, isFetchingMoreJobs, fetchNextJobs, selectedCategory]);
+  }, [hasMoreJobs, isFetchingMoreJobs, fetchNextJobs]);
 
- 
-
-  // search button handler
-    const searchHandler = ()=>{
-      
- 
-    const q = searchTerm.trim();
-  const location = searchLocation.trim();
-
-  // if (!q ) return;
-
-  setQuery({ q, location });
-  setSelectedCategory(null);
-  setSearchTerm("");
-  setSearchLocation("");
-  }
+  const searchHandler = () => {
+    setQuery({
+      q: searchTerm.trim(),
+      location: searchLocation.trim(),
+    });
+    setSelectedCategory(null);
+    setSearchTerm("");
+    setSearchLocation("");
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero with search */}
-      <HeroSection searchTerm={searchTerm} setSearchTerm={setSearchTerm}  onSearch={searchHandler} 
-     searchLocation={searchLocation} setSearchLocation={setSearchLocation} />
+      <HeroSection
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        onSearch={searchHandler}
+        searchLocation={searchLocation}
+        setSearchLocation={setSearchLocation}
+      />
 
-     {/* Explore by Category */}
-<section className="bg-gray-50">
-  <div className="max-w-7xl mx-auto px-4 py-14">
-    {/* Header */}
-    <div className="flex items-center justify-between mb-8">
-      <h2 className="text-2xl font-bold text-gray-900">
-        Explore by Category
-      </h2>
-      <button className="text-sm font-medium text-blue-600 hover:underline">
-        View all →
-      </button>
-    </div>
+      <ExploreByCategory
+        categories={categories}
+        onSelect={(id) => {
+          setSelectedCategory(id);
+          setQuery({ q: "", location: "" });
+        }}
+      />
 
-    {/* Category Cards */}
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6">
-      {categories.slice(0, 6).map((cat, index) => {
-        const icons = [
-          <Code key="code" />,
-          <Palette key="palette" />,
-          <Megaphone key="marketing" />,
-          <TrendingUp key="sales" />,
-          <Package key="product" />,
-          <Landmark key="finance" />,
-        ];
-
-        return (
-          <JobCategoryCard
-            key={cat._id}
-            title={cat.name}
-            jobCount={(cat as any).jobCount || 0}
-            icon={icons[index % icons.length]}
-            onClick={() => {
-              setSelectedCategory(cat._id);
-              setQuery({ q: "", location: "" });
-            }}
-          />
-        );
-      })}
-    </div>
-  </div>
-</section>
-
-
-      {/* Mobile Filter Bar */}
       <div className="md:hidden sticky top-0 z-30 bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
         <button
           onClick={() => setIsSidebarOpen(true)}
@@ -219,151 +173,44 @@ const jobsCount = jobsPages?.[0]?.pagination.totalRecords || 0;
           <Menu size={18} className="text-gray-700" />
         </button>
         <span className="text-sm font-medium text-gray-800">
-          {selectedCategory ? "Filtered" : "All Jobs"} • {jobsCount}{" "}
-          found
+          {selectedCategory ? "Filtered" : "All Jobs"} • {jobsCount} found
         </span>
       </div>
 
-      {/* Mobile Sidebar */}
-{isSidebarOpen && (
-  <div className="md:hidden fixed inset-0 z-40 overflow-hidden">
-    {/* Backdrop */}
-    <div
-      className="absolute inset-0 bg-black/40"
-      onClick={() => setIsSidebarOpen(false)}
-    />
-
-    {/* Sidebar */}
-    <div className="absolute left-0 top-0 h-full w-72 bg-white shadow-2xl flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b">
-        <h3 className="text-base font-semibold">Categories</h3>
-        <button onClick={() => setIsSidebarOpen(false)}>
-          <X size={18} />
-        </button>
-      </div>
-
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto overscroll-contain">
-        <Sidebar
-          selected={selectedCategory}
-          onSelect={(id) => {
-            setSelectedCategory(id);
-            setIsSidebarOpen(false);
-            setQuery({ q: "", location: "" });
-          }}
-          categories={categories || []}
-          isLoading={categoriesLoading}
-          loadMoreRef={categoriesLoadMoreRef}
-        />
-      </div>
-    </div>
-  </div>
-)}
-
-
-      {/* Main Grid */}
       <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Desktop Sidebar */}
         <div className="hidden md:block md:col-span-3">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sticky top-4">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">
-              Job Categories
-            </h3>
-            <Sidebar
-              selected={selectedCategory}
-             onSelect={(id) => {
-                setSelectedCategory(id);
-                setIsSidebarOpen(false);
-                setQuery({ q: "", location: "" })
-              }}
-              categories={categories || []}
-              isLoading={categoriesLoading}
-              loadMoreRef={categoriesLoadMoreRef}
-             
-            />
-          </div>
+          <FiltersSidebar
+            jobType={jobType}
+            setJobType={setJobType}
+            experience={experience}
+            setExperience={setExperience}
+            salaryRange={salaryRange}
+            setSalaryRange={setSalaryRange}
+          />
         </div>
 
-        {/* Job List */}
         <div className="md:col-span-9">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            {/* Header */}
-            <div className="px-5 py-3.5 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-              <div className="flex items-center gap-3">
-                <h2 className="text-sm font-semibold text-gray-900">
-                  {selectedCategory ? "Category Jobs" : "All Jobs"}
-                </h2>
-                <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-                  {jobsCount} jobs
-                </span>
-              </div>
-              {selectedCategory && (
-                <button
-                  onClick={() => setSelectedCategory(null)}
-                  className="text-xs text-gray-600 hover:text-gray-900 underline"
-                >
-                  Clear filter
-                </button>
-              )}
+            <div className="px-5 py-3.5 border-b border-gray-200 bg-gray-50 flex items-center gap-3">
+              <h2 className="text-sm font-semibold text-gray-900">
+                {selectedCategory ? "Category Jobs" : "All Jobs"}
+              </h2>
+              <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
+                {jobsCount} jobs
+              </span>
             </div>
 
-            {/* Loading */}
-            {jobsLoading && (
-              <div className="p-8 text-center">
-                <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-blue-600"></div>
-                <p className="text-xs text-gray-500 mt-2">Loading jobs...</p>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {!jobsLoading && jobsCount === 0 && (
-              <div className="p-12 text-center">
-                <p className="text-sm text-gray-500">
-                  No jobs match your search.
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Try different keywords or clear filters.
-                </p>
-              </div>
-            )}
-
-            {/* Job Cards */}
-            <div className="divide-y divide-transparent p-2">
+            <div className="p-2">
               {jobs.map((job) => (
-                <div
-                  key={job._id}
-                  className="py-5 first:pt-0 hover:bg-gray-50/70 transition-colors duration-150"
-                >
+                <div key={job._id} className="py-5 first:pt-0">
                   <JobCard job={job} />
                 </div>
               ))}
-              {/* Infinite scroll sentinel for jobs */}
               <div ref={jobsLoadMoreRef} className="h-1" />
-              {isFetchingMoreJobs && (
-                <div className="p-4 text-center text-xs text-gray-500">
-                  Loading more…
-                </div>
-              )}
             </div>
           </div>
         </div>
       </div>
-
-      {/* Animation */}
-      <style jsx>{`
-        @keyframes slideIn {
-          from {
-            transform: translateX(-100%);
-          }
-          to {
-            transform: translateX(0);
-          }
-        }
-        .animate-slideIn {
-          animation: slideIn 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 }

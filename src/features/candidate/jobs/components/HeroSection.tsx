@@ -41,47 +41,59 @@ export default function HeroSection({
           </p>
 
           {/* Search Bar */}
-          <div className="mt-12 max-w-4xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-2xl p-2">
-              <div className="flex flex-col md:flex-row gap-2">
-                {/* Job Input */}
-                <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Job title or keywords"
-                    className="w-full pl-12 pr-4 py-4 rounded-xl bg-white text-gray-800
-                               focus:outline-none focus:ring-2 focus:ring-blue-600"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
+          {/* Search Bar */}
+<div className="mt-12 max-w-4xl mx-auto">
+  <div className="bg-white rounded-2xl shadow-2xl p-2">
+    <div className="flex flex-col md:flex-row items-stretch gap-2 md:gap-0">
+      
+      {/* Job Input */}
+      <div className="relative flex-1">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Job title or keywords"
+          className="w-full pl-12 pr-4 py-4 rounded-xl md:rounded-r-none
+                     bg-white text-gray-800 focus:outline-none
+                     focus:ring-0 focus:border-transparent"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
 
-                {/* Location Input */}
-                <div className="relative flex-1 md:max-w-xs">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="City or remote"
-                    className="w-full pl-12 pr-4 py-4 rounded-xl bg-white text-gray-800
-                               focus:outline-none focus:ring-2 focus:ring-blue-600"
-                    value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
-                  />
-                </div>
+      {/* Divider (desktop only) */}
+      <div className="hidden md:flex items-center">
+        <div className="h-8 w-px bg-gray-200" />
+      </div>
 
-                {/* Button */}
-                <button
-                  onClick={onSearch}
-                  className="px-8 py-4 rounded-xl bg-blue-600 text-white font-semibold
-                             hover:bg-blue-700 transition shadow-lg flex items-center justify-center gap-2"
-                >
-                  <Search className="w-5 h-5" />
-                  Search Jobs
-                </button>
-              </div>
-            </div>
-          </div>
+      {/* Location Input */}
+      <div className="relative flex-1 md:max-w-xs">
+        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <input
+          type="text"
+          placeholder="City or remote"
+          className="w-full pl-12 pr-4 py-4 rounded-xl md:rounded-l-none
+                     bg-white text-gray-800 focus:outline-none
+                     focus:ring-0 focus:border-transparent    "
+          value={searchLocation}
+          onChange={(e) => setSearchLocation(e.target.value)}
+        />
+      </div>
+
+      {/* Button */}
+      <button
+        onClick={onSearch}
+        className="px-8 py-4 rounded-xl bg-blue-600 text-white font-semibold
+                   hover:bg-blue-700 transition shadow-lg
+                   flex items-center justify-center gap-2"
+      >
+        <Search className="w-5 h-5" />
+        Search Jobs
+      </button>
+
+    </div>
+  </div>
+</div>
+
         </div>
       </div>
     </div>

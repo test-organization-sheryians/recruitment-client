@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
 import { useToast } from "@/components/ui/Toast";
 import { useGetProfile } from "../../Profile/hooks/useProfileApi";
+import JobIcon from "./jobIcon";
+
 
 interface Category {
   _id: string;
@@ -95,17 +97,22 @@ export default function JobCard({ job }: JobCardProps) {
       {/* Left Section */}
       <div className="flex gap-4 flex-1 min-w-0">
         {/* Logo Placeholder */}
-        <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center
-                        text-gray-500 font-semibold text-sm shrink-0">
-          {job.title?.charAt(0)}
-        </div>
+        <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center
+                text-red-600 shrink-0">
+  <JobIcon
+    name={categoryName || job.title}
+    className="w-6 h-6"
+  />
+</div>
+
 
         {/* Job Info */}
-        <div className="min-w-0">
-          {/* Title */}
-          <h3 className="text-base font-semibold text-gray-900 truncate">
-            {job.title}
-          </h3>
+         <div className="min-w-0">
+    <h3 className="text-base font-semibold text-gray-900 truncate">
+      {job.title}
+    </h3>
+
+   
 
           {/* Category + Department */}
           <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500">
