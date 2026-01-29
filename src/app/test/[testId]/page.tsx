@@ -7,6 +7,8 @@ import Cookies from "js-cookie";
 
 import { useStartTest } from "@/features/test/hooks/useStartsTest";
 import { useTestInfo } from "@/features/test/hooks/testInfo";
+import { useStartingTimer } from "@/features/test/hooks/testTimer";
+
 
 import {
   Clock,
@@ -24,9 +26,12 @@ export default function StartTestPage() {
   const router = useRouter();
   const params = useParams();
   const testId = params?.testId as string;
+  const { timeLeft, started } = useStartingTimer(5);
 
   const queryClient = useQueryClient();
   const { mutate, isPending } = useStartTest();
+
+  
 
   /* ---------- FETCH TEST INFO ---------- */
 
@@ -75,6 +80,7 @@ export default function StartTestPage() {
       </p>
     );
   }
+  
 
   if (isError || !test) {
     return (
@@ -113,7 +119,6 @@ export default function StartTestPage() {
           </div>
 
           <h1 className="text-3xl font-bold mb-3">{test.title}</h1>
-          {/* <p className="text-gray-700 mb-6">{test.summury}</p> */}
 
           <div className="grid grid-cols-3 gap-4 mb-8">
             <Stat
@@ -162,19 +167,30 @@ export default function StartTestPage() {
             </div>
           </div>
 
-          <div className="text-center">
-            <button
-              onClick={handleStart}
-              disabled={isPending}
-              className={`px-10 py-4 text-white font-bold text-lg rounded-xl transition ${
-                isPending
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-indigo-600 hover:bg-indigo-700"
-              }`}
-            >
-              {isPending ? "Starting..." : "Start Assessment →"}
-            </button>
-          </div>
+          <div className="text-center space-y-3">
+  {!started && (
+    <p className="text-sm text-gray-600">
+      Test starts in <span className="font-bold">{timeLeft}</span>s
+    </p>
+  )}
+
+  <button
+    onClick={handleStart}
+    disabled={!started || isPending}
+    className={`px-10 py-4 text-white font-bold text-lg rounded-xl transition ${
+      !started || isPending
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-indigo-600 hover:bg-indigo-700"
+    }`}
+  >
+    {isPending
+      ? "Starting..."
+      : started
+      ? "Start Assessment →"
+      : "Please wait…"}
+  </button>
+</div>
+
         </div>
       </div>
     </div>
