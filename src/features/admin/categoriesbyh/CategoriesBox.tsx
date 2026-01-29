@@ -34,9 +34,6 @@ const CategoriesBox = () => {
     const categories = data?.pages?.flatMap((p) => p.data) ?? [];
     const totalRecords = data?.pages?.[0]?.pagination?.totalRecords ?? categories.length;
 
-
-    console.log(categories)
-
     const {
         mutate: deleteCategory,
         isPending: isDeleting,
