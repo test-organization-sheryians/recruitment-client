@@ -130,16 +130,23 @@ export default function JobDetails() {
   ];
 
   /* -------------------- Format Location -------------------- */
-  const getLocationString = () => {
-    if (!job.location) return job.department || null;
-    
-    const parts = [];
-    if (job.location.city) parts.push(job.location.city);
-    if (job.location.state) parts.push(job.location.state);
-    
-    const locationStr = parts.join(", ");
-    return job.isRemote ? `${locationStr} (Remote)` : locationStr;
-  };
+  const getLocationString = (): string | undefined => {
+  if (!job.location) {
+    return job.isRemote ? "Remote" : job.department;
+  }
+
+  const parts: string[] = [];
+
+  if (job.location.city) parts.push(job.location.city);
+  if (job.location.state) parts.push(job.location.state);
+
+  if (parts.length === 0) {
+    return job.isRemote ? "Remote" : job.department;
+  }
+
+  const locationStr = parts.join(", ");
+  return job.isRemote ? `${locationStr} (Remote)` : locationStr;
+};
 
   /* -------------------- UI -------------------- */
   return (
