@@ -7,6 +7,8 @@ import ExploreByCategory from "./ExploreByCategory";
 import HeroSection from "./HeroSection";
 import { Menu } from "lucide-react";
 import FiltersSidebar from "./FiltersSidebar";
+import LatestJobCard from "./LatestJobCard";
+
 
 import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
 import {
@@ -188,29 +190,47 @@ export default function JobDashboardPage() {
             setSalaryRange={setSalaryRange}
           />
         </div>
+        {/* Jobs */}
+<div className="md:col-span-9">
+  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    {/* Header */}
+    <div className="px-5 py-3.5 border-b border-gray-200 bg-gray-50 flex items-center gap-3">
+      <h2 className="text-sm font-semibold text-gray-900">
+        {selectedCategory ? "Category Jobs" : "Latest Jobs"}
+      </h2>
+      <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
+        {jobsCount} jobs
+      </span>
+    </div>
 
-        <div className="md:col-span-9">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-gray-200 bg-gray-50 flex items-center gap-3">
-              <h2 className="text-sm font-semibold text-gray-900">
-                {selectedCategory ? "Category Jobs" : "All Jobs"}
-              </h2>
-              <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-                {jobsCount} jobs
-              </span>
-            </div>
+    {/* Job list */}
+    <div className="p-4 space-y-4">
+      {jobs.map((job) => (
+        <LatestJobCard
+          key={job._id}
+          title={job.title}
+          company={job.client?.company || "Company"}
+          location={
+            job.location?.city
+              ? `${job.location.city}, ${job.location.country ?? ""}`
+              : "Remote"
+          }
+          salary={job.salary}
+          postedAt={job.createdAt ? "Recently" : undefined}
+          skills={job.skills?.map((s) => s.name)}
+          applied={job.applied}
+        />
+      ))}
 
-            <div className="p-2">
-              {jobs.map((job) => (
-                <div key={job._id} className="py-5 first:pt-0">
-                  <JobCard job={job} />
-                </div>
-              ))}
-              <div ref={jobsLoadMoreRef} className="h-1" />
-            </div>
-          </div>
-        </div>
+      {/* Infinite scroll trigger */}
+      <div ref={jobsLoadMoreRef} className="h-1" />
+    </div>
+  </div>
+</div>
+
+
       </div>
     </div>
   );
 }
+

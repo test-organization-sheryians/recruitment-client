@@ -16,22 +16,22 @@ export default function HeroSection({
   setSearchLocation,
 }: HeroSectionProps) {
   return (
-    <div className="w-full px-6 mt-8">
+    <div className="w-full px-6 pt-20 ">
       <div
-        className="relative max-w-7xl mx-auto rounded-3xl overflow-hidden bg-cover bg-center"
+        className="relative max-w-293 mx-auto rounded-2xl overflow-hidden bg-cover bg-center"
         style={{
-          backgroundImage: "url('/images/hero.jpeg')",
+          backgroundImage: "url('https://images.unsplash.com/photo-1510519138101-570d1dca3d66?q=80&w=1147&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
         }}
       >
         {/* Dark Overlay */}
         <div className="absolute inset-0 bg-black/60" />
 
         {/* Content */}
-        <div className="relative z-10 px-6 py-20 md:py-28 text-center text-white">
+        <div className="relative z-10 px-6 py-14 md:py-18 text-center text-white">
           {/* Heading */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-none">
             Find your next{" "}
-            <span className="text-blue-500">career-defining</span> role
+            <span className="text-blue-500">career- <br />defining</span> role
           </h1>
 
           {/* Subtitle */}
@@ -42,8 +42,8 @@ export default function HeroSection({
 
           {/* Search Bar */}
           {/* Search Bar */}
-<div className="mt-12 max-w-4xl mx-auto">
-  <div className="bg-white rounded-2xl shadow-2xl p-2">
+<div className="mt-8 max-w-3xl mx-auto">
+  <div className="bg-white rounded-lg shadow-2xl p-2">
     <div className="flex flex-col md:flex-row items-stretch gap-2 md:gap-0">
       
       {/* Job Input */}
@@ -82,7 +82,7 @@ export default function HeroSection({
       {/* Button */}
       <button
         onClick={onSearch}
-        className="px-8 py-4 rounded-xl bg-blue-600 text-white font-semibold
+        className="px-8 py-4 rounded-lg bg-blue-600 text-white font-semibold
                    hover:bg-blue-700 transition shadow-lg
                    flex items-center justify-center gap-2"
       >
