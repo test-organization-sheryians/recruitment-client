@@ -1,6 +1,9 @@
 "use client"
+
 import { useState } from "react"
 import DeleteIcon from "@mui/icons-material/Delete"
+import SwipeableDrawer from "@mui/material/SwipeableDrawer"
+
 interface AddQuestionProps {
   onClose: () => void
   onAdd: (question: {
@@ -14,6 +17,7 @@ interface AddQuestionProps {
 }
 
 export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
+  const [open, setOpen] = useState(true)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [type, setType] = useState<"radio" | "text" | "url">("radio")
@@ -22,9 +26,9 @@ export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
   const [options, setOptions] = useState<string[]>(["Option 1", "Option 2"])
 
   const handleOptionChange = (index: number, value: string) => {
-    const newOptions = [...options]
-    newOptions[index] = value
-    setOptions(newOptions)
+    const updated = [...options]
+    updated[index] = value
+    setOptions(updated)
   }
 
   const handleAddOption = () => {
@@ -32,25 +36,21 @@ export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
   }
 
   const handleDeleteOption = (index: number) => {
-    const newOptions = options.filter((_, i) => i !== index)
-    setOptions(newOptions)
+    setOptions(options.filter((_, i) => i !== index))
   }
 
   const handleSave = () => {
     if (!title.trim()) return
 
-    const questionData = {
+    onAdd({
       title,
       description,
       type,
       required,
       options: type === "radio" ? options : undefined,
       isKnockout,
-    }
+    })
 
-    onAdd(questionData)
-
-    // reset
     setTitle("")
     setDescription("")
     setType("radio")
@@ -58,131 +58,177 @@ export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
     setOptions(["Option 1", "Option 2"])
     setIsKnockout(false)
 
+    setOpen(false)
     onClose()
   }
 
   return (
-    <div className="h-full w-full p-4">
-      <div className="bg-white w-full h-full p-4">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Add Question</h2>
-          <button onClick={onClose} className="text-gray-500">✕</button>
-        </div>
+    <>
+      {/* Backdrop blur */}
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[60]" />
 
-        {/* Form */}
-        <div className="space-y-3">
-          <input
-            placeholder="Question"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full border p-2 rounded"
-          />
+      <SwipeableDrawer
+        anchor="right"
+        open={open}
+        onOpen={() => setOpen(true)}
+        onClose={() => {
+          setOpen(false)
+          onClose()
+        }}
+        PaperProps={{
+          sx: { width: 600 },
+        }}
+      >
+        <div className="flex flex-col h-full bg-white dark:bg-[#1a1e2e]">
 
-          <textarea
-            placeholder="Description (optional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full border p-2 rounded"
-          />
-
-          {/* Input Type */}
-          <div>
-            <label className="text-sm font-medium">Input Type</label>
-            <select
-              value={type}
-              onChange={(e) => {
-                const selectedType = e.target.value as "radio" | "text" | "url"
-                setType(selectedType)
-
-                if (selectedType !== "radio") {
-                  setOptions([])
-                } else {
-                  setOptions(["Option 1", "Option 2"])
-                }
+          {/* Header */}
+          <div className="p-6 border-b border-[#dbdde6] dark:border-gray-800 flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-bold">Add New Question</h2>
+              <p className="text-xs text-gray-500 mt-1">
+                Configure screening logic and input details
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setOpen(false)
+                onClose()
               }}
-              className="w-full border p-2 rounded mt-1"
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
             >
-              <option value="radio">Radio Button</option>
-              <option value="text">Long Text</option>
-              <option value="url">URL</option>
-            </select>
+              ✕
+            </button>
           </div>
 
+          {/* Body */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
-          {/* Options */}
-          {type === "radio" && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Options</label>
+            {/* Question */}
+            <div>
+              <label className="block text-sm font-bold mb-2">Question Title</label>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. How many years of experience do you have?"
+                className="w-full rounded-lg border border-gray-300 p-2 text-sm"
+              />
+            </div>
 
-              {options.map((opt, i) => (
-                <div key={i} className="flex gap-2 items-center">
-                  <input
-                    className="flex-1 border p-2 rounded"
-                    value={opt}
-                    onChange={(e) => handleOptionChange(i, e.target.value)}
-                    placeholder={`Option ${i + 1}`}
-                  />
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-bold mb-2">
+                Description (Optional)
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                placeholder="Provide additional context for the candidate..."
+                className="w-full rounded-lg border border-gray-300 p-2 text-sm"
+              />
+            </div>
 
+            {/* Input Type */}
+            <div>
+              <label className="block text-sm font-bold mb-2">Input Type</label>
+              <select
+                value={type}
+                onChange={(e) => {
+                  const val = e.target.value as "radio" | "text" | "url"
+                  setType(val)
+                  setOptions(val === "radio" ? ["Option 1", "Option 2"] : [])
+                }}
+                className="w-full rounded-lg border border-gray-300 p-2 text-sm"
+              >
+                <option value="radio">Radio Buttons</option>
+                <option value="text">Long Text</option>
+                <option value="url">URL</option>
+              </select>
+            </div>
+
+            {/* Options */}
+            {type === "radio" && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-bold">Options</label>
                   <button
                     type="button"
-                    onClick={() => handleDeleteOption(i)}
-                    className="px-3 py-2 text-red-600 rounded hover:bg-red-50"
+                    onClick={handleAddOption}
+                    className="text-xs font-bold text-blue-600"
                   >
-                      <DeleteIcon fontSize="small" />
+                    + Add Option
                   </button>
                 </div>
-              ))}
 
-              <button
-                className="text-blue-600 text-sm mt-2"
-                onClick={handleAddOption}
-                type="button"
-              >
-                + Add option
-              </button>
+                {options.map((opt, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      value={opt}
+                      onChange={(e) => handleOptionChange(i, e.target.value)}
+                      className="flex-1 rounded-lg border border-gray-300 p-2 text-sm"
+                    />
+                    <button
+                      onClick={() => handleDeleteOption(i)}
+                      className="text-red-500"
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Required */}
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div>
+                <p className="text-sm font-bold">Is Required</p>
+                <p className="text-xs text-gray-500">
+                  Candidate must answer to submit
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={required}
+                onChange={() => setRequired(!required)}
+              />
             </div>
-          )}
 
-          {/* Required */}
-          <div className="flex items-center space-x-2">
-            <span>Required</span>
-            <input
-              type="checkbox"
-              checked={required}
-              onChange={() => setRequired(!required)}
-            />
+            {/* Knockout */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold">Is Knockout Question</p>
+                <p className="text-xs text-gray-500">
+                  Filter candidates based on answer
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={isKnockout}
+                onChange={() => setIsKnockout(!isKnockout)}
+              />
+            </div>
           </div>
 
-          {/* Knockout */}
-          <div className="flex items-center space-x-2">
-            <span>Is knockout question</span>
-            <input
-              type="checkbox"
-              checked={isKnockout}
-              onChange={() => setIsKnockout(!isKnockout)}
-            />
+          {/* Footer */}
+          <div className="p-6 border-t border-[#dbdde6] dark:border-gray-800 flex gap-3">
+            <button
+              className="flex-1 h-11 rounded-lg border font-bold"
+              onClick={() => {
+                setOpen(false)
+                onClose()
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              className="flex-[2] h-11 rounded-lg bg-blue-600 text-white font-bold"
+              onClick={handleSave}
+            >
+              Create Question
+            </button>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="flex gap-4 mt-6">
-          <button
-            type="button"
-            className="bg-white text-black border w-[40%] py-2 rounded"
-            onClick={onClose}
-          >
-            Cancel
-          </button>
-
-          <button
-            className="bg-blue-600 text-white flex-1 py-2 rounded"
-            onClick={handleSave}
-          >
-            Create Question
-          </button>
-        </div>
-      </div>
-    </div>
+      </SwipeableDrawer>
+    </>
   )
 }

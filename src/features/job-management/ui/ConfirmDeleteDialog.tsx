@@ -123,7 +123,7 @@ export default function ConfirmDeleteDialog({
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 bg-gray-50">
+        <div className="flex gap-3 p-6 bg-gray-50 rounded-full">
           <button
             onClick={() => setIsOpen(false)}
             className="flex-1 h-11 border rounded"

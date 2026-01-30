@@ -1,20 +1,20 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import AddQuestion from "./AddQuestion"  // path adjust if needed
-import SwipeableDrawer from "@/features/job-management/ui/SwipeableDrawer"
+import AddQuestion from "./AddQuestion"  // adjust path if needed
 import AddIcon from "@mui/icons-material/Add"
-
 import EditIcon from "@mui/icons-material/Edit"
 import DeleteIcon from "@mui/icons-material/Delete"
+// import JobDeleteButton from "../ui/JobDeleteButton"
+import toast from "react-hot-toast"
+import ConfirmDeleteDialog from "../ui/ConfirmDeleteDialog"
 
-// ================= TYPEimport AddQuestionModal from "./AddQuestionModal"  // path adjust if needed
 
 export type QuestionType = "radio" | "text" | "url"
 
@@ -25,428 +25,309 @@ export interface ScreeningQuestion {
   required: boolean
 }
 
-// ================= COMPONENT =================
 const ScreeningQuestions: React.FC = () => {
-  const [questions, setQuestions] = useState<ScreeningQuestion[]>([
-    {
-      id: 1,
-      title: "How many years of experience do you have with Figma?",
-      type: "radio",
-      required: true,
-    },
-    {
-      id: 2,
-      title: "Please describe your most challenging design project.",
-      type: "text",
-      required: false,
-    },
-    {
-      id: 3,
-      title: "Portfolio Link",
-      type: "url",
-      required: true,
-    },
-  ])
-
+  const [questions, setQuestions] = useState<ScreeningQuestion[]>([])
   const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [title, setTitle] = useState("");
-const [description, setDescription] = useState("");
-const [type, setType] = useState<QuestionType>("radio");
-const [options, setOptions] = useState<string[]>(["Option 1", "Option 2"]);
-const [required, setRequired] = useState(false);
-const [isKnockout, setIsKnockout] = useState(false);
+  const [title, setTitle] = useState("")
+  const [type, setType] = useState<QuestionType>("radio")
+  const [required, setRequired] = useState(false)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
-const [isPreviewOpen, setIsPreviewOpen] = useState(false)
-const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-
-  const [newQuestion, setNewQuestion] = useState<{
-  title: string
-  description: string
-  type: QuestionType
-  options: string[]
-  required: boolean
-}>({
-  title: "",
-  description: "",
-  type: "radio",
-  options: [""],
-  required: false,
-})
-
+  // ================= Load saved questions on mount =================
+  useEffect(() => {
+    const saved = localStorage.getItem("screening_questions")
+    if (saved) setQuestions(JSON.parse(saved))
+    else {
+      // default questions if none saved
+      setQuestions([
+        { id: 1, title: "How many years of experience do you have with Figma?", type: "radio", required: true },
+        { id: 2, title: "Please describe your most challenging design project.", type: "text", required: false },
+        { id: 3, title: "Portfolio Link", type: "url", required: true },
+      ])
+    }
+  }, [])
 
   // ================= FUNCTIONS =================
   const deleteQuestion = (id: number) => {
-    setQuestions((prev) => prev.filter((q) => q.id !== id))
+    setQuestions(prev => prev.filter(q => q.id !== id))
+    toast.success("Question deleted")
   }
 
-  const updateQuestion = (id: number, newTitle: string) => {
-    setQuestions((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, title: newTitle } : q))
-    )
-  }
   const handleSaveChanges = () => {
-  localStorage.setItem("screening_questions", JSON.stringify(questions))
-  
-}
-const handleOptionChange = (index: number, value: string) => {
-  setOptions(prev => {
-    const newOptions = [...prev];
-    newOptions[index] = value;
-    return newOptions;
-  });
-};
-
-const handleDeleteOption = (index: number) => {
-  setOptions(prev => prev.filter((_, i) => i !== index));
-};
-
-const handleAddOption = () => {
-  setOptions(prev => [...prev, `Option ${prev.length + 1}`]);
-};
-const handleSave = () => {
-  if (editingQuestionId) {
-    // Update existing question
-    setQuestions(prev =>
-      prev.map(q =>
-        q.id === editingQuestionId
-          ? { ...q, title, type, required }
-          : q
-      )
-    );
-    setIsEditDialogOpen(false);
+    localStorage.setItem("screening_questions", JSON.stringify(questions))
+    toast.success("Questions saved successfully")
   }
-};
 
+  const handleEditQuestion = (q: ScreeningQuestion) => {
+    setEditingQuestionId(q.id)
+    setTitle(q.title)
+    setType(q.type)
+    setRequired(q.required)
+    setIsEditDialogOpen(true)
 
-  /*const handleAddQuestion = () => {
-  const id = Date.now()
-  const questionToAdd: ScreeningQuestion = {
-    id,
-    title: newQuestion.title,
-    type: newQuestion.type,
-    required: newQuestion.required,
-  }*/
-  /*setQuestions((prev) => [...prev, questionToAdd])
- 
-  setNewQuestion({
-    title: "",
-    description: "",
-    type: "radio",
-    options: [""],
-    required: false,
-  })
-}*/
+  }
 
+  const handleSaveEdit = () => {
+    if (editingQuestionId) {
+      setQuestions(prev =>
+        prev.map(q =>
+          q.id === editingQuestionId ? { ...q, title, type, required } : q
+        )
+      )
+      setIsEditDialogOpen(false)
+      toast.success("Question updated")
+    }
+  }
 
-
-
+  const handleAddQuestion = (q: { title: string; type: QuestionType; required: boolean }) => {
+    setQuestions(prev => [
+      ...prev,
+      { id: Date.now(), title: q.title, type: q.type, required: q.required },
+    ])
+    setIsDrawerOpen(false)
+    toast.success("Question added")
+  }
 
   // ================= UI =================
   return (
-    <div className="bg-[#f7f8fb] min-h-screen px-6 py-10">
-      <div className="max-w-5xl mx-auto space-y-6">
-        {/* HEADER */}
-        <div className="flex justify-between items-end gap-4 p-4">
-          <div className="flex flex-col gap-1">
-            <p className="text-[#111218] text-4xl font-black leading-tight tracking-[-0.033em]">
+    <div className="bg-background-light dark:bg-background-dark min-h-screen transition-colors">
+      {/* ================= HEADER ================= */}
+      <header className="sticky top-0 z-40 bg-white dark:bg-[#111218] border-b border-[#dbdde6] dark:border-gray-800 px-10 py-3 flex justify-between">
+        <div className="flex items-center gap-6">
+          <h2 className="text-lg font-bold">AdminPanel</h2>
+          <nav className="flex items-center gap-2 text-sm text-[#616889]">
+            <span>Jobs</span> /
+            <span>Senior Product Designer</span> /
+            <span className="font-bold text-black dark:text-white">
               Screening Questions
-            </p>
-            <p className="text-[#616889] text-base font-normal leading-normal">
-              Define the questions candidates must answer during their application.
-            </p>
-          </div>
-
-       <div className="flex justify-center mt-8">
-
+            </span>
+          </nav>
         </div>
-  <div className="flex items-center justify-between gap-5">
-    <button
-  onClick={() => setIsPreviewOpen(true)}
-  className="flex items-center  px-6 py-3 bg-white text-gray-500 font-semibold rounded-xl shadow-md hover:scale-105 transition"
->
-  Preview
-</button>
-<button
-  onClick={handleSaveChanges}
-  className="flex items-center  px-3 py-3 bg-blue-600 text-white font-semibold rounded-xl shadow-md hover:bg-blue-700 transition hover:scale-105"
->
-  Save Changes
-</button>
-  </div>
 
-  
-</div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setIsPreviewOpen(true)}
+            className="h-10 px-4 rounded-lg border font-bold hover:bg-gray-50"
+          >
+            Preview
+          </button>
+          <button
+            onClick={handleSaveChanges}
+            className="h-10 px-5 rounded-lg bg-primary text-white font-bold"
+          >
+            Save Changes
+          </button>
+        </div>
+      </header>
 
-        {/* QUESTIONS LIST */}
+      {/* ================= CONTENT ================= */}
+      <main className="max-w-[900px] mx-auto py-10 px-4 space-y-6">
+
+        {/* TITLE */}
+        <div>
+          <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded">
+            Hiring workflow
+          </span>
+
+          <h1 className="text-3xl font-black mt-2">
+            Screening Questions for Senior Product Designer
+          </h1>
+
+          <p className="text-[#616889] mt-1">
+            Define and order the questions candidates must answer during their application.
+          </p>
+        </div>
+
+        {/* ================= QUESTIONS LIST ================= */}
         <div className="space-y-4">
           {questions.map((q, index) => (
             <div
               key={q.id}
-              className="bg-white rounded-xl border border-gray-200 transition-all"
+              className="bg-white dark:bg-[#1a1e2e] border border-[#dbdde6] dark:border-gray-700 rounded-xl p-4 hover:border-primary transition"
             >
-              <div className="w-full flex justify-between items-center px-6 py-5 text-left rounded-xl">
+              <div className="flex justify-between gap-4">
                 <div>
-                  <p className="text-lg font-bold text-gray-900">{q.title}</p>
-                  <div className="flex gap-2 text-xs text-gray-500 mt-1">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded">
+                      Q{index + 1}
+                    </span>
+                    <h3 className="font-semibold">{q.title}</h3>
+                  </div>
+
+                  <div className="flex gap-4 text-xs mt-2 text-[#616889]">
                     <span>
                       {q.type === "radio"
                         ? "Radio Select"
                         : q.type === "text"
-                        ? "Long Text"
-                        : "URL Link"}
+                          ? "Long Text"
+                          : "URL/Text"}
                     </span>
-                    <span>•</span>
+
                     <span className={q.required ? "text-red-500" : ""}>
                       {q.required ? "Required" : "Optional"}
                     </span>
                   </div>
                 </div>
 
-
+                {/* ACTIONS */}
                 <div className="flex gap-2">
                   <button
-  onClick={() => {
-    setEditingQuestionId(q.id)
-
-    //  prefill form data
-    setTitle(q.title)
-    setType(q.type)
-    setRequired(q.required)
-
-    if (q.type === "radio") {
-      setOptions(["Option 1", "Option 2"])
-    } else {
-      setOptions([])
-    }
-
-    setIsEditDialogOpen(true)
-  }}
-  className="p-2 text-blue-600 hover:bg-gray-100 rounded-lg transition"
->
-  <EditIcon fontSize="small" />
-</button>
+                    onClick={() => handleEditQuestion(q)}
+                    className="p-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    <EditIcon />
+                  </button>
 
                   <button
                     onClick={() => deleteQuestion(q.id)}
-                    className="p-2 text-red-500 hover:bg-gray-100 rounded-lg transition"
+                    className="p-2 rounded-lg text-red-500 hover:text-red-600"
                   >
-                    <DeleteIcon fontSize="small" />
+                    <DeleteIcon />
                   </button>
+                  {/* <ConfirmDeleteDialog
+                    title="Delete this question?"
+                    consequences={[
+                      'This screening question will be permanently removed',
+                    ]}
+                    onDelete={async () => {
+                      deleteQuestion(q.id);
+                      return true;
+                    }}
+                    trigger={
+                      <button className="p-2 text-red-500 hover:text-red-600">
+                        <DeleteIcon />
+                      </button>
+                    }
+                  /> */}
+
+
                 </div>
               </div>
-              {/* ================= PREVIEW MODAL ================= */}
-{/* ================= PREVIEW MODAL ================= */}
-{/* ================= PREVIEW MODAL ================= */}
 
-
-
-
-              {/* DETAILS (optional) */}
-              <div className="px-6 pb-6 pt-2 bg-gray-50 rounded-b-xl">
-                <p className="text-sm text-gray-600">
-                  Question {index + 1} details can go here. You can add description or instructions for candidates.
-                </p>
-              </div>
-
-              {/* EDIT DIALOG */}
-              
-              <Dialog
-                open={isEditDialogOpen && editingQuestionId === q.id}
-                onOpenChange={(open) => {
-                  if (!open) setIsEditDialogOpen(false)
-                }}
-              >
-                <DialogContent className="w-[35%] max-h-[100vh] overflow-y-auto rounded p-6">
-  <DialogHeader>
-    <DialogTitle className="text-xl font-semibold text-gray-800">
-      Edit Question
-    </DialogTitle>
-   
-  </DialogHeader>
-
-  {/* Form */}
-  <div className="space-y-5 mt-4">
-
-    {/* Question */}
-    <div>
-      <label className="text-sm font-medium text-gray-700">Question</label>
-      <input
-        placeholder="Enter your question"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="w-full mt-1 border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-    </div>
-
-    {/* Input Type */}
-    <div>
-      <label className="text-sm font-medium text-gray-700">Input Type</label>
-      <select
-        value={type}
-        onChange={(e) => {
-          const selectedType = e.target.value as "radio" | "text" | "url"
-          setType(selectedType)
-
-          if (selectedType !== "radio") {
-            setOptions([])
-          } else {
-            setOptions(["Option 1", "Option 2"])
-          }
-        }}
-        className="w-full mt-1 border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-      >
-        <option value="radio">Radio Button</option>
-        <option value="text">Long Text</option>
-        <option value="url">URL</option>
-      </select>
-    </div>
-
-    {/* Options */}
-    {type === "radio" && (
-      <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Options</label>
-
-        {options.map((opt, i) => (
-          <div key={i} className="flex gap-3 items-center">
-            <input
-              className="flex-1 border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={opt}
-              onChange={(e) => handleOptionChange(i, e.target.value)}
-              placeholder={`Option ${i + 1}`}
-            />
-
-            <button
-              type="button"
-              onClick={() => handleDeleteOption(i)}
-              className="p-2 text-red-600 rounded-lg hover:bg-red-50 transition"
-            >
-              <DeleteIcon fontSize="small" />
-            </button>
-          </div>
-        ))}
-
-        <button
-          className="text-blue-600 text-sm font-medium hover:underline mt-1"
-          onClick={handleAddOption}
-          type="button"
-        >
-          + Add option
-        </button>
-      </div>
-    )}
-
-    {/* Toggles */}
-    <div className="grid grid-cols-2 gap-4 pt-2">
-      <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
-        <input
-          type="checkbox"
-          checked={required}
-          onChange={() => setRequired(!required)}
-          className="w-4 h-4"
-        />
-        <span className="text-sm text-gray-700">Required</span>
-      </div>
-
-      <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
-        <input
-          type="checkbox"
-          checked={isKnockout}
-          onChange={() => setIsKnockout(!isKnockout)}
-          className="w-4 h-4"
-        />
-        <span className="text-sm text-gray-700">Knockout Question</span>
-      </div>
-    </div>
-  </div>
-
-  {/* Footer */}
-  <div className="flex justify-end gap-4 mt-8 border-t pt-4">
-    <button
-      type="button"
-      className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
-      onClick={() => setIsEditDialogOpen(false)}
-    >
-      Cancel
-    </button>
-
-    <button
-      className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition shadow-md"
-      onClick={handleSave}
-    >
-      Save Changes
-    </button>
-  </div>
-</DialogContent>
-  </Dialog>
+              <p className="text-sm text-[#616889] mt-3">
+                Question {index + 1} details can go here. You can add description or instructions for candidates.
+              </p>
             </div>
-           
           ))}
-         <div className="px-10 flex justify-center items-center">
-  <button
-  onClick={() => setIsDrawerOpen(true)}
-  className="mt-10 px-6 py-3 w-full bg-white text-gray-600 font-semibold rounded-xl shadow-md transition transform hover:scale-105 flex items-center justify-center gap-3"
->
-  {/* circle icon */}
-  <span className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-600 text-white">
-    <AddIcon fontSize="small" />
-  </span>
-
-  <span>Add New Question</span>
-</button>
-
-</div>
-
         </div>
- {/* ================= ADD QUESTION SLIDE PAGE ================= */}
-{isDrawerOpen && (
-  <div className="fixed inset-0 z-50">
-    
-    {/* background overlay */}
-    <div
-      className="absolute inset-0 bg-black/40"
-      onClick={() => setIsDrawerOpen(false)}
-    />
 
-    {/* slide page */}
-    <div className="absolute right-0 top-0 h-full w-[420px] bg-white shadow-2xl animate-slideInRight
-">
-      <AddQuestion
-        onClose={() => setIsDrawerOpen(false)}
-        onAdd={(q) => {
-          const newQuestion = {
-            id: Date.now(),
-            title: q.title,
-            type: q.type,
-            required: q.required,
-          }
-          setQuestions((prev) => [...prev, newQuestion])
-          setIsDrawerOpen(false)
-        }}
-      />
-    </div>
-  </div>
-)}
+        {/* ================= ADD BUTTON ================= */}
+        <button
+          onClick={() => setIsDrawerOpen(true)}
+          className="w-full border-2 border-dashed border-[#dbdde6] rounded-xl p-8 text-[#616889] hover:border-primary hover:text-primary hover:bg-primary/5 flex justify-center gap-2 items-center"
+        >
+          <AddIcon />
+          <span className="text-lg font-bold">Add New Question</span>
+        </button>
 
+      </main>
 
-      </div>
+      {/* ================= ADD QUESTION DRAWER ================= */}
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setIsDrawerOpen(false)}
+          />
+          <div className="absolute right-0 top-0 h-full w-[500px] bg-white shadow-2xl">
+            <AddQuestion
+              onClose={() => setIsDrawerOpen(false)}
+              onAdd={handleAddQuestion}
+            />
+          </div>
+        </div>
+      )}
 
-      {/* ================= DRAWER ================= */}
-      {/* <SwipeableDrawer
-        open={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        onAdd={(q) => {
-          const newQuestion = {
-            id: Date.now(),
-            title: q.title,
-            type: q.type,
-            required: q.required,
-          }
-          setQuestions((prev) => [...prev, newQuestion])
-        }}
-      /> */}
-      
+      {/* ================= EDIT QUESTION DIALOG ================= */}
+      {isEditDialogOpen && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Question</DialogTitle>
+            </DialogHeader>
 
+            <div className="mt-4 space-y-4">
+              <input
+                type="text"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="Question Title"
+                className="w-full border rounded p-2"
+              />
+
+              <select
+                value={type}
+                onChange={e => setType(e.target.value as QuestionType)}
+                className="w-full border rounded p-2"
+              >
+                <option value="radio">Radio</option>
+                <option value="text">Text</option>
+                <option value="url">URL</option>
+              </select>
+
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={required}
+                  onChange={e => setRequired(e.target.checked)}
+                />
+                Required
+              </label>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setIsEditDialogOpen(false)}
+                  className="px-4 py-2 bg-gray-200 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  className="px-4 py-2 bg-primary text-white rounded"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* ================= PREVIEW DIALOG ================= */}
+      {isPreviewOpen && (
+        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Preview Questions</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4 mt-4">
+              {questions.map((q, index) => (
+                <div key={q.id} className="p-2 border rounded">
+                  <p>
+                    <strong>Q{index + 1}:</strong> {q.title}{" "}
+                    {q.required && <span className="text-red-500">(Required)</span>}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Type: {q.type === "radio" ? "Radio Select" : q.type === "text" ? "Long Text" : "URL/Text"}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setIsPreviewOpen(false)}
+                className="px-4 py-2 bg-gray-200 rounded"
+              >
+                Close
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

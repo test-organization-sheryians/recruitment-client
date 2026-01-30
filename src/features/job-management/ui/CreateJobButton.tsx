@@ -25,12 +25,12 @@ export default function CreateJobButton({ onJobCreated }: Props) {
 
       {/* REUSABLE DRAWER */}
       <SwipeableDrawer
-  anchor="right"
-  open={open}
-  onOpen={() => setOpen(true)}
-  onClose={() => setOpen(false)}
->
- 
+        anchor="right"
+        open={open}
+        onOpen={() => setOpen(true)}
+        onClose={() => setOpen(false)}
+      >
+
         <div className="flex h-full w-full flex-col">
 
           {/* Header */}
