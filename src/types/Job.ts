@@ -1,27 +1,36 @@
 export interface Job {
-    id: string;
-    title: string;
-    location: {
-      city: string;
-      state: string;
-      pincode: string;
-      country: string;
-    };
-    salary: number;
-    isRemote: boolean;
-    isFeatured: boolean;
-    createdAt: string;
-    updatedAt: string;
-    _id: string;
-    requiredExperience?: string;
-    category?: Category | string;
-    education?: string;
-    description?: string;
-    skills?: (Skill | string)[];
-    department?: string;
-    expiry?: string;
-    applied?: boolean
-}   
+  id: string;
+  title: string;
+  location:
+     string
+    | {
+        city: string;
+        state: string;
+        pincode: string;
+        country: string;
+      };
+  salary?: {
+    min: number;
+    max: number;
+    currency: string;
+  };
+
+  isRemote: boolean;
+  isFeatured: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _id: string;
+  requiredExperience?: string;
+  category?: Category | string;
+  education?: string;
+  description?: string;
+  skills?: (Skill | string)[];
+  department?: string;
+  expiry?: string;
+  applied?: boolean;
+
+  // optional backend fields
+}
 // Category can be an object or string
 interface Category {
   _id: string;
@@ -34,28 +43,26 @@ export interface Skill {
   name: string;
 }
 
-
 export interface SavedJob {
   _id: string;
   jobId: Job;
 }
 
 export interface JobFormValues {
-    title: string;
-    description: string;
-    location: {
-      city: string;
-      state: string;
-      pincode: string;
-      country: string;
-    };
-    salary: number;
-    category: string;
-    skills: string[];
-    isRemote: boolean;
-    isFeatured: boolean;
+  title: string;
+  description: string;
+  location: {
+    city: string;
+    state: string;
+    pincode: string;
+    country: string;
+  };
+  salary: number;
+  category: string;
+  skills: string[];
+  isRemote: boolean;
+  isFeatured: boolean;
 }
-
 
 // export interface PaginatedJobsResponse {
 //    "success": true,
@@ -74,3 +81,22 @@ export type SearchQuery = {
   q: string;
   location: string;
 };
+
+export interface JobCardJob {
+  _id: string;
+  title: string;
+  category?: Category | string;
+
+  requiredExperience?: string;
+  education?: string;
+
+  department?: string; // ✅ ADD THIS
+
+  skills?: {
+    _id: string;
+    name: string;
+  }[];
+
+  expiry?: string;
+  applied?: boolean;
+}
