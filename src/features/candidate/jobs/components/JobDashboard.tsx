@@ -150,7 +150,7 @@ export default function JobDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 border">
       <HeroSection
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -192,9 +192,10 @@ export default function JobDashboardPage() {
         </div>
         {/* Jobs */}
 <div className="md:col-span-9">
-  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+  <div className="bg-white rounded-xl overflow-hidden max-w-4xl mx-auto">
+
     {/* Header */}
-    <div className="px-5 py-3.5 border-b border-gray-200 bg-gray-50 flex items-center gap-3">
+    <div className="px-5 py-3.5  bg-gray-50 flex items-center gap-3">
       <h2 className="text-sm font-semibold text-gray-900">
         {selectedCategory ? "Category Jobs" : "Latest Jobs"}
       </h2>
@@ -204,7 +205,7 @@ export default function JobDashboardPage() {
     </div>
 
     {/* Job list */}
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 bg-gray-50 border-0 ring-0 outline-none">
       {jobs.map((job) => (
         <LatestJobCard
           key={job._id}

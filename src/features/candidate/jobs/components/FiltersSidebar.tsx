@@ -38,13 +38,13 @@ export default function FiltersSidebar({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 sticky top-4">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm py-7 p-5 sticky top-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
-        <h3 className="text-base font-semibold text-gray-900">Filters</h3>
+        <h3 className="text-lg font-bold text-gray-900">Filters</h3>
         <button
           onClick={clearAll}
-          className="text-sm text-blue-600 hover:underline"
+          className="text-xs font-bold text-blue-600 hover:underline font-sans cursor-pointer  "
         >
           Clear all
         </button>
@@ -52,22 +52,22 @@ export default function FiltersSidebar({
 
       {/* Job Type */}
 {/* Job Type */}
-<div className="mb-6">
-  <h4 className="text-xs font-semibold text-gray-500 mb-3 tracking-wider">
+<div className="mb-6 text-lg font-semibold" >
+  <h4 className="text-sm font-semibold text-gray-500 mb-3 tracking-wider">
     JOB TYPE
   </h4>
 
   {["Remote", "Full-Time", "Part-Time", "Hybrid"].map((type) => (
     <label
       key={type}
-      className="flex items-center justify-between text-sm mb-2 cursor-pointer"
+      className="flex items-center justify-between text-sm mb-2 cursor-pointer "
     >
       <div className="flex items-center gap-2">
         <input
           type="checkbox"
           checked={jobType.includes(type)}
           onChange={() => toggle(jobType, type, setJobType)}
-          className="accent-blue-600"
+          className="accent-blue-600 h-4 w-4 border border-gray-100 cursor-pointer rounded-sm"
         />
         <span>{type}</span>
       </div>
@@ -76,8 +76,8 @@ export default function FiltersSidebar({
 </div>
 
       {/* Experience */}
-      <div className="mb-6">
-        <h4 className="text-xs font-semibold text-gray-500 mb-3 tracking-wider">
+      <div className="mb-6 text-lg font-semibold">
+        <h4 className="text-sm font-semibold text-gray-500 mb-3 tracking-wider">
           EXPERIENCE LEVEL
         </h4>
 
@@ -90,7 +90,7 @@ export default function FiltersSidebar({
               type="checkbox"
               checked={experience.includes(level)}
               onChange={() => toggle(experience, level, setExperience)}
-              className="accent-blue-600"
+              className="accent-blue-600 h-4 w-4 border border-gray-100 cursor-pointer rounded-sm"
             />
             <span>{level} Level</span>
           </label>
@@ -99,7 +99,7 @@ export default function FiltersSidebar({
 
       {/* Salary */}
       <div>
-        <h4 className="text-xs font-semibold text-gray-500 mb-4 tracking-wider">
+        <h4 className="text-sm font-semibold text-gray-500 mb-4 tracking-wider">
           SALARY RANGE (₹)
         </h4>
 
