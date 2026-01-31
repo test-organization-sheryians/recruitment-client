@@ -114,7 +114,7 @@ export default function JobDetails() {
   const metaItems = [
     {
       label: "Job Type",
-      value: "Full-time",
+      value: job.jobType ?? "Not specified",
     },
     {
       label: "Experience Level",
