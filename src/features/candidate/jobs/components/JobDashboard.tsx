@@ -179,7 +179,7 @@ export default function JobDashboardPage() {
         </span>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-12 gap-6">
+      <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-12 gap-3">
         <div className="hidden md:block md:col-span-3">
           <FiltersSidebar
             jobType={jobType}
@@ -205,7 +205,7 @@ export default function JobDashboardPage() {
     </div>
 
     {/* Job list */}
-    <div className="p-4 space-y-4 bg-gray-50 border-0 ring-0 outline-none">
+    <div className="p-4 space-y-4 bg-gray-50">
       {jobs.map((job) => (
         <LatestJobCard
           key={job._id}
