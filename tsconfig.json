@@ -38,7 +38,7 @@
     "src/app/loading",
     "src/api/i",
     ".next/dev/types/**/*.ts"
-  ],
+, "src/app/cart/page.jsx"  ],
   "exclude": [
     "node_modules"
   ]
