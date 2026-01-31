@@ -2,9 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
-import type { JobCardJob } from "@/types/Job";
-import type {Job }from "@/types/Job";
-import JobCard from "./JobCategoryCard";
+import JobCard, { Job as CardJob } from "./JobCategoryCard";
 import HeroSection from "./HeroSection";
 import { Menu, X } from "lucide-react";
 import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
@@ -66,19 +64,17 @@ console.log("Jobs Pages data check ===>:", jobsPages);
 console.log("total job count check ===>:", jobsPages?.[0]?.pagination.totalRecords);
 const jobsCount = jobsPages?.[0]?.pagination.totalRecords || 0;
 
-  const jobs: Job[] = jobsPages
+  const jobs: CardJob[] = jobsPages
     .flatMap((p) => p.data ?? [])
     .map((job) => ({
       ...job,
-   
+      salary: typeof job.salary === "number" ? String(job.salary) : job.salary,
       skills: job.skills?.map((s) =>
         typeof s === "string"
           ? { _id: s, name: s }
           : { _id: s._id ?? s.name, name: s.name }
       ),
     }));
-  
-
 
   // Infinite scroll sentinels
   const categoriesLoadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -262,7 +258,7 @@ const jobsCount = jobsPages?.[0]?.pagination.totalRecords || 0;
                   key={job._id}
                   className="py-5 first:pt-0 hover:bg-gray-50/70 transition-colors duration-150"
                 >
-                  <JobCard job={job}  />
+                  <JobCard job={job} />
                 </div>
               ))}
               {/* Infinite scroll sentinel for jobs */}

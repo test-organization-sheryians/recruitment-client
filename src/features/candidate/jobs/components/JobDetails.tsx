@@ -3,10 +3,9 @@
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Bookmark } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
-import JobQuestionsList from "@/features/admin/jobApplicationQuestions/components/jobQuestionList";
 
 import { useGetJobById } from "@/features/admin/jobs/hooks/useJobApi";
+import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
 import {
   useSaveJob,
   useUnsaveJob,
@@ -17,49 +16,32 @@ import { useToast } from "@/components/ui/Toast";
 import { useGetProfile } from "../../Profile/hooks/useProfileApi";
 
 import type { SavedJob, Skill } from "@/types/Job";
-import { useGetJobQuestions } from "@/features/admin/jobApplicationQuestions/hooks/useGetJobQuestions";
-import { applyJob } from "@/api/jobApplication/applyJob";
 
 export default function JobDetails() {
   const router = useRouter();
   const params = useParams();
   const jobId = params.jobId as string;
 
+
   const toast = useToast();
   const queryClient = useQueryClient();
 
-  const [showQuestions, setShowQuestions] = useState(false);
-
-  const saveJobMutation = useSaveJob();
-  const unsaveJobMutation = useUnsaveJob();
-  useEffect(() => {
-  if (showQuestions) {
-    // lock background scroll
-    document.documentElement.style.overflow = "hidden"; // html
-    document.body.style.overflow = "hidden"; // body
-  } else {
-    document.documentElement.style.overflow = "";
-    document.body.style.overflow = "";
-  }
-
-  return () => {
-    document.documentElement.style.overflow = "";
-    document.body.style.overflow = "";
-  };
-}, [showQuestions]);
-
   /* -------------------- Queries -------------------- */
-  const { data: job, isLoading, error, refetch } = useGetJobById(jobId);
-  console.log(job);
-  const { data: questions, isLoading: questionsLoading } =
-    useGetJobQuestions(jobId);
-
+  const { data: job, isLoading, error } = useGetJobById(jobId);
   const { data: profile } = useGetProfile();
   const { data: savedJobs } = useGetSavedJobs();
+
+  /* -------------------- Mutations -------------------- */
+  const applyJobMutation = useApplyJob();
+  const saveJobMutation = useSaveJob();
+  const unsaveJobMutation = useUnsaveJob();
+
   /* -------------------- Guards -------------------- */
   if (isLoading) {
     return (
-      <p className="mt-10 text-center text-gray-500">Fetching job details...</p>
+      <p className="mt-10 text-center text-gray-500">
+        Fetching job details...
+      </p>
     );
   }
 
@@ -71,34 +53,20 @@ export default function JobDetails() {
     );
   }
 
-  const isExpired = job.expiry ? new Date(job.expiry) < new Date() : false;
+  const isExpired = job.expiry
+    ? new Date(job.expiry) < new Date()
+    : false;
 
-  /* -------------------- Saved State -------------------- */
+  /* -------------------- Saved State (TYPE SAFE) -------------------- */
   const isSaved =
     savedJobs?.some((saved: SavedJob) =>
       typeof saved.jobId === "string"
         ? saved.jobId === job._id
-        : saved.jobId?._id === job._id,
+        : saved.jobId?._id === job._id
     ) ?? false;
 
   /* -------------------- Handlers -------------------- */
-  const applyDirectly = async () => {
-    try {
-      await applyJob({
-        jobId: job._id,
-        resumeUrl: profile?.resumeFile,
-        answers: [],
-      });
-
-      toast.success("Job applied successfully");
-      queryClient.invalidateQueries({ queryKey: ["jobs"] });
-      await handleRefreshAfterApply();
-    } catch {
-      toast.error("Failed to apply");
-    }
-  };
-
-  const handleApply = async () => {
+  const handleApply = () => {
     if (isExpired || job.applied) return;
 
     if (!profile?.resumeFile) {
@@ -106,31 +74,26 @@ export default function JobDetails() {
       return;
     }
 
-    if (questionsLoading) {
-      toast.loading("Checking job questions...");
-      return;
-    }
-
-    try {
-      if (!questions || questions.length === 0) {
-        await applyDirectly();
-        await handleRefreshAfterApply();
-        return;
-      }
-
-      setShowQuestions(true);
-    } catch {
-      toast.error("Failed to apply");
-    }
+    applyJobMutation.mutate({
+      jobId: job._id,
+      message: "Excited to apply!",
+      resumeUrl: profile.resumeFile,
+    });
   };
 
   const handleBookmarkToggle = () => {
     if (isExpired || !job._id) return;
+    if (saveJobMutation.isPending || unsaveJobMutation.isPending) return;
 
     if (!isSaved) {
       saveJobMutation.mutate(job._id, {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
+        },
+        onError: (err: unknown) => {
+          if ((err as { status?: number })?.status !== 409) {
+            toast.error("Failed to save job");
+          }
         },
       });
     } else {
@@ -138,104 +101,120 @@ export default function JobDetails() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
         },
+        onError: () => toast.error("Failed to remove saved job"),
       });
     }
   };
 
-  const handleRefreshAfterApply = async () => {
-    await refetch(); // 🔁 job details refetch
-    router.refresh(); // 🔁 Next.js cache refresh
-    setShowQuestions(false); // ❌ close popup
-  };
-
   /* -------------------- UI -------------------- */
   return (
-    <>
-    <div className="flex h-screen overflow-hidden items-center justify-center bg-gray-50 ">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-6">
+      <div className="relative w-full max-w-2xl space-y-6 rounded-2xl bg-white p-6 shadow-lg">
 
-        <div className="relative w-full max-w-2xl space-y-6 rounded-2xl bg-white p-6 shadow-lg">
-          {/* Back */}
+        {/* Back */}
+        <button
+          onClick={() => router.back()}
+          className="absolute left-4 top-4 flex items-center gap-2 text-gray-700 hover:text-gray-900"
+        >
+          <ArrowLeft size={18} />
+          <span className="text-sm font-medium">Back</span>
+        </button>
+
+        {/* Title */}
+        <h1 className="mt-6 text-2xl font-bold">{job.title}</h1>
+
+        {/* Actions */}
+        <div className="flex flex-wrap items-center gap-3">
           <button
-            onClick={() => router.back()}
-            className="absolute left-4 top-4 flex items-center gap-2 text-gray-700 hover:text-gray-900"
+            onClick={handleBookmarkToggle}
+            className="rounded-md border border-gray-300 p-2 hover:bg-gray-100"
           >
-            <ArrowLeft size={18} />
-            <span className="text-sm font-medium">Back</span>
+            <Bookmark
+              size={20}
+              className={
+                isSaved
+                  ? "fill-blue-600 text-blue-600"
+                  : "text-gray-600"
+              }
+            />
           </button>
 
-          <h1 className="mt-6 text-2xl font-bold">{job.title}</h1>
+          <button
+            onClick={handleApply}
+            disabled={isExpired || job.applied}
+            className={`rounded-lg px-6 py-2.5 text-sm font-medium text-white ${
+              isExpired || job.applied
+                ? "cursor-not-allowed bg-gray-400"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            {job.applied
+              ? "Applied"
+              : isExpired
+              ? "Expired"
+              : "Apply Now"}
+          </button>
+        </div>
 
-          {/* Actions */}
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={handleBookmarkToggle}
-              className="rounded-md border border-gray-300 p-2 hover:bg-gray-100"
-            >
-              <Bookmark
-                size={20}
-                className={
-                  isSaved ? "fill-blue-600 text-blue-600" : "text-gray-600"
-                }
-              />
-            </button>
-
-            <button
-              onClick={handleApply}
-              disabled={isExpired || job.applied}
-              className={`rounded-lg px-6 py-2.5 text-sm font-medium text-white ${
-                isExpired || job.applied
-                  ? "cursor-not-allowed bg-gray-400"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
-            >
-              {job.applied ? "Applied" : isExpired ? "Expired" : "Apply Now"}
-            </button>
-          </div>
-
-          {/* Description */}
-          {job.description && (
-            <p className="text-sm text-gray-600">{job.description}</p>
+        {/* Meta */}
+        <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
+          {job.category && (
+            <p>
+              <strong>Category:</strong>{" "}
+              {typeof job.category === "string"
+                ? job.category
+                : job.category.name}
+            </p>
           )}
-
-          {/* 🔥 MODAL YAHAN */}
-          {showQuestions && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-              {/* 👇 Sirf isi box ko scrollable banao */}
-        <div className="w-[95vw] max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col">
-
-                {/* HEADER */}
-
-                {/* BODY */}
-                <div className="flex-1 overflow-y-auto px-6 py-6 hide-scrollbar">
-                  <JobQuestionsList
-                    jobId={job._id}
-                    onSuccess={async () => {
-                      toast.success("Applied successfully");
-                      await handleRefreshAfterApply();
-                    }}
-                    onBack={() => setShowQuestions(false)}
-                    userProfile={profile}
-                    jobDetails={job}
-                   
-                    
-                  />
-                </div>
-              </div>
-            </div>
+          {job.salary && <p><strong>Salary:</strong> {job.salary}</p>}
+          {job.department && (
+            <p><strong>Department:</strong> {job.department}</p>
+          )}
+          {job.requiredExperience && (
+            <p><strong>Experience:</strong> {job.requiredExperience}</p>
+          )}
+          {job.education && (
+            <p><strong>Education:</strong> {job.education}</p>
+          )}
+          {job.expiry && (
+            <p>
+              <strong>Expiry:</strong>{" "}
+              {new Date(job.expiry).toLocaleDateString()}
+            </p>
           )}
         </div>
+
+        {/* Description */}
+        {job.description && (
+          <div>
+            <h2 className="mb-1 font-semibold text-gray-800">
+              Description
+            </h2>
+            <p className="text-sm leading-relaxed text-gray-600">
+              {job.description}
+            </p>
+          </div>
+        )}
+
+        {/* Skills */}
+        {(job.skills ?? []).length > 0 && (
+          <div>
+            <h2 className="mb-2 font-semibold text-gray-800">
+              Skills Required
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {job.skills!.map((skill: Skill | string, index: number) => (
+                <span
+                  key={index}
+                  className="rounded-md bg-gray-100 px-3 py-1 text-xs text-gray-700"
+                >
+                  {typeof skill === "string" ? skill : skill.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
-
-      <style jsx>{`
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-    </>
+    </div>
   );
 }
