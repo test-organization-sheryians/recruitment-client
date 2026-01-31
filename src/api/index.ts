@@ -73,3 +73,8 @@ export * from "./password/resetPassword";
 
 export * from "./jobApplication/scheduleInterview";
 
+// categoriess
+ export * from "./categoriess/addCategoriess"
+ export * from "./categoriess/getCategoriess"
+ export * from "./categoriess/updateCategoriess"
+ export * from "./categoriess/deleteCategoriess"
