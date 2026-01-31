@@ -22,7 +22,7 @@ export interface Job {
   requiredExperience?: string;
   education?: string;
   expiry?: string | Date;
-  salary?: string;
+  salary?: string | { min: number; max: number; currency: string };
   department?: string;
   skills?: Skill[];
   applied?: boolean;
@@ -61,6 +61,17 @@ export default function JobCard({ job }: JobCardProps) {
   const isExpired = job.expiry ? new Date(job.expiry) < new Date() : false;
 
   const { data: profile, isLoading: profileLoading } = useGetProfile();
+
+  // Format salary
+  const getSalaryString = () => {
+    if (!job.salary) return null;
+    if (typeof job.salary === "string") return job.salary;
+    if (typeof job.salary === "object" && "min" in job.salary) {
+      const { min, max, currency } = job.salary;
+      return `${currency}${min}k - ${currency}${max}k`;
+    }
+    return null;
+  };
 
   const handleApply = () => {
     // ----------------------------------------------
@@ -119,8 +130,8 @@ export default function JobCard({ job }: JobCardProps) {
 
           {/* Salary & Department */}
           <div className="text-sm text-gray-600 space-y-1 mb-3">
-            {job.salary && (
-              <p className="font-semibold text-gray-800">{job.salary}</p>
+            {getSalaryString() && (
+              <p className="font-semibold text-gray-800">{getSalaryString()}</p>
             )}
             {job.department && <p>{job.department}</p>}
           </div>
