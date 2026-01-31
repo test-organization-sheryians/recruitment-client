@@ -126,22 +126,6 @@ export default function UniversalInterviewPage() {
       setBlocked(true);
     }
   }, [attempt]);
-  useEffect(() => {
-  if (!restored || !activeQuestion) return;
-
-  const id = setTimeout(() => {
-    const nextAnswers = [...state.answers];
-    nextAnswers[step] = isMCQ(activeQuestion)
-      ? { text }
-      : { text, code };
-
-    persist({ answers: nextAnswers });
-  }, 500);
-
-  return () => clearTimeout(id);
-}, [text, code, step, activeQuestion, restored]);
-
-
   /* ---------- TIMER LOGIC ---------- */
   const questions = Array.isArray(finalQuestions) ? finalQuestions : [];
   const isResumeTest = questions.some(q => q.source === "ai");
