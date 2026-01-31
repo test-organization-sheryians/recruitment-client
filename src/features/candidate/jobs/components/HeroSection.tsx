@@ -91,11 +91,26 @@ export default function HeroSection({
           </div>
 
           {/* Popular Tags - Subtle & Professional */}
-         
+          {/* <div className="mt-6 flex flex-wrap justify-center gap-2">
+            {["Remote Jobs", "Full Time", "React Developer", "Senior", "Startup"].map((tag) => (
+              <button
+                key={tag}
+                className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-full
+                           hover:bg-blue-100 hover:text-blue-700 transition-all duration-200
+                           border border-gray-200"
+              >
+                {tag}
+              </button>
+            ))}
+          </div> */}
         </div>
 
         {/* Trust Indicator */}
-       
+        {/* <div className="mt-12">
+          <p className="text-gray-600 text-sm">
+            Trusted by <span className="font-bold text-blue-600">10,000+</span> job seekers every month
+          </p>
+        </div> */}
       </div>
     </div>
   );

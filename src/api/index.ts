@@ -73,4 +73,3 @@ export * from "./password/resetPassword";
 
 export * from "./jobApplication/scheduleInterview";
 
-export * from "./jobs/jobApplicationQuestion";
