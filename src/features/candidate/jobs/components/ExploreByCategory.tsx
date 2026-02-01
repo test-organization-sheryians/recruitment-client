@@ -8,6 +8,12 @@ interface JobCategoryCardProps {
   jobCount: number;
   onClick: () => void;
 }
+interface Props {
+  categories: CategoryItem[];
+  onSelect: (id: string) => void;
+  onViewAll: () => void;
+}
+
 
 function JobCategoryCard({ title, jobCount, onClick }: JobCategoryCardProps) {
   return (
@@ -62,11 +68,13 @@ function JobCategoryCard({ title, jobCount, onClick }: JobCategoryCardProps) {
 interface ExploreByCategoryProps {
   categories: CategoryItem[];
   onSelect: (categoryId: string) => void;
+  onViewAll: () => void;
 }
 
 export default function ExploreByCategory({
   categories,
   onSelect,
+  onViewAll,
 }: ExploreByCategoryProps) {
   return (
     <section className="bg-gray-50">
@@ -75,9 +83,14 @@ export default function ExploreByCategory({
           <h2 className="text-2xl font-bold text-gray-900">
             Explore by Category
           </h2>
-          <button className="text-sm font-medium text-blue-600 hover:underline">
-            View all →
-          </button>
+          <button
+  onClick={onViewAll}
+  className="text-sm font-medium text-blue-600 hover:underline"
+>
+  View all →
+</button>
+
+         
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-6 gap-4 items-stretch ">

@@ -102,10 +102,10 @@ export default function LatestJobCard({
       </div>
 
       {/* RIGHT */}
-      <div className="flex flex-col justify-center gap-3">
+      <div className="flex flex-col justify-center gap-4">
         <button
   onClick={() => onDetails(jobId)}
-  className="px-6 py-2 border border-blue-600 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50"
+  className="px-8 py-3 border border-blue-600 text-[16px] text-blue-600 rounded-lg font-bold hover:bg-blue-50"
 >
   Details
 </button>
@@ -116,7 +116,7 @@ export default function LatestJobCard({
     e.stopPropagation()
     onApply(jobId)
   }}
-  className={`px-6 py-2 rounded-lg text-sm font-medium ${
+  className={`px-8 py-3 rounded-lg text-[16px] font-bold ${
     applied
       ? "bg-gray-300 text-gray-600 cursor-not-allowed"
       : "bg-blue-600 text-white hover:bg-blue-700"

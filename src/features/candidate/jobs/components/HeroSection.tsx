@@ -20,7 +20,7 @@ export default function HeroSection({
       <div
         className="relative max-w-293 mx-auto rounded-2xl overflow-hidden bg-cover bg-center"
         style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1510519138101-570d1dca3d66?q=80&w=1147&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
+          backgroundImage: "url('https://static.vecteezy.com/system/resources/thumbnails/008/010/800/small_2x/minimalist-empty-room-with-gray-wall-and-wood-floor-3d-rendering-photo.jpg')",
         }}
       >
         {/* Dark Overlay */}

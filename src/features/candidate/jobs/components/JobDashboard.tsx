@@ -1,21 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Sidebar from "./Sidebar";
 import JobCard, { Job as CardJob } from "./JobCategoryCard";
 import ExploreByCategory from "./ExploreByCategory";
 import HeroSection from "./HeroSection";
 import { Menu } from "lucide-react";
 import FiltersSidebar from "./FiltersSidebar";
 import LatestJobCard from "./LatestJobCard";
+import CategoryCard from "./CategoryCard";
+import { useGetProfile } from "@/features/candidate/Profile/hooks/useProfileApi"
 import { useRouter } from "next/navigation";
 import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
 import { useToast } from "@/components/ui/Toast"
-import { useGetProfile } from "@/features/Profile/hooks/useProfileAPI"
-
-
-
-
 import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
 import {
   useInfiniteJobs,
@@ -25,21 +21,39 @@ import { useInfiniteSearchJobs } from "@/features/candidate/jobs/hooks/useSearch
 import type { CategoryItem } from "@/api/category/getCategoriesPaginated";
 import { SearchQuery } from "@/types/Job";
 
+
+
+
 export default function JobDashboardPage() {
+  const { data: profile, isLoading: profileLoading } = useGetProfile()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
   const [query, setQuery] = useState<SearchQuery>({ q: "", location: "" });
   const router = useRouter();
+  const [showAllCategories, setShowAllCategories] = useState(false);
+
   
 
 const applyJobMutation = useApplyJob()
+const toast = useToast()
 
 const handleApplyJob = (jobId: string) => {
+  if (profileLoading) {
+    toast.error("Profile is loading. Please wait.")
+    return
+  }
+
+  if (!profile?.resumeFile) {
+    toast.error("Please upload your resume before applying.")
+    return
+  }
+
   applyJobMutation.mutate({
     jobId,
     message: "Excited to apply!",
+    resumeUrl: profile.resumeFile,
   })
 }
 
@@ -177,7 +191,7 @@ const handleApplyJob = (jobId: string) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 border">
+    <div className="min-h-screen bg-gray-50 border pt-15">
       <HeroSection
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -186,13 +200,17 @@ const handleApplyJob = (jobId: string) => {
         setSearchLocation={setSearchLocation}
       />
 
-      <ExploreByCategory
-        categories={categories}
-        onSelect={(id) => {
-          setSelectedCategory(id);
-          setQuery({ q: "", location: "" });
-        }}
-      />
+     {!showAllCategories && (
+  <ExploreByCategory
+    categories={categories}
+    onSelect={(id) => {
+      setSelectedCategory(id)
+      setQuery({ q: "", location: "" })
+    }}
+    onViewAll={() => setShowAllCategories(true)}
+  />
+)}
+
 
       <div className="md:hidden sticky top-0 z-30 bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
         <button
@@ -218,47 +236,69 @@ const handleApplyJob = (jobId: string) => {
           />
         </div>
         {/* Jobs */}
-<div className="md:col-span-9">
-  <div className="bg-white rounded-xl overflow-hidden max-w-4xl mx-auto">
-
-    {/* Header */}
-    <div className="px-4 py-1  bg-gray-50 flex items-center gap-3">
-      <h2 className="text-xl font-semibold text-gray-900">
-        {selectedCategory ? "Category Jobs" : "Latest Jobs"}
+{showAllCategories ? (
+  /* ================= ALL CATEGORIES VIEW ================= */
+  <div className="md:col-span-9">
+    <div className="bg-gray-50 rounded-2xl p-8">
+      <h2 className="text-xl font-semibold text-gray-900 mb-6">
+        All Categories
       </h2>
-      <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-        {jobsCount} jobs
-      </span>
-    </div>
 
-    {/* Job list */}
-    <div className="p-4 space-y-4 bg-gray-50">
-      {jobs.map((job) => (
-  <LatestJobCard
-    key={job._id}
-    jobId={job._id}
-    title={job.title}
-    company={job.client?.company || "Company"}
-    location={
-      job.location?.city
-        ? `${job.location.city}, ${job.location.country ?? ""}`
-        : "Remote"
-    }
-    salary={job.salary}
-    postedAt={job.createdAt ? "Recently" : undefined}
-    skills={job.skills?.map((s) => s.name)}
-    applied={job.applied}
-    onDetails={handleJobDetails}
-    onApply={handleApplyJob}
-  />
-))}
-
-
-      {/* Infinite scroll trigger */}
-      <div ref={jobsLoadMoreRef} className="h-1" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {categories.map((category) => (
+          <CategoryCard
+            key={category._id}
+            category={category}
+            onClick={() => {
+              setSelectedCategory(category._id)
+              setShowAllCategories(false)
+            }}
+          />
+        ))}
+      </div>
     </div>
   </div>
-</div>
+) : (
+  /* ================= JOB LIST (UNCHANGED) ================= */
+  <div className="md:col-span-9">
+    <div className="bg-white rounded-xl overflow-hidden w-full">
+      {/* Header */}
+      <div className="px-4 py-1 bg-gray-50 flex items-center gap-3">
+        <h2 className="text-xl font-semibold text-gray-900">
+          {selectedCategory ? "Category Jobs" : "Latest Jobs"}
+        </h2>
+        <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
+          {jobsCount} jobs
+        </span>
+      </div>
+
+      {/* Job list */}
+      <div className="p-4 space-y-4 bg-gray-50">
+        {jobs.map((job) => (
+          <LatestJobCard
+            key={job._id}
+            jobId={job._id}
+            title={job.title}
+            company={(job as any).client?.company || "Company"}
+            location={
+              job.location?.city
+                ? `${job.location.city}, ${job.location.country ?? ""}`
+                : "Remote"
+            }
+            salary={job.salary}
+            postedAt={job.createdAt ? "Recently" : undefined}
+            skills={job.skills?.map((s) => s.name)}
+            applied={job.applied}
+            onDetails={handleJobDetails}
+            onApply={handleApplyJob}
+          />
+        ))}
+
+        <div ref={jobsLoadMoreRef} className="h-1" />
+      </div>
+    </div>
+  </div>
+)}
 
 
       </div>
