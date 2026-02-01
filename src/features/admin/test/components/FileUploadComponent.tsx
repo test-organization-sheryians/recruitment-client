@@ -1,13 +1,10 @@
-'use client'
+'use client';
+
 import { uploadFileToS3 } from '@/lib/uploadFile';
 import React, { useState } from 'react';
 
-/**
- * Props for the FileUploadComponent
- */
 interface FileUploadProps {
-  // Your API endpoint to get the presigned URL
-  apiEndpoint: string; 
+  apiEndpoint: string;
 }
 
 const FileUploadComponent: React.FC<FileUploadProps> = ({ apiEndpoint }) => {
