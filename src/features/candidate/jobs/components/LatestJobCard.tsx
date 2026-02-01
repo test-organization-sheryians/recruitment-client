@@ -4,6 +4,7 @@ import { MapPin, Clock } from "lucide-react";
 import JobIcon from "./jobIcon";
 
 interface LatestJobCardProps {
+  jobId: string;
   title: string;
   company: string;
   location?: string;
@@ -11,9 +12,13 @@ interface LatestJobCardProps {
   postedAt?: string;
   skills?: string[];
   applied?: boolean;
+  onDetails: (jobId: string) => void;
+  onApply: (jobId: string) => void;
 }
 
+
 export default function LatestJobCard({
+  jobId,
   title,
   company,
   location = "Remote",
@@ -21,12 +26,19 @@ export default function LatestJobCard({
   postedAt,
   skills = [],
   applied = false,
+  onDetails,
+  onApply,
 }: LatestJobCardProps) {
   const visibleSkills = skills.slice(0, 4);
   const extraSkills = skills.length - visibleSkills.length;
 
+  
+
   return (
-    <div className="bg-white rounded-2xl p-6 flex justify-between gap-6">
+   <div className="bg-white rounded-lg p-6 flex border justify-between gap-6 
+                hover:shadow-lg hover:shadow-gray-500/50 
+                transition-shadow duration-300">
+
       {/* LEFT */}
       <div className="flex gap-4">
         {/* Icon */}
@@ -40,7 +52,7 @@ export default function LatestJobCard({
             {title}
           </h3>
 
-          <p className="text-sm text-gray-700 mt-0.5">
+          <p className="text-base font-bold text-gray-700 mt-0.5">
             {company}
           </p>
 
@@ -72,8 +84,8 @@ export default function LatestJobCard({
                 key={skill}
                 className={`px-4 py-1 text-xs rounded-full ${
                   index === 0
-                    ? "bg-blue-50 text-blue-600"
-                    : "bg-gray-100 text-gray-700"
+                    ? "bg-blue-50 text-blue-600 font-bold"
+                    : "bg-gray-100 text-gray-700 font-bold"
                 }`}
               >
                 {skill}
@@ -91,20 +103,28 @@ export default function LatestJobCard({
 
       {/* RIGHT */}
       <div className="flex flex-col justify-center gap-3">
-        <button className="px-7 py-2.5 border border-blue-600 text-blue-600 rounded-xl text-sm font-medium hover:bg-blue-50">
-          Details
-        </button>
-
         <button
-          disabled={applied}
-          className={`px-7 py-2.5 rounded-xl text-sm font-medium ${
-            applied
-              ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-              : "bg-blue-600 text-white hover:bg-blue-700"
-          }`}
-        >
-          {applied ? "Applied" : "Apply"}
-        </button>
+  onClick={() => onDetails(jobId)}
+  className="px-6 py-2 border border-blue-600 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50"
+>
+  Details
+</button>
+
+<button
+  disabled={applied}
+  onClick={(e) => {
+    e.stopPropagation()
+    onApply(jobId)
+  }}
+  className={`px-6 py-2 rounded-lg text-sm font-medium ${
+    applied
+      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+      : "bg-blue-600 text-white hover:bg-blue-700"
+  }`}
+>
+  {applied ? "Applied" : "Apply"}
+</button>
+
       </div>
     </div>
   );

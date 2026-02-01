@@ -38,7 +38,7 @@ export default function FiltersSidebar({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm py-7 p-5 sticky top-4">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 sticky top-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <h3 className="text-lg font-bold text-gray-900">Filters</h3>

@@ -8,6 +8,12 @@ import HeroSection from "./HeroSection";
 import { Menu } from "lucide-react";
 import FiltersSidebar from "./FiltersSidebar";
 import LatestJobCard from "./LatestJobCard";
+import { useRouter } from "next/navigation";
+import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
+import { useToast } from "@/components/ui/Toast"
+import { useGetProfile } from "@/features/Profile/hooks/useProfileAPI"
+
+
 
 
 import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
@@ -25,6 +31,19 @@ export default function JobDashboardPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
   const [query, setQuery] = useState<SearchQuery>({ q: "", location: "" });
+  const router = useRouter();
+  
+
+const applyJobMutation = useApplyJob()
+
+const handleApplyJob = (jobId: string) => {
+  applyJobMutation.mutate({
+    jobId,
+    message: "Excited to apply!",
+  })
+}
+
+
 
   const {
     data: categoryPages,
@@ -37,6 +56,14 @@ export default function JobDashboardPage() {
   const categories: CategoryItem[] = (categoryPages?.pages ?? []).flatMap(
     (p) => p.data ?? []
   );
+  const handleJobDetails = (jobId: string) => {
+  router.push(`/jobs/${jobId}`);
+};
+
+
+    // optional: refetch jobs so applied=true updates
+   
+
 
   /* ================= FILTER STATES ================= */
   const [jobType, setJobType] = useState<string[]>([]);
@@ -179,7 +206,7 @@ export default function JobDashboardPage() {
         </span>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-12 gap-3">
+      <div className="max-w-7xl mx-auto px-12 py-6 grid grid-cols-1 md:grid-cols-12 gap-3">
         <div className="hidden md:block md:col-span-3">
           <FiltersSidebar
             jobType={jobType}
@@ -195,8 +222,8 @@ export default function JobDashboardPage() {
   <div className="bg-white rounded-xl overflow-hidden max-w-4xl mx-auto">
 
     {/* Header */}
-    <div className="px-5 py-3.5  bg-gray-50 flex items-center gap-3">
-      <h2 className="text-sm font-semibold text-gray-900">
+    <div className="px-4 py-1  bg-gray-50 flex items-center gap-3">
+      <h2 className="text-xl font-semibold text-gray-900">
         {selectedCategory ? "Category Jobs" : "Latest Jobs"}
       </h2>
       <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
@@ -207,21 +234,25 @@ export default function JobDashboardPage() {
     {/* Job list */}
     <div className="p-4 space-y-4 bg-gray-50">
       {jobs.map((job) => (
-        <LatestJobCard
-          key={job._id}
-          title={job.title}
-          company={job.client?.company || "Company"}
-          location={
-            job.location?.city
-              ? `${job.location.city}, ${job.location.country ?? ""}`
-              : "Remote"
-          }
-          salary={job.salary}
-          postedAt={job.createdAt ? "Recently" : undefined}
-          skills={job.skills?.map((s) => s.name)}
-          applied={job.applied}
-        />
-      ))}
+  <LatestJobCard
+    key={job._id}
+    jobId={job._id}
+    title={job.title}
+    company={job.client?.company || "Company"}
+    location={
+      job.location?.city
+        ? `${job.location.city}, ${job.location.country ?? ""}`
+        : "Remote"
+    }
+    salary={job.salary}
+    postedAt={job.createdAt ? "Recently" : undefined}
+    skills={job.skills?.map((s) => s.name)}
+    applied={job.applied}
+    onDetails={handleJobDetails}
+    onApply={handleApplyJob}
+  />
+))}
+
 
       {/* Infinite scroll trigger */}
       <div ref={jobsLoadMoreRef} className="h-1" />
