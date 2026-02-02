@@ -8,6 +8,7 @@ import { createJob } from "../hooks/jobs.api";
 import JobDescriptionEditor from "./JobDescriptionEditor";
 import { Briefcase } from "lucide-react";
 import { usePincodeLookup } from "../hooks/usePincodeLookup";
+import { useRouter } from "next/navigation";
 
 
 
@@ -93,7 +94,27 @@ export default function CreateJob() {
 
 const { mutate, isPending } = useMutation({
   mutationFn: createJob,
+
+  onSuccess: (res) => {
+    // backend se job id nikaalo
+    const jobId = res?.data?.data?._id;
+
+    if (!jobId) {
+      alert("Job created but Job ID not found");
+      return;
+    }
+
+    // ✅ NEXT PAGE REDIRECT
+    router.push(`/Crew/${jobId}/screen`);
+  },
+
+  onError: () => {
+    alert("Failed to create job");
+  },
 });
+
+
+const router = useRouter();
 
 
 
@@ -219,8 +240,8 @@ if (selectedDate < today) {
           </div>
 
           {/* ================= Form Card ================= */}
-       <section className="bg-white dark:bg-[#1a1e2e] rounded-xl border border-[#dbdde6] dark:border-gray-800 p-6 md:p-8 shadow-sm">
-  
+      <section className="p-0 border-none bg-transparent shadow-none">
+
   {/* Header */}
   <div className="flex items-center gap-3 mb-6">
     <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">

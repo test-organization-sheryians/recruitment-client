@@ -31,7 +31,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
       <Box
         sx={{
         
-          width: { xs: '100vw', md: '50vw' }, // minimum ~65–70%
+          width: { xs: '100vw', md: '60vw' }, // minimum ~65–70%
           height: '100vh',
           display: 'flex',
           flexDirection: 'column',
