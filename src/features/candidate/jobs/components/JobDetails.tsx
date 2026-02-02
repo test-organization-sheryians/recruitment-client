@@ -109,45 +109,7 @@ export default function JobDetails() {
       });
     }
   };
-
-  /* -------------------- Meta Data -------------------- */
-  const metaItems = [
-    {
-      label: "Job Type",
-      value: job.jobType ?? "Not specified",
-    },
-    {
-      label: "Experience Level",
-      value: job.requiredExperience,
-    },
-    { label: "Salary", value: job.salary ? String(job.salary) : undefined },
-    { label: "Department", value: job.department },
-    { label: "Education", value: job.education },
-    {
-      label: "Date Posted",
-      value: job.expiry ? new Date(job.expiry).toLocaleDateString() : undefined,
-    },
-  ];
-
-  /* -------------------- Format Location -------------------- */
-  const getLocationString = (): string | undefined => {
-  if (!job.location) {
-    return job.isRemote ? "Remote" : job.department;
-  }
-
-  const parts: string[] = [];
-
-  if (job.location.city) parts.push(job.location.city);
-  if (job.location.state) parts.push(job.location.state);
-
-  if (parts.length === 0) {
-    return job.isRemote ? "Remote" : job.department;
-  }
-
-  const locationStr = parts.join(", ");
-  return job.isRemote ? `${locationStr} (Remote)` : locationStr;
-};
-const formatSalary = (): string | undefined => {
+  const formatSalary = (): string | undefined => {
   if (!job.salary) return "Not disclosed";
 
   // If salary is already string or number
@@ -170,6 +132,50 @@ const formatSalary = (): string | undefined => {
 
   return "Not disclosed";
 };
+
+  /* -------------------- Meta Data -------------------- */
+ /* -------------------- Meta Data -------------------- */
+const metaItems = [
+  {
+    label: "Job Type",
+    value: job.jobType ?? "Not specified",
+  },
+  {
+    label: "Experience Level",
+    value: job.requiredExperience,
+  },
+  {
+    label: "Salary",
+    value: formatSalary(), // <-- fixed here
+  },
+  { label: "Department", value: job.department },
+  { label: "Education", value: job.education },
+  {
+    label: "Date Posted",
+    value: job.expiry ? new Date(job.expiry).toLocaleDateString() : undefined,
+  },
+];
+
+
+  /* -------------------- Format Location -------------------- */
+  const getLocationString = (): string | undefined => {
+  if (!job.location) {
+    return job.isRemote ? "Remote" : job.department;
+  }
+
+  const parts: string[] = [];
+
+  if (job.location.city) parts.push(job.location.city);
+  if (job.location.state) parts.push(job.location.state);
+
+  if (parts.length === 0) {
+    return job.isRemote ? "Remote" : job.department;
+  }
+
+  const locationStr = parts.join(", ");
+  return job.isRemote ? `${locationStr} (Remote)` : locationStr;
+};
+
 
   /* -------------------- UI -------------------- */
   return (
