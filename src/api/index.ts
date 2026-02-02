@@ -73,3 +73,10 @@ export * from "./password/resetPassword";
 
 export * from "./jobApplication/scheduleInterview";
 
+
+/* ================= TASK ================= */
+export * from "./task/create"
+export * from "./task/getAll"
+export * from "./task/delete"
+export * from "./task/update"
+

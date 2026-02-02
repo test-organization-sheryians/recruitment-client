@@ -16,7 +16,7 @@ export default function HeroSection({
   setSearchLocation,
 }: HeroSectionProps) {
   return (
-    <div className="w-full px-6 pt-20 ">
+    <div className="w-full px-6 ">
       <div
         className="relative max-w-293 mx-auto rounded-2xl overflow-hidden bg-cover bg-center"
         style={{

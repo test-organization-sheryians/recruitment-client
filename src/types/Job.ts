@@ -26,6 +26,7 @@ export interface Job {
       [key: string]: any;
     };
     
+    jobType?: string;
 }   
 // Category can be an object or string
 interface Category {
