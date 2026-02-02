@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import JobCard, { Job as CardJob } from "./JobCategoryCard";
+import Sidebar from "./Sidebar";
+import JobCard from "./JobCategoryCard";
+import { Job as CardJob } from "@/types/Job";
 import ExploreByCategory from "./ExploreByCategory";
 import HeroSection from "./HeroSection";
 import { Menu } from "lucide-react";
 import FiltersSidebar from "./FiltersSidebar";
 import LatestJobCard from "./LatestJobCard";
+import CategoryExplorer from "./CategoryExplorer";
 import CategoryCard from "./CategoryCard";
-import { useGetProfile } from "@/features/candidate/Profile/hooks/useProfileApi"
+import { useGetProfile } from "@/features/candidate/Profile/hooks/useProfileApi";
 import { useRouter } from "next/navigation";
 import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
-import { useToast } from "@/components/ui/Toast"
+import { useToast } from "@/components/ui/Toast";
 import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
 import {
   useInfiniteJobs,
@@ -20,6 +23,8 @@ import {
 import { useInfiniteSearchJobs } from "@/features/candidate/jobs/hooks/useSearchJobs";
 import type { CategoryItem } from "@/api/category/getCategoriesPaginated";
 import { SearchQuery } from "@/types/Job";
+import { useQueryClient } from "@tanstack/react-query";
+
 
 
 
@@ -33,6 +38,8 @@ export default function JobDashboardPage() {
   const [query, setQuery] = useState<SearchQuery>({ q: "", location: "" });
   const router = useRouter();
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const queryClient = useQueryClient();
+
 
   
 
@@ -287,7 +294,7 @@ const handleApplyJob = (jobId: string) => {
             }
             salary={job.salary}
             postedAt={job.createdAt ? "Recently" : undefined}
-            skills={job.skills?.map((s) => s.name)}
+            skills={job.skills?.map((s) => typeof s === "string" ? s : s.name)}
             applied={job.applied}
             onDetails={handleJobDetails}
             onApply={handleApplyJob}

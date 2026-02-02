@@ -8,7 +8,7 @@ interface LatestJobCardProps {
   title: string;
   company: string;
   location?: string;
-  salary?: string;
+  salary?: string | number;
   postedAt?: string;
   skills?: string[];
   applied?: boolean;

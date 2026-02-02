@@ -1,16 +1,16 @@
 export interface Job {
     id: string;
     title: string;
-    location: {
-      city: string;
-      state: string;
-      pincode: string;
-      country: string;
+    location?: {
+      city?: string;
+      state?: string;
+      pincode?: string;
+      country?: string;
     };
-    salary: number;
+    salary: number | string;
     isRemote: boolean;
     isFeatured: boolean;
-    createdAt: string;
+    createdAt?: string;
     updatedAt: string;
     _id: string;
     requiredExperience?: string;
@@ -20,7 +20,11 @@ export interface Job {
     skills?: (Skill | string)[];
     department?: string;
     expiry?: string;
-    applied?: boolean
+    applied?: boolean;
+    client?: {
+      company?: string;
+      [key: string]: any;
+    };
     
 }   
 // Category can be an object or string
