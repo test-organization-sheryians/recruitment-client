@@ -111,7 +111,7 @@ export default function JobHeader({
                 className="flex items-center gap-2 rounded-lg border border-gray-300 px-5 py-2.5 font-medium text-gray-700 hover:bg-gray-50 transition"
               >
                 <Bookmark size={18} className={isSaved ? "fill-current" : ""} />
-                {isLoadingBookmark ? "Saving..." : "Save Job"}
+                {isLoadingBookmark ? "Saving..." : isSaved ? "Saved" : "Save"}
               </button>
             )}
 
