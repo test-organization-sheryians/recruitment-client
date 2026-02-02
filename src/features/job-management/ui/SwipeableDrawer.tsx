@@ -15,7 +15,7 @@ interface SwipeableDrawerProps {
 }
 
 const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
-  anchor = 'right', // ✅ UX: right side drawer
+  anchor = 'right', 
   open,
   onOpen,
   onClose,
@@ -30,7 +30,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
     >
       <Box
         sx={{
-          // ✅ FULL height + proper coverage
+        
           width: { xs: '100vw', md: '50vw' }, // minimum ~65–70%
           height: '100vh',
           display: 'flex',

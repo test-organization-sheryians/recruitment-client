@@ -1,150 +1,206 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import AddQuestion from "./AddQuestion"  // adjust path if needed
+import AddQuestion from "./AddQuestion"
 import AddIcon from "@mui/icons-material/Add"
 import EditIcon from "@mui/icons-material/Edit"
 import DeleteIcon from "@mui/icons-material/Delete"
-// import JobDeleteButton from "../ui/JobDeleteButton"
 import toast from "react-hot-toast"
-import ConfirmDeleteDialog from "../ui/ConfirmDeleteDialog"
+import { useParams } from "next/navigation"
 
+import {
+  useGetJobApplicationQuestions,
+  useCreateJobApplicationQuestions,
+  useUpdateJobApplicationQuestion,
+  useDeleteJobApplicationQuestion,
+} from "../hooks/useJobApplicationQuestions"
+
+/* ================= TYPES ================= */
 
 export type QuestionType = "radio" | "text" | "url"
 
 export interface ScreeningQuestion {
-  id: number
+  _id: string
   title: string
-  type: QuestionType
-  required: boolean
+  description?: string
+  inputType: QuestionType
+  options?: string[]
+  isRequired: boolean
+  isKnockout: boolean
+  order?: number
 }
 
+/* ================= COMPONENT ================= */
+
 const ScreeningQuestions: React.FC = () => {
+  /* ---------- JOB ID ---------- */
+  const params = useParams()
+  const jobId =
+    typeof params?.jobId === "string" ? params.jobId : undefined
+
+  if (!jobId) return <div className="p-10">Job ID not found</div>
+
+  /* ---------- STATE ---------- */
   const [questions, setQuestions] = useState<ScreeningQuestion[]>([])
-  const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null)
+  const [editingQuestion, setEditingQuestion] =
+    useState<ScreeningQuestion | null>(null)
+
+    const handleSaveChanges = async () => {
+  await refetch()
+  toast.success("All changes saved successfully")
+}
+
+
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [title, setTitle] = useState("")
-  const [type, setType] = useState<QuestionType>("radio")
-  const [required, setRequired] = useState(false)
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
-  // ================= Load saved questions on mount =================
+  /* ---------- API HOOKS ---------- */
+  const { data, isLoading, refetch } =
+    useGetJobApplicationQuestions(jobId)
+
+  const createMutation = useCreateJobApplicationQuestions()
+  const updateMutation = useUpdateJobApplicationQuestion()
+  const deleteMutation = useDeleteJobApplicationQuestion()
+
+  /* ---------- LOAD QUESTIONS ---------- */
   useEffect(() => {
-    const saved = localStorage.getItem("screening_questions")
-    if (saved) setQuestions(JSON.parse(saved))
-    else {
-      // default questions if none saved
-      setQuestions([
-        { id: 1, title: "How many years of experience do you have with Figma?", type: "radio", required: true },
-        { id: 2, title: "Please describe your most challenging design project.", type: "text", required: false },
-        { id: 3, title: "Portfolio Link", type: "url", required: true },
-      ])
-    }
-  }, [])
-
-  // ================= FUNCTIONS =================
-  const deleteQuestion = (id: number) => {
-    setQuestions(prev => prev.filter(q => q.id !== id))
-    toast.success("Question deleted")
-  }
-
-  const handleSaveChanges = () => {
-    localStorage.setItem("screening_questions", JSON.stringify(questions))
-    toast.success("Questions saved successfully")
-  }
-
-  const handleEditQuestion = (q: ScreeningQuestion) => {
-    setEditingQuestionId(q.id)
-    setTitle(q.title)
-    setType(q.type)
-    setRequired(q.required)
-    setIsEditDialogOpen(true)
-
-  }
-
-  const handleSaveEdit = () => {
-    if (editingQuestionId) {
-      setQuestions(prev =>
-        prev.map(q =>
-          q.id === editingQuestionId ? { ...q, title, type, required } : q
+    if (data?.data) {
+      setQuestions(
+        [...data.data].sort(
+          (a: ScreeningQuestion, b: ScreeningQuestion) =>
+            (a.order ?? 0) - (b.order ?? 0)
         )
       )
-      setIsEditDialogOpen(false)
-      toast.success("Question updated")
     }
+  }, [data])
+
+  /* ================= ACTIONS ================= */
+
+  const handleAddQuestion = (q: any) => {
+    createMutation.mutate(
+      {
+        jobId,
+        questions: [
+          {
+            title: q.title,
+            description: q.description,
+            inputType: q.type,
+            options: q.options || [],
+            isRequired: q.required,
+            isKnockout: q.isKnockout,
+            order: questions.length + 1,
+          },
+        ],
+      },
+      {
+        onSuccess: async () => {
+          toast.success("Question added")
+          setIsDrawerOpen(false)
+          await refetch()
+        },
+        onError: () => toast.error("Failed to add question"),
+      }
+    )
   }
 
-  const handleAddQuestion = (q: { title: string; type: QuestionType; required: boolean }) => {
-    setQuestions(prev => [
-      ...prev,
-      { id: Date.now(), title: q.title, type: q.type, required: q.required },
-    ])
-    setIsDrawerOpen(false)
-    toast.success("Question added")
+ const handleSaveEdit = () => {
+  if (!editingQuestion) return
+
+  updateMutation.mutate(
+    {
+      jobId,
+      payload: {
+        questionId: editingQuestion._id,
+
+        title: editingQuestion.title,
+        description: editingQuestion.description || "",
+
+        inputType: editingQuestion.inputType,
+        options: editingQuestion.options || [],
+
+        isRequired: editingQuestion.isRequired,
+        isKnockout: editingQuestion.isKnockout || false,
+        order: editingQuestion.order,
+      },
+    },
+    {
+      onSuccess: async () => {
+        toast.success("Question updated")
+        setIsEditDialogOpen(false)
+        await refetch()
+      },
+      onError: (err: any) => {
+        console.error(err)
+        toast.error("Update failed")
+      },
+    }
+  )
+}
+
+
+  const deleteQuestion = (questionId: string) => {
+    deleteMutation.mutate(
+      { jobId, questionId },
+      {
+        onSuccess: async () => {
+          toast.success("Question deleted")
+          await refetch()
+        },
+        onError: () => toast.error("Failed to delete question"),
+      }
+    )
   }
 
-  // ================= UI =================
+  if (isLoading) return <div className="p-10">Loading...</div>
+
+  /* ================= UI (NO CHANGE) ================= */
+
   return (
     <div className="bg-background-light dark:bg-background-dark min-h-screen transition-colors">
-      {/* ================= HEADER ================= */}
+
+      {/* HEADER */}
       <header className="sticky top-0 z-40 bg-white dark:bg-[#111218] border-b border-[#dbdde6] dark:border-gray-800 px-10 py-3 flex justify-between">
         <div className="flex items-center gap-6">
           <h2 className="text-lg font-bold">AdminPanel</h2>
           <nav className="flex items-center gap-2 text-sm text-[#616889]">
             <span>Jobs</span> /
-            <span>Senior Product Designer</span> /
             <span className="font-bold text-black dark:text-white">
               Screening Questions
             </span>
           </nav>
         </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={() => setIsPreviewOpen(true)}
-            className="h-10 px-4 rounded-lg border font-bold hover:bg-gray-50"
-          >
-            Preview
-          </button>
-          <button
-            onClick={handleSaveChanges}
-            className="h-10 px-5 rounded-lg bg-primary text-white font-bold"
-          >
-            Save Changes
-          </button>
-        </div>
+       <div className="flex gap-3">
+  <button
+    onClick={() => setIsPreviewOpen(true)}
+    className="h-10 px-4 rounded-lg border font-bold hover:bg-gray-50"
+  >
+    Preview
+  </button>
+
+  <button
+    onClick={handleSaveChanges}
+    className="h-10 px-5 rounded-lg bg-primary text-white font-bold"
+  >
+    Save Changes
+  </button>
+</div>
+
       </header>
 
-      {/* ================= CONTENT ================= */}
+      {/* CONTENT */}
       <main className="max-w-[900px] mx-auto py-10 px-4 space-y-6">
-
-        {/* TITLE */}
-        <div>
-          <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded">
-            Hiring workflow
-          </span>
-
-          <h1 className="text-3xl font-black mt-2">
-            Screening Questions for Senior Product Designer
-          </h1>
-
-          <p className="text-[#616889] mt-1">
-            Define and order the questions candidates must answer during their application.
-          </p>
-        </div>
-
-        {/* ================= QUESTIONS LIST ================= */}
         <div className="space-y-4">
           {questions.map((q, index) => (
             <div
-              key={q.id}
+              key={q._id}
               className="bg-white dark:bg-[#1a1e2e] border border-[#dbdde6] dark:border-gray-700 rounded-xl p-4 hover:border-primary transition"
             >
               <div className="flex justify-between gap-4">
@@ -157,63 +213,36 @@ const ScreeningQuestions: React.FC = () => {
                   </div>
 
                   <div className="flex gap-4 text-xs mt-2 text-[#616889]">
-                    <span>
-                      {q.type === "radio"
-                        ? "Radio Select"
-                        : q.type === "text"
-                          ? "Long Text"
-                          : "URL/Text"}
-                    </span>
-
-                    <span className={q.required ? "text-red-500" : ""}>
-                      {q.required ? "Required" : "Optional"}
+                    <span>{q.inputType}</span>
+                    <span className={q.isRequired ? "text-red-500" : ""}>
+                      {q.isRequired ? "Required" : "Optional"}
                     </span>
                   </div>
                 </div>
 
-                {/* ACTIONS */}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleEditQuestion(q)}
+                    onClick={() => {
+                      setEditingQuestion(q)
+                      setIsEditDialogOpen(true)
+                    }}
                     className="p-2 hover:bg-gray-100 rounded-lg"
                   >
                     <EditIcon />
                   </button>
 
                   <button
-                    onClick={() => deleteQuestion(q.id)}
+                    onClick={() => deleteQuestion(q._id)}
                     className="p-2 rounded-lg text-red-500 hover:text-red-600"
                   >
                     <DeleteIcon />
                   </button>
-                  {/* <ConfirmDeleteDialog
-                    title="Delete this question?"
-                    consequences={[
-                      'This screening question will be permanently removed',
-                    ]}
-                    onDelete={async () => {
-                      deleteQuestion(q.id);
-                      return true;
-                    }}
-                    trigger={
-                      <button className="p-2 text-red-500 hover:text-red-600">
-                        <DeleteIcon />
-                      </button>
-                    }
-                  /> */}
-
-
                 </div>
               </div>
-
-              <p className="text-sm text-[#616889] mt-3">
-                Question {index + 1} details can go here. You can add description or instructions for candidates.
-              </p>
             </div>
           ))}
         </div>
 
-        {/* ================= ADD BUTTON ================= */}
         <button
           onClick={() => setIsDrawerOpen(true)}
           className="w-full border-2 border-dashed border-[#dbdde6] rounded-xl p-8 text-[#616889] hover:border-primary hover:text-primary hover:bg-primary/5 flex justify-center gap-2 items-center"
@@ -221,110 +250,54 @@ const ScreeningQuestions: React.FC = () => {
           <AddIcon />
           <span className="text-lg font-bold">Add New Question</span>
         </button>
-
       </main>
 
-      {/* ================= ADD QUESTION DRAWER ================= */}
+      {/* ADD */}
       {isDrawerOpen && (
-        <div className="fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setIsDrawerOpen(false)}
-          />
-          <div className="absolute right-0 top-0 h-full w-[500px] bg-white shadow-2xl">
-            <AddQuestion
-              onClose={() => setIsDrawerOpen(false)}
-              onAdd={handleAddQuestion}
-            />
-          </div>
-        </div>
+        <AddQuestion
+          onClose={() => setIsDrawerOpen(false)}
+          onAdd={handleAddQuestion}
+        />
       )}
 
-      {/* ================= EDIT QUESTION DIALOG ================= */}
-      {isEditDialogOpen && (
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      {/* EDIT */}
+      {isEditDialogOpen && editingQuestion && (
+        <Dialog open onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Edit Question</DialogTitle>
             </DialogHeader>
 
-            <div className="mt-4 space-y-4">
-              <input
-                type="text"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                placeholder="Question Title"
-                className="w-full border rounded p-2"
-              />
+            <input
+              value={editingQuestion.title}
+              onChange={(e) =>
+                setEditingQuestion({
+                  ...editingQuestion,
+                  title: e.target.value,
+                })
+              }
+              className="w-full border rounded p-2"
+            />
 
-              <select
-                value={type}
-                onChange={e => setType(e.target.value as QuestionType)}
-                className="w-full border rounded p-2"
-              >
-                <option value="radio">Radio</option>
-                <option value="text">Text</option>
-                <option value="url">URL</option>
-              </select>
-
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={required}
-                  onChange={e => setRequired(e.target.checked)}
-                />
-                Required
-              </label>
-
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => setIsEditDialogOpen(false)}
-                  className="px-4 py-2 bg-gray-200 rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveEdit}
-                  className="px-4 py-2 bg-primary text-white rounded"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
+            <button
+              onClick={handleSaveEdit}
+              className="mt-4 bg-primary text-white px-4 py-2 rounded"
+            >
+              Save
+            </button>
           </DialogContent>
         </Dialog>
       )}
 
-      {/* ================= PREVIEW DIALOG ================= */}
+      {/* PREVIEW */}
       {isPreviewOpen && (
-        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Preview Questions</DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-4 mt-4">
-              {questions.map((q, index) => (
-                <div key={q.id} className="p-2 border rounded">
-                  <p>
-                    <strong>Q{index + 1}:</strong> {q.title}{" "}
-                    {q.required && <span className="text-red-500">(Required)</span>}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Type: {q.type === "radio" ? "Radio Select" : q.type === "text" ? "Long Text" : "URL/Text"}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={() => setIsPreviewOpen(false)}
-                className="px-4 py-2 bg-gray-200 rounded"
-              >
-                Close
-              </button>
-            </div>
+        <Dialog open onOpenChange={setIsPreviewOpen}>
+          <DialogContent>
+            {questions.map((q, i) => (
+              <p key={q._id}>
+                Q{i + 1}: {q.title}
+              </p>
+            ))}
           </DialogContent>
         </Dialog>
       )}

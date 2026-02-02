@@ -1,4 +1,4 @@
-import CreateJob from '@/features/job-management/components/CreateJob'
+import CreateJob from '@/features/job-management/components/ScreeningQuestion'
 import React from 'react'
 
 const page = () => {
