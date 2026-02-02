@@ -149,6 +149,29 @@ export default function JobDetails() {
   const locationStr = parts.join(", ");
   return job.isRemote ? `${locationStr} (Remote)` : locationStr;
 };
+const formatSalary = (): string | undefined => {
+  if (!job.salary) return "Not disclosed";
+
+  // If salary is already string or number
+  if (typeof job.salary === "string" || typeof job.salary === "number") {
+    return String(job.salary);
+  }
+
+  // If salary is an object
+  const { min, max, currency } = job.salary as {
+    min?: number;
+    max?: number;
+    currency?: string;
+  };
+
+  const curr = currency || "INR";
+
+  if (min && max) return `${curr} ${min.toLocaleString()} - ${max.toLocaleString()}`;
+  if (min) return `${curr} ${min.toLocaleString()}+`;
+  if (max) return `Up to ${curr} ${max.toLocaleString()}`;
+
+  return "Not disclosed";
+};
 
   /* -------------------- UI -------------------- */
   return (
@@ -159,7 +182,8 @@ export default function JobDetails() {
           title={job.title}
           company={typeof job.category === "string" ? job.category : job.category?.name}
           location={getLocationString()}
-          salary={job.salary ? String(job.salary) : undefined}
+         salary={formatSalary()}
+
           postedTime="2 hours ago"
           isSaved={isSaved}
           isExpired={isExpired}
