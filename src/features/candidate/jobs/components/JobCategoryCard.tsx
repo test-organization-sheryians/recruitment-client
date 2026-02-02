@@ -118,12 +118,10 @@ export default function JobCard({ job }: JobCardProps) {
 
 
         {/* Job Info */}
-         <div className="min-w-0">
-    <h3 className="text-base font-semibold text-gray-900 truncate">
-      {job.title}
-    </h3>
-
-   
+        <div className="min-w-0">
+          <h3 className="text-base font-semibold text-gray-900 truncate">
+            {job.title}
+          </h3>
 
           {/* Category + Department */}
           <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500">
@@ -132,17 +130,11 @@ export default function JobCard({ job }: JobCardProps) {
           </div>
 
           {/* Meta */}
-          
-              
-          {/* Title */}
-          <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-blue-700 transition-colors">
-            {job.title}
-          </h3>
-
-          {/* Salary & Department */}
-          <div className="text-sm text-gray-600 space-y-1 mb-3">
+          <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-500">
             {getSalaryString() && (
-              <p className="font-semibold text-gray-800">{getSalaryString()}</p>
+              <span className="font-medium text-gray-700">
+                {getSalaryString()}
+              </span>
             )}
             {job.requiredExperience && <span>{job.requiredExperience}</span>}
           </div>

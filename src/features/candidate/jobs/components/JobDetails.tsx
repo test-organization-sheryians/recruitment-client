@@ -173,9 +173,13 @@ const formatSalary = (): string | undefined => {
   return "Not disclosed";
 };
 
+  /* -------------------- Meta Data -------------------- */
+ /* -------------------- Meta Data -------------------- */
+
+
   /* -------------------- UI -------------------- */
   return (
-    <div className="min-h-screen bg-[#F6F6F8] py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F66F8] py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         {/* Header with integrated action buttons */}
         <JobHeader

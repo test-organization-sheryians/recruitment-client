@@ -79,27 +79,30 @@ export const useInfiniteSearchJobs = ({
   return useInfiniteQuery<BackendPaginatedResponse<Job>>({
     queryKey: [
       "searchJobs",
-      { q, location, jobType, experience, minSalary, maxSalary, limit },
+      q,
+      location,
+      jobType.join(","),      // ✅ FIX
+      experience.join(","),   // ✅ FIX
+      minSalary ?? "",
+      maxSalary ?? "",
+      limit,
     ],
-    enabled:
-      Boolean(q || location || jobType.length || experience.length) ||
-      minSalary !== undefined ||
-      maxSalary !== undefined,
+  enabled: Boolean(
+  q ||
+  location ||
+  jobType.length ||
+  experience.length ||
+  minSalary !== 0 ||
+  maxSalary !== 10000000
+),
+
     initialPageParam: 1,
     queryFn: async ({ pageParam }) => {
-      const res = await searchJobsPaginated(
-        {
-          q,
-          location,
-          jobType,
-          experience,
-          minSalary,
-          maxSalary,
-        },
+      return searchJobsPaginated(
+        { q, location, jobType, experience, minSalary, maxSalary },
         pageParam as number,
         limit
       );
-      return res;
     },
     getNextPageParam: (lastPage) => {
       const { pagination } = lastPage;

@@ -1,3 +1,4 @@
+
 import {
   DollarSign,
   Briefcase,
@@ -56,4 +57,4 @@ export default function JobMeta({ items }: JobMetaProps) {
       </div>
     </div>
   );
-}
+} 

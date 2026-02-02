@@ -20,7 +20,8 @@ import {
   useInfiniteJobs,
   useInfiniteJobsByCategory,
 } from "@/features/candidate/jobs/hooks/useInfiniteJobs";
-import { useInfiniteSearchJobs } from "@/features/candidate/jobs/hooks/useSearchJobs";
+import { useInfiniteSearchJobs } from "@/features/candidate/jobs/hooks/useInfiniteJobs";
+
 import type { CategoryItem } from "@/api/category/getCategoriesPaginated";
 import { SearchQuery } from "@/types/Job";
 import { useQueryClient } from "@tanstack/react-query";
@@ -39,6 +40,7 @@ export default function JobDashboardPage() {
   const router = useRouter();
   const [showAllCategories, setShowAllCategories] = useState(false);
   const queryClient = useQueryClient();
+  
 
 
   
@@ -98,30 +100,43 @@ const handleApplyJob = (jobId: string) => {
   const allJobsQuery = useInfiniteJobs();
   const jobsByCategoryQuery = useInfiniteJobsByCategory(selectedCategory);
 
+  // Normalize filter values
+  const normalizedJobType = jobType || [];
+  const normalizedExperience = experience || [];
+
   /* ✅ ONLY REAL CHANGE IS HERE */
-  const searchJobsQuery = useInfiniteSearchJobs({
-    q: query.q,
-    location: query.location,
-    jobType,
-    experience,
-    minSalary: salaryRange[0],
-    maxSalary: salaryRange[1],
-  } as any);
+const searchJobsQuery = useInfiniteSearchJobs({
+  q: query.q,
+  location: query.location,
+  jobType: normalizedJobType,
+  experience: normalizedExperience,
+  minSalary: salaryRange[0],
+  maxSalary: salaryRange[1],
+} as any);
 
-  const isSearchActive = Boolean(
-    query.q ||
-      query.location ||
-      jobType.length ||
-      experience.length ||
-      salaryRange[0] !== 0 ||
-      salaryRange[1] !== 10000000
-  );
+// ✅ PUT IT HERE ⬇️
+const isSearchActive = Boolean(
+  query.q ||
+    query.location ||
+    normalizedJobType.length ||
+    normalizedExperience.length ||
+    salaryRange[0] !== 0 ||
+    salaryRange[1] !== 10000000
+);
+useEffect(() => {
+  if (isSearchActive) {
+    setSelectedCategory(null);
+  }
+}, [isSearchActive]);
 
-  const activeJobsQuery = isSearchActive
-    ? searchJobsQuery
-    : selectedCategory
-    ? jobsByCategoryQuery
-    : allJobsQuery;
+
+// ✅ AND THIS RIGHT AFTER
+const activeJobsQuery = isSearchActive
+  ? searchJobsQuery
+  : selectedCategory
+  ? jobsByCategoryQuery
+  : allJobsQuery;
+
 
   const jobsPages = activeJobsQuery.data?.pages ?? [];
   const hasMoreJobs = activeJobsQuery.hasNextPage;

@@ -23,19 +23,14 @@ export const searchJobsPaginated = async (
   page: number,
   limit: number
 ): Promise<BackendPaginatedResponse<Job>> => {
-  console.log("API Call Params check (request) ===>:", {
-    ...params,
-    page,
-    limit,
-  });
 
   const res = await api.get("/api/jobs/search", {
     params: {
       q: params.q,
       location: params.location,
 
-      jobType: params.jobType,
-      experience: params.experience,
+      jobType: params.jobType?.join(","),        // 🔥 FIX
+      experience: params.experience?.join(","),  // 🔥 FIX
 
       minSalary: params.minSalary,
       maxSalary: params.maxSalary,
@@ -44,8 +39,6 @@ export const searchJobsPaginated = async (
       limit,
     },
   });
-
-  console.log("API Call Response check (response) ===>:", res);
 
   return res.data as BackendPaginatedResponse<Job>;
 };
