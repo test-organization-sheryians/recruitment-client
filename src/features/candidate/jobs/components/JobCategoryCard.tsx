@@ -22,7 +22,7 @@ export interface Job {
   requiredExperience?: string;
   education?: string;
   expiry?: string | Date;
-  salary?: string | { min?: number; max?: number; currency?: string };
+  salary?: string;
   department?: string;
   skills?: Skill[];
   applied?: boolean;
@@ -30,18 +30,6 @@ export interface Job {
 
 interface JobCardProps {
   job: Job;
-}
-
-function formatSalary(salary?: string | { min?: number; max?: number; currency?: string }): string {
-  if (!salary) return '';
-  if (typeof salary === 'string') return salary;
-  if (typeof salary === 'object') {
-    const { min, max, currency } = salary;
-    if (min !== undefined && max !== undefined && currency) {
-      return `${currency} ${min}k - ${max}k`;
-    }
-  }
-  return '';
 }
 
 export default function JobCard({ job }: JobCardProps) {
@@ -132,7 +120,7 @@ export default function JobCard({ job }: JobCardProps) {
           {/* Salary & Department */}
           <div className="text-sm text-gray-600 space-y-1 mb-3">
             {job.salary && (
-              <p className="font-semibold text-gray-800">{formatSalary(job.salary)}</p>
+              <p className="font-semibold text-gray-800">{job.salary}</p>
             )}
             {job.department && <p>{job.department}</p>}
           </div>
