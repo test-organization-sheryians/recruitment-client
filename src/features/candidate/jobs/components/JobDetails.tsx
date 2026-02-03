@@ -17,6 +17,18 @@ import { useGetProfile } from "../../Profile/hooks/useProfileApi";
 
 import type { SavedJob, Skill } from "@/types/Job";
 
+function formatSalary(salary?: string | { min?: number; max?: number; currency?: string }): string {
+  if (!salary) return '';
+  if (typeof salary === 'string') return salary;
+  if (typeof salary === 'object') {
+    const { min, max, currency } = salary;
+    if (min !== undefined && max !== undefined && currency) {
+      return `${currency} ${min}k - ${max}k`;
+    }
+  }
+  return '';
+}
+
 export default function JobDetails() {
   const router = useRouter();
   const params = useParams();
@@ -166,7 +178,7 @@ export default function JobDetails() {
                 : job.category.name}
             </p>
           )}
-          {job.salary && <p><strong>Salary:</strong> {job.salary}</p>}
+          {job.salary && <p><strong>Salary:</strong> {formatSalary(job.salary)}</p>}
           {job.department && (
             <p><strong>Department:</strong> {job.department}</p>
           )}

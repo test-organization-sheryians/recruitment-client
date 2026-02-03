@@ -22,13 +22,16 @@ function formatDate(date?: string) {
   return date ? new Date(date).toLocaleDateString() : 'Present';
 }
 
-function formatAvailability(availability: string | { min?: number; max?: number; currency?: string }): string {
+function formatAvailability(availability: string | { min?: number; max?: number; currency?: string } | undefined | null): string {
+  if (!availability) {
+    return 'N/A';
+  }
   if (typeof availability === 'string') {
     return availability === 'looking' ? 'Actively Looking' : 'Not Looking';
   }
-  if (typeof availability === 'object' && availability) {
+  if (typeof availability === 'object') {
     const { min, max, currency } = availability;
-    if (min && max && currency) {
+    if (min !== undefined && min !== null && max !== undefined && max !== null && currency) {
       return `${currency} ${min}k - ${max}k`;
     }
   }
@@ -224,7 +227,11 @@ export default function SelectedCandidatesPage() {
 
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                   <InfoCard icon={<Mail className="h-5 w-5" />} label="Email" value={activeCandidate.email} />
-                  <InfoCard icon={<User className="h-5 w-5" />} label="Availability" value={formatAvailability(activeCandidate.availability)} />
+                  <InfoCard 
+                    icon={<User className="h-5 w-5" />} 
+                    label="Availability" 
+                    value={formatAvailability(activeCandidate.availability) || 'N/A'} 
+                  />
                 </div>
 
                 {activeCandidate.skills.length > 0 && (
@@ -302,7 +309,7 @@ function InfoCard({
 }: {
   icon: React.ReactNode;
   label: string;
-  value: string;
+  value: string | React.ReactNode;
 }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
@@ -310,7 +317,7 @@ function InfoCard({
         <div className="text-slate-600">{icon}</div>
         <p className="text-sm font-medium text-slate-600">{label}</p>
       </div>
-      <p className="text-base text-slate-900 break-words font-medium">{value}</p>
+      <p className="text-base text-slate-900 break-words font-medium">{String(value)}</p>
     </div>
   );
 }
