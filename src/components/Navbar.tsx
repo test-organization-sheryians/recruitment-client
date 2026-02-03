@@ -10,6 +10,7 @@ import {
   Bookmark,
   BookCheck,
   Briefcase,
+  BookOpen,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -105,6 +106,15 @@ const Navbar = () => {
                   <User size={18} /> My Profile
                 </Link>
 
+                {/* ✅ My Courses (Desktop) */}
+                <Link
+                  href="/Pcourses"
+                  onClick={() => setOpenProfile(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
+                >
+                  <BookOpen size={18} /> My Courses
+                </Link>
+
                 {/* ✅ Applied Jobs */}
                 <Link
                   href="/appliedjobs"
@@ -180,6 +190,22 @@ const Navbar = () => {
               </div>
               <ChevronRight size={16} />
             </Link>
+
+
+            {/* ✅ My Courses (Mobile) */}
+            <Link
+              href="/Pcourses"
+              onClick={() => setOpenMenu(false)}
+              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
+            >
+              <div className="flex gap-3">
+                <BookOpen size={20} /> My Courses
+              </div>
+              <ChevronRight size={16} />
+            </Link>
+
+
+            
 
             {/* ✅ Applied Jobs */}
             <Link
