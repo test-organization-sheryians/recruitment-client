@@ -134,6 +134,7 @@ export default function UniversalInterviewPage() {
   const [showCode, setShowCode] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
 
+
   useEffect(() => {
     const duration = Number(localStorage.getItem("duration"));
     if (duration > 0) {
@@ -161,11 +162,16 @@ export default function UniversalInterviewPage() {
     setIsSubmitting,
   });
 
-  const secondsLeft = useTestTimer(testDuration, isActiveTest && !blocked,
-    () => submitTest()
+  const secondsLeft = useTestTimer(
+    testDuration,
+    isActiveTest && !blocked,
+    () => submitTest() // This remains the same
   );
 
-  secondsLeftRef.current = secondsLeft;
+  useEffect(() => {
+    secondsLeftRef.current = secondsLeft;
+  }, [secondsLeft]);
+
   const prevent = (e: React.ClipboardEvent<HTMLTextAreaElement>) => e.preventDefault();
 
   const onFinishClick = () => {
@@ -176,6 +182,7 @@ export default function UniversalInterviewPage() {
   const confirmSubmit = async () => {
     setShowConfirm(false);
     setIsSubmitting(true);
+    localStorage.removeItem("test_deadline_timestamp");
     await submitTest();
   };
 
