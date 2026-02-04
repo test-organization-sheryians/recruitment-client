@@ -3,6 +3,7 @@ import React, { useState } from "react"
 import Input from "@/components/Input"
 import { useEnrollTestuser } from "@/features/admin/test/hooks/useTest"
 import { useSearchUserTest } from "@/features/admin/test/hooks/useTest"
+import {useDebounce} from '@/features/admin/users/hooks/useDebounce'
 import toast from "react-hot-toast"
 
 
@@ -15,9 +16,10 @@ const EnrolledTestEmail: React.FC<Props> = ({ testId }) => {
   const [emails, setEmails] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
+  const  debounceValue = useDebounce(value)
 
   // ⭐ Search Hook (fixed)
-  const { data: searchResults = [], isLoading: searchLoading } = useSearchUserTest(value)
+  const { data: searchResults = [], isLoading: searchLoading } = useSearchUserTest(debounceValue)
 
   // enroll hook
   const { mutate, isPending } = useEnrollTestuser()

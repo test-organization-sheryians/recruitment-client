@@ -17,6 +17,7 @@ import { usePreventNavigation } from "@/features/test/hooks/usePreventNavigation
 import { useTestPersistence } from "@/features/test/hooks/useTestPersistence";
 import { useSplitEditor } from "@/features/test/hooks/useSplitEditor";
 import { useAntiCheat } from "@/features/test/hooks/antiCheat";
+import { enableDevToolsGuard, enforceFullScreen } from '@/lib/devtoolsAndScreenGuard'
 
 // Icons
 import { ChevronLeft, ChevronRight, CheckCircle2, Flag, Clock, } from "lucide-react";
@@ -91,21 +92,29 @@ export default function UniversalInterviewPage() {
   const activeQuestion = savedQuestions[step] ?? null;
   const initializedRef = useRef(false);
 
+  useEffect(() => {
+    const cleanup = enableDevToolsGuard();
+    const fullScreen = enforceFullScreen()
+    return () => {
+      cleanup?.();
+      fullScreen?.();
+    };
+  }, [])
 
   useEffect(() => {
-  if (!restored) return;
-  if (!rqQuestions?.length) return;
-  if (initializedRef.current) return;
-  if (state.questions.length > 0) return; // ✅ ADD THIS
+    if (!restored) return;
+    if (!rqQuestions?.length) return;
+    if (initializedRef.current) return;
+    if (state.questions.length > 0) return; // ✅ ADD THIS
 
-  initializedRef.current = true;
+    initializedRef.current = true;
 
-  persist({
-    questions: rqQuestions,
-    visited: [0],
-    step: 0,
-  });
-}, [restored, rqQuestions, state.questions.length]);
+    persist({
+      questions: rqQuestions,
+      visited: [0],
+      step: 0,
+    });
+  }, [restored, rqQuestions, state.questions.length]);
 
 
 
@@ -115,7 +124,10 @@ export default function UniversalInterviewPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const secondsLeftRef = useRef(0);
-  useAntiCheat(attemptId, () => setBlocked(true));
+  useAntiCheat(attemptId, () => {
+    setBlocked(true);
+    submitTest()
+  });
   const [testDuration, setTestDuration] = useState(0);
   const finalQuestions = state.questions;
   const { text, setText, code, setCode, isDirty, } = useAnswers(activeQuestion, step, state.answers);
@@ -338,7 +350,7 @@ export default function UniversalInterviewPage() {
             <div className="text-xs font-semibold text-blue-600 mb-1 uppercase tracking-wide">
               Question {step + 1} of {finalQuestions.length}
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 px-4">
+            <h2 className="text-xl font-semibold text-gray-900 px-4 select-none">
               {activeQuestion?.question}
             </h2>
           </div>
@@ -432,22 +444,28 @@ export default function UniversalInterviewPage() {
                           // ----- DISABLE SELECTION DRAGGING ----- //
                           editor.updateOptions({
                             dragAndDrop: false,
-                            selectionClipboard: false,});
+                            selectionClipboard: false,
+                          });
                           editor.onMouseDown((e) => {
                             if (e.event.leftButton) {
                               e.event.preventDefault();
-                              e.event.stopPropagation();}});
+                              e.event.stopPropagation();
+                            }
+                          });
                           // ----- BLOCK DOM EVENTS ----- //
                           const domNode = editor.getDomNode();
                           if (!domNode) return;
                           const prevent = (e: Event) => {
                             e.preventDefault();
-                            e.stopPropagation();};
+                            e.stopPropagation();
+                          };
                           ["copy", "paste", "cut", "dragstart", "drop"].forEach(ev =>
                             domNode.addEventListener(ev, prevent, true));
                           editor.onDidDispose(() => {
                             ["copy", "paste", "cut", "dragstart", "drop"].forEach(ev =>
-                              domNode.removeEventListener(ev, prevent, true));});}}
+                              domNode.removeEventListener(ev, prevent, true));
+                          });
+                        }}
                         onChange={(v) => setCode(v ?? "")}
                         options={{
                           dragAndDrop: false,
@@ -473,4 +491,5 @@ export default function UniversalInterviewPage() {
         </div>
       </div>
     </div>
-  );}
+  )
+}
