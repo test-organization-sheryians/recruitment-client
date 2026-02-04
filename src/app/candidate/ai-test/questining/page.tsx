@@ -93,19 +93,19 @@ export default function UniversalInterviewPage() {
 
 
   useEffect(() => {
-  if (!restored) return;
-  if (!rqQuestions?.length) return;
-  if (initializedRef.current) return;
-  if (state.questions.length > 0) return; // ✅ ADD THIS
+    if (!restored) return;
+    if (!rqQuestions?.length) return;
+    if (initializedRef.current) return;
+    if (state.questions.length > 0) return; // ✅ ADD THIS
 
-  initializedRef.current = true;
+    initializedRef.current = true;
 
-  persist({
-    questions: rqQuestions,
-    visited: [0],
-    step: 0,
-  });
-}, [restored, rqQuestions, state.questions.length]);
+    persist({
+      questions: rqQuestions,
+      visited: [0],
+      step: 0,
+    });
+  }, [restored, rqQuestions, state.questions.length]);
 
 
 
@@ -121,6 +121,7 @@ export default function UniversalInterviewPage() {
   const { text, setText, code, setCode, isDirty, } = useAnswers(activeQuestion, step, state.answers);
   const [showCode, setShowCode] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+
 
   useEffect(() => {
     const duration = Number(localStorage.getItem("duration"));
@@ -149,11 +150,16 @@ export default function UniversalInterviewPage() {
     setIsSubmitting,
   });
 
-  const secondsLeft = useTestTimer(testDuration, isActiveTest && !blocked,
-    () => submitTest()
+  const secondsLeft = useTestTimer(
+    testDuration,
+    isActiveTest && !blocked,
+    () => submitTest() // This remains the same
   );
 
-  secondsLeftRef.current = secondsLeft;
+  useEffect(() => {
+    secondsLeftRef.current = secondsLeft;
+  }, [secondsLeft]);
+
   const prevent = (e: React.ClipboardEvent<HTMLTextAreaElement>) => e.preventDefault();
 
   const onFinishClick = () => {
@@ -164,6 +170,7 @@ export default function UniversalInterviewPage() {
   const confirmSubmit = async () => {
     setShowConfirm(false);
     setIsSubmitting(true);
+    localStorage.removeItem("test_deadline_timestamp");
     await submitTest();
   };
 
@@ -432,22 +439,28 @@ export default function UniversalInterviewPage() {
                           // ----- DISABLE SELECTION DRAGGING ----- //
                           editor.updateOptions({
                             dragAndDrop: false,
-                            selectionClipboard: false,});
+                            selectionClipboard: false,
+                          });
                           editor.onMouseDown((e) => {
                             if (e.event.leftButton) {
                               e.event.preventDefault();
-                              e.event.stopPropagation();}});
+                              e.event.stopPropagation();
+                            }
+                          });
                           // ----- BLOCK DOM EVENTS ----- //
                           const domNode = editor.getDomNode();
                           if (!domNode) return;
                           const prevent = (e: Event) => {
                             e.preventDefault();
-                            e.stopPropagation();};
+                            e.stopPropagation();
+                          };
                           ["copy", "paste", "cut", "dragstart", "drop"].forEach(ev =>
                             domNode.addEventListener(ev, prevent, true));
                           editor.onDidDispose(() => {
                             ["copy", "paste", "cut", "dragstart", "drop"].forEach(ev =>
-                              domNode.removeEventListener(ev, prevent, true));});}}
+                              domNode.removeEventListener(ev, prevent, true));
+                          });
+                        }}
                         onChange={(v) => setCode(v ?? "")}
                         options={{
                           dragAndDrop: false,
@@ -473,4 +486,5 @@ export default function UniversalInterviewPage() {
         </div>
       </div>
     </div>
-  );}
+  );
+}
