@@ -45,12 +45,14 @@ export const useDeleteTest = () => {
     mutationFn: (id: string) => api.deleteTest(id),
 
     // 🚀 INSTANT UI UPDATE
-    onMutate: async (id) => {
+  onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ["tests"] });
 
-      const previousTests = queryClient.getQueryData<any[]>(["tests"]);
+      // 1. Change <string[]> to <Test[]>
+      const previousTests = queryClient.getQueryData<Test[]>(["tests"]);
 
-      queryClient.setQueryData<any[]>(["tests"], (old) =>
+      // 2. Change <string[]> to <Test[]> here too
+      queryClient.setQueryData<Test[]>(["tests"], (old) =>
         old ? old.filter((t) => t._id !== id) : []
       );
 
