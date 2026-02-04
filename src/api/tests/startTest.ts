@@ -70,7 +70,7 @@ export const startTestApi = async (
     if (!testId) throw new Error("Test ID not found");
 
     /* ================= SIDE EFFECTS ================= */
-
+    localStorage.clear()
     localStorage.setItem("attemptId", attemptId);
     localStorage.setItem("testId", testId);
     localStorage.setItem("startTime", startTime);
