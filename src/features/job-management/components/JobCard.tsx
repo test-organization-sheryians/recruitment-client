@@ -19,6 +19,7 @@ import JobShareButton from "../ui/JobShareButton"
 import JobDeleteButton from "../ui/JobDeleteButton"
 import ScreeningQuestions from "./ScreeningQuestion"
 import DeletejobTest from "./DeletejobTest"
+import { useState } from "react"
 
 /* ================= TYPES ================= */
 
@@ -30,18 +31,22 @@ interface Props {
   onToggle: () => void
   onEdit: () => void
   onDelete: () => void
-   onShare: () => void
+  onShare: () => void
 }
 
 /* ================= COMPONENT ================= */
 
-export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete,onShare }: Props) {
+export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete, onShare }: Props) {
   const router = useRouter()
 
+  const [showAllSkills, setShowAllSkills] = useState(false)
   const status: Status = (job.status?.toUpperCase() as Status) || "ACTIVE"
 
-  const visibleSkills = job.skills?.slice(0, 4) ?? []
-  const extraSkills = job.skills?.slice(4) ?? []
+  const allSkills = job.skills ?? []
+
+  const visibleSkills = showAllSkills ? allSkills : allSkills.slice(0, 4)
+
+  const extraSkills = allSkills.length - 4
 
   const statusStyles = (value: Status) => {
     switch (value) {
@@ -87,7 +92,10 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete,onShar
         </div>
 
         <div className="flex items-center gap-10">
-          <div className="text-center">
+          <div
+            className="text-center hover:bg-gray-100 p-3 rounded-lg z-50"
+            onClick={() => router.push(`/admin/applicants/${job._id}`)}
+          >
             <p className="text-xl font-bold text-gray-900">{job.applicantsCount ?? 0}</p>
             <p className="text-xs uppercase text-gray-500">Applicants</p>
           </div>
@@ -125,9 +133,21 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete,onShar
                     {typeof s === "string" ? s : s.name}
                   </span>
                 ))}
-                {extraSkills.length > 0 && (
-                  <span className="text-blue-600 text-xs font-bold cursor-pointer">
-                    +{extraSkills.length} more
+                {!showAllSkills && extraSkills > 0 && (
+                  <span
+                    className="text-blue-600 text-xs font-bold cursor-pointer hover:underline"
+                    onClick={() => setShowAllSkills(true)}
+                  >
+                    +{extraSkills} more
+                  </span>
+                )}
+
+                {showAllSkills && (
+                  <span
+                    className="text-blue-600 text-xs font-bold cursor-pointer hover:underline"
+                    onClick={() => setShowAllSkills(false)}
+                  >
+                    Show less
                   </span>
                 )}
               </div>
@@ -141,8 +161,11 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete,onShar
                 />
                 Job Description
               </h4>
-              <div className="mt-2 bg-white border rounded-lg p-4 text-sm text-gray-600 leading-relaxed prose prose-sm max-w-none max-h-48 overflow-hidden line-clamp-6"
-                dangerouslySetInnerHTML={{ __html: job.description || "<p>No description provided.</p>" }}
+              <div
+                className="mt-2 bg-white border rounded-lg p-4 text-sm text-gray-600 leading-relaxed prose prose-sm max-w-none max-h-48 overflow-hidden line-clamp-6"
+                dangerouslySetInnerHTML={{
+                  __html: job.description || "<p>No description provided.</p>",
+                }}
               />
             </div>
           </div>
@@ -163,7 +186,7 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete,onShar
                 onUpdated={onDelete}
               />
 
-              <JobQuestionsButton jobId={job._id}/>
+              <JobQuestionsButton jobId={job._id} />
 
               <JobShareButton onClick={onShare} />
 
