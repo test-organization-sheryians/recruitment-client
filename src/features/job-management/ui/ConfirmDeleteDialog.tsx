@@ -9,6 +9,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { AlertTriangle, Trash2, X } from "lucide-react";
+import DeleteIcon from "@mui/icons-material/Delete"
 
 interface ConfirmDeleteDialogProps {
   triggerLabel?: string;
@@ -22,6 +23,7 @@ interface ConfirmDeleteDialogProps {
 }
 
 export default function ConfirmDeleteDialog({
+  
   triggerLabel = "Delete",
   title,
   description = "This action cannot be undone.",
@@ -63,7 +65,7 @@ export default function ConfirmDeleteDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <button className="h-11 rounded-lg bg-red-50 text-red-800 font-semibold hover:bg-red-100 transition flex justify-center items-center gap-2 border border-red-200">
-          <Trash2 className="w-4 h-4" />
+          <DeleteIcon className="w-4 h-6" />
           {triggerLabel}
         </button>
       </DialogTrigger>

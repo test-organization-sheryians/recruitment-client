@@ -1,3 +1,4 @@
+import { InputType } from "@/types/inputTypes"
 import axios from "axios"
 
 const API = axios.create({
@@ -19,25 +20,41 @@ API.interceptors.request.use((config) => {
 
 /* ================= TYPES ================= */
 
-export interface JobQuestionPayload {
+export type JobQuestionPayload = {
   title: string
   description?: string
-  inputType: string
+  inputType: InputType
   options?: string[]
   isRequired: boolean
   isKnockout: boolean
   order?: number
+
+  // ✅ ADD THESE (for UI preview fields)
+  ratingValue?: number
+  fileValue?: {
+    name: string
+    size: number
+    type: string
+  }
 }
+
 
 export interface UpdateQuestionPayload {
   questionId: string
-  title?: string
+  title: string
   description?: string
-  inputType?: string
+  inputType: InputType
   options?: string[]
-  isRequired?: boolean
-  isKnockout?: boolean
+  isRequired: boolean
+  isKnockout: boolean
   order?: number
+
+  ratingValue?: number
+  fileValue?: {
+    name: string
+    size: number
+    type: string
+}
 }
 
 /* ================= API FUNCTIONS ================= */
