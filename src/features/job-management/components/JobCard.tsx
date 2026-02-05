@@ -93,7 +93,7 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete, onSha
 
         <div className="flex items-center gap-10">
           <div
-            className="text-center hover:bg-gray-100 p-3 rounded-lg z-50"
+            className="text-center hover:bg-gray-100 p-3 rounded-lg z-48"
             onClick={() => router.push(`/admin/applicants/${job._id}`)}
           >
             <p className="text-xl font-bold text-gray-900">{job.applicantsCount ?? 0}</p>

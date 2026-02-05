@@ -193,7 +193,7 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-40" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-49" onClick={onClose} />
 
       {/* Side Panel */}
       <div className="fixed inset-y-0 right-0 bg-white dark:bg-[#11131e] shadow-2xl z-50 flex flex-col border-l border-[#dbdde6] dark:border-gray-800 overflow-hidden" style={{ width: "550px" }}>
