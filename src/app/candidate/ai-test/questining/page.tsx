@@ -142,8 +142,15 @@ export default function UniversalInterviewPage() {
     }
   }, []);
   useEffect(() => {
-    if (attempt?.isDisqualified) {
-      setBlocked(true);
+    const rawDuration = localStorage.getItem("duration");
+    const storedDuration = Number(rawDuration);
+
+    if (rawDuration && !isNaN(storedDuration) && storedDuration > 0) {
+      setTestDuration(storedDuration);
+    } else {
+      console.error("Duration was 0 or missing! Setting default 60 mins.");
+      setTestDuration(60);
+      localStorage.setItem("duration", "60");
     }
   }, [attempt]);
   /* ---------- TIMER LOGIC ---------- */
@@ -151,22 +158,22 @@ export default function UniversalInterviewPage() {
   const isResumeTest = questions.some(q => q.source === "ai");
   const isActiveTest = !isResumeTest;
 
+  const secondsLeft = useTestTimer(
+    testDuration,
+    isActiveTest && !blocked && testDuration > 0,
+    () => submitTest()
+  );
+
   const { submitTest } = useTestSubmission({
     questions: finalQuestions,
     answers: state.answers,
     blocked,
-    secondsLeft: secondsLeftRef.current,
+    secondsLeft: secondsLeft,
     testDuration,
     evaluateMutation,
     submitMutation,
     setIsSubmitting,
   });
-
-  const secondsLeft = useTestTimer(
-    testDuration,
-    isActiveTest && !blocked,
-    () => submitTest() // This remains the same
-  );
 
   useEffect(() => {
     secondsLeftRef.current = secondsLeft;
@@ -339,7 +346,7 @@ export default function UniversalInterviewPage() {
             Instructions
           </button>
           {/* TIMER */}
-          {testDuration > 0 && (
+          {testDuration > 0 ? (
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-gray-700" />
               <div className="text-lg font-semibold text-gray-900">
@@ -347,6 +354,8 @@ export default function UniversalInterviewPage() {
                 {String(secondsLeft % 60).padStart(2, "0")}
               </div>
             </div>
+          ) : (
+            <div className="text-xs text-gray-400">Loading Timer...</div>
           )}
           <div className="w-[100px]" />
         </div>

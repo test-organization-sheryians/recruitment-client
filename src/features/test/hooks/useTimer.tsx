@@ -7,19 +7,18 @@ export function useTestTimer(
   enabled: boolean,
   onExpire: () => void
 ) {
-  // Initialize state to total seconds initially
-  const [secondsLeft, setSecondsLeft] = useState<number>(durationMinutes * 60);
+  // Fix 1: Initialize to 0 or total seconds
+  const [secondsLeft, setSecondsLeft] = useState<number>(0); 
   const onExpireRef = useRef(onExpire);
 
-  // Keep the expire callback fresh
   useEffect(() => {
     onExpireRef.current = onExpire;
   }, [onExpire]);
 
   useEffect(() => {
+    // Wait until we have a valid duration
     if (durationMinutes <= 0) return;
 
-    // 1. Get or Set the fixed Deadline
     let deadline = localStorage.getItem(TIMER_END_TIME_KEY);
 
     if (!deadline) {
@@ -28,18 +27,24 @@ export function useTestTimer(
       deadline = String(newDeadline);
     }
 
-    // Helper to calculate how many seconds are left until the deadline
     const getRemainingSeconds = () => {
       const diff = parseInt(deadline!) - Date.now();
       return Math.max(0, Math.floor(diff / 1000));
     };
 
-    // Immediate sync on mount
-    setSecondsLeft(getRemainingSeconds());
+    // Fix 2: Sync state immediately when durationMinutes becomes available
+    const initialRemaining = getRemainingSeconds();
+    setSecondsLeft(initialRemaining);
+
+    // If time is already up on load, trigger expiry
+    if (initialRemaining <= 0) {
+      localStorage.removeItem(TIMER_END_TIME_KEY);
+      onExpireRef.current();
+      return;
+    }
 
     if (!enabled) return;
 
-    // 2. Start the interval
     const intervalId = setInterval(() => {
       const remaining = getRemainingSeconds();
       setSecondsLeft(remaining);
@@ -52,11 +57,7 @@ export function useTestTimer(
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [durationMinutes, enabled]);
+  }, [durationMinutes, enabled]); // durationMinutes here ensures it re-triggers when duration loads
 
   return secondsLeft;
 }
-
-
-
-   
