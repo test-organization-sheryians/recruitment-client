@@ -101,8 +101,9 @@ const handleApplyJob = (jobId: string) => {
   const jobsByCategoryQuery = useInfiniteJobsByCategory(selectedCategory);
 
   // Normalize filter values
-  const normalizedJobType = jobType || [];
-  const normalizedExperience = experience || [];
+ const normalizedJobType = jobType.filter(j => j && j.trim() !== "");
+const normalizedExperience = experience.filter(e => e && e.trim() !== "");
+
 
   /* ✅ ONLY REAL CHANGE IS HERE */
 const searchJobsQuery = useInfiniteSearchJobs({
@@ -112,17 +113,19 @@ const searchJobsQuery = useInfiniteSearchJobs({
   experience: normalizedExperience,
   minSalary: salaryRange[0],
   maxSalary: salaryRange[1],
-} as any);
+});
+
 
 // ✅ PUT IT HERE ⬇️
 const isSearchActive = Boolean(
   query.q ||
-    query.location ||
-    normalizedJobType.length ||
-    normalizedExperience.length ||
-    salaryRange[0] !== 0 ||
-    salaryRange[1] !== 10000000
+  query.location ||
+  normalizedJobType.length ||
+  normalizedExperience.length ||
+  salaryRange[0] !== 0 ||
+  salaryRange[1] !== 10000000
 );
+
 useEffect(() => {
   if (isSearchActive) {
     setSelectedCategory(null);
@@ -149,23 +152,8 @@ const activeJobsQuery = isSearchActive
       : 0;
 
   const jobs: CardJob[] = jobsPages
-    .flatMap((p) => p.data ?? [])
-    .map((job) => ({
-      ...job,
-      salary:
-        typeof job.salary === "number"
-          ? String(job.salary)
-          : typeof job.salary === "object" && job.salary !== null
-          ? `${(job.salary as any).currency} ${(job.salary as any).min} - ${
-              (job.salary as any).max
-            }`
-          : "",
-      skills: job.skills?.map((s) =>
-        typeof s === "string"
-          ? { _id: s, name: s }
-          : { _id: s._id ?? s.name, name: s.name }
-      ),
-    }));
+  .flatMap((p) => p.data ?? []);
+
 
   const categoriesLoadMoreRef = useRef<HTMLDivElement | null>(null);
   const jobsLoadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -208,9 +196,13 @@ const activeJobsQuery = isSearchActive
       location: searchLocation.trim(),
     });
     setSelectedCategory(null);
-    setSearchTerm("");
-    setSearchLocation("");
+    
   };
+
+  console.log("Jobs to render:", jobs);
+console.log("Jobs pages:", jobsPages);
+console.log("Jobs to render", jobs);
+
 
   return (
     <div className="min-h-screen bg-gray-50 border pt-15">
@@ -295,6 +287,9 @@ const activeJobsQuery = isSearchActive
       </div>
 
       {/* Job list */}
+
+       
+
       <div className="p-4 space-y-4 bg-gray-50">
         {jobs.map((job) => (
           <LatestJobCard
@@ -307,7 +302,13 @@ const activeJobsQuery = isSearchActive
                 ? `${job.location.city}, ${job.location.country ?? ""}`
                 : "Remote"
             }
-            salary={job.salary}
+              salary={
+    job.salary && typeof job.salary === "object"
+      ? job.salary // already correct shape
+      : job.salary != null
+      ? { min: Number(job.salary), max: Number(job.salary), currency: "₹" }
+      : undefined
+  }
             postedAt={job.createdAt ? "Recently" : undefined}
             skills={job.skills?.map((s) => typeof s === "string" ? s : s.name)}
             applied={job.applied}

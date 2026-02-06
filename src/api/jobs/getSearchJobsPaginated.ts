@@ -16,30 +16,25 @@ export interface BackendPaginatedResponse<T> {
   message?: string;
 }
 
-
-
 export const searchJobsPaginated = async (
   params: SearchParams,
   page: number,
   limit: number
 ): Promise<BackendPaginatedResponse<Job>> => {
+  // ✅ Build queryParams safely
+  const queryParams: Record<string, any> = {
+    q: params.q || undefined,
+    location: params.location || undefined,
+    page,
+    limit,
+  };
 
-  const res = await api.get("/api/jobs/search", {
-    params: {
-      q: params.q,
-      location: params.location,
+  if (params.jobType?.length) queryParams.jobType = params.jobType.join(",");
+  if (params.experience?.length) queryParams.experience = params.experience.join(",");
+  if (params.minSalary != null) queryParams.minSalary = params.minSalary;
+  if (params.maxSalary != null) queryParams.maxSalary = params.maxSalary;
 
-      jobType: params.jobType?.join(","),        // 🔥 FIX
-      experience: params.experience?.join(","),  // 🔥 FIX
-
-      minSalary: params.minSalary,
-      maxSalary: params.maxSalary,
-
-      page,
-      limit,
-    },
-  });
+  const res = await api.get("/api/jobs/search", { params: queryParams });
 
   return res.data as BackendPaginatedResponse<Job>;
 };
-
