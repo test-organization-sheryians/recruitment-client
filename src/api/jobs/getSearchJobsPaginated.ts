@@ -1,5 +1,6 @@
 import api from "@/config/axios";
 import type { Job } from "@/types/Job";
+import type { SearchParams } from "@/types/Job";
 
 export interface BackendPagination {
   currentPage: number;
@@ -15,25 +16,30 @@ export interface BackendPaginatedResponse<T> {
   message?: string;
 }
 
-type SearchParams = {
-  q: string;
-  location: string;
-};
+
 
 export const searchJobsPaginated = async (
   params: SearchParams,
   page: number,
   limit: number
 ): Promise<BackendPaginatedResponse<Job>> => {
-    console.log("API Call Params check (request) ===>:", { params, page, limit });
+
   const res = await api.get("/api/jobs/search", {
     params: {
       q: params.q,
       location: params.location,
+
+      jobType: params.jobType?.join(","),        // 🔥 FIX
+      experience: params.experience?.join(","),  // 🔥 FIX
+
+      minSalary: params.minSalary,
+      maxSalary: params.maxSalary,
+
       page,
       limit,
     },
   });
-console.log("API Call Response check (response) ===>:", res);
+
   return res.data as BackendPaginatedResponse<Job>;
 };
+

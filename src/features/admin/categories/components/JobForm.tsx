@@ -43,8 +43,15 @@ export interface JobFormData {
   skills: string[];
   expiry: string;
   clientId: string;
-  location: Location; // added Location
+  jobType: "Remote" | "Hybrid" | "Full-Time" | "Part-Time";
+  salary: {
+    min: number;
+    max: number;
+    currency?: string;
+  };
+  location: Location;
 }
+
 
 interface JobFormProps {
   mode: "create" | "update";
@@ -76,30 +83,37 @@ export default function JobForm({
   const { data: categories = [] } = useGetJobCategories();
   const { data: skillsResponse = [] } = useGetAllSkills();
 
-  const [formData, setFormData] = useState({
-    title: safeInitialData.title || "",
-    requiredExperience: safeInitialData.requiredExperience || "",
-    category: typeof safeInitialData.category === "string"
-      ? (safeInitialData.category as string)
-      : (safeInitialData.category as unknown as Category)?._id || "",
-    education: safeInitialData.education || "",
-    description: safeInitialData.description || "",
-    location: {
-      city: safeInitialData.location?.city || "",
-      state: safeInitialData.location?.state || "",
-      pincode: safeInitialData.location?.pincode || "",
-      country: safeInitialData.location?.country || "",
-    },       // added Location 
-    skills: Array.isArray(safeInitialData.skills)
-      ? (safeInitialData.skills as (string | Skill)[]).map((s) =>
+const [formData, setFormData] = useState({
+  title: safeInitialData.title || "",
+  requiredExperience: safeInitialData.requiredExperience || "",
+  category: typeof safeInitialData.category === "string"
+    ? (safeInitialData.category as string)
+    : (safeInitialData.category as unknown as Category)?._id || "",
+  education: safeInitialData.education || "",
+  description: safeInitialData.description || "",
+  jobType: safeInitialData.jobType || "Full-Time",
+  salary: {
+    min: safeInitialData.salary?.min || 0,
+    max: safeInitialData.salary?.max || 0,
+    currency: "INR"
+  },
+  location: {
+    city: safeInitialData.location?.city || "",
+    state: safeInitialData.location?.state || "",
+    pincode: safeInitialData.location?.pincode || "",
+    country: safeInitialData.location?.country || "",
+  },
+  skills: Array.isArray(safeInitialData.skills)
+    ? (safeInitialData.skills as (string | Skill)[]).map((s) =>
         typeof s === "string" ? s : s._id
       )
-      : [],
-    expiry: safeInitialData.expiry
-      ? new Date(safeInitialData.expiry).toISOString().split("T")[0]
-      : "",
-    clientId: safeInitialData.clientId || "6915b90df6594de75060410b",
-  });
+    : [],
+  expiry: safeInitialData.expiry
+    ? new Date(safeInitialData.expiry).toISOString().split("T")[0]
+    : "",
+  clientId: safeInitialData.clientId || "6915b90df6594de75060410b",
+});
+
 
   useEffect(() => {
     if (categories.length > 0 && !formData.category) {
@@ -268,6 +282,16 @@ export default function JobForm({
         return;
       }
     }
+    if (formData.salary.min <= 0 || formData.salary.max <= 0) {
+  setError("Please enter a valid salary range");
+  return;
+}
+
+if (formData.salary.min > formData.salary.max) {
+  setError("Minimum salary cannot be greater than maximum salary");
+  return;
+}
+
     try {
       console.log("Submitting Payload:", formData);
       await onSubmit(formData);
@@ -331,6 +355,27 @@ export default function JobForm({
                   />
                 </div>
 
+                {/* Job Type */}
+<div className="space-y-2">
+  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+    <Briefcase className="w-4 h-4 text-blue-600" />
+    Job Type *
+  </label>
+  <select
+    value={formData.jobType}
+    onChange={(e) =>
+      setFormData({ ...formData, jobType: e.target.value as any })
+    }
+    className="w-full max-w-full border-2 border-gray-200 rounded-xl p-3 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+  >
+    <option value="Full-Time">Full-Time</option>
+    <option value="Part-Time">Part-Time</option>
+    <option value="Remote">Remote</option>
+    <option value="Hybrid">Hybrid</option>
+  </select>
+</div>
+
+
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <FileText className="w-4 h-4 text-blue-600" />
@@ -343,7 +388,8 @@ export default function JobForm({
                     value={formData.description}
                     onChange={handleChange}
                     className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
-                  />
+                    
+                      />
                 </div>
 
                 <div className="space-y-2">
@@ -388,6 +434,43 @@ export default function JobForm({
                       className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                     />
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+  <div className="space-y-2">
+    <label className="text-sm font-semibold text-gray-700">
+      Minimum Salary *
+    </label>
+    <input
+      type="number"
+      value={formData.salary.min}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          salary: { ...formData.salary, min: Number(e.target.value) }
+        })
+      }
+      className="w-full border-2 border-gray-200 rounded-xl p-3"
+    />
+  </div>
+
+  <div className="space-y-2">
+    <label className="text-sm font-semibold text-gray-700">
+      Maximum Salary *
+    </label>
+    <input
+      type="number"
+      value={formData.salary.max}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          salary: { ...formData.salary, max: Number(e.target.value) }
+        })
+      }
+      className="w-full border-2 border-gray-200 rounded-xl p-3"
+    />
+  </div>
+</div>
+
 
                   {/* {/* Location Added */}
                   <div className="space-y-2">
@@ -456,6 +539,7 @@ export default function JobForm({
                   </button>
                 </div>
               </div>
+
 
               <div className="w-1/2 pl-8 space-y-6">
                 <div className="space-y-2">

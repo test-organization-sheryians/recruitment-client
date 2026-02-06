@@ -73,7 +73,7 @@ export default function UniversalInterviewPage() {
   /* ---------- API MUTATIONS ---------- */
   const evaluateMutation = useEvaluateAnswers();
   const submitMutation = useSubmitResult();
-  const { data: rqQuestions } = useActiveQuestions();
+  const { data: rqQuestions, refetch } = useActiveQuestions();
   const { containerRef, width, startDrag } = useSplitEditor();
 
   const STORAGE_KEY =
@@ -81,7 +81,7 @@ export default function UniversalInterviewPage() {
       ? `testProgress:${localStorage.getItem("testId") ?? "temp"}`
       : "testProgress:temp";
 
-  const {restored,state,persist,} = useTestPersistence<Question, CandidateAnswer>(STORAGE_KEY,INITIAL_STATE);
+  const { restored, state, persist, } = useTestPersistence<Question, CandidateAnswer>(STORAGE_KEY, INITIAL_STATE);
 
   const step = state.step;
   const savedQuestions = state.questions;
@@ -89,17 +89,24 @@ export default function UniversalInterviewPage() {
   const savedSteps = new Set(state.saved);
   const reviewSteps = new Set(state.review);
   const activeQuestion = savedQuestions[step] ?? null;
+  const initializedRef = useRef(false);
+
 
   useEffect(() => {
-    if (!restored) return;
-    if (state.questions.length > 0) return;
-    if (!rqQuestions?.length) return;
+  if (!restored) return;
+  if (!rqQuestions?.length) return;
+  if (initializedRef.current) return;
+  if (state.questions.length > 0) return; // ✅ ADD THIS
 
-    persist({
-      questions: rqQuestions,
-      visited: [0],
-    });
-  }, [restored, rqQuestions]);
+  initializedRef.current = true;
+
+  persist({
+    questions: rqQuestions,
+    visited: [0],
+    step: 0,
+  });
+}, [restored, rqQuestions, state.questions.length]);
+
 
 
 
@@ -111,7 +118,7 @@ export default function UniversalInterviewPage() {
   useAntiCheat(attemptId, () => setBlocked(true));
   const [testDuration, setTestDuration] = useState(0);
   const finalQuestions = state.questions;
-  const {text,setText,code,setCode,isDirty,} = useAnswers(activeQuestion,step,state.answers);
+  const { text, setText, code, setCode, isDirty, } = useAnswers(activeQuestion, step, state.answers);
   const [showCode, setShowCode] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
 
@@ -119,7 +126,7 @@ export default function UniversalInterviewPage() {
     const duration = Number(localStorage.getItem("duration"));
     if (duration > 0) {
       setTestDuration(duration);
-}
+    }
   }, []);
   useEffect(() => {
     if (attempt?.isDisqualified) {
@@ -142,7 +149,7 @@ export default function UniversalInterviewPage() {
     setIsSubmitting,
   });
 
-  const secondsLeft = useTestTimer(testDuration,isActiveTest && !blocked,
+  const secondsLeft = useTestTimer(testDuration, isActiveTest && !blocked,
     () => submitTest()
   );
 
@@ -167,7 +174,7 @@ export default function UniversalInterviewPage() {
     }
   }, [secondsLeft, isActiveTest, blocked, submitTest]);
 
-  const {tryNavigate,showSaveWarning,pendingNav,clearWarning,confirmAndNavigate,}= usePreventNavigation({
+  const { tryNavigate, showSaveWarning, pendingNav, clearWarning, confirmAndNavigate, } = usePreventNavigation({
     isDirty,
     isReviewed: reviewSteps.has(step),
   });
@@ -233,19 +240,20 @@ export default function UniversalInterviewPage() {
 
   return (
     <div className="min-h-screen flex bg-indigo-50">
-     {showInstructions && (<TestInstructionsModal onClose={() => setShowInstructions(false)} />)}
-      
-      {showSaveWarning && (<SaveWarningModal onStay={clearWarning} onSaveAndNavigate={()=>{
+      {showInstructions && (<TestInstructionsModal onClose={() => setShowInstructions(false)} />)}
+
+      {showSaveWarning && (<SaveWarningModal onStay={clearWarning} onSaveAndNavigate={() => {
         onSave();
-        confirmAndNavigate();}}/>)}
+        confirmAndNavigate();
+      }} />)}
 
       {/* 1. DISQUALIFIED OVERLAY */}
-      {blocked && (<TestTerminatedModal/>)}
+      {blocked && (<TestTerminatedModal />)}
 
       {/* 2. SUBMIT CONFIRM MODAL */}
       {showConfirm && (<SubmitConfirmModal
-    onCancel={() => setShowConfirm(false)}
-    onConfirm={confirmSubmit}/> )}
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={confirmSubmit} />)}
 
       {isSubmitting && (
         <div className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center">
@@ -364,15 +372,15 @@ export default function UniversalInterviewPage() {
               /* ================= MCQ UI ================= */
               <div className="w-full max-w-2xl mx-auto grid gap-4">
                 {activeQuestion.options!.map((opt, i) => (<button key={i} onClick={() => setText(opt)} className={`p-4 rounded-lg border-2 text-left transition-all${text === opt
-                        ? "border-blue-600 bg-blue-50"
-                        : "border-gray-200 hover:border-blue-300"}`}>
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2
-                        className={`w-5 h-5 ${text === opt ? "text-blue-600" : "text-gray-300"
-                          }`} />
-                      <span className="font-medium text-gray-800">{opt}</span>
-                    </div>
-                  </button>
+                  ? "border-blue-600 bg-blue-50"
+                  : "border-gray-200 hover:border-blue-300"}`}>
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2
+                      className={`w-5 h-5 ${text === opt ? "text-blue-600" : "text-gray-300"
+                        }`} />
+                    <span className="font-medium text-gray-800">{opt}</span>
+                  </div>
+                </button>
                 ))}
               </div>
             ) : (
@@ -403,21 +411,49 @@ export default function UniversalInterviewPage() {
                     {/* HEADER */}
                     <div className="flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-[#333]">
                       <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wider"> Code Editor</h3>
-                      <button onClick={() => setShowCode(false)}className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition-colors ">
-                      Hide Code</button>
+                      <button onClick={() => setShowCode(false)} className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition-colors ">
+                        Hide Code</button>
                     </div>
-
                     {/* EDITOR */}
-                    <div className="flex-1">
+                    <div className="flex-1"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => e.preventDefault()}>
                       <Editor
-                        height="100%" defaultLanguage="javascript" value={code} theme="vs-dark" 
-                        onMount={(editor) => {
+                        height="100%" defaultLanguage="javascript" value={code} theme="vs-dark"
+                        onMount={(editor, monaco) => {
                           editorRef.current = editor;
                           editor.focus();
-                        }}
+                          // ----- BLOCK KEYBOARD SHORTCUTS ----- //
+                          const block = () => null;
+                          editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC, block);
+                          editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV, block);
+                          editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyX, block);
+                          editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyA, block);
+                          // ----- DISABLE SELECTION DRAGGING ----- //
+                          editor.updateOptions({
+                            dragAndDrop: false,
+                            selectionClipboard: false,});
+                          editor.onMouseDown((e) => {
+                            if (e.event.leftButton) {
+                              e.event.preventDefault();
+                              e.event.stopPropagation();}});
+                          // ----- BLOCK DOM EVENTS ----- //
+                          const domNode = editor.getDomNode();
+                          if (!domNode) return;
+                          const prevent = (e: Event) => {
+                            e.preventDefault();
+                            e.stopPropagation();};
+                          ["copy", "paste", "cut", "dragstart", "drop"].forEach(ev =>
+                            domNode.addEventListener(ev, prevent, true));
+                          editor.onDidDispose(() => {
+                            ["copy", "paste", "cut", "dragstart", "drop"].forEach(ev =>
+                              domNode.removeEventListener(ev, prevent, true));});}}
                         onChange={(v) => setCode(v ?? "")}
-                        options={{ fontSize: 15, fontFamily: "Fira Code, monospace", lineHeight: 22,
-                          minimap: { enabled: false }, automaticLayout: true, scrollBeyondLastLine: false, smoothScrolling: true, cursorBlinking: "smooth", cursorSmoothCaretAnimation: "on", wordWrap: "on", tabSize: 2, padding: { top: 12, bottom: 12 }, renderLineHighlight: "all", scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8,},}}/>
+                        options={{
+                          dragAndDrop: false,
+                          fontSize: 15, fontFamily: "Fira Code, monospace", lineHeight: 22, contextmenu: false, quickSuggestions: false,
+                          minimap: { enabled: false }, automaticLayout: true, scrollBeyondLastLine: false, smoothScrolling: true, cursorBlinking: "smooth", cursorSmoothCaretAnimation: "on", wordWrap: "on", tabSize: 2, padding: { top: 12, bottom: 12 }, renderLineHighlight: "all", scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8, },
+                        }} />
                     </div>
                   </div>)}
               </div>)}
@@ -438,4 +474,3 @@ export default function UniversalInterviewPage() {
       </div>
     </div>
   );}
-  

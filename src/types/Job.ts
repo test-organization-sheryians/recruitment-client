@@ -1,16 +1,16 @@
 export interface Job {
     id: string;
     title: string;
-    location: {
-      city: string;
-      state: string;
-      pincode: string;
-      country: string;
+    location?: {
+      city?: string;
+      state?: string;
+      pincode?: string;
+      country?: string;
     };
-    salary: number;
+    salary: number | string;
     isRemote: boolean;
     isFeatured: boolean;
-    createdAt: string;
+    createdAt?: string;
     updatedAt: string;
     _id: string;
     requiredExperience?: string;
@@ -21,6 +21,11 @@ export interface Job {
     department?: string;
     expiry?: string;
     applied?: boolean;
+    client?: {
+      company?: string;
+      [key: string]: any;
+    };
+    
     jobType?: string;
 }   
 // Category can be an object or string
@@ -75,3 +80,14 @@ export type SearchQuery = {
   q: string;
   location: string;
 };
+
+export interface SearchParams {
+  q?: string;
+  location?: string;
+
+  jobType?: string[];
+  experience?: string[];
+
+  minSalary?: number;
+  maxSalary?: number;
+}

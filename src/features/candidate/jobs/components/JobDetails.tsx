@@ -104,25 +104,53 @@ export default function JobDetails() {
       });
     }
   };
+  const formatSalary = (): string | undefined => {
+  if (!job.salary) return "Not disclosed";
+
+  // If salary is already string or number
+  if (typeof job.salary === "string" || typeof job.salary === "number") {
+    return String(job.salary);
+  }
+
+  // If salary is an object
+  const { min, max, currency } = job.salary as {
+    min?: number;
+    max?: number;
+    currency?: string;
+  };
+
+  const curr = currency || "INR";
+
+  if (min && max) return `${curr} ${min.toLocaleString()} - ${max.toLocaleString()}`;
+  if (min) return `${curr} ${min.toLocaleString()}+`;
+  if (max) return `Up to ${curr} ${max.toLocaleString()}`;
+
+  return "Not disclosed";
+};
 
   /* -------------------- Meta Data -------------------- */
-  const metaItems = [
-    {
-      label: "Job Type",
-      value: job.jobType ?? "Not specified",
-    },
-    {
-      label: "Experience Level",
-      value: job.requiredExperience,
-    },
-    { label: "Salary", value: job.salary ? String(job.salary) : undefined },
-    { label: "Department", value: job.department },
-    { label: "Education", value: job.education },
-    {
-      label: "Date Posted",
-      value: job.expiry ? new Date(job.expiry).toLocaleDateString() : undefined,
-    },
-  ];
+ /* -------------------- Meta Data -------------------- */
+const metaItems = [
+  {
+    label: "Job Type",
+    value: job.jobType ?? "Not specified",
+  },
+  {
+    label: "Experience Level",
+    value: job.requiredExperience,
+  },
+  {
+    label: "Salary",
+    value: formatSalary(), // <-- fixed here
+  },
+  { label: "Department", value: job.department },
+  { label: "Education", value: job.education },
+  {
+    label: "Date Posted",
+    value: job.expiry ? new Date(job.expiry).toLocaleDateString() : undefined,
+  },
+];
+
 
   /* -------------------- Format Location -------------------- */
   const getLocationString = (): string | undefined => {
@@ -143,6 +171,7 @@ export default function JobDetails() {
     return job.isRemote ? `${locationStr} (Remote)` : locationStr;
   };
 
+
   /* -------------------- UI -------------------- */
   return (
     <div className="min-h-screen bg-[#F6F6F8] py-8 px-4 sm:px-6 lg:px-8">
@@ -154,7 +183,8 @@ export default function JobDetails() {
             typeof job.category === "string" ? job.category : job.category?.name
           }
           location={getLocationString()}
-          salary={job.salary ? String(job.salary) : undefined}
+         salary={formatSalary()}
+
           postedTime="2 hours ago"
           isSaved={isSaved}
           isExpired={isExpired}
@@ -199,6 +229,6 @@ export default function JobDetails() {
           </div>
         </div>
       </div>
-    </div>
+    </div>  
   );
-}
+} 
