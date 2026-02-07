@@ -70,6 +70,16 @@ export default function StartTestPage() {
             console.error("Questions not generated yet");
             return;
           }
+          
+          if(!test) return ;
+          //STORE TEST DURATION (minutes)
+          const duration = test.duration;
+          localStorage.setItem("duration", String(duration));
+
+          //STORE DEADLINE TIMESTAMP
+          const deadline = Date.now() + duration * 60 * 1000;
+          localStorage.setItem("test_deadline_timestamp", String(deadline));
+
 
           // store questions for questioning page
           queryClient.setQueryData(
@@ -109,7 +119,7 @@ export default function StartTestPage() {
   /* ---------- HELPERS ---------- */
 
   const formatDuration = (m: number) =>
-    m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`;
+    m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}M`;
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("en-US", {

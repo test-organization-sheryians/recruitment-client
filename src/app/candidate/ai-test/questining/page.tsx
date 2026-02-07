@@ -2,11 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import type * as monaco from "monaco-editor";
 
 // Hooks
+import { useTestInfo } from "@/features/test/hooks/testInfo";
 import { useActiveQuestions } from "@/features/test/hooks/useActivation";
 import { useEvaluateAnswers } from "@/features/AITest/hooks/aiTestApi";
 import { useSubmitResult } from "@/features/test/hooks/useResultTest";
@@ -57,6 +58,8 @@ export default function UniversalInterviewPage() {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const attemptId =
     typeof window !== "undefined" ? localStorage.getItem("attemptId") : null;
+  const params = useParams();
+
 
   const { data: attempt } = useQuery({
     queryKey: ["attempt", attemptId],
@@ -82,7 +85,11 @@ export default function UniversalInterviewPage() {
       ? `testProgress:${localStorage.getItem("testId") ?? "temp"}`
       : "testProgress:temp";
 
+  const testId = params?.testId as string;
+
   const { restored, state, persist, } = useTestPersistence<Question, CandidateAnswer>(STORAGE_KEY, INITIAL_STATE);
+
+
 
   const step = state.step;
   const savedQuestions = state.questions;
@@ -105,7 +112,7 @@ export default function UniversalInterviewPage() {
     if (!restored) return;
     if (!rqQuestions?.length) return;
     if (initializedRef.current) return;
-    if (state.questions.length > 0) return; // ✅ ADD THIS
+    if (state.questions.length > 0) return; 
 
     initializedRef.current = true;
 
@@ -135,7 +142,9 @@ export default function UniversalInterviewPage() {
   const [showInstructions, setShowInstructions] = useState(false);
 
 
+  const { data: test } = useTestInfo(testId);
   useEffect(() => {
+
     const duration = Number(localStorage.getItem("duration"));
     if (duration > 0) {
       setTestDuration(duration);
@@ -147,11 +156,7 @@ export default function UniversalInterviewPage() {
 
     if (rawDuration && !isNaN(storedDuration) && storedDuration > 0) {
       setTestDuration(storedDuration);
-    } else {
-      console.error("Duration was 0 or missing! Setting default 60 mins.");
-      setTestDuration(60);
-      localStorage.setItem("duration", "60");
-    }
+    } 
   }, [attempt]);
   /* ---------- TIMER LOGIC ---------- */
   const questions = Array.isArray(finalQuestions) ? finalQuestions : [];
@@ -346,7 +351,7 @@ export default function UniversalInterviewPage() {
             Instructions
           </button>
           {/* TIMER */}
-          {testDuration > 0 ? (
+          {/* {testDuration > 0 ? (
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-gray-700" />
               <div className="text-lg font-semibold text-gray-900">
@@ -356,7 +361,16 @@ export default function UniversalInterviewPage() {
             </div>
           ) : (
             <div className="text-xs text-gray-400">Loading Timer...</div>
+          )} */}
+          {secondsLeft > 0 ? (
+            <div className="text-lg font-semibold">
+              {Math.floor(secondsLeft / 60)}:
+              {String(secondsLeft % 60).padStart(2, "0")}
+            </div>
+          ) : (
+            <span className="text-xs text-gray-400">Loading timer…</span>
           )}
+
           <div className="w-[100px]" />
         </div>
 

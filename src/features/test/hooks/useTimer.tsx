@@ -7,8 +7,7 @@ export function useTestTimer(
   enabled: boolean,
   onExpire: () => void
 ) {
-  // Fix 1: Initialize to 0 or total seconds
-  const [secondsLeft, setSecondsLeft] = useState<number>(0); 
+  const [secondsLeft, setSecondsLeft] = useState<number>(0);
   const onExpireRef = useRef(onExpire);
 
   useEffect(() => {
@@ -16,34 +15,30 @@ export function useTestTimer(
   }, [onExpire]);
 
   useEffect(() => {
-    // Wait until we have a valid duration
-    if (durationMinutes <= 0) return;
+    //Timer must not run unless enabled & duration exists
+    if (!enabled || durationMinutes <= 0) return;
 
-    let deadline = localStorage.getItem(TIMER_END_TIME_KEY);
+    const deadlineRaw = localStorage.getItem(TIMER_END_TIME_KEY);
 
-    if (!deadline) {
-      const newDeadline = Date.now() + durationMinutes * 60 * 1000;
-      localStorage.setItem(TIMER_END_TIME_KEY, String(newDeadline));
-      deadline = String(newDeadline);
-    }
+    //If no deadline exists, DO NOTHING (test not started properly)
+    if (!deadlineRaw) return;
+
+    const deadline = Number(deadlineRaw);
 
     const getRemainingSeconds = () => {
-      const diff = parseInt(deadline!) - Date.now();
+      const diff = deadline - Date.now();
       return Math.max(0, Math.floor(diff / 1000));
     };
 
-    // Fix 2: Sync state immediately when durationMinutes becomes available
+    // ✅ Sync immediately
     const initialRemaining = getRemainingSeconds();
     setSecondsLeft(initialRemaining);
 
-    // If time is already up on load, trigger expiry
     if (initialRemaining <= 0) {
       localStorage.removeItem(TIMER_END_TIME_KEY);
       onExpireRef.current();
       return;
     }
-
-    if (!enabled) return;
 
     const intervalId = setInterval(() => {
       const remaining = getRemainingSeconds();
@@ -57,7 +52,7 @@ export function useTestTimer(
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [durationMinutes, enabled]); // durationMinutes here ensures it re-triggers when duration loads
+  }, [durationMinutes, enabled]);
 
   return secondsLeft;
 }
