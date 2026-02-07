@@ -22,7 +22,8 @@ export const searchJobsPaginated = async (
   limit: number
 ): Promise<BackendPaginatedResponse<Job>> => {
   // ✅ Build queryParams safely
-  const queryParams: Record<string, any> = {
+  const queryParams: Record<string, unknown> = {
+
     q: params.q || undefined,
     location: params.location || undefined,
     page,

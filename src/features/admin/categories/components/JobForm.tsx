@@ -364,7 +364,8 @@ if (formData.salary.min > formData.salary.max) {
   <select
     value={formData.jobType}
     onChange={(e) =>
-      setFormData({ ...formData, jobType: e.target.value as any })
+      setFormData({ ...formData, jobType: e.target.value as JobFormData["jobType"] })
+
     }
     className="w-full max-w-full border-2 border-gray-200 rounded-xl p-3 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
   >

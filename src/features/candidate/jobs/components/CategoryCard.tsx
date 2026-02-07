@@ -45,7 +45,8 @@ export default function CategoryCard({ category, onClick }: CategoryCardProps) {
           {category.name}
         </h3>
         <p className="text-sm text-gray-500">
-          {(category as any).jobCount ?? 0} jobs available
+          {category.jobCount ?? 0}
+          jobs available
         </p>
       </div>
     </div>

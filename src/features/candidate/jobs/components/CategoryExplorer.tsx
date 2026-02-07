@@ -53,7 +53,8 @@ export default function CategoryExplorer({
                 {category.name}
               </h3>
               <p className="text-xs text-gray-500 mt-1">
-                {(category as any).jobCount ?? 0} jobs
+                {category.jobCount ?? 0
+                } jobs
               </p>
             </div>
           </div>

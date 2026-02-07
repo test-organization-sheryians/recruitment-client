@@ -19,17 +19,20 @@ export default function CategoriessBox() {
 
   return (
     <div className="w-full px-6 py-6">
-
-
-     <CategoryForm
+      <CategoryForm
         isSubmitting={isPending}
         onSubmit={(data) =>
           createCategory(data, {
             onSuccess: () => {
               toast.success("Category created successfully 🎉");
             },
-            onError: (error: any) => {
-              toast.error(error?.message || "Failed to create category");
+            onError: (error: unknown) => {
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : "Failed to create category";
+
+              toast.error(message);
             },
           })
         }

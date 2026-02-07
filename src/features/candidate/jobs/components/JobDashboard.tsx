@@ -15,6 +15,10 @@ import { useGetProfile } from "@/features/candidate/Profile/hooks/useProfileApi"
 import { useRouter } from "next/navigation";
 import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
 import { useToast } from "@/components/ui/Toast";
+
+import { useDebounce } from "@/features/admin/users/hooks/useDebounce";
+
+
 import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
 import {
   useInfiniteJobs,
@@ -40,31 +44,31 @@ export default function JobDashboardPage() {
   const router = useRouter();
   const [showAllCategories, setShowAllCategories] = useState(false);
   const queryClient = useQueryClient();
-  
 
 
-  
 
-const applyJobMutation = useApplyJob()
-const toast = useToast()
 
-const handleApplyJob = (jobId: string) => {
-  if (profileLoading) {
-    toast.error("Profile is loading. Please wait.")
-    return
+
+  const applyJobMutation = useApplyJob()
+  const toast = useToast()
+
+  const handleApplyJob = (jobId: string) => {
+    if (profileLoading) {
+      toast.error("Profile is loading. Please wait.")
+      return
+    }
+
+    if (!profile?.resumeFile) {
+      toast.error("Please upload your resume before applying.")
+      return
+    }
+
+    applyJobMutation.mutate({
+      jobId,
+      message: "Excited to apply!",
+      resumeUrl: profile.resumeFile,
+    })
   }
-
-  if (!profile?.resumeFile) {
-    toast.error("Please upload your resume before applying.")
-    return
-  }
-
-  applyJobMutation.mutate({
-    jobId,
-    message: "Excited to apply!",
-    resumeUrl: profile.resumeFile,
-  })
-}
 
 
 
@@ -80,12 +84,12 @@ const handleApplyJob = (jobId: string) => {
     (p) => p.data ?? []
   );
   const handleJobDetails = (jobId: string) => {
-  router.push(`/jobs/${jobId}`);
-};
+    router.push(`/jobs/${jobId}`);
+  };
 
 
-    // optional: refetch jobs so applied=true updates
-   
+  // optional: refetch jobs so applied=true updates
+
 
 
   /* ================= FILTER STATES ================= */
@@ -95,50 +99,55 @@ const handleApplyJob = (jobId: string) => {
     0,
     10000000,
   ]);
+
+  const debouncedMinSalary = useDebounce(salaryRange[0], 600);
+  const debouncedMaxSalary = useDebounce(salaryRange[1], 600);
+
   /* ================================================= */
 
   const allJobsQuery = useInfiniteJobs();
   const jobsByCategoryQuery = useInfiniteJobsByCategory(selectedCategory);
 
   // Normalize filter values
- const normalizedJobType = jobType.filter(j => j && j.trim() !== "");
-const normalizedExperience = experience.filter(e => e && e.trim() !== "");
+  const normalizedJobType = jobType.filter(j => j && j.trim() !== "");
+  const normalizedExperience = experience.filter(e => e && e.trim() !== "");
 
 
   /* ✅ ONLY REAL CHANGE IS HERE */
-const searchJobsQuery = useInfiniteSearchJobs({
-  q: query.q,
-  location: query.location,
-  jobType: normalizedJobType,
-  experience: normalizedExperience,
-  minSalary: salaryRange[0],
-  maxSalary: salaryRange[1],
-});
+  const searchJobsQuery = useInfiniteSearchJobs({
+    q: query.q,
+    location: query.location,
+    jobType: normalizedJobType,
+    experience: normalizedExperience,
+    minSalary: debouncedMinSalary,
+    maxSalary: debouncedMaxSalary,
+
+  });
 
 
-// ✅ PUT IT HERE ⬇️
-const isSearchActive = Boolean(
-  query.q ||
-  query.location ||
-  normalizedJobType.length ||
-  normalizedExperience.length ||
-  salaryRange[0] !== 0 ||
-  salaryRange[1] !== 10000000
-);
+  // ✅ PUT IT HERE ⬇️
+  const isSearchActive = Boolean(
+    query.q ||
+    query.location ||
+    normalizedJobType.length ||
+    normalizedExperience.length ||
+    salaryRange[0] !== 0 ||
+    salaryRange[1] !== 10000000
+  );
 
-useEffect(() => {
-  if (isSearchActive) {
-    setSelectedCategory(null);
-  }
-}, [isSearchActive]);
+  useEffect(() => {
+    if (isSearchActive) {
+      setSelectedCategory(null);
+    }
+  }, [isSearchActive]);
 
 
-// ✅ AND THIS RIGHT AFTER
-const activeJobsQuery = isSearchActive
-  ? searchJobsQuery
-  : selectedCategory
-  ? jobsByCategoryQuery
-  : allJobsQuery;
+  // ✅ AND THIS RIGHT AFTER
+  const activeJobsQuery = isSearchActive
+    ? searchJobsQuery
+    : selectedCategory
+      ? jobsByCategoryQuery
+      : allJobsQuery;
 
 
   const jobsPages = activeJobsQuery.data?.pages ?? [];
@@ -152,7 +161,7 @@ const activeJobsQuery = isSearchActive
       : 0;
 
   const jobs: CardJob[] = jobsPages
-  .flatMap((p) => p.data ?? []);
+    .flatMap((p) => p.data ?? []);
 
 
   const categoriesLoadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -196,12 +205,10 @@ const activeJobsQuery = isSearchActive
       location: searchLocation.trim(),
     });
     setSelectedCategory(null);
-    
+
   };
 
-  console.log("Jobs to render:", jobs);
-console.log("Jobs pages:", jobsPages);
-console.log("Jobs to render", jobs);
+
 
 
   return (
@@ -214,16 +221,16 @@ console.log("Jobs to render", jobs);
         setSearchLocation={setSearchLocation}
       />
 
-     {!showAllCategories && (
-  <ExploreByCategory
-    categories={categories}
-    onSelect={(id) => {
-      setSelectedCategory(id)
-      setQuery({ q: "", location: "" })
-    }}
-    onViewAll={() => setShowAllCategories(true)}
-  />
-)}
+      {!showAllCategories && (
+        <ExploreByCategory
+          categories={categories}
+          onSelect={(id) => {
+            setSelectedCategory(id)
+            setQuery({ q: "", location: "" })
+          }}
+          onViewAll={() => setShowAllCategories(true)}
+        />
+      )}
 
 
       <div className="md:hidden sticky top-0 z-30 bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
@@ -250,78 +257,79 @@ console.log("Jobs to render", jobs);
           />
         </div>
         {/* Jobs */}
-{showAllCategories ? (
-  /* ================= ALL CATEGORIES VIEW ================= */
-  <div className="md:col-span-9">
-    <div className="bg-gray-50 rounded-2xl p-8">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">
-        All Categories
-      </h2>
+        {showAllCategories ? (
+          /* ================= ALL CATEGORIES VIEW ================= */
+          <div className="md:col-span-9">
+            <div className="bg-gray-50 rounded-2xl p-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                All Categories
+              </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {categories.map((category) => (
-          <CategoryCard
-            key={category._id}
-            category={category}
-            onClick={() => {
-              setSelectedCategory(category._id)
-              setShowAllCategories(false)
-            }}
-          />
-        ))}
-      </div>
-    </div>
-  </div>
-) : (
-  /* ================= JOB LIST (UNCHANGED) ================= */
-  <div className="md:col-span-9">
-    <div className="bg-white rounded-xl overflow-hidden w-full">
-      {/* Header */}
-      <div className="px-4 py-1 bg-gray-50 flex items-center gap-3">
-        <h2 className="text-xl font-semibold text-gray-900">
-          {selectedCategory ? "Category Jobs" : "Latest Jobs"}
-        </h2>
-        <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-          {jobsCount} jobs
-        </span>
-      </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {categories.map((category) => (
+                  <CategoryCard
+                    key={category._id}
+                    category={category}
+                    onClick={() => {
+                      setSelectedCategory(category._id)
+                      setShowAllCategories(false)
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* ================= JOB LIST (UNCHANGED) ================= */
+          <div className="md:col-span-9">
+            <div className="bg-white rounded-xl overflow-hidden w-full">
+              {/* Header */}
+              <div className="px-4 py-1 bg-gray-50 flex items-center gap-3">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {selectedCategory ? "Category Jobs" : "Latest Jobs"}
+                </h2>
+                <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
+                  {jobsCount} jobs
+                </span>
+              </div>
 
-      {/* Job list */}
+              {/* Job list */}
 
-       
 
-      <div className="p-4 space-y-4 bg-gray-50">
-        {jobs.map((job) => (
-          <LatestJobCard
-            key={job._id}
-            jobId={job._id}
-            title={job.title}
-            company={(job as any).client?.company || "Company"}
-            location={
-              job.location?.city
-                ? `${job.location.city}, ${job.location.country ?? ""}`
-                : "Remote"
-            }
-              salary={
-    job.salary && typeof job.salary === "object"
-      ? job.salary // already correct shape
-      : job.salary != null
-      ? { min: Number(job.salary), max: Number(job.salary), currency: "₹" }
-      : undefined
-  }
-            postedAt={job.createdAt ? "Recently" : undefined}
-            skills={job.skills?.map((s) => typeof s === "string" ? s : s.name)}
-            applied={job.applied}
-            onDetails={handleJobDetails}
-            onApply={handleApplyJob}
-          />
-        ))}
 
-        <div ref={jobsLoadMoreRef} className="h-1" />
-      </div>
-    </div>
-  </div>
-)}
+              <div className="p-4 space-y-4 bg-gray-50">
+                {jobs.map((job) => (
+                  <LatestJobCard
+                    key={job._id}
+                    jobId={job._id}
+                    title={job.title}
+                    company={(job as { client?: { company?: string } }).client?.company || "Company"}
+
+                    location={
+                      job.location?.city
+                        ? `${job.location.city}, ${job.location.country ?? ""}`
+                        : "Remote"
+                    }
+                    salary={
+                      job.salary && typeof job.salary === "object"
+                        ? job.salary // already correct shape
+                        : job.salary != null
+                          ? { min: Number(job.salary), max: Number(job.salary), currency: "₹" }
+                          : undefined
+                    }
+                    postedAt={job.createdAt ? "Recently" : undefined}
+                    skills={job.skills?.map((s) => typeof s === "string" ? s : s.name)}
+                    applied={job.applied}
+                    onDetails={handleJobDetails}
+                    onApply={handleApplyJob}
+                  />
+                ))}
+
+                <div ref={jobsLoadMoreRef} className="h-1" />
+              </div>
+            </div>
+          </div>
+        )}
 
 
       </div>
