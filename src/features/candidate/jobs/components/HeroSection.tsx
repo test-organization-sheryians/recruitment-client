@@ -29,8 +29,10 @@ export default function HeroSection({
         shadow-md
       "
         style={{
-          background:
-            "linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 40%, #0f766e 100%)",
+          background: `
+    radial-gradient(circle at 20% 20%, rgba(59,130,246,0.25), transparent 40%),
+    linear-gradient(130deg, #101a36 10%, #101a36 30%, #0f766e 100%)
+  `,
         }}
       >
         {/* Heading */}

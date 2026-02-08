@@ -18,7 +18,6 @@ import { useToast } from "@/components/ui/Toast";
 
 import { useDebounce } from "@/features/admin/users/hooks/useDebounce";
 
-
 import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
 import {
   useInfiniteJobs,
@@ -30,12 +29,8 @@ import type { CategoryItem } from "@/api/category/getCategoriesPaginated";
 import { SearchQuery } from "@/types/Job";
 import { useQueryClient } from "@tanstack/react-query";
 
-
-
-
-
 export default function JobDashboardPage() {
-  const { data: profile, isLoading: profileLoading } = useGetProfile()
+  const { data: profile, isLoading: profileLoading } = useGetProfile();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,32 +40,26 @@ export default function JobDashboardPage() {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const queryClient = useQueryClient();
 
-
-
-
-
-  const applyJobMutation = useApplyJob()
-  const toast = useToast()
+  const applyJobMutation = useApplyJob();
+  const toast = useToast();
 
   const handleApplyJob = (jobId: string) => {
     if (profileLoading) {
-      toast.error("Profile is loading. Please wait.")
-      return
+      toast.error("Profile is loading. Please wait.");
+      return;
     }
 
     if (!profile?.resumeFile) {
-      toast.error("Please upload your resume before applying.")
-      return
+      toast.error("Please upload your resume before applying.");
+      return;
     }
 
     applyJobMutation.mutate({
       jobId,
       message: "Excited to apply!",
       resumeUrl: profile.resumeFile,
-    })
-  }
-
-
+    });
+  };
 
   const {
     data: categoryPages,
@@ -81,23 +70,19 @@ export default function JobDashboardPage() {
   } = useInfiniteJobCategories();
 
   const categories: CategoryItem[] = (categoryPages?.pages ?? []).flatMap(
-    (p) => p.data ?? []
+    (p) => p.data ?? [],
   );
   const handleJobDetails = (jobId: string) => {
     router.push(`/jobs/${jobId}`);
   };
 
-
   // optional: refetch jobs so applied=true updates
-
-
 
   /* ================= FILTER STATES ================= */
   const [jobType, setJobType] = useState<string[]>([]);
   const [experience, setExperience] = useState<string[]>([]);
   const [salaryRange, setSalaryRange] = useState<[number, number]>([
-    0,
-    10000000,
+    0, 10000000,
   ]);
 
   const debouncedMinSalary = useDebounce(salaryRange[0], 600);
@@ -109,9 +94,8 @@ export default function JobDashboardPage() {
   const jobsByCategoryQuery = useInfiniteJobsByCategory(selectedCategory);
 
   // Normalize filter values
-  const normalizedJobType = jobType.filter(j => j && j.trim() !== "");
-  const normalizedExperience = experience.filter(e => e && e.trim() !== "");
-
+  const normalizedJobType = jobType.filter((j) => j && j.trim() !== "");
+  const normalizedExperience = experience.filter((e) => e && e.trim() !== "");
 
   /* ✅ ONLY REAL CHANGE IS HERE */
   const searchJobsQuery = useInfiniteSearchJobs({
@@ -121,9 +105,7 @@ export default function JobDashboardPage() {
     experience: normalizedExperience,
     minSalary: debouncedMinSalary,
     maxSalary: debouncedMaxSalary,
-
   });
-
 
   // ✅ PUT IT HERE ⬇️
   const isSearchActive = Boolean(
@@ -132,7 +114,7 @@ export default function JobDashboardPage() {
     normalizedJobType.length ||
     normalizedExperience.length ||
     salaryRange[0] !== 0 ||
-    salaryRange[1] !== 10000000
+    salaryRange[1] !== 10000000,
   );
 
   useEffect(() => {
@@ -141,7 +123,6 @@ export default function JobDashboardPage() {
     }
   }, [isSearchActive]);
 
-
   // ✅ AND THIS RIGHT AFTER
   const activeJobsQuery = isSearchActive
     ? searchJobsQuery
@@ -149,20 +130,15 @@ export default function JobDashboardPage() {
       ? jobsByCategoryQuery
       : allJobsQuery;
 
-
   const jobsPages = activeJobsQuery.data?.pages ?? [];
   const hasMoreJobs = activeJobsQuery.hasNextPage;
   const fetchNextJobs = activeJobsQuery.fetchNextPage;
   const isFetchingMoreJobs = activeJobsQuery.isFetchingNextPage;
 
   const jobsCount =
-    jobsPages.length > 0
-      ? jobsPages[0]?.pagination?.totalRecords ?? 0
-      : 0;
+    jobsPages.length > 0 ? (jobsPages[0]?.pagination?.totalRecords ?? 0) : 0;
 
-  const jobs: CardJob[] = jobsPages
-    .flatMap((p) => p.data ?? []);
-
+  const jobs: CardJob[] = jobsPages.flatMap((p) => p.data ?? []);
 
   const categoriesLoadMoreRef = useRef<HTMLDivElement | null>(null);
   const jobsLoadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -205,11 +181,7 @@ export default function JobDashboardPage() {
       location: searchLocation.trim(),
     });
     setSelectedCategory(null);
-
   };
-
-
-
 
   return (
     <div className="min-h-screen bg-gray-50 border pt-15">
@@ -225,13 +197,12 @@ export default function JobDashboardPage() {
         <ExploreByCategory
           categories={categories}
           onSelect={(id) => {
-            setSelectedCategory(id)
-            setQuery({ q: "", location: "" })
+            setSelectedCategory(id);
+            setQuery({ q: "", location: "" });
           }}
           onViewAll={() => setShowAllCategories(true)}
         />
       )}
-
 
       <div className="md:hidden sticky top-0 z-30 bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
         <button
@@ -245,7 +216,44 @@ export default function JobDashboardPage() {
         </span>
       </div>
 
-      <div className="max-w-7xl mx-auto px-12 py-6 grid grid-cols-1 md:grid-cols-12 gap-3">
+      {/* MOBILE SIDEBAR */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+
+          {/* Drawer */}
+          <div className="absolute top-0 left-0 h-full w-[85%] max-w-sm bg-white shadow-xl p-4 overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Filters</h2>
+
+              <button
+                onClick={() => setIsSidebarOpen(false)}
+                className="text-gray-600 text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <FiltersSidebar
+              jobType={jobType}
+              setJobType={setJobType}
+              experience={experience}
+              setExperience={setExperience}
+              salaryRange={salaryRange}
+              setSalaryRange={setSalaryRange}
+            />
+          </div>
+        </div>
+      )}
+
+      <div
+        className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 grid grid-cols-1 md:grid-cols-12 gap-3"
+      >
         <div className="hidden md:block md:col-span-3">
           <FiltersSidebar
             jobType={jobType}
@@ -271,8 +279,8 @@ export default function JobDashboardPage() {
                     key={category._id}
                     category={category}
                     onClick={() => {
-                      setSelectedCategory(category._id)
-                      setShowAllCategories(false)
+                      setSelectedCategory(category._id);
+                      setShowAllCategories(false);
                     }}
                   />
                 ))}
@@ -295,16 +303,16 @@ export default function JobDashboardPage() {
 
               {/* Job list */}
 
-
-
               <div className="p-4 space-y-4 bg-gray-50">
                 {jobs.map((job) => (
                   <LatestJobCard
                     key={job._id}
                     jobId={job._id}
                     title={job.title}
-                    company={(job as { client?: { company?: string } }).client?.company || "Company"}
-
+                    company={
+                      (job as { client?: { company?: string } }).client
+                        ?.company || "Company"
+                    }
                     location={
                       job.location?.city
                         ? `${job.location.city}, ${job.location.country ?? ""}`
@@ -314,11 +322,17 @@ export default function JobDashboardPage() {
                       job.salary && typeof job.salary === "object"
                         ? job.salary // already correct shape
                         : job.salary != null
-                          ? { min: Number(job.salary), max: Number(job.salary), currency: "₹" }
+                          ? {
+                              min: Number(job.salary),
+                              max: Number(job.salary),
+                              currency: "₹",
+                            }
                           : undefined
                     }
                     postedAt={job.createdAt ? "Recently" : undefined}
-                    skills={job.skills?.map((s) => typeof s === "string" ? s : s.name)}
+                    skills={job.skills?.map((s) =>
+                      typeof s === "string" ? s : s.name,
+                    )}
                     applied={job.applied}
                     onDetails={handleJobDetails}
                     onApply={handleApplyJob}
@@ -330,10 +344,7 @@ export default function JobDashboardPage() {
             </div>
           </div>
         )}
-
-
       </div>
     </div>
   );
 }
-

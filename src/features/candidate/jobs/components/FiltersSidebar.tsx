@@ -22,12 +22,10 @@ export default function FiltersSidebar({
   const toggle = (
     list: string[],
     value: string,
-    setter: (v: string[]) => void
+    setter: (v: string[]) => void,
   ) => {
     setter(
-      list.includes(value)
-        ? list.filter((v) => v !== value)
-        : [...list, value]
+      list.includes(value) ? list.filter((v) => v !== value) : [...list, value],
     );
   };
 
@@ -51,29 +49,28 @@ export default function FiltersSidebar({
       </div>
 
       {/* Job Type */}
-{/* Job Type */}
-<div className="mb-6 text-lg font-semibold" >
-  <h4 className="text-sm font-semibold text-gray-500 mb-3 tracking-wider">
-    JOB TYPE
-  </h4>
+      <div className="mb-6 text-lg font-semibold">
+        <h4 className="text-sm font-semibold text-gray-500 mb-3 tracking-wider">
+          JOB TYPE
+        </h4>
 
-  {["Remote", "Full-Time", "Part-Time", "Hybrid"].map((type) => (
-    <label
-      key={type}
-      className="flex items-center justify-between text-sm mb-2 cursor-pointer "
-    >
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={jobType.includes(type)}
-          onChange={() => toggle(jobType, type, setJobType)}
-          className="accent-blue-600 h-4 w-4 border border-gray-100 cursor-pointer rounded-sm"
-        />
-        <span>{type}</span>
+        {["Remote", "Full-Time", "Part-Time", "Hybrid"].map((type) => (
+          <label
+            key={type}
+            className="flex items-center justify-between text-sm mb-2 cursor-pointer "
+          >
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={jobType.includes(type)}
+                onChange={() => toggle(jobType, type, setJobType)}
+                className="accent-blue-600 h-4 w-4 border border-gray-100 cursor-pointer rounded-sm"
+              />
+              <span>{type}</span>
+            </div>
+          </label>
+        ))}
       </div>
-    </label>
-  ))}
-</div>
 
       {/* Experience */}
       <div className="mb-6 text-lg font-semibold">
