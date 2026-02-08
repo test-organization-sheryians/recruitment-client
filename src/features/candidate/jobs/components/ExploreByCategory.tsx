@@ -84,13 +84,13 @@ export default function ExploreByCategory({
             Explore by Category
           </h2>
           <button
-  onClick={onViewAll}
-  className="text-sm font-medium text-blue-600 hover:underline"
->
-  View all →
-</button>
+            onClick={onViewAll}
+            className="text-sm font-medium text-blue-600 hover:underline"
+          >
+            View all →
+          </button>
 
-         
+
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-6 gap-4 items-stretch ">
@@ -99,7 +99,8 @@ export default function ExploreByCategory({
             <JobCategoryCard
               key={cat._id}
               title={cat.name}
-              jobCount={(cat as any).jobCount ?? 0}
+              jobCount={(cat as { jobCount?: number }).jobCount ?? 0}
+
               onClick={() => onSelect(cat._id)}
             />
           ))}

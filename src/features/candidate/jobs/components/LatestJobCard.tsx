@@ -8,7 +8,14 @@ interface LatestJobCardProps {
   title: string;
   company: string;
   location?: string;
-  salary?: string | number;
+  salary?: {
+  currency?: string;
+  min?: number;
+  max?: number;
+};
+
+
+
   postedAt?: string;
   skills?: string[];
   applied?: boolean;
@@ -63,11 +70,12 @@ export default function LatestJobCard({
               {location}
             </span>
 
-            {salary && (
-              <span className="flex items-center gap-1">
-                💰 {salary}
-              </span>
-            )}
+          {salary && salary.min != null && salary.max != null && (
+         <span className="flex items-center gap-1">
+    💰 {salary.currency ?? "₹"} {salary.min} - {salary.max}
+         </span>
+          )}
+
 
             {postedAt && (
               <span className="flex items-center gap-1">
