@@ -91,4 +91,5 @@ export interface SearchParams {
 
   minSalary?: number;
   maxSalary?: number;
+  category?: string; 
 }

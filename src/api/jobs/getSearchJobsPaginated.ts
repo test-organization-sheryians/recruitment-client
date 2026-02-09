@@ -34,6 +34,8 @@ export const searchJobsPaginated = async (
   if (params.experience?.length) queryParams.experience = params.experience.join(",");
   if (params.minSalary != null) queryParams.minSalary = params.minSalary;
   if (params.maxSalary != null) queryParams.maxSalary = params.maxSalary;
+  if (params.category) queryParams.category = params.category;
+
 
   const res = await api.get("/api/jobs/search", { params: queryParams });
 

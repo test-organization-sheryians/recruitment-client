@@ -121,6 +121,7 @@ export default function JobDashboardPage() {
     experience: normalizedExperience,
     minSalary: debouncedMinSalary,
     maxSalary: debouncedMaxSalary,
+    category: selectedCategory ?? undefined,
 
   });
 
@@ -135,19 +136,20 @@ export default function JobDashboardPage() {
     salaryRange[1] !== 10000000
   );
 
-  useEffect(() => {
-    if (isSearchActive) {
-      setSelectedCategory(null);
-    }
-  }, [isSearchActive]);
+  // useEffect(() => {
+  //   if (isSearchActive) {
+  //     setSelectedCategory(null);
+  //   }
+  // }, [isSearchActive]);
 
 
-  // ✅ AND THIS RIGHT AFTER
-  const activeJobsQuery = isSearchActive
-    ? searchJobsQuery
-    : selectedCategory
-      ? jobsByCategoryQuery
-      : allJobsQuery;
+  // // ✅ AND THIS RIGHT AFTER
+  // const activeJobsQuery = isSearchActive
+  //   ? searchJobsQuery
+  //   : selectedCategory
+  //     ? jobsByCategoryQuery
+  //     : allJobsQuery;
+const activeJobsQuery = searchJobsQuery;
 
 
   const jobsPages = activeJobsQuery.data?.pages ?? [];
@@ -244,8 +246,43 @@ export default function JobDashboardPage() {
           {selectedCategory ? "Filtered" : "All Jobs"} • {jobsCount} found
         </span>
       </div>
+        
+        {/* MOBILE SIDEBAR */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setIsSidebarOpen(false)}
+          />
 
-      <div className="max-w-7xl mx-auto px-12 py-6 grid grid-cols-1 md:grid-cols-12 gap-3">
+          {/* Drawer */}
+          <div className="absolute top-0 left-0 h-full w-[85%] max-w-sm bg-white shadow-xl p-4 overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Filters</h2>
+
+              <button
+                onClick={() => setIsSidebarOpen(false)}
+                className="text-gray-600 text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <FiltersSidebar
+              jobType={jobType}
+              setJobType={setJobType}
+              experience={experience}
+              setExperience={setExperience}
+              salaryRange={salaryRange}
+              setSalaryRange={setSalaryRange}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8  py-6 grid grid-cols-1 md:grid-cols-12 gap-3">
         <div className="hidden md:block md:col-span-3">
           <FiltersSidebar
             jobType={jobType}

@@ -64,6 +64,8 @@ interface SearchJobsParams {
   experience?: string[];
   minSalary?: number;
   maxSalary?: number;
+
+  category?: string;
   limit?: number;
 }
 
@@ -74,6 +76,8 @@ export const useInfiniteSearchJobs = ({
   experience = [],
   minSalary,
   maxSalary,
+  category,
+
   limit = DEFAULT_LIMIT,
 }: SearchJobsParams) => {
   return useInfiniteQuery<BackendPaginatedResponse<Job>>({
@@ -85,6 +89,8 @@ export const useInfiniteSearchJobs = ({
       experience.join(","),   // ✅ FIX
       minSalary ?? "",
       maxSalary ?? "",
+      category ?? "",
+     
       limit,
     ],
   enabled: Boolean(
@@ -93,13 +99,14 @@ export const useInfiniteSearchJobs = ({
   jobType.length ||
   experience.length ||
   minSalary !== 0 ||
-  maxSalary !== 10000000
+  maxSalary !== 10000000 ||
+  category
 ),
 
     initialPageParam: 1,
     queryFn: async ({ pageParam }) => {
       return searchJobsPaginated(
-        { q, location, jobType, experience, minSalary, maxSalary },
+        { q, location, jobType, experience, minSalary, maxSalary,category},
         pageParam as number,
         limit
       );
