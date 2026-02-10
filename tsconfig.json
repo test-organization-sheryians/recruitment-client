@@ -19,6 +19,7 @@
     "incremental": true,
     // ✅ ADD THIS
     "forceConsistentCasingInFileNames": true,
+    "allowImportingTsExtensions": true,
     "plugins": [
       {
         "name": "next"

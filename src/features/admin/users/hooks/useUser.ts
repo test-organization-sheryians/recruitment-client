@@ -1,8 +1,11 @@
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import api from "@/config/axios";
-import { getUsersPaginated, type BackendPaginatedResponse } from "@/api/users/getUsersPaginated";
+import {
+  getUsersPaginated,
+  type BackendPaginatedResponse,
+} from "@/api/users/getUsersPaginated";
 
-/* ===== FIX: MERGE CONFLICT REMOVED ===== */
+/* ===== TYPES ===== */
 export interface Role {
   _id: string;
   name: string;
@@ -24,15 +27,17 @@ export const useInfiniteUsers = (search: string) => {
     queryFn: ({ pageParam = 1 }) =>
       getUsersPaginated(pageParam as number, 10, search),
     getNextPageParam: (lastPage) => {
-      if (lastPage.pagination.currentPage < lastPage.pagination.totalPages) {
+      if (
+        lastPage.pagination.currentPage <
+        lastPage.pagination.totalPages
+      ) {
         return lastPage.pagination.currentPage + 1;
       }
       return undefined;
     },
     initialPageParam: 1,
-
     placeholderData: (prev) => prev,
-    staleTime: 5 * 60 * 1000,      // ✅ avoids refetch on every keystroke
+    staleTime: 5 * 60 * 1000,
   });
 };
 
@@ -54,6 +59,8 @@ export const useUpdateUserRole = () => {
       userId: string;
       role: string;
     }) =>
-      api.put(`/api/users/update-role/${userId}`, { roleId: role }),
+      api.put(`/api/users/update-role/${userId}`, {
+        roleId: role,
+      }),
   });
 };

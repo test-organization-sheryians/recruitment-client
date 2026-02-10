@@ -18,12 +18,11 @@ const isPublicRoute = (path: string) => {
 };
 
 const api = axios.create({
-  baseURL,
+  baseURL: baseURL || "http://localhost:9000",
   headers: {
     "Content-Type": "application/json",
   },
   withCredentials: true,
-  // validateStatus: (status) => status >= 200 && status < 300,
 });
 
 api.interceptors.response.use(
@@ -46,9 +45,7 @@ api.interceptors.response.use(
       }
     }
 
-    // ✅ Keep the GOOD version
     const publicRoute = isPublicRoute(currentPath);
-    console.log(publicRoute, currentPath);
 
     if (
       !publicRoute &&
@@ -60,11 +57,11 @@ api.interceptors.response.use(
             message.toLowerCase().includes("unauthenticated") ||
             message.toLowerCase().includes("invalid token"))))
     ) {
-      Cookies.remove("refreshToken");
-      Cookies.remove("accessToken");
+      // Cookies.remove("refreshToken");
+      // Cookies.remove("accessToken");
 
       if (typeof window !== "undefined") {
-        // window.location.href = "/login";
+        // window.location.href = "/login"; // redirect handled elsewhere
       }
 
       return Promise.reject(
