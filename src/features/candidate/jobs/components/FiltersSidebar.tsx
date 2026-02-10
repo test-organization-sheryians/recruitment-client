@@ -9,6 +9,7 @@ interface FiltersSidebarProps {
 
   salaryRange: [number, number];
   setSalaryRange: (v: [number, number]) => void;
+  setSelectedCategory: (v: string | null) => void;
 }
 
 export default function FiltersSidebar({
@@ -18,6 +19,7 @@ export default function FiltersSidebar({
   setExperience,
   salaryRange,
   setSalaryRange,
+   setSelectedCategory,
 }: FiltersSidebarProps) {
   const toggle = (
     list: string[],
@@ -35,6 +37,7 @@ export default function FiltersSidebar({
     setJobType([]);
     setExperience([]);
     setSalaryRange([0, 10000000]); // ₹0 – ₹1 Cr
+    setSelectedCategory(null); 
   };
 
   return (
@@ -98,7 +101,7 @@ export default function FiltersSidebar({
       </div>
 
       {/* Salary */}
-      <div>
+      {/* <div>
         <h4 className="text-sm font-semibold text-gray-500 mb-4 tracking-wider">
           SALARY RANGE (₹)
         </h4>
@@ -113,9 +116,9 @@ export default function FiltersSidebar({
             setSalaryRange([salaryRange[0], Number(e.target.value)])
           }
           className="w-full accent-blue-600"
-        />
+        /> */}
 
-        <div className="flex justify-between text-sm text-gray-700 mt-3">
+        {/* <div className="flex justify-between text-sm text-gray-700 mt-3">
           <span>₹{(salaryRange[0] / 100000).toFixed(0)} L</span>
           <span>
             ₹
@@ -123,8 +126,8 @@ export default function FiltersSidebar({
               ? "1 Cr+"
               : `${(salaryRange[1] / 100000).toFixed(0)} L`}
           </span>
-        </div>
-      </div>
+        </div> */}
+      {/* </div> */}
     </div>
   );
 }

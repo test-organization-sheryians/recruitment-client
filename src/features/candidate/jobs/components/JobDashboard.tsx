@@ -132,8 +132,7 @@ export default function JobDashboardPage() {
     query.location ||
     normalizedJobType.length ||
     normalizedExperience.length ||
-    salaryRange[0] !== 0 ||
-    salaryRange[1] !== 10000000
+    !(salaryRange[0] === 0 && salaryRange[1] === 10000000)
   );
 
   // useEffect(() => {
@@ -149,7 +148,11 @@ export default function JobDashboardPage() {
   //   : selectedCategory
   //     ? jobsByCategoryQuery
   //     : allJobsQuery;
-const activeJobsQuery = searchJobsQuery;
+  const activeJobsQuery = isSearchActive
+    ? searchJobsQuery
+    : selectedCategory
+      ? jobsByCategoryQuery
+      : allJobsQuery;
 
 
   const jobsPages = activeJobsQuery.data?.pages ?? [];
@@ -210,6 +213,19 @@ const activeJobsQuery = searchJobsQuery;
 
   };
 
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isSidebarOpen]);
+
+
 
 
 
@@ -226,6 +242,7 @@ const activeJobsQuery = searchJobsQuery;
       {!showAllCategories && (
         <ExploreByCategory
           categories={categories}
+          selectedCategory={selectedCategory}
           onSelect={(id) => {
             setSelectedCategory(id)
             setQuery({ q: "", location: "" })
@@ -246,8 +263,8 @@ const activeJobsQuery = searchJobsQuery;
           {selectedCategory ? "Filtered" : "All Jobs"} • {jobsCount} found
         </span>
       </div>
-        
-        {/* MOBILE SIDEBAR */}
+
+      {/* MOBILE SIDEBAR */}
       {isSidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           {/* Overlay */}
@@ -277,6 +294,7 @@ const activeJobsQuery = searchJobsQuery;
               setExperience={setExperience}
               salaryRange={salaryRange}
               setSalaryRange={setSalaryRange}
+              setSelectedCategory={setSelectedCategory}
             />
           </div>
         </div>
@@ -291,6 +309,7 @@ const activeJobsQuery = searchJobsQuery;
             setExperience={setExperience}
             salaryRange={salaryRange}
             setSalaryRange={setSalaryRange}
+            setSelectedCategory={setSelectedCategory}
           />
         </div>
         {/* Jobs */}

@@ -7,6 +7,7 @@ interface JobCategoryCardProps {
   title: string;
   jobCount: number;
   onClick: () => void;
+  selected?: boolean;
 }
 interface Props {
   categories: CategoryItem[];
@@ -15,38 +16,36 @@ interface Props {
 }
 
 
-function JobCategoryCard({ title, jobCount, onClick }: JobCategoryCardProps) {
+function JobCategoryCard({ title, jobCount, onClick, selected }: JobCategoryCardProps) {
   return (
     <div
       onClick={onClick}
-      className="
-        bg-white
-        rounded-2xl
-        border border-gray-200
-        px-5 py-5
-        h-full
-        cursor-pointer
-        transition-all duration-200
-        group
-        hover:border-blue-500
-        hover:shadow-md
-        hover:-translate-y-1
-      "
+      className={`
+  bg-white
+  rounded-2xl
+  border
+  px-5 py-5
+  h-full
+  cursor-pointer
+  transition-all duration-200
+  group
+  hover:border-blue-500
+  hover:shadow-md
+  hover:-translate-y-1
+  ${selected ? "border-blue-600 shadow-md -translate-y-1" : "border-gray-200"}
+`}
     >
       <div className="flex flex-col items-start">
         {/* Icon */}
         <div
-          className="
-            w-12 h-12
-            rounded-xl
-            bg-blue-50
-            flex items-center justify-center
-            mb-3
-            text-blue-600
-            transition-colors
-            group-hover:bg-blue-600
-            group-hover:text-white
-          "
+          className={`
+  w-12 h-12
+  rounded-xl
+  flex items-center justify-center
+  mb-3
+  transition-colors
+  ${selected ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white"}
+`}
         >
           <JobIcon name={title} className="w-6 h-6" />
         </div>
@@ -69,12 +68,14 @@ interface ExploreByCategoryProps {
   categories: CategoryItem[];
   onSelect: (categoryId: string) => void;
   onViewAll: () => void;
+  selectedCategory?: string | null;
 }
 
 export default function ExploreByCategory({
   categories,
   onSelect,
   onViewAll,
+  selectedCategory,
 }: ExploreByCategoryProps) {
   return (
     <section className="bg-gray-50">
@@ -102,6 +103,7 @@ export default function ExploreByCategory({
               jobCount={(cat as { jobCount?: number }).jobCount ?? 0}
 
               onClick={() => onSelect(cat._id)}
+              selected={selectedCategory === cat._id}
             />
           ))}
         </div>
