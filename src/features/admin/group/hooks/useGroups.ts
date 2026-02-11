@@ -1,18 +1,14 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as api from "@/api/Groups/group.api";
 
-/* ================= GET ALL ================= */
+/* GET ALL */
 export const useGroups = () =>
   useQuery({
     queryKey: ["groups"],
     queryFn: api.getGroups,
   });
 
-/* ================= GET ONE ================= */
+/* GET ONE */
 export const useGroupDetail = (groupId: string) =>
   useQuery({
     queryKey: ["group", groupId],
@@ -20,7 +16,7 @@ export const useGroupDetail = (groupId: string) =>
     enabled: !!groupId,
   });
 
-/* ================= CREATE ================= */
+/* CREATE */
 export const useCreateGroup = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -31,14 +27,12 @@ export const useCreateGroup = () => {
   });
 };
 
-/* ================= UPDATE ================= */
+/* UPDATE */
 export const useUpdateGroup = (groupId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
-      groupName?: string;
-      users?: string[];
-    }) => api.updateGroup(groupId, data),
+    mutationFn: (data: { groupName?: string }) =>
+      api.updateGroup(groupId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["group", groupId] });
       qc.invalidateQueries({ queryKey: ["groups"] });
@@ -46,7 +40,7 @@ export const useUpdateGroup = (groupId: string) => {
   });
 };
 
-/* ================= DELETE ================= */
+/* DELETE */
 export const useDeleteGroup = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -57,7 +51,7 @@ export const useDeleteGroup = () => {
   });
 };
 
-/* ================= ADD USER ================= */
+/* ADD USER */
 export const useAddUser = (groupId: string) => {
   const qc = useQueryClient();
   return useMutation({
@@ -69,7 +63,7 @@ export const useAddUser = (groupId: string) => {
   });
 };
 
-/* ================= REMOVE USER ================= */
+/* REMOVE USER */
 export const useRemoveUser = (groupId: string) => {
   const qc = useQueryClient();
   return useMutation({

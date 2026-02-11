@@ -12,29 +12,24 @@ export default function GroupsPage() {
   const groups = data ?? [];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      {/* Header */}
+    <div className="min-h-screen bg-gray-50 p-10">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold">
-            Groups & Members Management
+            Groups & Members
           </h1>
-          <p className="text-gray-500 text-sm">
-            Manage organizational structures and assign user permissions.
-          </p>
         </div>
 
         <button
           onClick={() => setOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg"
+          className="bg-blue-600 text-white px-5 py-2 rounded-lg"
         >
-          + Create New Group
+          + Create Group
         </button>
       </div>
 
-      {/* Groups List */}
-      <div className="space-y-4">
-        {isLoading && <p>Loading groups...</p>}
+      <div className="space-y-5">
+        {isLoading && <p>Loading...</p>}
 
         {groups.map((group: any) => (
           <GroupCard key={group._id} group={group} />
