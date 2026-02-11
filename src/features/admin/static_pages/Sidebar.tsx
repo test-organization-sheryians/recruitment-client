@@ -19,6 +19,7 @@ const navItems = [
   { name: "Categories", href: "/admin/categories" },
   { name: "Users", href: "/admin/users" }, // ✅ New Users item
   { name: "Tests", href: "/admin/tests" },
+  { name: "Blog", href: "/admin/blog/create" }, // ✅ New Blog item
 ];
 
 const Sidebar: React.FC<SidebarProps> = () => {
