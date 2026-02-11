@@ -42,7 +42,7 @@ export default function LatestJobCard({
   
 
   return (
-   <div className="bg-white rounded-lg p-6 flex border justify-between gap-6 
+   <div className="bg-white rounded-lg p-6 flex flex-col md:flex-row md:justify-between border gap-6 
                 hover:shadow-lg hover:shadow-gray-500/50 
                 transition-shadow duration-300">
 
@@ -109,8 +109,8 @@ export default function LatestJobCard({
         </div>
       </div>
 
-      {/* RIGHT */}
-      <div className="flex flex-col justify-center gap-4">
+      {/* BUTTONS - BELOW ON MOBILE, RIGHT ON DESKTOP */}
+      <div className="flex flex-row md:flex-col md:justify-center gap-4">
         <button
   onClick={() => onDetails(jobId)}
   className="px-8 py-3 border border-blue-600 text-[16px] text-blue-600 rounded-lg font-bold hover:bg-blue-50"
