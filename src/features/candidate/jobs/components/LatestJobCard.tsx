@@ -111,7 +111,7 @@ export default function LatestJobCard({
 
       {/* BUTTONS - BELOW ON MOBILE, RIGHT ON DESKTOP */}
       <div className="flex flex-row md:flex-col md:justify-center gap-4">
-d         <button
+        <button
   onClick={() => onDetails(jobId)}
   className="px-8 py-3 border border-blue-600 text-[16px] text-blue-600 rounded-lg font-bold hover:bg-blue-50"
 >
