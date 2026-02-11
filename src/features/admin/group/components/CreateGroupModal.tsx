@@ -22,7 +22,7 @@ export default function CreateGroupModal({
   const submit = () => {
     createGroup.mutate({
       groupName,
-      selectedUsers: selectedUserIds,
+      users: selectedUserIds,
     });
 
     onClose();
