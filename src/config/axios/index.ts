@@ -2,9 +2,11 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
+
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const publicRoutes = ["/login", "/register", "/"] as const;
+
 
 // Updated: Check if path starts with these instead of exact match
 const isPublicRoute = (path: string) => {
@@ -75,6 +77,7 @@ api.interceptors.response.use(
 
     return Promise.reject(error);
   }
+
 );
 
 export default api;
