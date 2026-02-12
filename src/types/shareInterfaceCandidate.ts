@@ -1,6 +1,8 @@
 export interface ShareCandidatePayload {
   candidateId: string;
 }
+
+
 export interface Skill {
   _id?: string;
   name?: string;
@@ -45,4 +47,24 @@ export interface BackendResponse<T> {
 export interface CreateShareCandidateResponse {
   message: string;
   shareLink: string;
+}
+
+//group
+
+export interface Group {
+_id: string;
+groupName: string;
+  users: string[]; // userIds
+  
+}
+
+
+export interface UpdateGroupPayload {
+  groupId: string;
+  newName: string;
+}
+
+ export interface RemoveUserPayload {
+  groupId: string;
+  userId: string;
 }

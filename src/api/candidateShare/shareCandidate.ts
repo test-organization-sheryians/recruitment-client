@@ -1,26 +1,62 @@
-import api from '@/config/axios';
-import { ShareCandidate, ShareCandidatePayload } from '../../types/shareInterfaceCandidate';
+import api from "@/config/axios";
+import { ShareCandidate } from "../../types/shareInterfaceCandidate";
 
-export const createShareCandidate = async (data: ShareCandidatePayload[]) => {
-  const response = await api.post('/api/share/', {
-    users: data.map(item => item.candidateId),
+/* ================= CREATE GROUP ================= */
+export const createShareCandidate = async (
+  groupName: string,
+  users: { candidateId: string }[]
+) => {
+  const response = await api.post("/api/share", {
+    groupName,
+    users: users.map(u => u.candidateId),
   });
-  console.log(
-    'check the data send from frontend to backend  => ',
-    response,
-    'response.data => ',
-    response.data
+  return response.data;
+};
+
+/* ================= GET ALL GROUPS ================= */
+export const getAllGroups = async () => {
+  const response = await api.get("/api/share");
+  return response.data.data;
+};
+
+/* ================= GET SINGLE GROUP ================= */
+export const getShareCandidate = async (shareId: string): Promise<ShareCandidate[]> => {
+  const response = await api.get(`/api/share/${shareId}`);
+  return response.data.data;
+};
+
+/* ================= UPDATE GROUP NAME (PUT) ================= */
+export const updateGroupName = async (groupId: string, newName: string) => {
+  const response = await api.put(`/api/share/${groupId}`, {
+    groupName: newName,
+  });
+  return response.data;
+};
+
+/* ================= DELETE GROUP ================= */
+export const deleteGroup = async (groupId: string) => {
+  const response = await api.delete(`/api/share/${groupId}`);
+  return response.data;
+};
+
+/* ================= ADD USER TO GROUP ================= */
+export const addUserToGroup = async (
+  groupId: string,
+  userId: string
+) => {
+  const response = await api.put(
+    `/api/share/${groupId}/user/${userId}`
   );
   return response.data;
 };
 
-export const getShareCandidate = async (shareId: string): Promise<ShareCandidate[]> => {
-  const response = await api.get(`/api/share/${shareId}`);
-  console.log(
-    'backend response of ALL share candidates ===>',
-    response,
-    'response.data.data ===>',
-    response.data.data
+
+
+/* ================= REMOVE USER FROM GROUP ================= */
+export const removeUserFromGroup = async (groupId: string, userId: string) => {
+  const response = await api.delete(
+    `/api/share/${groupId}/user/${userId}`
   );
-  return response.data.data;
+  return response.data;
 };
+

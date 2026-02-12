@@ -2,11 +2,18 @@ import { createShareCandidate, getShareCandidate } from '@/api/candidateShare/sh
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ShareCandidate, ShareCandidatePayload } from '../../../../types/shareInterfaceCandidate';
 
+interface CreateShareCandidateArgs {
+  groupName: string;
+  users: ShareCandidatePayload[];
+}
+
 export const useCreateShareCandidate = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: ShareCandidatePayload[]) => createShareCandidate(payload),
+    mutationFn: ({ groupName, users }: CreateShareCandidateArgs) =>
+      createShareCandidate(groupName, users),
+
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['share-candidates'],
@@ -22,3 +29,4 @@ export const useShareCandidates = (shareId: string) => {
     enabled: !!shareId,
   });
 };
+
