@@ -1,0 +1,28 @@
+'use client';
+
+import { useGroupDetail } from "@/features/admin/group/hooks/useGroups";
+import GroupUsersTable from "@/features/admin/group/component/groupuserstable";
+import { useParams } from "next/navigation";
+
+export default function GroupDetailPage() {
+  const params = useParams();
+  const rawId = (params as { id?: string | string[] })?.id;
+  const id = Array.isArray(rawId) ? rawId[0] : rawId ?? "";
+
+  const { data: group, isLoading, isError } = useGroupDetail(id);
+
+  if (!id) return <p>Invalid group id</p>;
+  if (isLoading) return <p>Loading...</p>;
+  if (isError) return <p>Failed to load group</p>;
+  if (!group) return <p>No group found</p>; // ✅ IMPORTANT FIX
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold">
+        {group.groupName}
+      </h1>
+
+      <GroupUsersTable group={group} />
+    </div>
+  );
+}
