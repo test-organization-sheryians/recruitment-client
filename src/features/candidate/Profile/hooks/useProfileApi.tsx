@@ -72,7 +72,8 @@ export const useUpdateAvailability = () => {
 export const useUpdateMe = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: api.updateMe,
+    mutationKey: ["updateMe"],
+    mutationFn: (data: api.UpdateMeInput) => api.updateMe(data),
     onSuccess: () => {
       // Invalidate both candidate profile and auth user to sync updates
       queryClient.invalidateQueries({ queryKey: ["candidateProfile"] });
