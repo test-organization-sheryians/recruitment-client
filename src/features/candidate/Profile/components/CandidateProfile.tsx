@@ -73,7 +73,7 @@ export default function CandidateProfile() {
             profile={profile}
             isOpen={isEditOpen}
             onClose={toggleEdit}
-            onUpdated={refetch}
+            onUpdated={async () => { await refetch(); }}
           />
         </div>
 
@@ -138,3 +138,4 @@ export default function CandidateProfile() {
     </div>
   );
 }
+
