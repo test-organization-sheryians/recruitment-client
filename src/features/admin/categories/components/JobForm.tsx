@@ -425,10 +425,11 @@ if (formData.salary.min > formData.salary.max) {
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                       <Clock className="w-4 h-4 text-blue-600" />
-                      Experience Required *
+                    Minimum Experience Required *
                     </label>
                     <input
-                      placeholder="e.g. 3-5 Years"
+                      type="number"
+                      placeholder="e.g. 2"
                       name="requiredExperience"
                       value={formData.requiredExperience}
                       onChange={handleChange}
