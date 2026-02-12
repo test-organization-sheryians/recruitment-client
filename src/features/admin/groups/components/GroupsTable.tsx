@@ -280,17 +280,32 @@ export default function GroupsTable() {
                         disabled={!selectedUserId}
                         onClick={() => addUserToGroup({ groupId: group._id, userId: selectedUserId }, { 
                             onSuccess: () => {
+                                success("Member added successfully!");
                                 fetchGroupMembers(group._id);
                                 queryClient.invalidateQueries({ queryKey: ["groups"] });
                                 setOpenGroupId(null);
                                 setUserSearchQuery("");
-                            } 
+                                setSelectedUserId("");
+                            },
+                            onError: (err) => {
+                              console.error("Add member error:", err);
+                              error("Failed to add member");
+                            }
                         })}
-                        className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-xs font-bold disabled:opacity-50"
+                        className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-xs font-bold disabled:opacity-50 hover:bg-blue-700 transition"
                       >
                         Add Member
                       </button>
-                      <button onClick={() => setOpenGroupId(null)} className="px-3 py-2 text-xs text-slate-500">Cancel</button>
+                      <button 
+                        onClick={() => {
+                          setOpenGroupId(null);
+                          setUserSearchQuery("");
+                          setSelectedUserId("");
+                        }} 
+                        className="px-3 py-2 text-xs text-slate-500 hover:bg-slate-100 rounded transition"
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 )}
