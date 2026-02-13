@@ -1186,10 +1186,7 @@ export default function UsersTable() {
             {/* Action buttons */}
             <div className="flex items-center gap-8">
               {/* SHARE BUTTON */}
-              <button onClick={handleViewSelected} className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition" title="Share selected candidates">
-                <Upload className="h-4 w-4" />
-                <span className="text-xs font-semibold uppercase tracking-wide">Share</span>
-              </button>
+              
 
               {/* CREATE GROUP BUTTON (Right Side of Share) */}
               <button 

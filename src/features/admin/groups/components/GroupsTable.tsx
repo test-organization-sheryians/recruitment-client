@@ -9,6 +9,7 @@ import {
   UserMinus,
   Pencil,
   UserPlus,
+  Share, // <-- added share icon
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -23,7 +24,7 @@ import { useDebounce } from "../../users/hooks/useDebounce";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/Toast";
 import api from "@/config/axios";
-
+import { useRouter } from "next/navigation";
 import {
   Group,
   GroupUser,
@@ -35,6 +36,7 @@ export default function GroupsTable() {
   const { data: groups } = useGroups();
   const queryClient = useQueryClient();
   const { success, error } = useToast();
+  const router = useRouter();
 
   /* ================= STATE ================= */
   const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null);
@@ -67,36 +69,40 @@ export default function GroupsTable() {
 
   /* ================= FETCH MEMBERS ================= */
   const fetchGroupMembers = async (groupId: string) => {
-  if (!groupId) return;
+    if (!groupId) return;
 
-  setFetchingId(groupId);
+    setFetchingId(groupId);
 
-  try {
-    const res = await api.get<BackendResponse<Group>>(
-      `/api/share/group/${groupId}`
-    );
+    try {
+      const res = await api.get<BackendResponse<Group>>(
+        `/api/share/group/${groupId}`
+      );
 
-    if (!res.data.success) throw new Error(res.data.message);
+      if (!res.data.success) throw new Error(res.data.message);
 
-    const members = res.data.data.selectedUsers || [];
+      const members = res.data.data.selectedUsers || [];
 
-    setMembersCache((prev) => ({
-      ...prev,
-      [groupId]: members,
-    }));
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      console.error("Fetch member error:", err.message);
-    } else if (typeof err === "object" && err !== null && "response" in err) {
-      // @ts-expect-error: err may have a response property
-      console.error("Fetch member error:", err.response?.data);
-    } else {
-      console.error("Fetch member error:", err);
+      setMembersCache((prev) => ({
+        ...prev,
+        [groupId]: members,
+      }));
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Fetch member error:", err.message);
+      } else if (typeof err === "object" && err !== null && "response" in err) {
+        // @ts-expect-error
+        console.error("Fetch member error:", err.response?.data);
+      } else {
+        console.error("Fetch member error:", err);
+      }
+      error("Failed to load members");
+    } finally {
+      setFetchingId(null);
     }
-    error("Failed to load members");
-  } finally {
-    setFetchingId(null);
-  }
+  };
+  
+  const handleShareGroup = (group: any) => {
+  router.push(`/selected-candidates?shareId=${group._id}`);
 };
 
   /* ================= TOGGLE ================= */
@@ -152,6 +158,9 @@ export default function GroupsTable() {
             </div>
 
             <div className="flex gap-3 items-center">
+             <button onClick={(e) => { e.stopPropagation(); handleShareGroup(group); }} className="p-2 text-slate-400 hover:text-blue-600 transition-colors" title="Share Group" > <Share size={18} /> </button>
+
+              {/* EDIT BUTTON */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -165,6 +174,10 @@ export default function GroupsTable() {
                 <Pencil size={16} />
               </button>
 
+             
+           
+
+              {/* DELETE BUTTON */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
