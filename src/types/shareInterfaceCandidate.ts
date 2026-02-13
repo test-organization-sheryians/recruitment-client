@@ -1,3 +1,5 @@
+// ================= SHARE CANDIDATE =================
+
 export interface ShareCandidatePayload {
   candidateId: string;
 }
@@ -28,7 +30,7 @@ export interface User {
 export interface ShareCandidate {
   _id: string;
   userId: string;
-  availability: 'looking' | 'not_looking';
+  availability: "looking" | "not_looking";
   resumeFile?: string;
   createdAt: string;
   updatedAt: string;
@@ -57,11 +59,20 @@ export interface GroupUser {
   email: string;
 }
 
+/**
+ * Single unified Group interface
+ * Works for:
+ * - get all groups (with memberCount)
+ * - get single group (with selectedUsers)
+ */
 export interface Group {
   _id: string;
   groupName: string;
-  selectedUsers: GroupUser[];
+  memberCount: number;   // 👈 backend se aa raha hai
+  createdAt?: string;
+  updatedAt?: string;
 }
+
 
 export interface UpdateGroupPayload {
   groupId: string;

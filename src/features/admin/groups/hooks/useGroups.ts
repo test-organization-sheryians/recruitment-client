@@ -11,15 +11,20 @@ import {
   UpdateGroupPayload,
   RemoveUserPayload,
   Group,
+  BackendResponse,
 } from "@/types/shareInterfaceCandidate";
 
 /* =====================================================
    GET ALL GROUPS
 ===================================================== */
 export const useGroups = () => {
-  return useQuery<Group[]>({
+  return useQuery<Group[], Error>({
     queryKey: ["groups"],
-    queryFn: getAllGroups,
+    queryFn: async () => {
+      const data = await getAllGroups();
+      return data;
+    },
+    staleTime: 1000 * 60 * 5, // 5 min cache
   });
 };
 
@@ -29,8 +34,10 @@ export const useGroups = () => {
 export const useDeleteGroup = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, string>({
-    mutationFn: (groupId: string) => deleteGroup(groupId),
+  return useMutation<BackendResponse<any>, Error, string>({
+    mutationFn: async (groupId: string) => {
+      return await deleteGroup(groupId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
     },
@@ -43,8 +50,10 @@ export const useDeleteGroup = () => {
 export const useUpdateGroup = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, UpdateGroupPayload>({
-    mutationFn: ({ groupId, newName }) => updateGroupName(groupId, newName),
+  return useMutation<BackendResponse<any>, Error, UpdateGroupPayload>({
+    mutationFn: async ({ groupId, newName }) => {
+      return await updateGroupName(groupId, newName);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
     },
@@ -57,8 +66,10 @@ export const useUpdateGroup = () => {
 export const useRemoveUserFromGroup = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, RemoveUserPayload>({
-    mutationFn: ({ groupId, userId }) => removeUserFromGroup(groupId, userId),
+  return useMutation<BackendResponse<any>, Error, RemoveUserPayload>({
+    mutationFn: async ({ groupId, userId }) => {
+      return await removeUserFromGroup(groupId, userId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
     },
@@ -76,8 +87,10 @@ export interface AddUserPayload {
 export const useAddUserToGroup = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, AddUserPayload>({
-    mutationFn: ({ groupId, userId }) => addUserToGroup(groupId, userId),
+  return useMutation<BackendResponse<any>, Error, AddUserPayload>({
+    mutationFn: async ({ groupId, userId }) => {
+      return await addUserToGroup(groupId, userId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
     },
