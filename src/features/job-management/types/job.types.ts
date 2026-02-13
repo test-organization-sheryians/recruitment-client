@@ -17,7 +17,7 @@ export type LocationForm = {
 
 export type CreateJobFormValues = {
   title: string;
-  requiredExperience: string;
+  requiredExperience: number;
   category: string;
   education: string;
   description: string;
@@ -28,7 +28,7 @@ export type CreateJobFormValues = {
 
 export type CreateJobRequest = {
   title: string;
-  requiredExperience: string;
+  requiredExperience: number;
   category: string;
   education: string;
   description: string;
@@ -43,7 +43,7 @@ export type JobFormData = {
   title: string;
   description: string;
   education: string;
-  requiredExperience: string;
+  requiredExperience: number;
   category: string;
   skills: string[];
   expiry: string;

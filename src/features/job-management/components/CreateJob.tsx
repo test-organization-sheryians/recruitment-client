@@ -32,7 +32,7 @@ type LocationForm = {
 
 type CreateJobFormValues = {
   title: string;
-  requiredExperience: string;
+  requiredExperience: number;
   category: string;
   education: string;
   jobType: string;
@@ -42,6 +42,7 @@ type CreateJobFormValues = {
   salary: {
     min: number;
     max: number;
+    currency?: string;
   };
   location: LocationForm;
   clientId: string; // ✅ ADD
@@ -67,7 +68,7 @@ const today = new Date().toISOString().split("T")[0];
 
 /* ================= COMPONENT ================= */
 
-export default function CreateJob() {
+export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
   const router = useRouter();
 
   const [skillQuery, setSkillQuery] = React.useState("");
@@ -84,7 +85,7 @@ export default function CreateJob() {
 
   const [form, setForm] = React.useState<CreateJobFormValues>({
     title: "",
-    requiredExperience: "",
+    requiredExperience: 0,
     category: "",
     education: "",
     jobType: "Full-Time",
@@ -94,6 +95,7 @@ export default function CreateJob() {
     salary: {
       min: 0,
       max: 0,
+      currency: "INR",
     },
     location: {
       city: "",
@@ -137,8 +139,7 @@ export default function CreateJob() {
 
     onError: (error: any) => {
       toast.dismiss(); // ✅ remove loading if any
-      const message =
-        error?.response?.data?.message || "Failed to create job";
+      const message = error?.response?.data?.message || "Failed to create job";
       toast.error(message);
     },
   });
@@ -189,6 +190,7 @@ export default function CreateJob() {
       salary: {
         min: form.salary.min,
         max: form.salary.max,
+        currency: form.salary.currency || "INR",
       },
 
       location: {
@@ -207,7 +209,15 @@ export default function CreateJob() {
       <main className="flex flex-col items-center py-12 px-4 sm:px-10">
         <div className="max-w-200 w-full flex flex-col gap-10">
           <div>
-            <button className="text-sm text-gray-500 mb-2">← Back to Jobs</button>
+            <button
+              className="text-sm text-gray-500 mb-2"
+              onClick={() => {
+                if (onClose) onClose();
+                else router.back();
+              }}
+            >
+              ← Back to Jobs
+            </button>
             <h1 className="text-3xl font-black">Create New Job</h1>
             <p className="text-gray-500">
               Fill in the details below to post a new job opening.
@@ -244,12 +254,11 @@ export default function CreateJob() {
                 />
 
                 <Input
-                  label="Experience Level"
-                  placeholder="e.g. 1–3 years"
-                  value={form.requiredExperience}
-                  onChange={(v) =>
-                    setForm({ ...form, requiredExperience: v })
-                  }
+                  label="Experience Level (minimum required)"
+                  type="number"
+                  placeholder="e.g. 2"
+                  value={form.requiredExperience.toString()}
+                  onChange={(v) => setForm({ ...form, requiredExperience: Number(v) })}
                 />
               </TwoCol>
 
@@ -392,7 +401,7 @@ export default function CreateJob() {
                           s.name
                             .toLowerCase()
                             .includes(skillQuery.toLowerCase()) &&
-                          !form.skills.some((x) => x._id === s._id)
+                          !form.skills.some((x) => x._id === s._id),
                       )
                       .slice(0, 8)
                       .map((s) => (
@@ -431,7 +440,7 @@ export default function CreateJob() {
           </section>
 
           <div className="flex items-center justify-between mt-10">
-            <button
+            {/* <button
               type="button"
               className="text-sm font-semibold text-gray-500 hover:text-gray-700 transition"
               onClick={() => {
@@ -439,7 +448,7 @@ export default function CreateJob() {
               }}
             >
               Save Draft
-            </button>
+            </button> */}
 
             <div className="flex items-center gap-4">
               <button
@@ -507,25 +516,94 @@ function Select({
   options: Category[];
   onChange: (v: string) => void;
 }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (!ref.current) return;
+      if (!ref.current.contains(e.target as Node)) setOpen(false);
+    }
+
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const selected = options.find((o) => o._id === value);
+
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5" ref={ref}>
       <label className="text-sm font-bold">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="px-4 py-3 rounded-lg border bg-gray-50 dark:bg-gray-800"
-      >
-        <option value="">Select</option>
-        {options.map((c) => (
-          <option key={c._id} value={c._id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
+
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen((s) => !s)}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          className="w-full flex items-center justify-between px-4 py-3 rounded-lg border bg-white dark:bg-gray-800 text-left shadow-sm hover:shadow-md transition"
+        >
+          <span className={`${selected ? "" : "text-gray-400"}`}>
+            {selected ? selected.name : "Select"}
+          </span>
+
+          <svg
+            className={`w-4 h-4 ml-2 transform transition ${open ? "rotate-180" : "rotate-0"}`}
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M6 8l4 4 4-4"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+
+        {open && (
+          <ul
+            role="listbox"
+            tabIndex={-1}
+            className="absolute z-40 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg border shadow-lg max-h-48 overflow-auto"
+          >
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  onChange("");
+                  setOpen(false);
+                }}
+                className={`w-full text-left px-4 py-2 text-sm ${!value ? "font-semibold" : "text-gray-600 dark:text-gray-200"}`}
+              >
+                Select
+              </button>
+            </li>
+            {options.map((c) => (
+              <li key={c._id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange(c._id);
+                    setOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition ${value === c._id ? "bg-[#2b4bee] text-white" : "text-gray-700 dark:text-gray-200"}`}
+                >
+                  {c.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
 
 function TwoCol({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>;
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>
+  );
 }

@@ -275,7 +275,7 @@ export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
               <div className="h-px bg-gray-200 dark:bg-[#2b2f45] my-3" />
 
               {/* KNOCKOUT */}
-              <div className="flex items-center justify-between py-2">
+              {/* <div className="flex items-center justify-between py-2">
                 <div>
                   <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                     Knockout Question
@@ -290,7 +290,7 @@ export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
                   onChange={() => setIsKnockout(!isKnockout)}
                   className="h-5 w-5 accent-primary"
                 />
-              </div>
+              </div> */}
             </div>
           </div>
 

@@ -23,7 +23,7 @@ export interface Job {
   _id: string
   title: string
 
-  requiredExperience?: string
+  requiredExperience?: number
   education?: string
   description?: string
   expiry?: string
@@ -49,7 +49,7 @@ export interface Job {
 
 export interface CreateJobFormValues {
   title: string
-  requiredExperience: string
+  requiredExperience: number
   category: string
   education: string
   description: string
@@ -60,7 +60,7 @@ export interface CreateJobFormValues {
 
 export interface CreateJobRequest {
   title: string
-  requiredExperience: string
+  requiredExperience: number
   category: string
   education: string
   description: string

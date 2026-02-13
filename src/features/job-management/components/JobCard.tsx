@@ -168,6 +168,23 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete, onSha
                 }}
               />
             </div>
+
+            <div>
+              <h4 className="flex items-center gap-1 text-sm font-bold text-gray-900">
+                <span className="text-base">💰</span>
+                Salary
+              </h4>
+
+              {job.salary && typeof job.salary === 'object' ? (
+                <div className="flex flex-wrap gap-2 mt-2 items-center">
+                  <span className="px-3 py-1.5 rounded-full bg-white border text-xs font-semibold">
+                    {(job.salary as any)?.min?.toLocaleString() || "0"} - {(job.salary as any)?.max?.toLocaleString() || "0"} {(job.salary as any)?.currency || "INR"}
+                  </span>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500 mt-2">Not specified</p>
+              )}
+            </div>
           </div>
 
           {/* RIGHT */}

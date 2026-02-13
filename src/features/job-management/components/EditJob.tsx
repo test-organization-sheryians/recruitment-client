@@ -27,7 +27,7 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
     title: "",
     description: "",
     education: "",
-    requiredExperience: "",
+    requiredExperience: 0,
     category: "",
     skills: [],
     expiry: "",
@@ -79,7 +79,7 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
         title: job.title || "",
         description: job.description || "",
         education: job.education || "",
-        requiredExperience: job.requiredExperience || "",
+        requiredExperience: job.requiredExperience || 0,
         category: typeof job.category === "string" ? job.category : job.category?._id || "",
         skills: ((job.skills as Array<Skill | string>) || []).map((s: Skill | string) => (typeof s === "string" ? s : s._id || "")),
         expiry: job.expiry || "",
@@ -116,10 +116,18 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
           },
         }))
       } else {
-        setFormData((prev: JobFormData) => ({
-          ...prev,
-          [name]: value,
-        }))
+        // convert numeric fields to numbers where appropriate
+        if (name === "requiredExperience") {
+          setFormData((prev: JobFormData) => ({
+            ...prev,
+            requiredExperience: value ? Number(value) : 0,
+          }))
+        } else {
+          setFormData((prev: JobFormData) => ({
+            ...prev,
+            [name]: value,
+          }))
+        }
       }
     },
     []
@@ -136,7 +144,7 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
           title: formData.title,
           description: formData.description,
           education: formData.education,
-          requiredExperience: formData.requiredExperience,
+          requiredExperience: String(formData.requiredExperience),
           category: formData.category,
           skills: formData.skills,
           clientId: formData.clientId,
@@ -279,8 +287,8 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
                     >
                       <option value="Full-time">Full-time</option>
                       <option value="Part-time">Part-time</option>
-                      <option value="Contract">Contract</option>
-                      <option value="Internship">Internship</option>
+                      <option value="Hybrid">Hybrid</option>
+                      <option value="Remote">Remote</option>
                     </select>
                     <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#616889] dark:text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
                   </div>
@@ -292,22 +300,14 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
                 <label className="text-sm font-semibold text-[#111218] dark:text-gray-300">
                   Experience Level
                 </label>
-                <div className="flex gap-2">
-                  {["Senior", "Mid-Level", "Junior", "Fresher"].map((level) => (
-                    <button
-                      key={level}
-                      type="button"
-                      onClick={() => setFormData((prev: JobFormData) => ({ ...prev, requiredExperience: level }))}
-                      className={`flex-1 py-2 px-3 text-xs font-bold rounded border transition-all ${
-                        formData.requiredExperience === level
-                          ? "bg-[#2b4bee] text-white border-[#2b4bee]"
-                          : "border-[#dbdde6] text-[#616889] bg-white hover:bg-[#f7f8fb]"
-                      }`}
-                    >
-                      {level}
-                    </button>
-                  ))}
-                </div>
+                  <input
+                    type="Number"
+                    name="requiredExperience"
+                    value={formData.requiredExperience}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 2"
+                    className="w-full px-4 py-3 rounded-lg border border-[#dbdde6] dark:border-gray-700 bg-white dark:bg-gray-800/50 text-[#111218] dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                  />
               </div>
 
               {/* Education */}
@@ -426,7 +426,7 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
                     </label>
                     <input
                       type="number"
-                      value={formData.salary?.min ? formData.salary.min : ""}
+                      value={formData.salary?.min ?? ""}
                       onChange={(e) => setFormData((prev: JobFormData) => ({
                         ...prev,
                         salary: {
@@ -446,7 +446,7 @@ export default function EditJob({ jobId, onClose, onJobUpdated }: EditJobProps) 
                     </label>
                     <input
                       type="number"
-                      value={formData.salary?.max ? formData.salary.max : ""}
+                      value={formData.salary?.max ?? ""}
                       onChange={(e) => setFormData((prev: JobFormData) => ({
                         ...prev,
                         salary: {

@@ -49,7 +49,7 @@ export default function CreateJobButton({ onJobCreated }: Props) {
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto px-8 py-6">
-            <CreateJob />
+            <CreateJob onClose={() => setOpen(false)} />
           </div>
         </div>
       </SwipeableDrawer>
