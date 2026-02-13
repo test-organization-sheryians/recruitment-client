@@ -24,3 +24,23 @@ export const getShareCandidate = async (shareId: string): Promise<ShareCandidate
   );
   return response.data.data;
 };
+
+export const getCandidatesByIds = async (userIds: string[]): Promise<ShareCandidate[]> => {
+  try {
+    // Use the share endpoint to get candidate data without creating a public share
+    const response = await api.post('/api/share/', {
+      users: userIds,
+    });
+    
+    // Get the shareId from the response
+    const shareId = response.data.shareLink.split('/').pop();
+    
+    // Fetch the candidates from the share
+    const candidatesResponse = await api.get(`/api/share/${shareId}`);
+    console.log('View candidates data ==>', candidatesResponse.data.data);
+    return candidatesResponse.data.data;
+  } catch (error) {
+    console.error('Error fetching candidates by IDs:', error);
+    throw error;
+  }
+};

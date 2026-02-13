@@ -1,12 +1,12 @@
 'use client';
 
-import { useShareCandidates } from '@/features/admin/users/hooks/useShareuser';
+import { useViewCandidates } from '@/features/admin/users/hooks/useShareuser';
 import { FileText, Home, Loader2, Mail, User, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Experience, ShareCandidate } from '../../types/shareInterfaceCandidate';
 
-interface UIShareCandidate {
+interface UICandidate {
   _id: string;
   userId: string;
   name: string;
@@ -17,17 +17,46 @@ interface UIShareCandidate {
   experiences: Experience[];
   createdAt?: string;
 }
+
 function formatDate(date?: string) {
   return date ? new Date(date).toLocaleDateString() : 'Present';
 }
 
-export default function SelectedCandidatesPage() {
+export default function ViewCandidatesPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const shareId = params.get('shareId') ?? '';
-  const { data: backendCandidates = [], isLoading } = useShareCandidates(shareId);
+  const candidateIdsParam = params.get('ids') ?? '';
+  const [candidateIds, setCandidateIds] = useState<string[]>([]);
 
-  const uiCandidates: UIShareCandidate[] = backendCandidates.map((c: ShareCandidate) => ({
+  // Parse candidate IDs from URL parameter
+  useEffect(() => {
+    if (candidateIdsParam) {
+      const ids = candidateIdsParam.split(',').filter(id => id.trim());
+      console.log('Parsed candidate IDs from URL:', ids);
+      setCandidateIds(ids);
+    }
+  }, [candidateIdsParam]);
+
+  const { data: backendCandidates = [], isLoading, isError, error } = useViewCandidates(candidateIds);
+
+  useEffect(() => {
+    console.log('ViewCandidatesPage - Search params:', {
+      rawParam: candidateIdsParam,
+      parsedIds: candidateIds,
+    });
+  }, [candidateIdsParam, candidateIds]);
+
+  useEffect(() => {
+    console.log('ViewCandidatesPage - Query state:', {
+      isLoading,
+      isError,
+      error: error?.message || String(error),
+      dataLength: backendCandidates?.length,
+      data: backendCandidates,
+    });
+  }, [isLoading, isError, error, backendCandidates]);
+
+  const uiCandidates: UICandidate[] = backendCandidates.map((c: ShareCandidate) => ({
     _id: c._id,
     userId: c.userId,
     name: `${c.user.firstName} ${c.user.lastName}`,
@@ -56,10 +85,44 @@ export default function SelectedCandidatesPage() {
 
   const activeCandidate = uiCandidates.find(c => c._id === activeId) ?? null;
 
+  // If no candidate IDs provided in URL
+  if (candidateIds.length === 0 && !isLoading) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center bg-slate-100">
+        <User className="mb-4 h-12 w-12 text-slate-400" />
+        <p className="text-sm text-slate-500 mb-2">No candidates to view</p>
+        <p className="text-xs text-slate-400 mb-4">Please select candidates from the users table</p>
+        <button
+          onClick={() => router.push('/admin/users')}
+          className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-slate-50"
+        >
+          Go Back to Users
+        </button>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-600 mx-auto mb-2" />
+          <p className="text-slate-600">Loading candidates...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || error) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center bg-slate-100">
+        <p className="text-sm text-red-500 mb-4">Error loading candidates: {String(error)}</p>
+        <button
+          onClick={() => router.push('/admin/users')}
+          className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-slate-50"
+        >
+          Go Back
+        </button>
       </div>
     );
   }
@@ -68,12 +131,12 @@ export default function SelectedCandidatesPage() {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-slate-100">
         <User className="mb-4 h-12 w-12 text-slate-400" />
-        <p className="text-sm text-slate-500">No shared candidates found</p>
+        <p className="text-sm text-slate-500">No candidates found</p>
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/admin/users')}
           className="mt-4 rounded-lg border bg-white px-4 py-2 text-sm hover:bg-slate-50"
         >
-          Go Home
+          Go Back
         </button>
       </div>
     );
@@ -84,16 +147,16 @@ export default function SelectedCandidatesPage() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-slate-800">
-            Shared Candidates
+            View Candidates
             <span className="ml-2 text-sm font-normal text-slate-500">({uiCandidates.length})</span>
           </h1>
 
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/admin/users')}
             className="flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
           >
             <Home className="h-4 w-4" />
-            Home
+            Back to Users
           </button>
         </div>
 
@@ -144,10 +207,8 @@ export default function SelectedCandidatesPage() {
                       {activeCandidate.name}
                     </h2>
                     <p className="mt-2 text-sm text-slate-500">
-                      Shared at:{' '}
-                      {activeCandidate.createdAt
-                        ? new Date(activeCandidate.createdAt).toLocaleString()
-                        : 'N/A'}
+                      Viewed at:{' '}
+                      {new Date().toLocaleString()}
                     </p>
                   </div>
                 </div>

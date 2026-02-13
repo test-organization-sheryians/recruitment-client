@@ -299,6 +299,16 @@ export default function UsersTable() {
     }
   };
 
+  /* ---------------- VIEW CANDIDATES (Internal) ---------------- */
+  const handleViewList = () => {
+    if (selectedUserIds.length === 0) {
+      error("Please select at least one user");
+      return;
+    }
+    const candidateIds = selectedUserIds.join(",");
+    router.push(`/view-candidates?ids=${candidateIds}`);
+  };
+
   /* ---------------- STATES ---------------- */
   if (isLoading) return <p className="py-10 text-center">Loading users…</p>;
   if (isError)
@@ -538,6 +548,17 @@ export default function UsersTable() {
 
             {/* Action buttons */}
             <div className="flex items-center gap-8">
+              <button
+                onClick={handleViewList}
+                className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
+                title="View selected candidates"
+              >
+                <FiEye className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide">
+                  View
+                </span>
+              </button>
+
               <button
                 onClick={handleViewSelected}
                 className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"

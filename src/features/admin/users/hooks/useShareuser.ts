@@ -1,4 +1,4 @@
-import { createShareCandidate, getShareCandidate } from '@/api/candidateShare/shareCandidate';
+import { createShareCandidate, getShareCandidate, getCandidatesByIds } from '@/api/candidateShare/shareCandidate';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ShareCandidate, ShareCandidatePayload } from '../../../../types/shareInterfaceCandidate';
 
@@ -20,5 +20,15 @@ export const useShareCandidates = (shareId: string) => {
     queryKey: ['share-candidates', shareId],
     queryFn: () => getShareCandidate(shareId),
     enabled: !!shareId,
+  });
+};
+
+export const useViewCandidates = (userIds: string[]) => {
+  return useQuery<ShareCandidate[]>({
+    queryKey: ['view-candidates', userIds],
+    queryFn: () => getCandidatesByIds(userIds),
+    enabled: userIds.length > 0,
+    retry: 3,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
