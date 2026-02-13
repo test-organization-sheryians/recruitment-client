@@ -2,7 +2,6 @@ export interface ShareCandidatePayload {
   candidateId: string;
 }
 
-
 export interface Skill {
   _id?: string;
   name?: string;
@@ -33,7 +32,6 @@ export interface ShareCandidate {
   resumeFile?: string;
   createdAt: string;
   updatedAt: string;
-
   user: User;
   skills: Skill[];
   experiences: Experience[];
@@ -44,27 +42,33 @@ export interface BackendResponse<T> {
   message?: string;
   data: T;
 }
+
 export interface CreateShareCandidateResponse {
   message: string;
   shareLink: string;
 }
 
-//group
+// ================= GROUP =================
 
-export interface Group {
-_id: string;
-groupName: string;
-  users: string[]; // userIds
-  
+export interface GroupUser {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
 }
 
+export interface Group {
+  _id: string;
+  groupName: string;
+  selectedUsers: GroupUser[];
+}
 
 export interface UpdateGroupPayload {
   groupId: string;
   newName: string;
 }
 
- export interface RemoveUserPayload {
+export interface RemoveUserPayload {
   groupId: string;
   userId: string;
 }

@@ -3,14 +3,12 @@
 import {
   ChevronDown,
   ChevronUp,
-  UserPlus,
   Users,
   Trash2,
   Loader2,
-  Plus,
   UserMinus,
   Pencil,
-  PencilLine,
+  UserPlus,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -22,80 +20,86 @@ import {
 } from "../hooks/useGroups";
 import { useInfiniteUsers } from "../../users/hooks/useUser";
 import { useDebounce } from "../../users/hooks/useDebounce";
-
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/Toast";
 import api from "@/config/axios";
 
+import {
+  Group,
+  GroupUser,
+  UpdateGroupPayload,
+  BackendResponse,
+} from "@/types/shareInterfaceCandidate";
+
 export default function GroupsTable() {
   const { data: groups } = useGroups();
-  
-  const [userSearchQuery, setUserSearchQuery] = useState("");
-  const debouncedUserSearch = useDebounce(userSearchQuery, 400);
-  const normalizedSearch = debouncedUserSearch.trim().replace(/\s+/g, " ");
-  
-  const { data: usersData } = useInfiniteUsers(normalizedSearch);
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
 
+  /* ================= STATE ================= */
   const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null);
-  const [membersCache, setMembersCache] = useState<{ [key: string]: any[] }>({});
+  const [membersCache, setMembersCache] = useState<Record<string, GroupUser[]>>(
+    {}
+  );
   const [fetchingId, setFetchingId] = useState<string | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingGroup, setEditingGroup] = useState<{ id: string; name: string } | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
 
   const [openGroupId, setOpenGroupId] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [userSearchQuery, setUserSearchQuery] = useState<string>("");
 
-  const { success, error } = useToast();
-  const queryClient = useQueryClient();
+  const debouncedSearch = useDebounce(userSearchQuery, 400);
+  const { data: usersData } = useInfiniteUsers(debouncedSearch);
 
-  const { mutate: addUserToGroup } = useAddUserToGroup();
+  const users: GroupUser[] =
+    usersData?.pages.flatMap((page: { data: GroupUser[] }) => page.data) ?? [];
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+  const [editingGroup, setEditingGroup] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  /* ================= MUTATIONS ================= */
   const { mutate: deleteGroup } = useDeleteGroup();
-  const { mutate: removeUser } = useRemoveUserFromGroup();
   const { mutate: updateGroup } = useUpdateGroup();
+  const { mutate: addUserToGroup } = useAddUserToGroup();
+  const { mutate: removeUser } = useRemoveUserFromGroup();
 
+  /* ================= FETCH MEMBERS ================= */
   const fetchGroupMembers = async (groupId: string) => {
-    setFetchingId(groupId);
-    try {
-      const res = await api.get(`/api/share/${groupId}`);
-      setMembersCache((prev) => ({
-        ...prev,
-        [groupId]: res.data.data || [],
-      }));
-    } catch {
-      error("Could not load members");
-    } finally {
-      setFetchingId(null);
-    }
-  };
+  if (!groupId) return;
 
-  const handleOpenEditModal = (e: React.MouseEvent, groupId: string, currentName: string) => {
-    e.stopPropagation(); // Card expand/collapse hone se rokne ke liye
-    setEditingGroup({ id: groupId, name: currentName });
-    setIsEditModalOpen(true);
-  };
+  setFetchingId(groupId);
 
-  const handleUpdateNameSubmit = () => {
-    if (!editingGroup || !editingGroup.name.trim()) return;
-
-    setIsUpdating(true);
-    updateGroup(
-      {
-        groupId: editingGroup.id,
-        newName: editingGroup.name.trim(),
-      },
-      {
-        onSuccess: () => {
-          success("Group name updated successfully!");
-          setIsEditModalOpen(false);
-          queryClient.invalidateQueries({ queryKey: ["groups"] });
-        },
-        onError: () => error("Failed to update group name"),
-        onSettled: () => setIsUpdating(false),
-      }
+  try {
+    const res = await api.get<BackendResponse<Group>>(
+      `/api/share/group/${groupId}`
     );
-  };
 
+    if (!res.data.success) throw new Error(res.data.message);
+
+    const members = res.data.data.selectedUsers || [];
+
+    setMembersCache((prev) => ({
+      ...prev,
+      [groupId]: members,
+    }));
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error("Fetch member error:", err.message);
+    } else if (typeof err === "object" && err !== null && "response" in err) {
+      // @ts-expect-error: err may have a response property
+      console.error("Fetch member error:", err.response?.data);
+    } else {
+      console.error("Fetch member error:", err);
+    }
+    error("Failed to load members");
+  } finally {
+    setFetchingId(null);
+  }
+};
+
+  /* ================= TOGGLE ================= */
   const toggleGroup = (id: string) => {
     if (expandedGroupId === id) {
       setExpandedGroupId(null);
@@ -105,249 +109,226 @@ export default function GroupsTable() {
     }
   };
 
-  const users = usersData?.pages.flatMap((page) => page.data) || [];
+  /* ================= RENAME ================= */
+  const handleRename = () => {
+    if (!editingGroup?.name.trim()) return;
 
+    const payload: UpdateGroupPayload = {
+      groupId: editingGroup.id,
+      newName: editingGroup.name.trim(),
+    };
+
+    updateGroup(payload, {
+      onSuccess: () => {
+        success("Group renamed successfully");
+        setIsEditModalOpen(false);
+        queryClient.invalidateQueries({ queryKey: ["groups"] });
+      },
+      onError: () => error("Rename failed"),
+    });
+  };
+
+  /* ================= RENDER ================= */
   return (
     <div className="space-y-4 p-6 bg-slate-50 min-h-screen">
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-bold text-slate-800">Manage Groups</h1>
-      </div>
-
-      {/* GROUP LIST */}
-      {groups?.map((group: any) => (
-        <div key={group._id} className="bg-white border rounded-xl overflow-hidden shadow-sm mb-3">
+      {groups?.map((group: Group) => (
+        <div key={group._id} className="bg-white border rounded-xl shadow-sm">
+          {/* HEADER */}
           <div
-            className={`p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 ${
-              expandedGroupId === group._id ? "bg-slate-50/50" : ""
-            }`}
             onClick={() => toggleGroup(group._id)}
+            className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50"
           >
-            <div className="flex items-center gap-4 flex-1">
-              <div className="bg-blue-100 p-2.5 rounded-lg">
-                <Users className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-slate-800">{group.groupName}</h3>
-                <p className="text-xs text-slate-500">
-                  {membersCache[group._id]?.length || group.members?.length || 0} Members
+            <div className="flex items-center gap-3">
+              <Users className="text-blue-600" />
+              <div>
+                <h3 className="font-semibold">{group.groupName}</h3>
+                <p className="text-xs text-slate-400">
+                  {membersCache[group._id]?.length ??
+                    group.selectedUsers?.length ??
+                    0}{" "}
+                  Members
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex gap-3 items-center">
               <button
-                onClick={(e) => handleOpenEditModal(e, group._id, group.groupName)}
-                className="p-2 text-slate-400 hover:text-amber-600 transition-colors"
-                title="Edit Group Name"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingGroup({
+                    id: group._id,
+                    name: group.groupName,
+                  });
+                  setIsEditModalOpen(true);
+                }}
               >
-                <Pencil size={18} />
+                <Pencil size={16} />
               </button>
 
-              {/* <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm("Are you sure you want to delete this group?")) {
-                    deleteGroup(group._id, {
-                      onSuccess: () => success("Group deleted successfully"),
-                      onError: () => error("Failed to delete group"),
-                    });
-                  }
-                }}
-                className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                title="Delete Group"
-              >
-                <Trash2 size={18} />
-              </button> */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  
                   deleteGroup(group._id, {
-                    onSuccess: () => {
-                      success("Group deleted successfully");
-                      queryClient.invalidateQueries({ queryKey: ["groups"] });
-                    },
+                    onSuccess: () => success("Group deleted successfully"),
                     onError: () => error("Failed to delete group"),
                   });
                 }}
-                className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                title="Delete Group"
               >
-                <Trash2 size={18} />
+                <Trash2 size={16} />
               </button>
-              {expandedGroupId === group._id ? <ChevronUp className="text-slate-400" /> : <ChevronDown className="text-slate-400" />}
+
+              {expandedGroupId === group._id ? <ChevronUp /> : <ChevronDown />}
             </div>
           </div>
 
-          {/* MEMBERS SECTION */}
+          {/* MEMBERS */}
           {expandedGroupId === group._id && (
-            <div className="border-t bg-white">
-              <div className="px-6 py-2 bg-slate-50/80 flex justify-between text-[10px] font-bold text-slate-400 uppercase">
-                <span>Member Name</span>
-                <span>Actions</span>
-              </div>
-
-              <div className="divide-y">
-                {fetchingId === group._id ? (
-                  <div className="py-8 flex justify-center">
-                    <Loader2 className="animate-spin text-blue-500" />
-                  </div>
-                ) : membersCache[group._id]?.length > 0 ? (
-                  membersCache[group._id].map((member: any) => {
-                    const name = member.firstName || member.lastName ? `${member.firstName} ${member.lastName}` : "Unknown User";
-                    return (
-                      <div key={member._id} className="px-6 py-4 flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-700">
-                            {name[0]}
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold">{name}</p>
-                            <p className="text-xs text-slate-400">{member.email || "No email"}</p>
-                          </div>
+            <div className="border-t">
+              {fetchingId === group._id ? (
+                <div className="py-6 flex justify-center">
+                  <Loader2 className="animate-spin text-blue-500" />
+                </div>
+              ) : (
+                <>
+                  {(membersCache[group._id] ?? group.selectedUsers ?? []).map(
+                    (user: GroupUser) => (
+                      <div
+                        key={user._id}
+                        className="flex items-center justify-between px-4 py-3 border-b"
+                      >
+                        <div>
+                          <p className="text-sm font-medium">
+                            {user.firstName} {user.lastName}
+                          </p>
+                          <p className="text-xs text-gray-500">{user.email}</p>
                         </div>
 
                         <button
-                          onClick={() =>
+                          onClick={() => {
                             removeUser(
-                              { groupId: group._id, userId: member._id },
+                              { groupId: group._id, userId: user._id },
                               {
-                                onSuccess: () => {
+                                onSuccess: async () => {
                                   success("User removed");
-                                  fetchGroupMembers(group._id);
-                                  queryClient.invalidateQueries({ queryKey: ["groups"] });
+                                  await fetchGroupMembers(group._id);
+                                  queryClient.invalidateQueries({
+                                    queryKey: ["groups"],
+                                  });
                                 },
                               }
-                            )
-                          }
-                          className="text-slate-300 hover:text-red-500 transition-colors"
+                            );
+                          }}
                         >
-                          <UserMinus size={18} />
+                          <UserMinus size={16} />
                         </button>
                       </div>
-                    );
-                  })
-                ) : (
-                  <div className="py-8 text-center text-xs text-slate-400 italic">This group is empty</div>
-                )}
-              </div>
-          
-              {/* ADD USER SECTION */}
-              <div className="p-4 border-t bg-slate-50/50 relative">
-                {!openGroupId ? (
-                  <button
-                    onClick={() => setOpenGroupId(group._id)}
-                    className="w-full py-2 border-2 border-dashed border-slate-200 rounded-lg text-slate-400 text-xs font-medium hover:border-blue-300 hover:text-blue-500 transition-all flex items-center justify-center gap-2"
-                  >
-                    <UserPlus size={14} /> Add New Member
-                  </button>
-                ) : (
-                  <div className="space-y-3 animate-in fade-in slide-in-from-top-1">
-                    <div className="relative">
-                      <input
-                        autoFocus
-                        type="text"
-                        placeholder="Search by name or email..."
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={userSearchQuery}
-                        onChange={(e) => {
-                            setUserSearchQuery(e.target.value);
-                            setSelectedUserId("");
-                        }}
-                      />
-                      {userSearchQuery && !selectedUserId && (
-                        <div className="absolute left-0 right-0 bottom-full mb-2 z-[50] bg-white border rounded-lg shadow-xl max-h-48 overflow-y-auto">
-                          {users
-                            .filter(u => (u.firstName + u.lastName + u.email).toLowerCase().includes(userSearchQuery.toLowerCase()))
-                            .map(u => (
-                              <div 
-                                key={u._id} 
-                                className="p-2 hover:bg-blue-50 cursor-pointer text-sm"
-                                onClick={() => {
-                                    setSelectedUserId(u._id);
-                                    setUserSearchQuery(`${u.firstName} ${u.lastName}`);
-                                }}
-                              >
-                                {u.firstName} {u.lastName} <span className="text-xs text-slate-400">({u.email})</span>
-                              </div>
-                            ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <button 
-                        disabled={!selectedUserId}
-                        onClick={() => addUserToGroup({ groupId: group._id, userId: selectedUserId }, { 
-                            onSuccess: () => {
-                                success("Member added successfully!");
-                                fetchGroupMembers(group._id);
-                                queryClient.invalidateQueries({ queryKey: ["groups"] });
-                                setOpenGroupId(null);
-                                setUserSearchQuery("");
-                                setSelectedUserId("");
-                            },
-                            onError: (err) => {
-                              console.error("Add member error:", err);
-                              error("Failed to add member");
+                    )
+                  )}
+
+                  {/* ADD MEMBER */}
+                  <div className="p-4 bg-slate-50">
+                    {!openGroupId ? (
+                      <button
+                        onClick={() => setOpenGroupId(group._id)}
+                        className="w-full border-dashed border py-2 rounded"
+                      >
+                        <UserPlus size={14} /> Add Member
+                      </button>
+                    ) : (
+                      <div className="space-y-3">
+                        <input
+                          value={userSearchQuery}
+                          onChange={(e) => setUserSearchQuery(e.target.value)}
+                          placeholder="Search user..."
+                          className="w-full border px-3 py-2 rounded"
+                        />
+
+                        {userSearchQuery &&
+                          users.map((u: GroupUser) => (
+                            <div
+                              key={u._id}
+                              onClick={() => {
+                                setSelectedUserId(u._id);
+                                setUserSearchQuery(
+                                  `${u.firstName} ${u.lastName}`
+                                );
+                              }}
+                              className="cursor-pointer text-sm hover:bg-blue-50 p-2"
+                            >
+                              {u.firstName} {u.lastName} ({u.email})
+                            </div>
+                          ))}
+
+                        <div className="flex gap-2">
+                          <button
+                            disabled={!selectedUserId}
+                            onClick={() =>
+                              addUserToGroup(
+                                { groupId: group._id, userId: selectedUserId },
+                                {
+                                  onSuccess: async () => {
+                                    success("Member added successfully");
+                                    await fetchGroupMembers(group._id);
+                                    queryClient.invalidateQueries({
+                                      queryKey: ["groups"],
+                                    });
+                                    setOpenGroupId(null);
+                                    setSelectedUserId("");
+                                    setUserSearchQuery("");
+                                  },
+                                  onError: () => error("Failed to add member"),
+                                }
+                              )
                             }
-                        })}
-                        className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-xs font-bold disabled:opacity-50 hover:bg-blue-700 transition"
-                      >
-                        Add Member
-                      </button>
-                      <button 
-                        onClick={() => {
-                          setOpenGroupId(null);
-                          setUserSearchQuery("");
-                          setSelectedUserId("");
-                        }} 
-                        className="px-3 py-2 text-xs text-slate-500 hover:bg-slate-100 rounded transition"
-                      >
-                        Cancel
-                      </button>
-                    </div>
+                            className="flex-1 bg-blue-600 text-white py-2 rounded disabled:opacity-50"
+                          >
+                            Add
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setOpenGroupId(null);
+                              setSelectedUserId("");
+                              setUserSearchQuery("");
+                            }}
+                            className="px-3 py-2 text-sm"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
             </div>
           )}
         </div>
       ))}
 
-      {/* EDIT MODAL - Keep outside the loop for correct Z-index */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="w-[380px] bg-white rounded-2xl p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-amber-100 p-2 rounded-lg text-amber-600">
-                <PencilLine size={20} />
-              </div>
-              <h2 className="text-xl font-bold text-slate-800">Rename Group</h2>
-            </div>
-
+      {/* RENAME MODAL */}
+      {isEditModalOpen && editingGroup && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl w-[350px]">
+            <h2 className="font-bold mb-4">Rename Group</h2>
             <input
-              autoFocus
-              className="w-full rounded-xl border-2 border-slate-100 px-4 py-3 focus:border-amber-500 outline-none transition-all"
-              placeholder="New group name"
-              value={editingGroup?.name || ""}
-              onChange={(e) => setEditingGroup((prev) => (prev ? { ...prev, name: e.target.value } : null))}
-              onKeyDown={(e) => e.key === "Enter" && handleUpdateNameSubmit()}
+              value={editingGroup.name}
+              onChange={(e) =>
+                setEditingGroup((prev) =>
+                  prev ? { ...prev, name: e.target.value } : null
+                )
+              }
+              className="w-full border px-3 py-2 rounded"
             />
 
-            <div className="flex justify-end gap-3 mt-8">
+            <div className="flex justify-end gap-3 mt-4">
+              <button onClick={() => setIsEditModalOpen(false)}>Cancel</button>
+
               <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="px-4 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50 rounded-xl transition-colors"
+                onClick={handleRename}
+                className="bg-amber-500 text-white px-4 py-2 rounded"
               >
-                Cancel
-              </button>
-              <button
-                onClick={handleUpdateNameSubmit}
-                disabled={isUpdating || !editingGroup?.name.trim()}
-                className="bg-amber-500 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-amber-600 disabled:opacity-50 flex items-center gap-2 transition-all shadow-md shadow-amber-100"
-              >
-                {isUpdating ? <Loader2 className="animate-spin h-4 w-4" /> : "Save Changes"}
+                Save
               </button>
             </div>
           </div>
