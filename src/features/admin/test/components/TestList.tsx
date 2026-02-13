@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Clock, GraduationCap, EllipsisVertical, Search } from "lucide-react";
 import Modal from "@/components/ui/Modal"; // Add this import
 import {useGetAllTests, usePublishTestResult} from "@/features/admin/test/hooks/useTest";
-
+import DeleteTestButton from "@/features/admin/test/components/DeleteTestButton";
 import EnrolledPopup from "@/features/admin/test/components/EnrolledPopUp";
 import TestDetails from "./TestDetails";
 import CreateTestModal from "./CreateTestForm";
-import { useDeleteTest } from "@/features/admin/test/hooks/useTest";
+// import { useDeleteTest } from "@/features/admin/test/hooks/useTest";
 
 
 
@@ -40,7 +40,7 @@ export default function TestList() {
 
   const { data, isLoading, isError } = useGetAllTests();
   const { mutate, isPending } = usePublishTestResult();
-  const { mutate: deleteTest, isPending: isDeleting } = useDeleteTest();
+  // const { mutate: deleteTest, isPending: isDeleting } = useDeleteTest();
 
 
 
@@ -207,7 +207,7 @@ const selectedTest = tests.find(test => test._id === disclosingTestId);
                   {isDeleting ? "Deleting..." : "Delete Test"}
                  </button> */}
 
-                 <button
+                 {/* <button
   className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50"
   disabled={isDeleting}
   onClick={() => {
@@ -217,10 +217,12 @@ const selectedTest = tests.find(test => test._id === disclosingTestId);
   }}
 >
   {isDeleting ? "Deleting..." : "Delete Test"}
-</button>
-
-
-
+</button> */}
+<DeleteTestButton
+  testId={test._id}
+  onOpen={() => setOpenMenu(null)}
+  onSuccess={() => setOpenMenu(null)}
+/>
 
                   </div>
                 )}

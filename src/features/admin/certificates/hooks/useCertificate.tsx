@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Certificate } from "../types/certificate"; 
+import { Certificate } from "@/types/Certificate"; // Ensure this path is correct based on your project structure
 
 export function useCertificate() {
   const [certificates, setCertificates] = useState<Certificate[]>([
@@ -25,6 +25,15 @@ export function useCertificate() {
     },
     {
       _id: "3",
+      name: "NDA Template",
+      type: "Other", // Enum value: Other
+      file: "https://example.com/nda.pdf",
+      createdAt: "2026-01-15T09:30:00Z",
+      issuedBy: "Legal Dept",
+      description: "Standard non-disclosure agreement for project kickoff."
+    },
+     {
+      _id: "4",
       name: "NDA Template",
       type: "Other", // Enum value: Other
       file: "https://example.com/nda.pdf",

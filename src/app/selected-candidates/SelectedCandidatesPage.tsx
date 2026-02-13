@@ -83,7 +83,7 @@ export default function SelectedCandidatesPage() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-slate-800">
-            Shared Candidates
+            Shared candidates
             <span className="ml-2 text-sm font-normal text-slate-500">({uiCandidates.length})</span>
           </h1>
 

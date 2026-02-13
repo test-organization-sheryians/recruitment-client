@@ -25,6 +25,7 @@ export const UploadResume = () => {
         setFile(file);
         setResult({});
     };
+    
 
     const handleExtract = async () => {
         if (!file) return;

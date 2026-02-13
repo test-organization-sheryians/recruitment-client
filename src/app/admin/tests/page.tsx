@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import TestList from "@/features/admin/test/components/TestList";
 import CreateTestModal from "@/features/admin/test/components/CreateTestForm";
+import DeleteTestButton from "@/features/admin/test/components/DeleteTestButton";
 import { Button } from "@/components/ui/button";
 
 export default function TestsPage() {
@@ -16,8 +17,6 @@ export default function TestsPage() {
 
       <TestList />
       
-
-
       <CreateTestModal open={open} onClose={() => setOpen(false)} />
     </div>
   );
