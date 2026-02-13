@@ -87,6 +87,11 @@ export default function GroupsTable() {
       setFetchingId(null);
     }
   };
+ //share group
+  const handleShareGroup = (group: any) => {
+  router.push(`/selected-candidates?shareId=${group._id}`);
+};
+
 
   /* ================= TOGGLE ================= */
 
@@ -131,16 +136,8 @@ export default function GroupsTable() {
               </div>
 
               <div className="flex gap-3 items-center">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    router.push(
-                      `/selected-candidates?shareId=${group._id}`
-                    );
-                  }}
-                >
-                  <Share size={18} />
-                </button>
+                {/* /* //share button */} 
+                <button onClick={(e) => { e.stopPropagation(); handleShareGroup(group); }} className="p-2 text-slate-800 hover:text-blue-600 transition-colors" title="Share Group" > <Share size={18} /> </button>
 
                 <button
                   onClick={(e) => {
