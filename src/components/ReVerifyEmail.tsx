@@ -2,6 +2,13 @@
 
 import { Mail, RefreshCw } from "lucide-react";
 import { useResendVerification } from "@/features/resendMail/useResendMailApi";
+import { useRefreshToken } from "@/features/auth/hooks/useAuthApi";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/features/auth/slice";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useToast } from "./ui/Toast";
+
 // import { AxiosError } from "axios";
 
 interface Props {
@@ -11,20 +18,70 @@ interface Props {
 
 export default function ReVerifyEmailPage({ email, isVerified }: Props) {
   const { mutateAsync, isPending } = useResendVerification();
-
+  const { mutate: refreshToken, data, error } = useRefreshToken();
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const toast = useToast();
   const handleResend = async () => {
     if (isVerified) {
       return;
     }
 
     try {
-      const res = await mutateAsync();
+      await mutateAsync();
     } catch (error) {
+      console.log(error);
     }
   };
 
   const handleRefresh = () => {
-    window.location.reload();
+    refreshToken(undefined, {
+      onSuccess: (res: {
+        data: {
+          token: string;
+          user: {
+            _id: string;
+            email?: string;
+            firstName: string;
+            lastName?: string;
+            role?: { name: string };
+            isVerified: boolean;
+          };
+        };
+      }) => {
+        // 1️⃣ Save new access token
+        Cookies.set("access", res.data.token);
+
+        // 2️⃣ Update redux user
+        dispatch(
+          setUser({
+            id: res.data.user._id,
+            email: res.data.user.email,
+            firstName: res.data.user.firstName,
+            lastName: res.data.user.lastName,
+            role: res.data.user?.role?.name || "user",
+            isVerified: res.data.user.isVerified,
+          }),
+        );
+        toast.success("Email Verified Successully");
+
+        // 3️⃣ Redirect if verified
+        if (res.data.user.isVerified) {
+          router.push("/");
+        }
+      },
+      onError: (err: {
+        response?: { data?: { message: string } };
+        message?: string;
+      }) => {
+        const msg =
+          err?.response?.data?.message ||
+          err?.message ||
+          "Failed to refresh session";
+
+        toast.error(msg);
+      },
+    });
   };
 
   return (
@@ -45,22 +102,37 @@ export default function ReVerifyEmailPage({ email, isVerified }: Props) {
           <div className="px-10 py-10 space-y-8">
             <div className="text-center">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg
+                  className="w-12 h-12 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-800">One step away!</h2>
+              <h2 className="text-2xl font-bold text-gray-800">
+                One step away!
+              </h2>
               <p className="mt-3 text-gray-600 max-w-md mx-auto">
-                Click the link in your email to verify your account and start applying to jobs.
+                Click the link in your email to verify your account and start
+                applying to jobs.
               </p>
             </div>
 
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm">
-              <p className="font-semibold text-amber-800 mb-2">Not in your inbox?</p>
+              <p className="font-semibold text-amber-800 mb-2">
+                Not in your inbox?
+              </p>
               <ul className="text-amber-700 space-y-1">
                 <li>• Check spam/junk folder</li>
-                <li>• Search for “Sheriyansh”</li>
-                <li>• Add <span className="font-medium">no-reply@sheriyansh.com</span> to contacts</li>
+                <li>• Search for “Sheryians”</li>
+                <li>• Add <span className="font-medium">no-reply@sheryians.com</span> to contacts</li>
               </ul>
             </div>
 
@@ -73,7 +145,11 @@ export default function ReVerifyEmailPage({ email, isVerified }: Props) {
                 }`}
               >
                 <RefreshCw className="w-5 h-5" />
-                {isVerified ? "Email Verified" : isPending ? "Sending..." : "Resend Email"}
+                {isVerified
+                  ? "Email Verified"
+                  : isPending
+                    ? "Sending..."
+                    : "Resend Email"}
               </button>
 
               <button
@@ -87,14 +163,14 @@ export default function ReVerifyEmailPage({ email, isVerified }: Props) {
             <p className="text-center text-sm text-gray-500">
               Need help?{" "}
               <a href="mailto:support@sheriyansh.com" className="text-indigo-600 font-medium hover:underline">
-                support@sheriyansh.com
+                support@sheryians.com
               </a>
             </p>
           </div>
         </div>
 
         <p className="text-center text-white/70 mt-8 text-sm">
-          © 2025 Sheriyansh Coding School
+          © 2025 Sheryians Coding School
         </p>
       </div>
     </div>
