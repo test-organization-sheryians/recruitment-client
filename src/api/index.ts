@@ -74,3 +74,9 @@ export * from "./password/resetPassword";
 
 export * from "./jobApplication/scheduleInterview";
 
+/* ================= PRODUCTS ================= */
+export * from "./products/createPrdouct";
+export * from "./products/getAllProducts";
+export * from "./products/getProduct";
+export * from "./products/updateProduct";
+export * from "./products/deleteProduct";
