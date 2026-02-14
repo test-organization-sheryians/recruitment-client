@@ -75,3 +75,11 @@ export * from "./password/resetPassword";
 
 export * from "./jobApplication/scheduleInterview";
 
+
+
+/* ================= CLIENTS ================= */
+export * from './client/registerClient'
+export * from './client/deleteClient'
+export * from './client/getAllClient'
+export * from './client/getClientDetails'
+export * from './client/updateClinet'
