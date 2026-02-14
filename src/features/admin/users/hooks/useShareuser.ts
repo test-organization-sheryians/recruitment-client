@@ -16,7 +16,7 @@ export const useCreateShareCandidate = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['share-candidates'],
+        queryKey: ['groups'],
       });
     },
   });

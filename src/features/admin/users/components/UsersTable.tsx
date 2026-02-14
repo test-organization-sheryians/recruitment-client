@@ -438,7 +438,7 @@ export default function UsersTable() {
               {/* CREATE GROUP BUTTON (Right Side of Share) */}
               <button 
                 onClick={() => setIsGroupModalOpen(true)} 
-                className="flex flex-col items-center gap-1 text-blue-600 hover:text-blue-700 transition"
+                className="flex flex-col items-center gap-1 text-slate-600 hover:text-blue-700 transition"
               >
                 <UserPlus className="h-4 w-4" />
                 <span className="text-xs font-semibold uppercase tracking-wide">Create Group</span>
