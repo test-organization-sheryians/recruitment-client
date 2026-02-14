@@ -65,7 +65,7 @@ export default function Certificate() {
       {/* 3. Grid Content */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {/* Create From Scratch Card */}
-        <div 
+        {/* <div 
           onClick={() => setIsDrawerOpen(true)}
           className="group border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center p-8 hover:border-blue-400 hover:bg-blue-50/50 transition-all cursor-pointer min-h-[300px]"
         >
@@ -73,7 +73,7 @@ export default function Certificate() {
             <Plus className="text-slate-400 group-hover:text-blue-600" size={24} />
           </div>
           <span className="text-sm font-bold text-slate-500 group-hover:text-blue-700">Create From Scratch</span>
-        </div>
+        </div> */}
 
         {/* Dynamic Mapping with Card UI */}
         {certificates.map((certificate) => (

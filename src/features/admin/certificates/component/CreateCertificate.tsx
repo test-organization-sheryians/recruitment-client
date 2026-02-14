@@ -19,7 +19,8 @@ export default function CreateCertificate({ isOpen, onClose }: CreateCertificate
   const [formData, setFormData] = useState({
     name: "",
     type: "Completion", // Default value from backend enum
-    file: ""
+    file: "",
+      url: ""  
   });
 
   // Dynamic Fields State (Aapke UI ke hisaab se)
@@ -93,6 +94,20 @@ export default function CreateCertificate({ isOpen, onClose }: CreateCertificate
                 <option value="Other">Other</option>
               </select>
             </div>
+
+            <div>
+  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
+    Template URL
+  </label>
+  <input 
+    type="url"
+    value={formData.url}
+    onChange={(e) => setFormData({...formData, url: e.target.value})}
+    placeholder="e.g., https://example.com/template"
+    className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+  />
+</div>
+
           </div>
 
           {/* Input Fields Builder Section */}
