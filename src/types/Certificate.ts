@@ -1,12 +1,34 @@
+// export interface Certificate {
+//   _id?: string;
+//   name: string;
+//   type: "Completion" | "Internship" | "Offer" | "Other";
+//   fileUrl: string;   
+//   createdAt?: string;
+//   updatedAt?: string;
+
+//   issuedBy?: string;
+//   description?: string;
+// }
+
+
+export type CertificateType =
+  | "Completion"
+  | "Internship"
+  | "Offer"
+  | "Other";
+
 export interface Certificate {
-  _id: string;            
-  name: string;           
-  type: "Completion" | "Internship" | "Offer" | "Other";
-  file: string;           
-  createdAt: string;     
-  updatedAt?: string;     
-  
-  // Optional Fields 
-  issuedBy?: string;      
-  description?: string;   
+  _id?: string;   // backend dega
+  name: string;
+  type: CertificateType;
+  fileUrl: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CertificateField {
+  title: string;
+  type: string;
+  placeholder: string;
+  certificateId?: string; // ye baad me add hoga
 }
