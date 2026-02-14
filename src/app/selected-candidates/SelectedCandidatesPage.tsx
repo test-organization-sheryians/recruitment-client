@@ -82,9 +82,10 @@ export default function SelectedCandidatesPage() {
               
             </h1>
             
-            <p>
+            <p className='text-slate-700 text-sm '>
+              <span className="mr-1 text-sm font-normal text-slate-800">{uiCandidates.length}</span>
               Members
-              <span className="ml-2 text-sm font-normal text-slate-800">{uiCandidates.length}</span>
+             
             </p>
 
           </div>

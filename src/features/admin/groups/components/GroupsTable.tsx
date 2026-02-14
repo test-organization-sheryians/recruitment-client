@@ -201,7 +201,7 @@ export default function GroupsTable() {
 
               <div className="flex gap-3 items-center">
                 {/* /* //share button */} 
-                <button onClick={(e) => { e.stopPropagation(); handleShareGroup(group); }} className="p-2 text-slate-800 hover:text-blue-800 transition-colors" title="Share Group" > <Share size={18} /> </button>
+                <button onClick={(e) => { e.stopPropagation(); handleShareGroup(group); }} className="p-2 text-slate-800 hover:text-blue-600 transition-colors" title="Share Group" > <Share size={18} /> </button>
 
                    {/* EDIT BUTTON */}
 
@@ -209,7 +209,7 @@ export default function GroupsTable() {
 
                onClick={(e) => handleOpenEditModal(e, group._id, group.groupName)}
 
-               className="p-2 text-slate-800 hover:text-indigo-600 transition-colors"
+               className="p-2 text-slate-800 hover:text-blue-600 transition-colors"
 
                title="Edit Group Name"
 
@@ -228,8 +228,8 @@ export default function GroupsTable() {
                       onError: () => error("Delete failed"),
                     });
                   }}
-                >
-                  <Trash2 size={16} />
+               className="p-2 text-slate-800 hover:text-red-600 transition-colors" >
+                   <Trash2 size={16} />
                 </button>
                     
                 
@@ -398,13 +398,13 @@ export default function GroupsTable() {
 
             <div className="flex items-center gap-3 mb-6">
 
-               <div className="bg-amber-100 p-2 rounded-lg text-indigo-600">
+               <div className="bg-amber-100 p-2 rounded-lg text-blue-600">
 
                 <Pencil size={20} />
 
                </div>
 
-              <h2 className="text-xl font-bold text-slate-800">Rename Group</h2>
+              <h2 className="text-xl font-bold text-slate-800">Update Group Name</h2>
 
            </div>
 
@@ -414,7 +414,7 @@ export default function GroupsTable() {
 
               autoFocus
 
-              className="w-full rounded-xl border-2 border-slate-100 px-4 py-3 focus:border-indigo-500 outline-none transition-all"               placeholder="New group name"
+              className="w-full rounded-xl border-2 border-slate-100 px-4 py-3 focus:border-blue-500 outline-none transition-all"               placeholder="New group name"
 
               value={editingGroup?.name || ""}
 
@@ -445,7 +445,7 @@ export default function GroupsTable() {
 
                disabled={isUpdating || !editingGroup?.name.trim()}
 
-                className="bg-indigo-500 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-indigo-600 disabled:opacity-50 flex items-center gap-2 transition-all shadow-md shadow-amber-100"
+                className="bg-blue-500 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2 transition-all shadow-md shadow-amber-100"
 
               >
 
