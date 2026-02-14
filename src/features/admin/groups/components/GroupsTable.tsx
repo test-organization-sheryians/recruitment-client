@@ -49,6 +49,18 @@ export default function GroupsTable() {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [userSearchQuery, setUserSearchQuery] = useState("");
 
+  // //   // Edit states
+
+   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+   const [editingGroup, setEditingGroup] = useState<{ id: string; name: string } | null>(null);
+
+  const [isUpdating, setIsUpdating] = useState(false);
+
+
+
+
+
   const debouncedSearch = useDebounce(userSearchQuery, 400);
   const { data: usersData } = useInfiniteUsers(debouncedSearch);
 
@@ -92,6 +104,58 @@ export default function GroupsTable() {
   router.push(`/selected-candidates?shareId=${group._id}`);
 };
 
+  // //   /* ================= EDIT GROUP LOGIC ================= */
+
+  const handleOpenEditModal = (e: React.MouseEvent, groupId: string, currentName: string) => {
+
+  e.stopPropagation(); // Card ko expand hone se rokne ke liye
+
+    setEditingGroup({ id: groupId, name: currentName });
+
+    setIsEditModalOpen(true);
+
+  };
+
+
+
+  const handleUpdateNameSubmit = () => {
+
+    if (!editingGroup || !editingGroup.name.trim()) return;
+
+
+
+    setIsUpdating(true);
+
+    updateGroup(
+
+      {
+
+        groupId: editingGroup.id,
+
+        newName: editingGroup.name.trim(),
+
+      },
+    {
+
+      onSuccess: () => {
+
+      success("Group name updated successfully!");
+
+       setIsEditModalOpen(false);
+
+       queryClient.invalidateQueries({ queryKey: ["groups"] });
+
+     },
+
+     onError: () => error("Failed to update group name"),
+
+      onSettled: () => setIsUpdating(false),
+
+      }
+
+    );
+
+  };
 
   /* ================= TOGGLE ================= */
 
@@ -129,7 +193,7 @@ export default function GroupsTable() {
                 <Users className="text-blue-600" />
                 <div>
                   <h3 className="font-semibold">{group.groupName}</h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-600">
                     {group.memberCount ?? 0} Members
                   </p>
                 </div>
@@ -137,7 +201,23 @@ export default function GroupsTable() {
 
               <div className="flex gap-3 items-center">
                 {/* /* //share button */} 
-                <button onClick={(e) => { e.stopPropagation(); handleShareGroup(group); }} className="p-2 text-slate-800 hover:text-blue-600 transition-colors" title="Share Group" > <Share size={18} /> </button>
+                <button onClick={(e) => { e.stopPropagation(); handleShareGroup(group); }} className="p-2 text-slate-800 hover:text-blue-800 transition-colors" title="Share Group" > <Share size={18} /> </button>
+
+                   {/* EDIT BUTTON */}
+
+          <button
+
+               onClick={(e) => handleOpenEditModal(e, group._id, group.groupName)}
+
+               className="p-2 text-slate-800 hover:text-indigo-600 transition-colors"
+
+               title="Edit Group Name"
+
+            >
+
+                <Pencil size={18} />
+
+             </button>
 
                 <button
                   onClick={(e) => {
@@ -151,7 +231,8 @@ export default function GroupsTable() {
                 >
                   <Trash2 size={16} />
                 </button>
-
+                    
+                
                 {expandedGroupId === group._id ? (
                   <ChevronUp />
                 ) : (
@@ -306,6 +387,80 @@ export default function GroupsTable() {
           </div>
         );
       })}
+
+           {/* ================= EDIT MODAL ================= */}
+
+      {isEditModalOpen && (
+
+       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+
+         <div className="w-[380px] bg-white rounded-2xl p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
+
+            <div className="flex items-center gap-3 mb-6">
+
+               <div className="bg-amber-100 p-2 rounded-lg text-indigo-600">
+
+                <Pencil size={20} />
+
+               </div>
+
+              <h2 className="text-xl font-bold text-slate-800">Rename Group</h2>
+
+           </div>
+
+
+
+            <input
+
+              autoFocus
+
+              className="w-full rounded-xl border-2 border-slate-100 px-4 py-3 focus:border-indigo-500 outline-none transition-all"               placeholder="New group name"
+
+              value={editingGroup?.name || ""}
+
+              onChange={(e) => setEditingGroup((prev) => (prev ? { ...prev, name: e.target.value } : null))}
+
+             onKeyDown={(e) => e.key === "Enter" && handleUpdateNameSubmit()}
+
+            />
+
+
+
+            <div className="flex justify-end gap-3 mt-8">
+
+              <button
+
+                onClick={() => setIsEditModalOpen(false)}
+
+                className="px-4 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50 rounded-xl transition-colors"
+
+              >
+                 Cancel
+
+               </button>
+
+              <button
+
+                 onClick={handleUpdateNameSubmit}
+
+               disabled={isUpdating || !editingGroup?.name.trim()}
+
+                className="bg-indigo-500 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-indigo-600 disabled:opacity-50 flex items-center gap-2 transition-all shadow-md shadow-amber-100"
+
+              >
+
+                 {isUpdating ? <Loader2 className="animate-spin h-4 w-4" /> : "Save Changes"}
+
+              </button>
+
+           </div>
+
+          </div>
+
+       </div>
+
+       )}
+
     </div>
   );
 }
