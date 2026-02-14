@@ -30,6 +30,7 @@ import type { CategoryItem } from "@/api/category/getCategoriesPaginated";
 import { SearchQuery } from "@/types/Job";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { getJobQuestions } from "@/api/jobs/jobApplicationQuestion";
 
 
 
@@ -52,23 +53,53 @@ export default function JobDashboardPage() {
   const applyJobMutation = useApplyJob()
   const toast = useToast()
 
-  const handleApplyJob = (jobId: string) => {
-    if (profileLoading) {
-      toast.error("Profile is loading. Please wait.")
-      return
-    }
+  // const handleApplyJob = (jobId: string) => {
+  //   if (profileLoading) {
+  //     toast.error("Profile is loading. Please wait.")
+  //     return
+  //   }
 
-    if (!profile?.resumeFile) {
-      toast.error("Please upload your resume before applying.")
-      return
-    }
+  //   if (!profile?.resumeFile) {
+  //     toast.error("Please upload your resume before applying.")
+  //     return
+  //   }
 
-    applyJobMutation.mutate({
-      jobId,
-      message: "Excited to apply!",
-      resumeUrl: profile.resumeFile,
-    })
+  //   applyJobMutation.mutate({
+  //     jobId,
+  //     message: "Excited to apply!",
+  //     resumeUrl: profile.resumeFile,
+  //   })
+  // }
+
+  const handleApplyJob = async (jobId: string) => {
+  if (profileLoading) {
+    toast.error("Profile is loading. Please wait.");
+    return;
   }
+
+  if (!profile?.resumeFile) {
+    toast.error("Please upload your resume before applying.");
+    return;
+  }
+
+  try {
+    const questions = await getJobQuestions(jobId);
+
+    if (!questions || questions.length === 0) {
+      // ✅ no screening → apply now
+      applyJobMutation.mutate({
+        jobId,
+        message: "Excited to apply!",
+        resumeUrl: profile.resumeFile,
+      });
+    } else {
+      // ✅ screening exists → open form
+      router.push(`/jobs/${jobId}/apply`);
+    }
+  } catch (err) {
+    toast.error("Failed to check job requirements.");
+  }
+};
 
 
 

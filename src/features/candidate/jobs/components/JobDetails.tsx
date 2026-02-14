@@ -49,13 +49,14 @@ export default function JobDetails() {
     );
   }
 
-  if (error || !job) {
-    return (
-      <p className="mt-10 text-center text-red-500">
-        Failed to load job details
-      </p>
-    );
-  }
+ if (error || !job) {
+  return (
+    <p className="mt-10 text-center text-red-500">
+      Failed to load job details
+    </p>
+  );
+}
+
 
   const isExpired = job.expiry
     ? new Date(job.expiry) < new Date()
@@ -70,6 +71,7 @@ export default function JobDetails() {
     ) ?? false;
 
   /* -------------------- Handlers -------------------- */
+  
   const handleApply = () => {
     if (isExpired || job.applied) return;
 
@@ -287,4 +289,4 @@ const metaItems = [
       </div>
     </div>  
   );
-} 
+}
