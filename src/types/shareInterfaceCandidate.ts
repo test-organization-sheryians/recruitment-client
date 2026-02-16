@@ -1,13 +1,72 @@
-// ================= SHARE CANDIDATE =================
+// types/shareInterfaceCandidate.ts
+
+/* =====================================================
+   COMMON BACKEND RESPONSE
+===================================================== */
+
+export interface BackendResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+/* =====================================================
+   SHARE REQUEST ITEM
+===================================================== */
 
 export interface ShareCandidatePayload {
   candidateId: string;
 }
 
+/* =====================================================
+   CREATE GROUP PAYLOAD
+===================================================== */
+
+export interface CreateGroupPayload {
+  groupName: string;
+  users: ShareCandidatePayload[];
+}
+
+/* =====================================================
+   UNION PAYLOAD
+===================================================== */
+
+export type ShareMutationPayload =
+  | ShareCandidatePayload[]
+  | CreateGroupPayload;
+
+/* =====================================================
+   SHARE RESPONSE
+===================================================== */
+
+export interface ShareResponse {
+  success: boolean;
+  message: string;
+  shareLink: string;
+  groupName?: string;
+}
+
+/* =====================================================
+   CREATE SHARE RESPONSE (OPTIONAL LEGACY SUPPORT)
+===================================================== */
+
+export interface CreateShareCandidateResponse {
+  message: string;
+  shareLink: string;
+}
+
+/* =====================================================
+   SKILL
+===================================================== */
+
 export interface Skill {
   _id?: string;
   name?: string;
 }
+
+/* =====================================================
+   EXPERIENCE
+===================================================== */
 
 export interface Experience {
   _id?: string;
@@ -20,37 +79,39 @@ export interface Experience {
   isCurrent?: boolean;
 }
 
-export interface User {
+/* =====================================================
+   SHARE USER
+===================================================== */
+
+export interface ShareUser {
   _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
 }
+
+/* =====================================================
+   SHARE CANDIDATE
+===================================================== */
 
 export interface ShareCandidate {
   _id: string;
   userId: string;
-  availability: "looking" | "not_looking";
+
+  availability?: string;
   resumeFile?: string;
-  createdAt: string;
-  updatedAt: string;
-  user: User;
-  skills: Skill[];
-  experiences: Experience[];
+
+  createdAt?: string;
+  updatedAt?: string;
+
+  user?: ShareUser;
+  skills?: Skill[];
+  experiences?: Experience[];
 }
 
-export interface BackendResponse<T> {
-  success: boolean;
-  message?: string;
-  data: T;
-}
-
-export interface CreateShareCandidateResponse {
-  message: string;
-  shareLink: string;
-}
-
-// ================= GROUP =================
+/* =====================================================
+   GROUP USER
+===================================================== */
 
 export interface GroupUser {
   _id: string;
@@ -59,27 +120,60 @@ export interface GroupUser {
   email: string;
 }
 
-/**
- * Single unified Group interface
- * Works for:
- * - get all groups (with memberCount)
- * - get single group (with selectedUsers)
- */
+/* =====================================================
+   GROUP
+===================================================== */
+
 export interface Group {
   _id: string;
   groupName: string;
-  memberCount: number;   // 👈 backend se aa raha hai
+
+  memberCount?: number;
+
   createdAt?: string;
   updatedAt?: string;
+
+  selectedUsers?: GroupUser[];
 }
 
+/* =====================================================
+   GROUP PAYLOADS
+===================================================== */
 
+// Update group name
 export interface UpdateGroupPayload {
   groupId: string;
   newName: string;
 }
 
+// Remove user from group
 export interface RemoveUserPayload {
   groupId: string;
   userId: string;
+}
+
+// Add user to group
+export interface AddUserPayload {
+  groupId: string;
+  userId: string;
+}
+
+/* =====================================================
+   SHARE CANDIDATES RESPONSE
+===================================================== */
+
+export interface ShareCandidatesResponse {
+  success?: boolean;
+  message?: string;
+
+  groupName?: string;
+  selectedUsers?: ShareCandidate[];
+
+  data?:
+    | {
+        groupName?: string;
+        selectedUsers?: ShareCandidate[];
+      }
+    | ShareCandidate[]
+    | null;
 }

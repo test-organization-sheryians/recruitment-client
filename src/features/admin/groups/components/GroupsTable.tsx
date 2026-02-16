@@ -30,6 +30,10 @@ import {
   BackendResponse,
 } from "@/types/shareInterfaceCandidate";
 
+interface UsersPage {
+  data: GroupUser[];
+}
+
 export default function GroupsTable() {
   const { data: groups = [] } = useGroups();
   const queryClient = useQueryClient();
@@ -39,9 +43,11 @@ export default function GroupsTable() {
   /* ================= STATE ================= */
 
   const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null);
+
   const [membersCache, setMembersCache] = useState<
     Record<string, GroupUser[]>
   >({});
+
   const [fetchingId, setFetchingId] = useState<string | null>(null);
 
   const [openAddForGroup, setOpenAddForGroup] = useState<string | null>(null);
@@ -49,19 +55,21 @@ export default function GroupsTable() {
   const [userSearchQuery, setUserSearchQuery] = useState("");
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   const [editingGroup, setEditingGroup] = useState<{
     id: string;
     name: string;
   } | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
 
+  const [isUpdating, setIsUpdating] = useState(false);
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
 
   const debouncedSearch = useDebounce(userSearchQuery, 400);
+
   const { data: usersData } = useInfiniteUsers(debouncedSearch);
 
   const users: GroupUser[] =
-    usersData?.pages.flatMap((p: any) => p.data) ?? [];
+    usersData?.pages.flatMap((p: UsersPage) => p.data) ?? [];
 
   /* ================= MUTATIONS ================= */
 
@@ -75,7 +83,10 @@ export default function GroupsTable() {
   const fetchGroupMembers = async (groupId: string) => {
     try {
       setFetchingId(groupId);
-      const res = await api.get<BackendResponse<any>>(`/api/share/${groupId}`);
+
+      const res = await api.get<
+        BackendResponse<{ selectedUsers: GroupUser[] }>
+      >(`/api/share/${groupId}`);
 
       if (!res.data.success) {
         throw new Error(res.data.message);
@@ -169,10 +180,7 @@ export default function GroupsTable() {
         const members = membersCache[group._id] ?? [];
 
         return (
-          <div
-            key={group._id}
-            className="bg-white border rounded-xl shadow-sm"
-          >
+          <div key={group._id} className="bg-white border rounded-xl shadow-sm">
             {/* HEADER */}
             <div
               onClick={() => toggleGroup(group._id)}
@@ -235,7 +243,7 @@ export default function GroupsTable() {
                   </div>
                 ) : (
                   <>
-                    {members.map((user: GroupUser) => (
+                    {members.map((user) => (
                       <div
                         key={user._id}
                         className="flex justify-between items-center px-4 py-3 border-b"
@@ -293,7 +301,7 @@ export default function GroupsTable() {
                           />
 
                           {userSearchQuery &&
-                            users.map((u: GroupUser) => (
+                            users.map((u) => (
                               <div
                                 key={u._id}
                                 onClick={() => {

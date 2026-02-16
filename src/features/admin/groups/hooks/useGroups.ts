@@ -5,14 +5,14 @@ import {
   addUserToGroup,
   updateGroupName,
   removeUserFromGroup,
-  // createShareCandidate,
 } from "@/api/candidateShare/shareCandidate";
 
 import {
   UpdateGroupPayload,
   RemoveUserPayload,
+  AddUserPayload,
   Group,
-  BackendResponse,
+  ShareResponse,
 } from "@/types/shareInterfaceCandidate";
 
 /* =====================================================
@@ -25,7 +25,7 @@ export const useGroups = () => {
       const data = await getAllGroups();
       return data;
     },
-    staleTime: 1000 * 60 * 5, // 5 min cache
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
 
@@ -35,7 +35,7 @@ export const useGroups = () => {
 export const useDeleteGroup = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<BackendResponse<any>, Error, string>({
+  return useMutation<ShareResponse, Error, string>({
     mutationFn: async (groupId: string) => {
       return await deleteGroup(groupId);
     },
@@ -51,7 +51,7 @@ export const useDeleteGroup = () => {
 export const useUpdateGroup = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<BackendResponse<any>, Error, UpdateGroupPayload>({
+  return useMutation<ShareResponse, Error, UpdateGroupPayload>({
     mutationFn: async ({ groupId, newName }) => {
       return await updateGroupName(groupId, newName);
     },
@@ -67,7 +67,7 @@ export const useUpdateGroup = () => {
 export const useRemoveUserFromGroup = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<BackendResponse<any>, Error, RemoveUserPayload>({
+  return useMutation<ShareResponse, Error, RemoveUserPayload>({
     mutationFn: async ({ groupId, userId }) => {
       return await removeUserFromGroup(groupId, userId);
     },
@@ -80,15 +80,10 @@ export const useRemoveUserFromGroup = () => {
 /* =====================================================
    ADD USER TO GROUP
 ===================================================== */
-export interface AddUserPayload {
-  groupId: string;
-  userId: string;
-}
-
 export const useAddUserToGroup = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<BackendResponse<any>, Error, AddUserPayload>({
+  return useMutation<ShareResponse, Error, AddUserPayload>({
     mutationFn: async ({ groupId, userId }) => {
       return await addUserToGroup(groupId, userId);
     },

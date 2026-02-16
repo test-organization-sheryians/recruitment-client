@@ -1,11 +1,49 @@
+"use client";
 
-'use client';
+import { useShareCandidates } from "@/features/admin/users/hooks/useShareuser";
+import { FileText, Home, Loader2, Mail, User, X } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, useMemo } from "react";
+import { Experience } from "../../types/shareInterfaceCandidate";
 
-import { useShareCandidates } from '@/features/admin/users/hooks/useShareuser';
-import { FileText, Home, Loader2, Mail, User, Users, X } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
-import { Experience, ShareCandidate } from '../../types/shareInterfaceCandidate';
+/* ================= TYPES ================= */
+
+interface BackendUser {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+}
+
+interface BackendSkill {
+  _id?: string;
+  name?: string;
+}
+
+interface BackendCandidate {
+  _id?: string;
+  userId?: string;
+  user?: BackendUser;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  availability?: string;
+  resumeFile?: string;
+  skills?: BackendSkill[];
+  experiences?: Experience[];
+  createdAt?: string;
+}
+
+interface ShareCandidatesResponseShape {
+  groupName?: string;
+  selectedUsers?: BackendCandidate[];
+  data?:
+    | {
+        groupName?: string;
+        selectedUsers?: BackendCandidate[];
+      }
+    | BackendCandidate[]
+    | null;
+}
 
 interface UIShareCandidate {
   _id: string;
@@ -19,42 +57,72 @@ interface UIShareCandidate {
   createdAt?: string;
 }
 
+/* ================= HELPERS ================= */
+
 function formatDate(date?: string) {
-  return date ? new Date(date).toLocaleDateString() : 'Present';
+  return date ? new Date(date).toLocaleDateString() : "Present";
 }
+
+/* ================= COMPONENT ================= */
 
 export default function SelectedCandidatesPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const shareId = params.get('shareId') ?? '';
-  
-  // Backend data fetching
-  const { data: response, isLoading } = useShareCandidates(shareId);
+  const shareId = params.get("shareId") ?? "";
+
+  const { data: response, isLoading } = useShareCandidates(shareId) as {
+    data: ShareCandidatesResponseShape | undefined;
+    isLoading: boolean;
+  };
+
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // --- SAHI MAPPING LOGIC ---
+  /* ================= SAFE MAPPING ================= */
+
   const uiCandidates: UIShareCandidate[] = useMemo(() => {
-    // Backend structure check: data.data.selectedUsers ya direct array
-    const rawList = response?.data?.selectedUsers || response?.selectedUsers || (Array.isArray(response?.data) ? response.data : []);
-    
-    return rawList.map((c: any) => ({
-      _id: c._id || Math.random().toString(),
-      userId: c.userId || '',
-      name: `${c.user?.firstName || c.firstName || ''} ${c.user?.lastName || c.lastName || ''}`.trim() || 'Candidate',
-      email: c.user?.email || c.email || 'N/A',
-      availability: c.availability || 'N/A',
-      resumeFile: c.resumeFile,
-      skills: (c.skills ?? []).map((skill: any) => ({
-        _id: skill._id ?? '',
-        name: skill.name ?? skill ?? '',
+    let rawList: BackendCandidate[] = [];
+
+    if (Array.isArray(response?.data)) {
+      // case: data is array
+      rawList = response.data;
+    } else if (response?.data?.selectedUsers) {
+      // case: data object with selectedUsers
+      rawList = response.data.selectedUsers;
+    } else if (response?.selectedUsers) {
+      // case: root selectedUsers
+      rawList = response.selectedUsers;
+    }
+
+    return rawList.map((c) => ({
+      _id: c?._id || Math.random().toString(),
+      userId: c?.userId || "",
+      name:
+        `${c?.user?.firstName || c?.firstName || ""} ${
+          c?.user?.lastName || c?.lastName || ""
+        }`.trim() || "Candidate",
+      email: c?.user?.email || c?.email || "N/A",
+      availability: c?.availability || "N/A",
+      resumeFile: c?.resumeFile,
+      skills: (c?.skills ?? []).map((skill) => ({
+        _id: skill?._id ?? "",
+        name: skill?.name ?? "",
       })),
-      experiences: c.experiences ?? [],
-      createdAt: c.createdAt,
+      experiences: c?.experiences ?? [],
+      createdAt: c?.createdAt,
     }));
   }, [response]);
 
-  const groupName = response?.groupName || response?.data?.groupName || "Shared Group";
+  /* ================= GROUP NAME ================= */
+
+  const groupName =
+    response?.groupName ||
+    (typeof response?.data === "object" && !Array.isArray(response?.data)
+      ? response?.data?.groupName
+      : undefined) ||
+    "Shared Group";
+
+  /* ================= ACTIVE CANDIDATE ================= */
 
   useEffect(() => {
     if (uiCandidates.length > 0 && !activeId) {
@@ -62,7 +130,9 @@ export default function SelectedCandidatesPage() {
     }
   }, [uiCandidates, activeId]);
 
-  const activeCandidate = uiCandidates.find(c => c._id === activeId) ?? null;
+  const activeCandidate = uiCandidates.find((c) => c._id === activeId) ?? null;
+
+  /* ================= LOADING ================= */
 
   if (isLoading) {
     return (
@@ -72,6 +142,8 @@ export default function SelectedCandidatesPage() {
     );
   }
 
+  /* ================= UI ================= */
+
   return (
     <div className="min-h-screen bg-slate-50 px-6 py-8">
       <div className="mx-auto max-w-7xl">
@@ -79,19 +151,18 @@ export default function SelectedCandidatesPage() {
           <div>
             <h1 className="text-2xl font-semibold text-slate-800">
               {groupName}
-              
             </h1>
-            
-            <p className='text-slate-700 text-sm '>
-              <span className="mr-1 text-sm font-normal text-slate-800">{uiCandidates.length}</span>
-              Members
-             
-            </p>
 
+            <p className="text-slate-700 text-sm">
+              <span className="mr-1 text-sm font-normal text-slate-800">
+                {uiCandidates.length}
+              </span>
+              Members
+            </p>
           </div>
 
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push("/")}
             className="flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
           >
             <Home className="h-4 w-4" />
@@ -108,14 +179,14 @@ export default function SelectedCandidatesPage() {
 
             <div className="divide-y max-h-[70vh] overflow-y-auto">
               {uiCandidates.length > 0 ? (
-                uiCandidates.map(c => (
+                uiCandidates.map((c) => (
                   <button
                     key={c._id}
                     onClick={() => setActiveId(c._id)}
                     className={`w-full px-5 py-4 text-left transition ${
                       activeId === c._id
-                        ? 'bg-blue-50 border-r-4 border-slate-800'
-                        : 'hover:bg-slate-50'
+                        ? "bg-blue-50 border-r-4 border-slate-800"
+                        : "hover:bg-slate-50"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -123,14 +194,20 @@ export default function SelectedCandidatesPage() {
                         {c.name.charAt(0)}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate font-medium text-slate-800">{c.name}</p>
-                        <p className="truncate text-xs text-slate-500">{c.email}</p>
+                        <p className="truncate font-medium text-slate-800">
+                          {c.name}
+                        </p>
+                        <p className="truncate text-xs text-slate-500">
+                          {c.email}
+                        </p>
                       </div>
                     </div>
                   </button>
                 ))
               ) : (
-                <div className="p-10 text-center text-slate-400 text-sm">No members found.</div>
+                <div className="p-10 text-center text-slate-400 text-sm">
+                  No members found.
+                </div>
               )}
             </div>
           </aside>
@@ -144,23 +221,42 @@ export default function SelectedCandidatesPage() {
                     {activeCandidate.name.charAt(0)}
                   </div>
                   <div>
-                    <h2 className="text-2xl font-semibold text-slate-800">{activeCandidate.name}</h2>
+                    <h2 className="text-2xl font-semibold text-slate-800">
+                      {activeCandidate.name}
+                    </h2>
                     <p className="mt-2 text-sm text-slate-500">
-                      Shared at: {activeCandidate.createdAt ? new Date(activeCandidate.createdAt).toLocaleString() : 'N/A'}
+                      Shared at:{" "}
+                      {activeCandidate.createdAt
+                        ? new Date(activeCandidate.createdAt).toLocaleString()
+                        : "N/A"}
                     </p>
                   </div>
                 </div>
 
                 <div className="mt-8 grid grid-cols-2 gap-6">
-                  <InfoCard icon={<Mail className="h-5 w-5" />} label="Email" value={activeCandidate.email} />
-                  <InfoCard icon={<User className="h-5 w-5" />} label="Availability" value={activeCandidate.availability} />
+                  <InfoCard
+                    icon={<Mail className="h-5 w-5" />}
+                    label="Email"
+                    value={activeCandidate.email}
+                  />
+
+                  <InfoCard
+                    icon={<User className="h-5 w-5" />}
+                    label="Availability"
+                    value={activeCandidate.availability}
+                  />
 
                   {activeCandidate.skills.length > 0 && (
                     <div className="col-span-2">
-                      <p className="mb-2 text-sm font-semibold text-slate-700">Skills</p>
+                      <p className="mb-2 text-sm font-semibold text-slate-700">
+                        Skills
+                      </p>
                       <div className="flex flex-wrap gap-2">
-                        {activeCandidate.skills.map(skill => (
-                          <span key={skill._id} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 border">
+                        {activeCandidate.skills.map((skill) => (
+                          <span
+                            key={skill._id}
+                            className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 border"
+                          >
                             {skill.name}
                           </span>
                         ))}
@@ -170,17 +266,27 @@ export default function SelectedCandidatesPage() {
 
                   {activeCandidate.experiences.length > 0 && (
                     <div className="col-span-2">
-                      <p className="mb-3 text-sm font-semibold text-slate-700">Experience</p>
+                      <p className="mb-3 text-sm font-semibold text-slate-700">
+                        Experience
+                      </p>
                       <div className="space-y-3">
-                        {activeCandidate.experiences.map((exp: any, index: number) => (
-                          <div key={index} className="rounded-xl border p-4 hover:bg-slate-50 transition">
+                        {activeCandidate.experiences.map((exp, index) => (
+                          <div
+                            key={index}
+                            className="rounded-xl border p-4 hover:bg-slate-50 transition"
+                          >
                             <div className="flex items-start justify-between">
                               <div>
-                                <p className="text-sm font-semibold text-slate-900">{exp.title || exp.position}</p>
-                                <p className="text-sm text-slate-600">{exp.company || exp.companyName}</p>
+                                <p className="text-sm font-semibold text-slate-900">
+                                  {exp.title || exp.role}
+                                </p>
+                                <p className="text-sm text-slate-600">
+                                  {exp.company}
+                                </p>
                               </div>
                               <span className="text-xs text-slate-500">
-                                {formatDate(exp.startDate)} – {formatDate(exp.endDate)}
+                                {formatDate(exp.startDate)} –{" "}
+                                {formatDate(exp.endDate)}
                               </span>
                             </div>
                           </div>
@@ -191,8 +297,13 @@ export default function SelectedCandidatesPage() {
 
                   {activeCandidate.resumeFile && (
                     <div className="col-span-2">
-                      <a href={activeCandidate.resumeFile} target="_blank" className="flex items-center gap-2 rounded-lg border bg-blue-50 p-4 text-blue-600 font-semibold hover:underline">
-                        <FileText className="h-5 w-5" /> Download Resume
+                      <a
+                        href={activeCandidate.resumeFile}
+                        target="_blank"
+                        className="flex items-center gap-2 rounded-lg border bg-blue-50 p-4 text-blue-600 font-semibold hover:underline"
+                      >
+                        <FileText className="h-5 w-5" />
+                        Download Resume
                       </a>
                     </div>
                   )}
@@ -207,23 +318,34 @@ export default function SelectedCandidatesPage() {
         </div>
       </div>
 
-      {/* --- MODAL FOR GROUP MEMBERS --- */}
+      {/* MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between border-b p-5">
               <h3 className="font-bold text-slate-800">Group Members</h3>
-              <button onClick={() => setIsModalOpen(false)} className="rounded-full p-1 hover:bg-slate-100">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="rounded-full p-1 hover:bg-slate-100"
+              >
                 <X className="h-5 w-5 text-slate-500" />
               </button>
             </div>
+
             <div className="max-h-96 overflow-y-auto p-4 space-y-3">
-              {uiCandidates.map(m => (
-                <div key={m._id} className="flex items-center gap-3 p-2 bg-slate-50 rounded-lg">
-                  <div className="h-8 w-8 rounded bg-slate-200 flex items-center justify-center text-xs font-bold">{m.name.charAt(0)}</div>
+              {uiCandidates.map((m) => (
+                <div
+                  key={m._id}
+                  className="flex items-center gap-3 p-2 bg-slate-50 rounded-lg"
+                >
+                  <div className="h-8 w-8 rounded bg-slate-200 flex items-center justify-center text-xs font-bold">
+                    {m.name.charAt(0)}
+                  </div>
                   <div className="min-w-0">
                     <p className="text-sm font-bold truncate">{m.name}</p>
-                    <p className="text-[10px] text-slate-500 truncate">{m.email}</p>
+                    <p className="text-[10px] text-slate-500 truncate">
+                      {m.email}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -235,12 +357,24 @@ export default function SelectedCandidatesPage() {
   );
 }
 
-function InfoCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+/* ================= INFO CARD ================= */
+
+function InfoCard({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="flex gap-4 rounded-lg border bg-slate-50/50 p-4 hover:bg-white transition shadow-sm">
       <div className="text-slate-500">{icon}</div>
       <div>
-        <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{label}</p>
+        <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+          {label}
+        </p>
         <p className="text-sm font-bold text-slate-800">{value}</p>
       </div>
     </div>

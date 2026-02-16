@@ -30,6 +30,11 @@ import {
   User,
   useUpdateUserRole,
 } from "@/features/admin/users/hooks/useUser";
+import {
+  ShareMutationPayload,
+  ShareResponse,
+} from "@/types/shareInterfaceCandidate";
+
 import { FiEye } from "react-icons/fi";
 
 export default function UsersTable() {
@@ -122,6 +127,7 @@ export default function UsersTable() {
   const [showLink, setShowLink] = useState(false);
   const [copied, setCopied] = useState(false);
   const loadMoreRef = useRef<HTMLTableRowElement | null>(null);
+
 
   const deleteUser = useDeleteUser();
   const updateUserRole = useUpdateUserRole();
@@ -257,59 +263,63 @@ export default function UsersTable() {
   };
 
   /* ---------------- SHARE & CREATE GROUP LOGIC ---------------- */
-  const handleViewSelected = () => {
-    if (selectedUserIds.length === 0) {
-      error("Please select at least one user");
-      return;
-    }
-    const payload = selectedUserIds.map((id) => ({ candidateId: id }));
-    shareCandidates(payload as any, {
-      onSuccess: (res) => {
-        setSelectedUserIds([]);
-        const shareId = res.shareLink.split("/").pop();
-        setLink(`https://hire.sheryians.com/selected-candidates?shareId=${shareId}`);
-        setShowLink(true);
-      },
-      onError: () => error("Failed to share candidates"),
-    });
-  };
+const handleViewSelected = () => {
+  if (selectedUserIds.length === 0) {
+    error("Please select at least one user");
+    return;
+  }
 
-  const handleCreateGroupSubmit = () => {
-    if (!newGroupName.trim()) {
-      error("Please enter a group name");
-      return;
-    }
+  const payload: ShareMutationPayload = selectedUserIds.map((id) => ({
+    candidateId: id,
+  }));
 
-    // const payload = {
-    //   groupName: newGroupName.trim(),
-    //   users: selectedUserIds, // String array expected by backend
-    const payload = {
-  groupName: newGroupName.trim(),
-  users: selectedUserIds.map(id => ({ candidateId: id })), 
+  shareCandidates(payload, {
+    onSuccess: (res: ShareResponse) => {
+      setSelectedUserIds([]);
+      const shareId = res.shareLink.split("/").pop();
+      setLink(
+        `https://hire.sheryians.com/selected-candidates?shareId=${shareId}`
+      );
+      setShowLink(true);
+    },
+    onError: () => error("Failed to share candidates"),
+  });
 };
-    
 
-    shareCandidates(payload as any, {
-      onSuccess: () => {
-        success("Group created successfully");
-        setIsGroupModalOpen(false);
-        setNewGroupName("");
-        setSelectedUserIds([]);
-        router.push("/admin/groups");
-      },
-      onError: () => error("Failed to create group"),
-    });
+const handleCreateGroupSubmit = () => {
+  if (!newGroupName.trim()) {
+    error("Please enter a group name");
+    return;
+  }
+
+  const payload: ShareMutationPayload = {
+    groupName: newGroupName.trim(),
+    users: selectedUserIds.map((id) => ({
+      candidateId: id,
+    })),
   };
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy", err);
-    }
-  };
+  shareCandidates(payload, {
+    onSuccess: () => {
+      success("Group created successfully");
+      setIsGroupModalOpen(false);
+      setNewGroupName("");
+      setSelectedUserIds([]);
+      router.push("/admin/groups");
+    },
+    onError: () => error("Failed to create group"),
+  });
+};
+
+const handleCopy = async () => {
+  try {
+    await navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  } catch (err) {
+    console.error("Failed to copy", err);
+  }
+};
 
   if (isLoading) return <p className="py-10 text-center">Loading users…</p>;
   if (isError) return <p className="py-10 text-center text-red-500">Failed to load users</p>;
