@@ -22,7 +22,6 @@ export default function JobDetails() {
   const params = useParams();
   const jobId = params.jobId as string;
 
-
   const toast = useToast();
   const queryClient = useQueryClient();
 
@@ -39,9 +38,7 @@ export default function JobDetails() {
   /* -------------------- Guards -------------------- */
   if (isLoading) {
     return (
-      <p className="mt-10 text-center text-gray-500">
-        Fetching job details...
-      </p>
+      <p className="mt-10 text-center text-gray-500">Fetching job details...</p>
     );
   }
 
@@ -53,16 +50,14 @@ export default function JobDetails() {
     );
   }
 
-  const isExpired = job.expiry
-    ? new Date(job.expiry) < new Date()
-    : false;
+  const isExpired = job.expiry ? new Date(job.expiry) < new Date() : false;
 
   /* -------------------- Saved State (TYPE SAFE) -------------------- */
   const isSaved =
     savedJobs?.some((saved: SavedJob) =>
       typeof saved.jobId === "string"
         ? saved.jobId === job._id
-        : saved.jobId?._id === job._id
+        : saved.jobId?._id === job._id,
     ) ?? false;
 
   /* -------------------- Handlers -------------------- */
@@ -110,7 +105,6 @@ export default function JobDetails() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-6">
       <div className="relative w-full max-w-2xl space-y-6 rounded-2xl bg-white p-6 shadow-lg">
-
         {/* Back */}
         <button
           onClick={() => router.back()}
@@ -132,9 +126,7 @@ export default function JobDetails() {
             <Bookmark
               size={20}
               className={
-                isSaved
-                  ? "fill-blue-600 text-blue-600"
-                  : "text-gray-600"
+                isSaved ? "fill-blue-600 text-blue-600" : "text-gray-600"
               }
             />
           </button>
@@ -148,11 +140,7 @@ export default function JobDetails() {
                 : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
-            {job.applied
-              ? "Applied"
-              : isExpired
-              ? "Expired"
-              : "Apply Now"}
+            {job.applied ? "Applied" : isExpired ? "Expired" : "Apply Now"}
           </button>
         </div>
 
@@ -166,15 +154,25 @@ export default function JobDetails() {
                 : job.category.name}
             </p>
           )}
-          {job.salary && <p><strong>Salary:</strong> {job.salary}</p>}
+          {job.salary && (
+            <p>
+              <strong>Salary:</strong> {job.salary}
+            </p>
+          )}
           {job.department && (
-            <p><strong>Department:</strong> {job.department}</p>
+            <p>
+              <strong>Department:</strong> {job.department}
+            </p>
           )}
           {job.requiredExperience && (
-            <p><strong>Experience:</strong> {job.requiredExperience}</p>
+            <p>
+              <strong>Experience:</strong> {job.requiredExperience}
+            </p>
           )}
           {job.education && (
-            <p><strong>Education:</strong> {job.education}</p>
+            <p>
+              <strong>Education:</strong> {job.education}
+            </p>
           )}
           {job.expiry && (
             <p>
@@ -187,9 +185,7 @@ export default function JobDetails() {
         {/* Description */}
         {job.description && (
           <div>
-            <h2 className="mb-1 font-semibold text-gray-800">
-              Description
-            </h2>
+            <h2 className="mb-1 font-semibold text-gray-800">Description</h2>
             <p className="text-sm leading-relaxed text-gray-600">
               {job.description}
             </p>

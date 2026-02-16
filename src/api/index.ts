@@ -59,18 +59,23 @@ export * from "./tests/enRolltest";
 export * from "./tests/getTest";
 export * from "./tests/getTestDetails";
 export * from "./tests/getUserAttempts";
-export * from "./tests/enRollBulkUser";  
+export * from "./tests/enRollBulkUser";
 export * from "./tests/searchUsertest";
 export * from "./tests/startTest";
 export * from "./tests/testAttempts";
 export * from "./tests/testInfo";
 export * from "./tests/updateTest";
-export * from "./tests/publishTestResult"
+export * from "./tests/publishTestResult";
 export * from "./tests/deleteTest";
-
 
 export * from "./password/forgotPassword";
 export * from "./password/resetPassword";
 
 export * from "./jobApplication/scheduleInterview";
 
+/* ================= jobReport ================= */
+export * from "./jobReports/reportJob";
+export * from "./jobReports/getAllReports";
+export * from "./jobReports/getMyReports";
+export * from "./jobReports/updateReportStatus";
+export * from "./jobReports/deleteReport";

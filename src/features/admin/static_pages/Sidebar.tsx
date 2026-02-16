@@ -14,6 +14,8 @@ type User = {
 const NAV_ITEMS = [
   { name: "Dashboard", href: "/admin" },
   { name: "Jobs", href: "/admin/jobs" },
+  { name: "Job Reports", href: "/admin/jobreports" },
+
   { name: "Clients", href: "/admin/clients" },
   { name: "Skills", href: "/admin/skills" },
   { name: "Categories", href: "/admin/categories" },
@@ -88,9 +90,7 @@ const Sidebar: React.FC = () => {
         <div className="text-xl font-extrabold tracking-tight text-slate-900">
           Sheryians<span className="text-blue-600">.</span>
         </div>
-        <p className="text-[11px] text-slate-500 mt-0.5">
-          Admin Control Panel
-        </p>
+        <p className="text-[11px] text-slate-500 mt-0.5">Admin Control Panel</p>
       </div>
 
       {/* Identity */}
@@ -124,7 +124,7 @@ const Sidebar: React.FC = () => {
                 "group relative flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
                 active
                   ? "bg-linear-to-r from-blue-50 to-white text-blue-700 shadow-sm"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
               )}
             >
               {active && (
