@@ -444,10 +444,10 @@ export default function UsersTable() {
                 <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">Create Group</span>
               </button> 
 
-              <button onClick={() => router.push("/admin/groups")} className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition">
+              {/* <button onClick={() => router.push("/admin/groups")} className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition">
                 <UsersRound className="h-4 w-4" />
                 <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">View Groups</span>
-              </button>
+              </button> */}
 
               <button onClick={openBulkRoleModal} className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition" title="Edit role for selected">
                 <ArrowRightLeft className="h-4 w-4" />
