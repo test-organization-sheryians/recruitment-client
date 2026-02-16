@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { name: "Categories", href: "/admin/categories" },
   { name: "Users", href: "/admin/users" },
   { name: "Tests", href: "/admin/tests" },
+  { name: "Blog", href: "/admin/blog" },
 ];
 
 const AVATAR_COLORS = [
