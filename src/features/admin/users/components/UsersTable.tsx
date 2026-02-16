@@ -441,27 +441,27 @@ export default function UsersTable() {
                 className="flex flex-col items-center gap-1 text-slate-600 hover:text-blue-700 transition"
               >
                 <UserPlus className="h-4 w-4" />
-                <span className="text-xs font-semibold uppercase tracking-wide">Create Group</span>
+                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">Create Group</span>
               </button> 
 
               <button onClick={() => router.push("/admin/groups")} className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition">
                 <UsersRound className="h-4 w-4" />
-                <span className="text-xs font-semibold uppercase tracking-wide">View Groups</span>
+                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">View Groups</span>
               </button>
 
               <button onClick={openBulkRoleModal} className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition" title="Edit role for selected">
                 <ArrowRightLeft className="h-4 w-4" />
-                <span className="text-xs font-semibold uppercase tracking-wide">Edit Role</span>
+                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">Edit Role</span>
               </button>
 
               <button className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition" title="Blast email">
                 <Mail className="h-4 w-4" />
-                <span className="text-xs font-semibold uppercase tracking-wide">Blast</span>
+                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">Blast</span>
               </button>
 
               <button onClick={handleBulkDelete} className="flex flex-col items-center gap-1 text-red-500 hover:text-red-600 transition" title="Delete selected">
                 <Trash2 className="h-4 w-4" />
-                <span className="text-xs font-semibold uppercase tracking-wide">Delete</span>
+                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">Delete</span>
               </button>
             </div>
 
@@ -474,7 +474,7 @@ export default function UsersTable() {
 
       {/* CREATE GROUP MODAL */}
       {isGroupModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100]  cursor-pointer flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="w-[400px] rounded-2xl bg-white p-6 shadow-2xl animate-in zoom-in duration-200">
             <div className="flex items-center gap-3 mb-6 border-b pb-4">
               <div className="bg-blue-100 p-2 rounded-lg text-blue-600"><Users size={20} /></div>
@@ -498,7 +498,7 @@ export default function UsersTable() {
                 <button 
                   onClick={handleCreateGroupSubmit}
                   disabled={isSharing || !newGroupName.trim()}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition shadow-lg shadow-blue-200 flex items-center gap-2"
+                  className="bg-blue-600 text-white px-6 py-2 cursor-pointer rounded-xl text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition shadow-lg shadow-blue-200 flex items-center gap-2"
                 >
                   {isSharing ? <Loader2 className="animate-spin h-4 w-4" />:<Plus className="h-3 w-3 -ml-0.5 mt-0.5" /> }
                   Create Group
@@ -524,7 +524,7 @@ export default function UsersTable() {
               <option value="692c10094167ed9d874b8f99">Client</option>
               <option value="6915ab309788ad1e00990866">Candidate</option>
             </select>
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-6 cursor-pointer flex justify-end gap-3">
               <button onClick={() => setIsModalOpen(false)}>Cancel</button>
               <button onClick={handleSaveRole} disabled={isSaving} className="rounded-lg bg-blue-600 px-4 py-2 text-white">
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
