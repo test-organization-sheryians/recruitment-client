@@ -21,7 +21,8 @@ export interface Certificate {
   _id?: string;   // backend dega
   name: string;
   type: CertificateType;
-  fileUrl: string;
+  // fileUrl: string;
+  file: string;   // frontend se aayega, backend me handle hoke fileUrl ban jayega
   createdAt?: string;
   updatedAt?: string;
 }

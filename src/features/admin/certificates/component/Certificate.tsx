@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Search, ArrowRight, FileText, Trash2 } from "lucide-react"; // 👈 Trash2 add kiya
 import { useCertificate } from "../hooks/useCertificate";
 import CreateCertificate from "./CreateCertificate";  
-import { Certificate } from "@/types/Certificate"; 
+import { Certificate } from "@/types/Certificate";
 // import { deleteCertificate } from "@/api/certificate/deleteCertificate";
 
 // 👈 API import ki
@@ -48,13 +48,14 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
     }
   }
 };
-  
+ 
   const categories = ["All Templates", "Completion", "Internship", "Offer", "Other"];
 
   return (
     <div className="space-y-8 p-2">
       {/* 1. Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+
         <div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Document Templates</h1>
           <p className="text-slate-500 mt-1">Manage and create professional document structures.</p>
@@ -102,7 +103,7 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
       {/* 3. Grid Content */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {/* Create From Scratch Card */}
-        <div 
+        {/* <div 
           onClick={() => setIsDrawerOpen(true)}
           className="group border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center p-8 hover:border-blue-400 hover:bg-blue-50/50 transition-all cursor-pointer min-h-[300px]"
         >
@@ -110,7 +111,7 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
             <Plus className="text-slate-400 group-hover:text-blue-600" size={24} />
           </div>
           <span className="text-sm font-bold text-slate-500 group-hover:text-blue-700">Create From Scratch</span>
-        </div>
+        </div> */}
 
         {/* Dynamic Mapping */}
         {certificates.map((certificate) => (
@@ -125,13 +126,30 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
               className="absolute top-3 right-3 p-2 bg-red-50 text-red-400 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all z-10"
               title="Delete Template"
             >
-              <Trash2 size={16} />
+              <Trash2 size={12} />
             </button>
 
-            <div>
-              <div className="w-full h-32 bg-slate-50 rounded-xl mb-4 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
-                <FileText className="text-slate-300 group-hover:text-blue-200" size={40} />
-              </div>
+            <div>  
+              {/*  this the image part  */}
+              {/* <div className="w-full h-32 bg-slate-800 rounded-xl mb-4 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+                <FileText classNam
+                e="text-slate-400 group-hover:text-blue-200" size={20} />
+              </div> */}
+
+
+
+<div className="w-full h-32 rounded-xl mb-4 overflow-hidden bg-slate-100 flex items-center justify-center">
+  <iframe
+    src={certificate.file}
+    className="w-full h-full object-contain"
+  />
+</div>
+
+
+
+{/* console.log(certificate.file); */}
+
+
               <div className="inline-block px-2 py-1 rounded-md bg-blue-50 text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-2">
                 {certificate.type}
               </div>
@@ -144,19 +162,25 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
             </div>
 
             <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-50">
-              <div className="flex flex-col">
+              {/* <div className="flex flex-col">
                 <span className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">Issued By</span>
                 <span className="text-xs font-semibold text-slate-600">{certificate.issuedBy || "Sheryians"}</span>
-              </div>
+              </div> */}
               
               <button 
-                onClick={(e) => {
+               
+                className="p-2 bg-slate-50 text-slate-400 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm hover:shadow-blue-200"
+              >
+                <div className="flex items-center gap-2 ">
+                     <h1 
+                      onClick={(e) => {
                   e.stopPropagation(); 
                   router.push('/admin/certificates/generator');
                 }}
-                className="p-2 bg-slate-50 text-slate-400 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm hover:shadow-blue-200"
-              >
+                     className="text-xs font-bold">manage</h1>
                 <ArrowRight size={16} />
+                </div>
+             
               </button>
             </div>
           </div>

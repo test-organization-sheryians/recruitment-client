@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
 import { Certificate } from "@/types/Certificate"; 
-import { createCertificate , createFields} from "@/api/certificate/createCertificate"; 
+// import { createCertificate , createFields} from "@/api/certificate/createCertificate"; 
 import { useRouter } from "next/navigation";
 
 
@@ -21,7 +21,7 @@ interface CreateCertificateProps {
 }
 
 export default function CreateCertificate({ isOpen, onClose, onSave }: CreateCertificateProps) {
-  const initialState = { name: "", type: "Completion", fileUrl: "" };
+  const initialState = { name: "", type: "Completion", file: " ", };
   const initialFields = [{ id: "1", title: "Client Name", type: "Text Input", placeholder: "Enter full name" }];
 
   const [formData, setFormData] = useState(initialState);
@@ -38,7 +38,11 @@ export default function CreateCertificate({ isOpen, onClose, onSave }: CreateCer
     // Maan lijiye link mil gaya:
     const s3Url = `https://sherihunt.s3.ap-south-1.amazonaws.com/uploads/${file.name}`; 
     
-    setFormData(prev => ({ ...prev, fileUrl: s3Url }));
+    // setFormData(prev => ({ ...prev, file: file, fileUrl: s3Url }));
+    setFormData(prev => ({
+  ...prev,
+  file: s3Url   // string save karo
+}));
   } catch (err) {
     alert("Upload failed");
   } finally {
@@ -70,14 +74,17 @@ export default function CreateCertificate({ isOpen, onClose, onSave }: CreateCer
   const router = useRouter();
 const handlePublish = async () => {
   if (!formData.name) return alert("Enter name");
-  if (!formData.fileUrl) return alert("Upload file");
+  if (!formData.file) return alert("Upload file");
 
   try {
     await onSave({
       name: formData.name,
       type: formData.type,
-      fileUrl: formData.fileUrl,
+      file: String(formData.file),
     } as Certificate);
+
+   
+
 
     alert("Template Created Successfully");
     onClose();
@@ -138,12 +145,12 @@ const handlePublish = async () => {
     <input type="file" accept=".html" id="file-up" onChange={handleFileUpload} className="hidden" />
     
     <div className="flex-1 border border-slate-200 rounded-lg p-3 text-sm bg-slate-50 text-slate-400 truncate">
-      {formData.fileUrl ? "✅ File Uploaded" : "No file selected"}
+      {formData.file ? "✅ File Uploaded" : "No file selected"}
     </div>
 
     <label htmlFor="file-up" className="px-4 py-2 bg-white border border-blue-200 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-50 cursor-pointer flex items-center gap-2">
       {isUploading ? <span className="animate-spin h-3 w-3 border-2 border-blue-600 border-t-transparent rounded-full" /> : <Plus size={14} />}
-      {formData.fileUrl ? "Change" : "Upload"}
+      {formData.file ? "Change" : "Upload"}
     </label>
   </div>
 </div>

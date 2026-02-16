@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { readExcelFile } from "../utils/excelReader";
 import { generateBulkCertificates } from "../utils/bulkGenerator";
-// import { saveAs } from "file-saver";
+import { saveAs } from "file-saver";
 import { toPng } from "html-to-image";
 
 import {
@@ -63,12 +63,12 @@ export default function OfferGenerator() {
             <span className="text-slate-800">Offer Letter Generator</span>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        {/* <div className="flex items-center gap-4">
           <Bell size={18} className="text-slate-400" />
           <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-[10px] font-bold text-orange-600">
             B
           </div>
-        </div>
+        </div> */}
       </header>
 
       <div className="flex flex-1 overflow-hidden">
@@ -77,7 +77,7 @@ export default function OfferGenerator() {
         {/* --- MAIN GENERATOR AREA --- */}
         <main className="flex-1 flex flex-col bg-slate-50/30 overflow-hidden relative">
           {/* Floating Toolbar */}
-          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20">
+          {/* <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20">
             <div className="bg-white/90 backdrop-blur shadow-2xl border border-slate-200 rounded-2xl px-5 py-2 flex items-center gap-6">
               <div className="flex gap-3 text-slate-400 border-r pr-5">
                 <RotateCcw
@@ -105,14 +105,14 @@ export default function OfferGenerator() {
                 </button>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Scrolling Form Container */}
           <div className="flex-1 overflow-y-auto p-12 pt-20">
             <div className="max-w-3xl mx-auto bg-white shadow-sm border border-slate-100 rounded-[2.5rem] p-16 space-y-16">
               <div className="text-center space-y-2">
                 <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-                  Employment Offer Letter
+                  Employment Offer Letter 
                 </h1>
                 {/* <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Standard HR Template v2.4 (2024)</p> */}
                 {/* <div className="flex flex-col items-center pt-6 gap-2">
