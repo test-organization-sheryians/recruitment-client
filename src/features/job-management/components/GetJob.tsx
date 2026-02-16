@@ -62,10 +62,13 @@ export default function Jobs() {
 
   const filteredJobs = useMemo(() => {
     if (filter === "ALL") return jobs
+     if (filter === "ACTIVE") return jobs
     return jobs.filter((j) => j.status?.toUpperCase() === filter)
   }, [jobs, filter])
 
-  const totalJobs = filteredJobs.length
+  // Use backend totalRecords when no client-side filter applied so total is known from first page
+  const backendTotalRecords = jobPages?.pages?.[0]?.pagination?.totalRecords
+  const totalJobs = filter === "ALL" && typeof backendTotalRecords === "number" ? backendTotalRecords : filteredJobs.length
   const totalPages = Math.max(1, Math.ceil(totalJobs / PAGE_SIZE))
 
   const startIndex = (currentPage - 1) * PAGE_SIZE
@@ -77,6 +80,7 @@ export default function Jobs() {
     const requiredJobs = page * PAGE_SIZE
 
     if (requiredJobs > jobs.length && hasNextPage) {
+      // fetch until we have enough jobs loaded for the requested page
       await fetchNextPage()
     }
 
@@ -97,8 +101,7 @@ export default function Jobs() {
   const filters = [
     { key: "ALL", label: "All Jobs", icon: ChevronDown },
     { key: "ACTIVE", label: "Active", icon: CheckCircle2 },
-    { key: "DRAFT", label: "Draft", icon: Edit3 },
-    { key: "FILLED", label: "Filled", icon: Archive },
+   
   ] as const
 
   /* ================= RENDER ================= */

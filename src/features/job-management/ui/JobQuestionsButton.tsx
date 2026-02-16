@@ -14,7 +14,7 @@ export default function JobQuestionsButton({ jobId }: Props) {
     <button
       // onClick={() => router.push(`/admin/jobs/${jobId}/questions`)}
       onClick={() => router.push(`/Crew/${jobId}/screen`)}
-      className="h-11 rounded-lg border bg-white font-semibold hover:bg-gray-100 transition flex justify-center items-center gap-2"
+      className="h-11 rounded-lg border bg-white font-semibold hover:bg-gray-100 transition flex justify-center items-center gap-2 cursor-pointer"
     >
       <FileQuestionMark size={16} />
       Questions

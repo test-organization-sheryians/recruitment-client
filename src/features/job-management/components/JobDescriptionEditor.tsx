@@ -3,6 +3,7 @@
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
+
 import {
   Bold,
   Italic,
@@ -54,23 +55,34 @@ export default function JobDescriptionEditor({
   if (!editor) return null;
 
   const applyLink = () => {
-    if (!linkUrl) return;
+  if (!linkUrl) return;
 
-    const safeUrl =
-      linkUrl.startsWith("http://") || linkUrl.startsWith("https://")
-        ? linkUrl
-        : `https://${linkUrl}`;
+  const safeUrl =
+    linkUrl.startsWith("http://") || linkUrl.startsWith("https://")
+      ? linkUrl
+      : `https://${linkUrl}`;
 
+  if (editor.state.selection.empty) {
+    // 🔥 No text selected → insert link as text
+    editor
+      .chain()
+      .focus()
+      .insertContent(`<a href="${safeUrl}" target="_blank">${safeUrl}</a>`)
+      .run();
+  } else {
+    // Text selected → convert into link
     editor
       .chain()
       .focus()
       .extendMarkRange("link")
       .setLink({ href: safeUrl, target: "_blank" })
       .run();
+  }
 
-    setLinkUrl("");
-    setShowLinkUI(false);
-  };
+  setLinkUrl("");
+  setShowLinkUI(false);
+};
+
 
   return (
     <div className="flex flex-col gap-2 mt-2">
@@ -79,20 +91,26 @@ export default function JobDescriptionEditor({
       <div className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900">
 
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-white dark:bg-gray-900">
-          <Btn onClick={() => editor.chain().focus().toggleBold().run()}>
+        <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-white dark:bg-gray-900 cursor-pointer">
+          <Btn 
+          onClick={() => editor.chain().focus().toggleBold().run()}>
             <Bold size={16} />
           </Btn>
 
-          <Btn onClick={() => editor.chain().focus().toggleItalic().run()}>
+          <Btn 
+          onClick={() => editor.chain().focus().toggleItalic().run()}>
             <Italic size={16} />
           </Btn>
 
-          <Btn onClick={() => editor.chain().focus().toggleBulletList().run()}>
+          <Btn 
+          active={editor.isActive("bulletList")}
+          onClick={() => editor.chain().focus().toggleBulletList().run()}>
             <List size={16} />
           </Btn>
 
-          <Btn onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+          <Btn 
+          active={editor.isActive("orderedList")}
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}>
             <ListOrdered size={16} />
           </Btn>
 
@@ -160,15 +178,24 @@ export default function JobDescriptionEditor({
 function Btn({
   children,
   onClick,
+  active = false,
 }: {
   children: React.ReactNode;
   onClick: () => void;
+  active?: boolean;
 }) {
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+      className={`
+  p-2 rounded transition cursor-pointer
+  ${active
+    ? "bg-blue-100 text-blue-600 dark:bg-blue-900/40"
+    : "hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"}
+`}
+
     >
       {children}
     </button>

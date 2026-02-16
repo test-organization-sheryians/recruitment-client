@@ -4,6 +4,7 @@ import React from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import apiClient from "@/lib/api-client";
 import { createJob } from "../hooks/jobs.api";
+import { useGetCategories } from "../hooks/useJobApi";
 
 import JobDescriptionEditor from "./JobDescriptionEditor";
 import { Briefcase } from "lucide-react";
@@ -59,11 +60,6 @@ const fetchSkills = async (): Promise<Skill[]> => {
   return res.data.data;
 };
 
-const fetchCategories = async (): Promise<Category[]> => {
-  const res = await apiClient.get("/job-categories");
-  return res.data.data;
-};
-
 const today = new Date().toISOString().split("T")[0];
 
 /* ================= COMPONENT ================= */
@@ -78,33 +74,39 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
     queryFn: fetchSkills,
   });
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ["categories"],
-    queryFn: fetchCategories,
-  });
+  const {
+    data: categories = [],
+    fetchNextPage: fetchMoreCategories,
+    hasNextPage: categoriesHasNext,
+    isFetchingNextPage: isFetchingMoreCategories,
+  } = useGetCategories();
 
-  const [form, setForm] = React.useState<CreateJobFormValues>({
-    title: "",
-    requiredExperience: 0,
-    category: "",
-    education: "",
-    jobType: "Full-Time",
-    description: "",
-    expiry: "",
-    skills: [],
-    salary: {
-      min: 0,
-      max: 0,
-      currency: "INR",
-    },
-    location: {
-      city: "",
-      state: "",
-      pincode: "",
-      country: "India",
-    },
-    clientId: "6915b90df6594de75060410b",
-  });
+  const initialForm: CreateJobFormValues = {
+  title: "",
+  requiredExperience: 0,
+  category: "",
+  education: "",
+  jobType: "Full-Time",
+  description: "",
+  expiry: "",
+  skills: [],
+  salary: {
+    min: 0,
+    max: 0,
+    currency: "INR",
+  },
+  location: {
+    city: "",
+    state: "",
+    pincode: "",
+    country: "India",
+  },
+  clientId: "6915b90df6594de75060410b",
+};
+
+
+  const [form, setForm] = React.useState<CreateJobFormValues>(initialForm);
+
 
   const pincodeStatus = usePincodeLookup(form.location.pincode, (location) => {
     setForm((prev) => ({
@@ -210,7 +212,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
         <div className="max-w-200 w-full flex flex-col gap-10">
           <div>
             <button
-              className="text-sm text-gray-500 mb-2"
+              className="text-sm text-gray-500 mb-2 cursor-pointer"
               onClick={() => {
                 if (onClose) onClose();
                 else router.back();
@@ -234,7 +236,12 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
 
             <div className="flex flex-col gap-5">
               <Input
-                label="Job Title"
+                label={
+                  <>
+                    <span>Job Title</span>
+                    <span className="text-red-600 ml-1">*</span>
+                  </>
+                }
                 placeholder="e.g. Frontend Developer"
                 value={form.title}
                 onChange={(v) => setForm({ ...form, title: v })}
@@ -254,17 +261,29 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
                 />
 
                 <Input
-                  label="Experience Level (minimum required)"
+                  label={
+                    <>
+                      <span>Experience Level (minimum required)</span>
+                      <span className="text-red-600 ml-1">*</span>
+                    </>
+                  }
                   type="number"
                   placeholder="e.g. 2"
                   value={form.requiredExperience.toString()}
-                  onChange={(v) => setForm({ ...form, requiredExperience: Number(v) })}
+                  onChange={(v) =>
+                    setForm({ ...form, requiredExperience: Number(v) })
+                  }
                 />
               </TwoCol>
 
               <TwoCol>
                 <Input
-                  label="Application Deadline"
+                  label={
+                    <>
+                      <span>Application Deadline</span>
+                      <span className="text-red-600 ml-1">*</span>
+                    </>
+                  }
                   placeholder="Select last date"
                   type="date"
                   min={today}
@@ -274,7 +293,12 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
 
                 <div>
                   <Input
-                    label="Pincode"
+                    label={
+                      <>
+                        <span>Pincode</span>
+                        <span className="text-red-600 ml-1">*</span>
+                      </>
+                    }
                     placeholder="e.g. 462001"
                     value={form.location.pincode}
                     onChange={(v) =>
@@ -329,14 +353,24 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Input
-                  label="Education"
+                  label={
+                    <>
+                      <span>Education</span>
+                      <span className="text-red-600 ml-1">*</span>
+                    </>
+                  }
                   placeholder="e.g. B.Tech / BCA / MCA"
                   value={form.education}
                   onChange={(v) => setForm({ ...form, education: v })}
                 />
 
                 <Input
-                  label="Min Salary (INR)"
+                  label={
+                    <>
+                      <span>Min Salary (INR)</span>
+                      <span className="text-red-600 ml-1">*</span>
+                    </>
+                  }
                   placeholder="e.g. 15000"
                   type="number"
                   value={form.salary.min.toString()}
@@ -349,7 +383,12 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
                 />
 
                 <Input
-                  label="Max Salary (INR)"
+                  label={
+                    <>
+                      <span>Max Salary (INR)</span>
+                      <span className="text-red-600 ml-1">*</span>
+                    </>
+                  }
                   placeholder="e.g. 30000"
                   type="number"
                   value={form.salary.max.toString()}
@@ -364,7 +403,9 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
 
               {/* Skills */}
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold">Required Skills</label>
+                <label className="text-sm font-bold">
+                  Required Skills <span className="text-red-600 ml-1">*</span>
+                </label>
 
                 <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 items-center">
                   {form.skills.map((s) => (
@@ -411,7 +452,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
                             setForm({ ...form, skills: [...form.skills, s] });
                             setSkillQuery("");
                           }}
-                          className="px-3 py-1 text-xs rounded-full border border-dashed border-primary text-primary hover:bg-primary/10 transition"
+                          className="px-3 py-1 text-xs rounded-full border border-dashed border-primary text-primary hover:bg-primary/10 transition cursor-pointer"
                         >
                           + {s.name}
                         </button>
@@ -421,10 +462,21 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
               </div>
 
               <Select
-                label="Job Category"
+                label={
+                  <>
+                    <span>Job Category</span>
+                    <span className="text-red-600 ml-1">*</span>
+                  </>
+                }
                 value={form.category}
                 options={categories}
                 onChange={(v) => setForm({ ...form, category: v })}
+                onLoadMore={() => {
+                  if (categoriesHasNext && !isFetchingMoreCategories)
+                    fetchMoreCategories();
+                }}
+                hasMore={!!categoriesHasNext}
+                isLoadingMore={!!isFetchingMoreCategories}
               />
 
               <JobDescriptionEditor
@@ -453,10 +505,12 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
             <div className="flex items-center gap-4">
               <button
                 type="button"
-                className="px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-gray-50 transition"
+                className="px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-gray-50 transition cursor-pointer"
                 onClick={() => {
-                  toast("Cancel clicked");
-                }}
+                setForm(initialForm);
+                if (onClose) onClose();
+                else router.back();
+              }}
               >
                 Cancel
               </button>
@@ -465,7 +519,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
                 type="button"
                 onClick={submitJob}
                 disabled={isPending}
-                className="px-8 py-3 bg-[#2b4bee] text-white rounded-lg font-semibold shadow-md shadow-[#2b4bee]/30 hover:bg-[#2340c8] transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-3 bg-[#2b4bee] text-white rounded-lg font-semibold shadow-md shadow-[#2b4bee]/30 hover:bg-[#2340c8] transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isPending ? "Creating..." : "Next Screening Questions"}
                 {!isPending && <span>→</span>}
@@ -486,7 +540,7 @@ function Input({
   type = "text",
   ...props
 }: {
-  label: string;
+  label: React.ReactNode;
   value?: string;
   onChange?: (v: string) => void;
   type?: string;
@@ -505,17 +559,37 @@ function Input({
   );
 }
 
+type SelectProps = {
+  label: React.ReactNode;
+  value: string;
+  options: Category[];
+  onChange: (v: string) => void;
+
+  // infinite scroll props
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+};
+
 function Select({
   label,
   value,
   options,
   onChange,
+  onLoadMore,
+  hasMore = false,
+  isLoadingMore = false,
 }: {
-  label: string;
+  label: React.ReactNode;
   value: string;
   options: Category[];
   onChange: (v: string) => void;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 }) {
+  // allow optional infinite-loading props when provided
+  // @ts-ignore
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement | null>(null);
 
@@ -541,7 +615,7 @@ function Select({
           onClick={() => setOpen((s) => !s)}
           aria-haspopup="listbox"
           aria-expanded={open}
-          className="w-full flex items-center justify-between px-4 py-3 rounded-lg border bg-white dark:bg-gray-800 text-left shadow-sm hover:shadow-md transition"
+          className="w-full flex items-center justify-between px-4 py-3 rounded-lg border bg-white dark:bg-gray-800 text-left shadow-sm hover:shadow-md transition cursor-pointer"
         >
           <span className={`${selected ? "" : "text-gray-400"}`}>
             {selected ? selected.name : "Select"}
@@ -567,6 +641,16 @@ function Select({
           <ul
             role="listbox"
             tabIndex={-1}
+            onScroll={(e) => {
+              const target = e.currentTarget;
+              if (!onLoadMore || !hasMore) return;
+              if (
+                target.scrollTop + target.clientHeight >=
+                target.scrollHeight - 8
+              ) {
+                if (!isLoadingMore) onLoadMore();
+              }
+            }}
             className="absolute z-40 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg border shadow-lg max-h-48 overflow-auto"
           >
             <li>
@@ -576,7 +660,7 @@ function Select({
                   onChange("");
                   setOpen(false);
                 }}
-                className={`w-full text-left px-4 py-2 text-sm ${!value ? "font-semibold" : "text-gray-600 dark:text-gray-200"}`}
+                className={`w-full text-left px-4 py-2 text-sm ${!value ? "font-semibold" : "text-gray-600 dark:text-gray-200"} cursor-pointer`}
               >
                 Select
               </button>
@@ -589,7 +673,7 @@ function Select({
                     onChange(c._id);
                     setOpen(false);
                   }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition ${value === c._id ? "bg-[#2b4bee] text-white" : "text-gray-700 dark:text-gray-200"}`}
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition ${value === c._id ? "bg-[#2b4bee] text-white" : "text-gray-700 dark:text-gray-200"} cursor-pointer`}
                 >
                   {c.name}
                 </button>

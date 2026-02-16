@@ -10,6 +10,7 @@ import {
   Share2,
   Skull,
   Trash,
+  BadgeIndianRupee,
 } from "lucide-react"
 
 import type { Job } from "@/types/Job"
@@ -70,13 +71,13 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete, onSha
       } flex flex-col rounded-xl border border-[#dbdde6] dark:border-gray-700 bg-white dark:bg-[#1a1e2e] shadow-sm overflow-hidden transition-all duration-300`}
     >
       {/* HEADER ROW */}
-      <button
+      <div
         onClick={onToggle}
-        className="w-full flex justify-between items-center px-6 py-5 text-left hover:bg-gray-50 rounded-xl cursor-pointer"
+        className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-3 px-4 sm:px-6 py-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl cursor-pointer"
       >
-        <div>
+        <div className="w-full">
           <div className="flex items-center gap-3">
-            <h3 className="text-lg font-bold text-gray-900">{job.title}</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white break-words">{job.title}</h3>
             <span
               className={`px-2.5 py-0.5 rounded text-xs font-bold tracking-wide ${statusStyles(
                 status
@@ -86,27 +87,37 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete, onSha
             </span>
           </div>
           <p className="text-[#616889] dark:text-gray-400 text-sm mt-1">
-            {typeof job.category === "string" ? job.category : job.category?.name || "General"} •{" "}
-            {job.createdAt ? `Posted ${new Date(job.createdAt).toLocaleDateString()}` : "Recently"}
+            {typeof job.category === "string" ? job.category : job.category?.name || "General"} • {job.createdAt ? `Posted ${new Date(job.createdAt).toLocaleDateString()}` : "Recently"}
           </p>
         </div>
 
-        <div className="flex items-center gap-10">
+        <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-4">
           <div
-            className="text-center hover:bg-gray-100 p-3 rounded-lg z-48"
-            onClick={() => router.push(`/admin/applicants/${job._id}`)}
+            className="text-center hover:bg-gray-100 dark:hover:bg-gray-700 p-2 sm:p-3 rounded-lg z-48"
+            onClick={(e) => {
+              e.stopPropagation()
+              router.push(`/admin/applicants/${job._id}`)
+            }}
           >
-            <p className="text-xl font-bold text-gray-900">{job.applicantsCount ?? 0}</p>
-            <p className="text-xs uppercase text-gray-500">Applicants</p>
+            <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{job.applicantsCount ?? 0}</p>
+            <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Applicants</p>
           </div>
 
-          <span
-            className={`text-2xl text-blue-600 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggle()
+            }}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer"
+            aria-expanded={isOpen}
+            aria-label="Toggle job details"
           >
-            <ChevronDown />
-          </span>
+            <span className={`text-2xl text-blue-600 dark:text-blue-400 transition-transform ${isOpen ? "rotate-180" : ""}`}>
+              <ChevronDown />
+            </span>
+          </button>
         </div>
-      </button>
+      </div>
 
       <hr />
 
@@ -117,36 +128,24 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete, onSha
           <div className="space-y-6">
             <div>
               <h4 className="flex items-center gap-1 text-sm font-bold text-gray-900">
-                <Skull
-                  size={18}
-                  className="text-blue-600"
-                />
+                <Skull size={18} className="text-blue-600" />
                 Required Skills
               </h4>
 
               <div className="flex flex-wrap gap-2 mt-2 items-center">
                 {visibleSkills.map((s, i) => (
-                  <span
-                    key={i}
-                    className="px-3 py-1.5 rounded-full bg-white border text-xs font-semibold"
-                  >
+                  <span key={i} className="px-3 py-1.5 rounded-full bg-white border text-xs font-semibold">
                     {typeof s === "string" ? s : s.name}
                   </span>
                 ))}
                 {!showAllSkills && extraSkills > 0 && (
-                  <span
-                    className="text-blue-600 text-xs font-bold cursor-pointer hover:underline"
-                    onClick={() => setShowAllSkills(true)}
-                  >
+                  <span className="text-blue-600 text-xs font-bold hover:underline cursor-pointer" onClick={() => setShowAllSkills(true)}>
                     +{extraSkills} more
                   </span>
                 )}
 
                 {showAllSkills && (
-                  <span
-                    className="text-blue-600 text-xs font-bold cursor-pointer hover:underline"
-                    onClick={() => setShowAllSkills(false)}
-                  >
+                  <span className="text-blue-600 text-xs font-bold hover:underline cursor-pointer" onClick={() => setShowAllSkills(false)}>
                     Show less
                   </span>
                 )}
@@ -155,27 +154,22 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete, onSha
 
             <div>
               <h4 className="flex items-center gap-2 text-sm font-bold text-gray-900">
-                <FileText
-                  size={18}
-                  className="text-blue-600"
-                />
+                <FileText size={18} className="text-blue-600" />
                 Job Description
               </h4>
               <div
-                className="mt-2 bg-white border rounded-lg p-4 text-sm text-gray-600 leading-relaxed prose prose-sm max-w-none max-h-48 overflow-hidden line-clamp-6"
-                dangerouslySetInnerHTML={{
-                  __html: job.description || "<p>No description provided.</p>",
-                }}
+                className="mt-2 bg-white border rounded-lg p-4 text-sm text-gray-600 leading-relaxed job-description-content max-w-none max-h-48 overflow-hidden line-clamp-6"
+                dangerouslySetInnerHTML={{ __html: job.description || "<p>No description provided.</p>" }}
               />
             </div>
 
             <div>
-              <h4 className="flex items-center gap-1 text-sm font-bold text-gray-900">
-                <span className="text-base">💰</span>
+              <h4 className="flex items-center gap-2 text-sm font-bold text-gray-900">
+                <BadgeIndianRupee size={18} className="text-blue-600" />
                 Salary
               </h4>
 
-              {job.salary && typeof job.salary === 'object' ? (
+              {job.salary && typeof job.salary === "object" ? (
                 <div className="flex flex-wrap gap-2 mt-2 items-center">
                   <span className="px-3 py-1.5 rounded-full bg-white border text-xs font-semibold">
                     {(job.salary as any)?.min?.toLocaleString() || "0"} - {(job.salary as any)?.max?.toLocaleString() || "0"} {(job.salary as any)?.currency || "INR"}
@@ -190,29 +184,15 @@ export default function JobCard({ job, isOpen, onToggle, onEdit, onDelete, onSha
           {/* RIGHT */}
           <div>
             <h4 className="flex items-center gap-2 text-sm font-bold text-gray-900 mb-4">
-              <Settings
-                size={18}
-                className="text-blue-600"
-              />
+              <Settings size={18} className="text-blue-600" />
               Management Actions
             </h4>
 
             <div className="grid grid-cols-2 gap-3">
-              <JobEditButton
-                jobId={job._id}
-                onUpdated={onDelete}
-              />
-
+              <JobEditButton jobId={job._id} onUpdated={onDelete} />
               <JobQuestionsButton jobId={job._id} />
-
               <JobShareButton onClick={onShare} />
-
-              <JobDeleteButton
-                jobId={job._id}
-                jobTitle={job.title}
-                onDeleted={onDelete}
-              />
-              {/* <DeletejobTest jobId={job._id} jobTitle={job.title} /> */}
+              <JobDeleteButton jobId={job._id} jobTitle={job.title} onDeleted={onDelete} />
             </div>
           </div>
         </div>

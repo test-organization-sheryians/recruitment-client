@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import DeleteIcon from "@mui/icons-material/Delete"
 import SwipeableDrawer from "@mui/material/SwipeableDrawer"
 import { InputType } from "@/types/inputTypes"
@@ -25,6 +25,15 @@ export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
   const [isRequired, setIsRequired] = useState(true)
   const [isKnockout, setIsKnockout] = useState(false)
   const [options, setOptions] = useState<string[]>([])
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640)
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
 
   const optionTypes: InputType[] = ["radio", "checkbox", "dropdown", "yes-no"]
 
@@ -97,7 +106,7 @@ export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
         onClose={closeDrawer}
         PaperProps={{
           sx: {
-            width: 720,
+            width: isMobile ? "100%" : 720,
             borderTopLeftRadius: 18,
             borderBottomLeftRadius: 18,
             overflow: "hidden",
@@ -106,10 +115,10 @@ export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
       >
         <div className="flex flex-col h-full bg-white dark:bg-[#0f1220]">
           {/* HEADER */}
-          <div className="sticky top-0 z-10 px-6 py-5 border-b border-gray-200 dark:border-[#2b2f45] bg-white/90 dark:bg-[#0f1220]/90 backdrop-blur">
+          <div className="sticky top-0 z-10 px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 dark:border-[#2b2f45] bg-white/90 dark:bg-[#0f1220]/90 backdrop-blur">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                   Add New Question
                 </h2>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -119,7 +128,7 @@ export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
 
               <button
                 onClick={closeDrawer}
-                className="h-9 w-9 grid place-items-center rounded-lg border border-gray-200 dark:border-[#2b2f45] hover:bg-gray-50 dark:hover:bg-white/5 transition"
+                className="h-9 w-9 grid place-items-center rounded-lg border border-gray-200 dark:border-[#2b2f45] hover:bg-gray-50 dark:hover:bg-white/5 transition cursor-pointer"
                 aria-label="Close"
                 type="button"
               >
@@ -129,7 +138,7 @@ export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
           </div>
 
           {/* BODY */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 space-y-5">
             {/* TITLE */}
             <div className={cardBase}>
               <label className={labelBase}>Question Title</label>
@@ -159,26 +168,25 @@ export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
             {/* INPUT TYPE */}
             <div className={cardBase}>
               <label className={labelBase}>Input Type</label>
-              <select
+              <CustomSelect
                 value={inputType}
-                onChange={(e) => {
-                  const val = e.target.value as InputType
-                  setInputType(val)
-                  setOptions(getDefaultOptions(val))
+                onChange={(val) => {
+                  setInputType(val as InputType)
+                  setOptions(getDefaultOptions(val as InputType))
                 }}
-                className={inputBase}
-              >
-                <option value="text">Text</option>
-                <option value="textarea">Textarea</option>
-                <option value="number">Number</option>
-                <option value="date">Date</option>
-                <option value="file">File Upload</option>
-                <option value="rating">Rating</option>
-                <option value="radio">Radio</option>
-                <option value="checkbox">Checkbox</option>
-                <option value="dropdown">Dropdown</option>
-                <option value="yes-no">Yes / No</option>
-              </select>
+                options={[
+                  { value: "text", label: "Text" },
+                  { value: "textarea", label: "Textarea" },
+                  { value: "number", label: "Number" },
+                  { value: "date", label: "Date" },
+                  { value: "file", label: "File Upload" },
+                  { value: "rating", label: "Rating" },
+                  { value: "radio", label: "Radio" },
+                  { value: "checkbox", label: "Checkbox" },
+                  { value: "dropdown", label: "Dropdown" },
+                  { value: "yes-no", label: "Yes / No" },
+                ]}
+              />
 
               <div className="mt-3 flex flex-wrap gap-2">
                 <span className="text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary font-semibold">
@@ -201,7 +209,7 @@ export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
                   {inputType !== "yes-no" && (
                     <button
                       onClick={handleAddOption}
-                      className="text-xs font-bold text-primary hover:underline"
+                      className="text-xs font-bold text-primary hover:underline cursor-pointer"
                       type="button"
                     >
                       + Add Option
@@ -295,10 +303,10 @@ export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
           </div>
 
           {/* FOOTER */}
-          <div className="sticky bottom-0 z-10 px-6 py-4 border-t border-gray-200 dark:border-[#2b2f45] bg-white/90 dark:bg-[#0f1220]/90 backdrop-blur">
+          <div className="sticky bottom-0 z-10 px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-[#2b2f45] bg-white/90 dark:bg-[#0f1220]/90 backdrop-blur">
             <div className="flex gap-3">
               <button
-                className="flex-1 rounded-xl border border-gray-200 dark:border-[#2b2f45] py-2.5 text-sm font-bold text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-white/5 transition"
+                className="flex-1 rounded-xl border border-gray-200 dark:border-[#2b2f45] py-2.5 text-sm font-bold text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-white/5 transition cursor-pointer"
                 onClick={closeDrawer}
                 type="button"
               >
@@ -318,5 +326,109 @@ export default function AddQuestion({ onClose, onAdd }: AddQuestionProps) {
         </div>
       </SwipeableDrawer>
     </>
+  )
+}
+
+/* ================= CUSTOM SELECT COMPONENT ================= */
+function CustomSelect({
+  value,
+  onChange,
+  options,
+}: {
+  value: string
+  onChange: (value: string) => void
+  options: { value: string; label: string }[]
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (!ref.current) return
+      if (!ref.current.contains(e.target as Node)) setOpen(false)
+    }
+
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [])
+
+  const selected = options.find((o) => o.value === value)
+
+  return (
+    <div className="w-full" ref={ref}>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen((s) => !s)}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          className="w-full flex items-center justify-between rounded-xl border border-gray-200 dark:border-[#2b2f45] bg-white dark:bg-[#14172a] px-3 py-2 text-sm text-gray-900 dark:text-gray-100 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition"
+        >
+          <span className={`${selected ? "" : "text-gray-400"}`}>
+            {selected ? selected.label : "Select"}
+          </span>
+
+          <svg
+            className={`w-4 h-4 ml-2 transform transition flex-shrink-0 ${
+              open ? "rotate-180" : "rotate-0"
+            }`}
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M6 8l4 4 4-4"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+
+        {open && (
+          <ul
+            role="listbox"
+            tabIndex={-1}
+            className="absolute z-40 mt-2 w-full bg-white dark:bg-[#14172a] rounded-xl border border-gray-200 dark:border-[#2b2f45] shadow-lg max-h-56 overflow-y-auto"
+          >
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  onChange("")
+                  setOpen(false)
+                }}
+                className={`w-full text-left px-3 py-2 text-sm transition ${
+                  !value
+                    ? "font-semibold bg-primary/10 text-primary"
+                    : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
+                }`}
+              >
+                Select
+              </button>
+            </li>
+            {options.map((option) => (
+              <li key={option.value}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange(option.value)
+                    setOpen(false)
+                  }}
+                  className={`w-full text-left px-3 py-2 text-sm transition ${
+                    value === option.value
+                      ? "bg-primary text-white font-semibold"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
   )
 }

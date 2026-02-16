@@ -106,7 +106,7 @@ export default function QRCodePanel({
       <div className="relative mt-4">
         <button
           onClick={() => setShowMenu((p) => !p)}
-          className="text-[#1D4ED8] text-xs font-bold flex items-center gap-1 hover:underline"
+          className="text-[#1D4ED8] text-xs font-bold flex items-center gap-1 hover:underline cursor-pointer"
         >
           <Download className="w-4 h-4" />
           Download
@@ -116,21 +116,21 @@ export default function QRCodePanel({
           <div className="absolute bottom-full mb-2 right-0 bg-white dark:bg-[#1a1e2e] border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg w-28 z-50">
             <button
               onClick={handleDownloadSVG}
-              className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
             >
               Download SVG
             </button>
 
             <button
               onClick={() => downloadAsImage("png")}
-              className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
             >
               Download PNG
             </button>
 
             <button
               onClick={() => downloadAsImage("jpg")}
-              className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
             >
               Download JPG
             </button>

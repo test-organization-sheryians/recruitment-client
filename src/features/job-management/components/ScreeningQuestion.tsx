@@ -205,7 +205,7 @@ const ScreeningQuestions: React.FC = () => {
               <button
                 type="button"
                 onClick={() => router.push("/Crew/getJob")}
-                className="hover:text-primary transition font-medium"
+                className="hover:text-primary transition font-medium cursor-pointer"
               >
                 Jobs
               </button>
@@ -229,7 +229,7 @@ const ScreeningQuestions: React.FC = () => {
           <div className="flex items-center gap-2 md:gap-3">
             <button
               onClick={() => setIsPreviewOpen(true)}
-              className="h-10 px-4 rounded-xl border border-[#dbdde6] dark:border-gray-700 bg-white dark:bg-transparent font-bold text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition"
+              className="h-10 px-4 rounded-xl border border-[#dbdde6] dark:border-gray-700 bg-white dark:bg-transparent font-bold text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition cursor-pointer"
               type="button"
             >
               Preview
@@ -237,7 +237,7 @@ const ScreeningQuestions: React.FC = () => {
 
             <button
               onClick={handleSaveChanges}
-              className="h-10 px-5 rounded-xl bg-primary text-white font-extrabold text-sm hover:opacity-95 transition shadow-sm"
+              className="h-10 px-5 rounded-xl bg-primary text-white font-extrabold text-sm hover:opacity-95 transition shadow-sm cursor-pointer"
               type="button"
             >
               Save Changes
@@ -271,7 +271,7 @@ const ScreeningQuestions: React.FC = () => {
 
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="mt-6 inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary text-white font-extrabold hover:opacity-95 transition"
+              className="mt-6 inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary text-white font-extrabold hover:opacity-95 transition cursor-pointer"
               type="button"
             >
               <AddIcon />
@@ -333,7 +333,7 @@ const ScreeningQuestions: React.FC = () => {
                           setEditingQuestion(q)
                           setIsEditDialogOpen(true)
                         }}
-                        className="h-10 w-10 grid place-items-center rounded-xl border border-[#dbdde6] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-white/5 transition"
+                        className="h-10 w-10 grid place-items-center rounded-xl border border-[#dbdde6] dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-white/5 transition cursor-pointer"
                         aria-label="Edit"
                         type="button"
                       >
@@ -371,7 +371,7 @@ const ScreeningQuestions: React.FC = () => {
             {/* Add New Question CTA */}
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="w-full rounded-2xl border-2 border-dashed border-[#dbdde6] dark:border-gray-700 p-7 md:p-8 text-[#616889] hover:border-primary hover:text-primary hover:bg-primary/5 transition flex justify-center gap-2 items-center"
+              className="w-full rounded-2xl border-2 border-dashed border-[#dbdde6] dark:border-gray-700 p-7 md:p-8 text-[#616889] hover:border-primary hover:text-primary hover:bg-primary/5 transition flex justify-center gap-2 items-center cursor-pointer"
               type="button"
             >
               <AddIcon />
@@ -410,7 +410,7 @@ const ScreeningQuestions: React.FC = () => {
 
             <button
               onClick={handleSaveEdit}
-              className="mt-6 bg-primary text-white px-4 py-2 rounded-xl w-full font-bold hover:opacity-95 transition"
+              className="mt-6 bg-primary text-white px-4 py-2 rounded-xl w-full font-bold hover:opacity-95 transition cursor-pointer"
               type="button"
             >
               Save Changes

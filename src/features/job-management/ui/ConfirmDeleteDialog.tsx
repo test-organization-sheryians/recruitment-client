@@ -64,7 +64,7 @@ export default function ConfirmDeleteDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="h-11 rounded-lg bg-red-50 text-red-800 font-semibold hover:bg-red-100 transition flex justify-center items-center gap-2 border border-red-200">
+        <button className="h-11 rounded-lg bg-red-50 text-red-800 font-semibold hover:bg-red-100 transition flex justify-center items-center gap-2 border border-red-200 cursor-pointer">
           <DeleteIcon className="w-4 h-6" />
           {triggerLabel}
         </button>
@@ -88,7 +88,7 @@ export default function ConfirmDeleteDialog({
             </div>
 
             <button onClick={() => setIsOpen(false)}>
-              <X className="w-5 h-5 text-gray-400" />
+              <X className="w-5 h-5 text-gray-400 cursor-pointer" />
             </button>
           </div>
         </DialogHeader>
@@ -128,7 +128,7 @@ export default function ConfirmDeleteDialog({
         <div className="flex gap-3 p-6 bg-gray-50 rounded-full">
           <button
             onClick={() => setIsOpen(false)}
-            className="flex-1 h-11 border rounded"
+            className="flex-1 h-11 border rounded cursor-pointer"
           >
             Cancel
           </button>
@@ -136,7 +136,7 @@ export default function ConfirmDeleteDialog({
           <button
             onClick={handleDelete}
             disabled={loading || input !== confirmText}
-            className="flex-[1.5] h-11 bg-red-600 text-white rounded disabled:opacity-50"
+            className="flex-[1.5] h-11 bg-red-600 text-white rounded disabled:opacity-50 cursor-pointer"
           >
             {loading ? "Deleting..." : "Delete"}
           </button>

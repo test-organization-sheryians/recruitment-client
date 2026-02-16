@@ -16,7 +16,7 @@ export default function JobEditButton({ jobId, onUpdated }: Props) {
     <>
       <button
         onClick={() => setEditingJobId(jobId)}
-        className="h-11 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition flex justify-center items-center gap-2"
+        className="h-11 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition flex justify-center items-center gap-2 cursor-pointer"
       >
         <Pencil size={16} />
         Edit Job

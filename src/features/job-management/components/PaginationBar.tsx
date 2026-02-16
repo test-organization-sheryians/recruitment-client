@@ -49,7 +49,7 @@ export default function PaginationBar({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="h-9 w-9 rounded border flex items-center justify-center disabled:opacity-40 hover:bg-gray-100"
+          className="h-9 w-9 rounded border flex items-center justify-center disabled:opacity-40 hover:bg-gray-100 cursor-pointer"
         >
           <ChevronLeft />
         </button>

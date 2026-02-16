@@ -38,7 +38,7 @@ export default function PublicLinkSection({ url }: Props) {
 
         <button
           onClick={handleCopy}
-          className={`px-5 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition ${
+          className={`px-5 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition cursor-pointer ${
             copied
               ? "bg-green-600 hover:bg-green-700"
               : "bg-[#1D4ED8] hover:bg-blue-700"
