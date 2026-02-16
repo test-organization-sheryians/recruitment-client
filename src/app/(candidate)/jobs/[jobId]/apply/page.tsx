@@ -17,11 +17,16 @@ export default function ApplyPage() {
 
   // ⭐ after this line → data is guaranteed Job
   return (
-    <JobQuestionList
-      jobId={jobId}
-      jobDetails={data}
-      onBack={() => router.back()}
-       onSuccess={() => router.push("/candidate/jobs")} 
-    />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
+      <div className="w-full sm:max-w-3xl max-h-[90vh] sm:max-h-[92vh] overflow-y-auto bg-white rounded-3xl shadow-2xl">
+        <JobQuestionList
+          jobId={jobId}
+          jobDetails={data}
+          onBack={() => router.back()}
+          onSuccess={() => router.push("/jobs")}
+        />
+      </div>
+    </div>
   );
 }
+
