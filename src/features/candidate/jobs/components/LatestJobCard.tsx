@@ -9,10 +9,10 @@ interface LatestJobCardProps {
   company: string;
   location?: string;
   salary?: {
-  currency?: string;
-  min?: number;
-  max?: number;
-};
+    currency?: string;
+    min?: number;
+    max?: number;
+  };
 
 
 
@@ -39,10 +39,10 @@ export default function LatestJobCard({
   const visibleSkills = skills.slice(0, 4);
   const extraSkills = skills.length - visibleSkills.length;
 
-  
+
 
   return (
-   <div className="bg-white rounded-lg p-6 flex flex-col md:flex-row md:justify-between border gap-6 
+    <div className="bg-white rounded-lg p-6 flex flex-col md:flex-row md:justify-between border gap-6 
                 hover:shadow-lg hover:shadow-gray-500/50 
                 transition-shadow duration-300">
 
@@ -70,11 +70,11 @@ export default function LatestJobCard({
               {location}
             </span>
 
-          {salary && salary.min != null && salary.max != null && (
-         <span className="flex items-center gap-1">
-    💰 {salary.currency ?? "₹"} {salary.min} - {salary.max}
-         </span>
-          )}
+            {salary && salary.min != null && salary.max != null && (
+              <span className="flex items-center gap-1">
+                💰 {salary.currency ?? "₹"} {salary.min} - {salary.max}
+              </span>
+            )}
 
 
             {postedAt && (
@@ -90,11 +90,10 @@ export default function LatestJobCard({
             {visibleSkills.map((skill, index) => (
               <span
                 key={skill}
-                className={`px-4 py-1 text-xs rounded-full ${
-                  index === 0
+                className={`px-4 py-1 text-xs rounded-full ${index === 0
                     ? "bg-blue-50 text-blue-600 font-bold"
                     : "bg-gray-100 text-gray-700 font-bold"
-                }`}
+                  }`}
               >
                 {skill}
               </span>
@@ -112,26 +111,25 @@ export default function LatestJobCard({
       {/* BUTTONS - BELOW ON MOBILE, RIGHT ON DESKTOP */}
       <div className="flex flex-row md:flex-col md:justify-center gap-4">
         <button
-  onClick={() => onDetails(jobId)}
-  className="px-8 py-3 border border-blue-600 text-[16px] text-blue-600 rounded-lg font-bold hover:bg-blue-50"
->
-  Details
-</button>
+          onClick={() => onDetails(jobId)}
+          className="px-8 py-3 border border-blue-600 text-[16px] text-blue-600 rounded-lg font-bold hover:bg-blue-50"
+        >
+          Details
+        </button>
 
-<button
-  disabled={applied}
-  onClick={(e) => {
-    e.stopPropagation()
-    onApply(jobId)
-  }}
-  className={`px-8 py-3 rounded-lg text-[16px] font-bold ${
-    applied
-      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-      : "bg-blue-600 text-white hover:bg-blue-700"
-  }`}
->
-  {applied ? "Applied" : "Apply"}
-</button>
+        <button
+          disabled={applied}
+          onClick={(e) => {
+            e.stopPropagation()
+            onApply(jobId)
+          }}
+          className={`px-8 py-3 rounded-lg text-[16px] font-bold ${applied
+              ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700"
+            }`}
+        >
+          {applied ? "Applied" : "Apply"}
+        </button>
 
       </div>
     </div>

@@ -282,6 +282,22 @@ export default function JobQuestionsForm({
                         onChange={(e) => handleChange(q.title, e.target.value)}
                       />
                     )}
+                    {q.inputType === "file" && (
+  <input
+    type="file"
+    className="w-full border px-4 py-2 rounded-lg text-sm file:mr-4 file:py-2 file:px-4 
+               file:rounded-lg file:border-0 file:text-sm file:font-semibold 
+               file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+   onChange={(e) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    handleChange(q.title, file);
+  }
+}}
+
+  />
+)}
+
                     {q.inputType === "dropdown" && (
                       <select
                         className="w-full border px-4 py-2 rounded-lg text-sm"
@@ -293,6 +309,7 @@ export default function JobQuestionsForm({
                         ))}
                       </select>
                     )}
+                    
                   </QuestionWrapper>
                 ))}
               </div>

@@ -1,6 +1,7 @@
 import { Building2, MapPin, Bookmark } from "lucide-react";
 
 interface JobHeaderProps {
+  jobId: string;
   title: string;
   company?: string;
   location?: string;
@@ -11,12 +12,13 @@ interface JobHeaderProps {
   isExpired?: boolean;
   isApplied?: boolean;
   onBookmarkClick?: () => void;
-  onApplyClick?: () => void;
+  onApplyClick?: (jobId: string) => void;
   isLoadingBookmark?: boolean;
   isLoadingApply?: boolean;
 }
 
 export default function JobHeader({
+  jobId,
   title,
   company,
   location,
@@ -117,7 +119,10 @@ export default function JobHeader({
 
             {onApplyClick && (
               <button
-                onClick={onApplyClick}
+                onClick={(e) => {
+            e.stopPropagation()
+              onApplyClick(jobId)
+          }}
                 disabled={isExpired || isApplied || isLoadingApply}
                 className={`rounded-lg px-6 py-2.5 font-semibold transition ${
                   isExpired || isApplied
