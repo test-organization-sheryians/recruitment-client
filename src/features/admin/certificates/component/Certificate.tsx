@@ -29,10 +29,10 @@ export default function Certificate() {
 const handleSave = async (newCert: Certificate) => {
   try {
     await addCertificate(newCert); // mutation call
-    alert("Template created successfully!");
+    // alert("Template created successfully!");
   } catch (err) {
     console.error(err);
-    alert("Failed to create template");
+    // alert("Failed to create template");
   }
 };
 
@@ -41,10 +41,10 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
   if (confirm("Are you sure to delete this template?")) {
     try {
       await deleteCertificate(_id);
-      alert("Deleted successfully");
+      // alert("Deleted successfully");
     } catch (err) {
       console.error(err);
-      alert("Failed to delete");
+      // alert("Failed to delete");
     }
   }
 };

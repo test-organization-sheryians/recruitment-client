@@ -59,7 +59,9 @@ export default function UpdateJob({
           onSuccess: (res) => {
             if (res.success) {
               onJobUpdated?.()
-              router.refresh()
+              
+     router.refresh()
+
               resolve()
             } else {
               reject(new Error("Failed to update job"))

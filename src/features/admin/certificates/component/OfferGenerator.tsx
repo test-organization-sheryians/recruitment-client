@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import { readExcelFile } from "../utils/excelReader";
 import { generateBulkCertificates } from "../utils/bulkGenerator";
 import { saveAs } from "file-saver";
-import { toPng } from "html-to-image";
+import CertificatePreview from "./CertificatePreview";
+
 
 import {
   Printer,
@@ -354,11 +355,11 @@ export default function OfferGenerator() {
                   Download PDF
                 </button>
 
-                {showCertificate && (
+                {/* {showCertificate && (
                   // <div className="mt-12 bg-white border-4 border-blue-700 p-12 text-center rounded-2xl shadow-2xl">
                   <div
                     id="single-preview"
-                    className="mt-12 bg-white border-4 border-blue-700 p-12 text-center rounded-2xl shadow-2xl"
+                    className=" bg-white border-4 border-blue-700 p-12 text-center rounded-2xl shadow-2xl"
                   >
                     <h1 className="text-4xl font-bold text-blue-800 mb-6">
                       Internship Certificate
@@ -405,7 +406,15 @@ export default function OfferGenerator() {
                       </div>
                     </div>
                   </div>
-                )}
+                )} */}
+
+                  {showCertificate && (
+  <CertificatePreview
+    formData={formData}
+    onClose={() => setShowCertificate(false)}
+  />
+)}
+
 
                 <button
                   onClick={() => router.back()}
