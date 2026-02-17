@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useGetJobById } from "@/features/admin/jobs/hooks/useJobApi";
@@ -13,6 +13,7 @@ import {
 
 import { useToast } from "@/components/ui/Toast";
 import { useGetProfile } from "../../Profile/hooks/useProfileApi";
+import { getJobQuestions } from "@/api/jobs/jobApplicationQuestion";
 
 import JobHeader from "./JobHeader";
 import JobActions from "./JobActions";
@@ -32,13 +33,17 @@ export default function JobDetails() {
 
   /* -------------------- Queries -------------------- */
   const { data: job, isLoading, error } = useGetJobById(jobId);
-  const { data: profile } = useGetProfile();
+  const { data: profile, isLoading: profileLoading } = useGetProfile();
+  const router = useRouter();
   const { data: savedJobs } = useGetSavedJobs();
 
   /* -------------------- Mutations -------------------- */
   const applyJobMutation = useApplyJob();
   const saveJobMutation = useSaveJob();
   const unsaveJobMutation = useUnsaveJob();
+
+  // Helper to support both react-query v4 (`isLoading`) and v5+ (`isPending`)
+  const isMutationWorking = (m: any) => !!(m?.isPending ?? m?.isLoading);
 
   /* -------------------- Guards -------------------- */
   if (isLoading) {
@@ -72,24 +77,39 @@ export default function JobDetails() {
 
   /* -------------------- Handlers -------------------- */
   
-  const handleApply = () => {
+  const handleApply = async (jobIdParam?: string) => {
+    const targetJobId = jobIdParam ?? job._id;
     if (isExpired || job.applied) return;
+
+    if (profileLoading) {
+      toast.error("Profile is loading. Please wait.");
+      return;
+    }
 
     if (!profile?.resumeFile) {
       toast.error("Please upload your resume before applying.");
       return;
     }
 
-    applyJobMutation.mutate({
-      jobId: job._id,
-      message: "Excited to apply!",
-      resumeUrl: profile.resumeFile,
-    });
+    try {
+      const questions = await getJobQuestions(targetJobId);
+      if (!questions || questions.length === 0) {
+        applyJobMutation.mutate({
+          jobId: targetJobId,
+          message: "Excited to apply!",
+          resumeUrl: profile.resumeFile,
+        });
+      } else {
+        router.push(`/jobs/${targetJobId}/apply`);
+      }
+    } catch (err) {
+      toast.error("Failed to check job requirements.");
+    }
   };
 
   const handleBookmarkToggle = () => {
     if (isExpired || !job._id) return;
-    if (saveJobMutation.isPending || unsaveJobMutation.isPending) return;
+    if (isMutationWorking(saveJobMutation) || isMutationWorking(unsaveJobMutation)) return;
 
     if (!isSaved) {
       saveJobMutation.mutate(job._id, {
@@ -185,6 +205,7 @@ const metaItems = [
       <div className="max-w-6xl mx-auto">
         {/* Header with integrated action buttons */}
         <JobHeader
+          jobId={job._id}
           title={job.title}
           company={typeof job.category === "string" ? job.category : job.category?.name}
           location={getLocationString()}
@@ -196,10 +217,8 @@ const metaItems = [
           isApplied={job.applied ?? false}
           onBookmarkClick={handleBookmarkToggle}
           onApplyClick={handleApply}
-          isLoadingBookmark={
-            saveJobMutation.isPending || unsaveJobMutation.isPending
-          }
-          isLoadingApply={applyJobMutation.isPending}
+          isLoadingBookmark={isMutationWorking(saveJobMutation) || isMutationWorking(unsaveJobMutation)}
+          isLoadingApply={isMutationWorking(applyJobMutation)}
         />
 
         {/* Main Content + Sidebar */}
