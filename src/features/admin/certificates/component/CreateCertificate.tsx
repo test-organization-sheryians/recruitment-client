@@ -4,6 +4,8 @@ import { X, Plus, Trash2 } from "lucide-react";
 import { Certificate } from "@/types/Certificate"; 
 // import { createCertificate , createFields} from "@/api/certificate/createCertificate"; 
 import { useRouter } from "next/navigation";
+import { useCreateJobApplicationQuestions } from "@/features/job-management/hooks/useJobApplicationQuestions";
+import { uploadFileToS3 } from "@/lib/uploadFile";
 
 
 
@@ -14,41 +16,82 @@ type Field = {
   placeholder: string;
 };
 
+// interface CreateCertificateProps {
+//   isOpen: boolean;
+//   onClose: () => void;
+//   onSave: (data: Certificate) => void;
+// }
+
 interface CreateCertificateProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: Certificate) => void;
+  onSave: (data: Certificate) => Promise<Certificate>;
 }
 
+
 export default function CreateCertificate({ isOpen, onClose, onSave }: CreateCertificateProps) {
-  const initialState = { name: "", type: "Completion", file: " ", };
-  const initialFields = [{ id: "1", title: "Client Name", type: "Text Input", placeholder: "Enter full name" }];
+  const initialState = { name: "", type: "Completion", file: "", };
+  const initialFields = [{ id: "1", title: "", type: "Text Input", placeholder: "" }];
 
   const [formData, setFormData] = useState(initialState);
   const [fields, setFields] = useState<Field[]>(initialFields);
   const [isUploading, setIsUploading] = useState(false);
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file || !file.name.endsWith('.html')) return alert("Please upload .html file");
+
+    const { mutateAsync: createQuestions } = useCreateJobApplicationQuestions();
+
+
+//   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+//   const file = e.target.files?.[0];
+//   if (!file || !file.name.endsWith('.html')) return alert("Please upload .html file");
+
+//   setIsUploading(true);
+//   try {
+//     // 1. Backend se presigned URL lein (AWS logic)
+//     // 2. Us URL par file 'PUT' karein
+//     // Maan lijiye link mil gaya:
+//     const s3Url = `https://sherihunt.s3.ap-south-1.amazonaws.com/uploads/${file.name}`; 
+    
+//     // setFormData(prev => ({ ...prev, file: file, fileUrl: s3Url }));
+//     setFormData(prev => ({
+//   ...prev,
+//   file: s3Url   // string save karo
+// }));  
+//   } catch (err) {
+//     // alert("Upload failed");
+//     console.log(err)
+//   } finally {
+//     setIsUploading(false);
+//   }
+// };
+
+
+const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const selectedFile = e.target.files?.[0];
+  if (!selectedFile || !selectedFile.name.endsWith('.html')) return alert("Please upload .html file");
 
   setIsUploading(true);
+
   try {
-    // 1. Backend se presigned URL lein (AWS logic)
-    // 2. Us URL par file 'PUT' karein
-    // Maan lijiye link mil gaya:
-    const s3Url = `https://sherihunt.s3.ap-south-1.amazonaws.com/uploads/${file.name}`; 
-    
-    // setFormData(prev => ({ ...prev, file: file, fileUrl: s3Url }));
+    // 🔥 REAL UPLOAD
+    const finalUrl = await uploadFileToS3(selectedFile);
+
     setFormData(prev => ({
-  ...prev,
-  file: s3Url   // string save karo
-}));
+      ...prev,
+      file: finalUrl
+    }));
+
+    console.log("Uploaded successfully:", finalUrl);
+
   } catch (err) {
+    console.error(err);
     alert("Upload failed");
   } finally {
     setIsUploading(false);
   }
 };
+
+
+
 
   useEffect(() => {
     if (!isOpen) {
@@ -72,32 +115,97 @@ export default function CreateCertificate({ isOpen, onClose, onSave }: CreateCer
     setFields(fields.filter((f) => f.id !== id));
   };
   const router = useRouter();
+
+  const mapInputType = (type: string) => {
+  switch (type) {
+    case "Text Input":
+      return "text";
+    case "Date Picker":
+      return "date";
+    case "File Upload":
+      return "file";
+    default:
+      return "text";
+  }
+};
+
 const handlePublish = async () => {
   if (!formData.name) return alert("Enter name");
-  if (!formData.file) return alert("Upload file");
+  if (!formData.file.trim()) return alert("Upload file");
+
+   if (fields.some(field => !field.title.trim())) {
+    return alert("All field titles are required");
+  }
 
   try {
-    await onSave({
+    const template = await onSave({
       name: formData.name,
       type: formData.type,
       file: String(formData.file),
-    } as Certificate);
-
-   
+    });
 
 
-    alert("Template Created Successfully");
-    onClose();
-  } catch (error: unknown) {
-    console.error(error);
+    console.log("Template response:", template);
 
-    if (error instanceof Error) {
-      alert(error.message);
-    } else {
-      alert("Something went wrong");
+   const templateId = template?.data?._id || template?._id;
+
+
+    if (!templateId) {
+      throw new Error("Template ID not returned");
     }
-  }
+
+    console.log(template)
+
+    const questions = fields.map((field, index) => ({
+      title: field.title,
+      inputType: mapInputType(field.type),
+      placeholder: field.placeholder,
+      isRequired: true,
+      isKnockout: false,
+      order: index + 1,
+    }));
+
+    console.log(questions)
+
+
+    await createQuestions({
+  jobId: templateId,
+  questions,
+});
+
+router.push(`/offer-generator/${templateId}`);
+
+
+//     await createQuestions({
+//   jobId: templateId,
+//   questions,
+// });
+
+// router.push(`/offer-generator?id=${templateId}`);
+
+
+    // await createQuestions({
+    //   jobId: templateId,
+    //   questions,
+       
+    // });
+
+    // // alert("Template + Fields Created Successfully");
+    // onClose();
+
+  // } catch (error) {
+  //   console.error(error);
+  //   // alert("Something went wrong");
+  // }
+
+
+  } catch (error: any) {
+  console.log("Full error:", error);
+  console.log("Backend error:", error?.response?.data);
+}
+
 };
+
 
 
 
@@ -183,7 +291,7 @@ const handlePublish = async () => {
                       type="text"
                       value={field.title}
                       onChange={(e) => updateField(field.id, "title", e.target.value)}
-                      placeholder="e.g. Full Name"
+                      placeholder="e.g Field Title"
                       className="w-full mt-1 border border-slate-200 rounded-lg p-2.5 text-sm"
                     />
                   </div>
@@ -205,7 +313,7 @@ const handlePublish = async () => {
                       type="text"
                       value={field.placeholder}
                       onChange={(e) => updateField(field.id, "placeholder", e.target.value)}
-                      placeholder="Enter placeholder"
+                      placeholder="Enter your placeholder"
                       className="w-full mt-1 border border-slate-200 rounded-lg p-2.5 text-sm"
                     />
                   </div>

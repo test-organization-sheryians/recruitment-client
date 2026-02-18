@@ -16,9 +16,25 @@ export async function uploadFileToS3(
   file: File,
   apiEndpoint: string = "/api/aws/presignedurl-s3"
 ): Promise<string> {
-   if (file.type !== "application/pdf") {
-    throw new Error("Only PDF files are allowed.");
-  }
+//    const allowedTypes = ["application/pdf", "text/html"];
+
+// if (!allowedTypes.includes(file.type)) {
+//   throw new Error("Only PDF and HTML files are allowed.");
+// }
+
+
+const allowedTypes = ["application/pdf", "text/html"];
+
+const isValidType =
+  allowedTypes.includes(file.type) ||
+  file.name.endsWith(".html") ||
+  file.name.endsWith(".pdf");
+
+if (!isValidType) {
+  throw new Error("Only PDF and HTML files are allowed.");
+}
+
+
   
   const fileDetails: FileDetails = {
     fileName: file.name + Date.now(),

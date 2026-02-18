@@ -26,15 +26,27 @@ export default function Certificate() {
   } = useCertificate();
   
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+// const handleSave = async (newCert: Certificate) => {
+//   try {
+//     await addCertificate(newCert); // mutation call
+//     // alert("Template created successfully!");
+//   } catch (err) {
+//     console.error(err);
+//     // alert("Failed to create template");
+//   }
+// };
+
+
 const handleSave = async (newCert: Certificate) => {
   try {
-    await addCertificate(newCert); // mutation call
-    // alert("Template created successfully!");
+    const created = await addCertificate(newCert);
+    return created; // 🔥 IMPORTANT
   } catch (err) {
     console.error(err);
-    // alert("Failed to create template");
+    throw err;
   }
 };
+
 
 const handleDelete = async (e: React.MouseEvent, _id: string) => {
   e.stopPropagation();

@@ -69,6 +69,7 @@ export const getJobQuestions = async (jobId: string) => {
   return res.data
 }
 
+
 export const createJobQuestions = async (
   jobId: string,
   questions: JobQuestionPayload[]
