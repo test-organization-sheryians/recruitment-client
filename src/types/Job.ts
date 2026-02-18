@@ -43,6 +43,40 @@ export interface Job {
   isFeatured?: boolean
   department?: string
   applied?: boolean
+  id: string;
+  title: string;
+  location?: {
+    city?: string;
+    state?: string;
+    pincode?: string;
+    country?: string;
+  };
+  salary: number | string;
+  isRemote: boolean;
+  isFeatured: boolean;
+  createdAt?: string;
+  updatedAt: string;
+  _id: string;
+  requiredExperience?: string;
+  category?: Category | string;
+  education?: string;
+  description?: string;
+  skills?: (Skill | string)[];
+  department?: string;
+  expiry?: string;
+  applied?: boolean;
+  client?: {
+    company?: string;
+    [key: string]: unknown;
+  };
+
+
+  jobType?: string;
+}
+// Category can be an object or string
+interface Category {
+  _id: string;
+  name: string;
 }
 
 // ================= FORM MODELS =================
@@ -83,19 +117,19 @@ export interface SavedJob {
 }
 
 export interface JobFormValues {
-    title: string;
-    description: string;
-    location: {
-      city: string;
-      state: string;
-      pincode: string;
-      country: string;
-    };
-    salary: number;
-    category: string;
-    skills: string[];
-    isRemote: boolean;
-    isFeatured: boolean;
+  title: string;
+  description: string;
+  location: {
+    city: string;
+    state: string;
+    pincode: string;
+    country: string;
+  };
+  salary: number;
+  category: string;
+  skills: string[];
+  isRemote: boolean;
+  isFeatured: boolean;
 }
 
 
@@ -116,3 +150,15 @@ export type SearchQuery = {
   q: string;
   location: string;
 };
+
+export interface SearchParams {
+  q?: string;
+  location?: string;
+
+  jobType?: string[];
+  experience?: string[];
+
+  minSalary?: number;
+  maxSalary?: number;
+  category?: string; 
+}
