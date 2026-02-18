@@ -1,4 +1,48 @@
+// ================= SHARED MODELS =================
+
+export interface Skill {
+  _id?: string
+  name: string
+}
+
+export interface Category {
+  _id: string
+  name: string
+}
+
+export interface LocationForm {
+  city: string
+  state: string
+  country: string
+  pincode: string
+}
+
+// ================= JOB MODEL =================
+
 export interface Job {
+  _id: string
+  title: string
+
+  requiredExperience?: number
+  education?: string
+  description?: string
+  expiry?: string
+
+  // populated OR id
+  category?: Category | string
+  skills?: (Skill | string)[]
+  location?: LocationForm
+
+  status?: "ACTIVE" | "DRAFT" | "INTERVIEWING" | "FILLED"
+  applicantsCount?: number
+  createdAt?: string
+  updatedAt?: string
+
+  salary?: number
+  isRemote?: boolean
+  isFeatured?: boolean
+  department?: string
+  applied?: boolean
   id: string;
   title: string;
   location?: {
@@ -35,10 +79,35 @@ interface Category {
   name: string;
 }
 
-// Skill can be an object or string
-export interface Skill {
-  _id?: string;
-  name: string;
+// ================= FORM MODELS =================
+
+export interface CreateJobFormValues {
+  title: string
+  requiredExperience: number
+  category: string
+  education: string
+  description: string
+  expiry: string
+  skills: Skill[]
+  location: LocationForm
+}
+
+export interface CreateJobRequest {
+  title: string
+  requiredExperience: number
+  category: string
+  education: string
+  description: string
+  expiry: string
+  skills: string[]
+  clientId: string
+  location: LocationForm
+}
+
+
+export interface SavedJob {
+  _id: string;
+  jobId: Job;
 }
 
 

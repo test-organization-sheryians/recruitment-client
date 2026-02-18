@@ -43,6 +43,13 @@ export interface JobFormData {
   skills: string[];
   expiry: string;
   clientId: string;
+  location: Location; // added Location
+    // ✅ REQUIRED BY BACKEND
+  jobType: string;
+  salary: {
+    min: number;
+    max: number;
+  };
   jobType: "Remote" | "Hybrid" | "Full-Time" | "Part-Time";
   salary: {
     min: number;
@@ -107,6 +114,19 @@ const [formData, setFormData] = useState({
     ? (safeInitialData.skills as (string | Skill)[]).map((s) =>
         typeof s === "string" ? s : s._id
       )
+      : [],
+    expiry: safeInitialData.expiry
+      ? new Date(safeInitialData.expiry).toISOString().split("T")[0]
+      : "",
+    clientId: safeInitialData.clientId || "6915b90df6594de75060410b",
+     // ✅ ADD ONLY FUNCTIONAL FIELDS (NO UI)
+jobType: safeInitialData.jobType || "Full-Time",
+
+salary: {
+  min: (safeInitialData as any)?.salary?.min || 10000,
+  max: (safeInitialData as any)?.salary?.max || 30000,
+},
+  });
     : [],
   expiry: safeInitialData.expiry
     ? new Date(safeInitialData.expiry).toISOString().split("T")[0]
@@ -124,8 +144,15 @@ const [formData, setFormData] = useState({
     }
   }, [categories]);
 
-  const handleChange = (e: { target: { name: string; value: string } }) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (
+  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+) => {
+  const { name, value } = e.target
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }))
+}
 
   const handleSkillToggle = (skillId: string) => {
     setFormData((prev) => ({
@@ -245,6 +272,8 @@ const [formData, setFormData] = useState({
       "expiry",
       "category",
       "skills",
+      "jobType",   // ✅
+  "salary",
     ];
 
     const missingFields = requiredFields.filter((field) => {
@@ -282,6 +311,13 @@ const [formData, setFormData] = useState({
         return;
       }
     }
+  if (!formData.salary) {
+  setError("Salary is required");
+  return;
+}
+
+if (!formData.jobType) {
+  setError("Job type is required");
     if (formData.salary.min <= 0 || formData.salary.max <= 0) {
   setError("Please enter a valid salary range");
   return;

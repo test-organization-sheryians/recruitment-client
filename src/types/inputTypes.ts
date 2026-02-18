@@ -1,0 +1,11 @@
+export type InputType =
+  | "text"
+  | "textarea"
+  | "radio"
+  | "checkbox"
+  | "dropdown"
+  | "yes-no"
+  | "file"
+  | "date"
+  | "number"
+  | "rating"
