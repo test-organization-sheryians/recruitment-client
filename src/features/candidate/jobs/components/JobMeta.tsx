@@ -10,7 +10,7 @@ import {
 
 interface JobMetaItem {
   label: string;
-  value: string | undefined;
+  value?: React.ReactNode;
   icon?: React.ReactNode;
 }
 

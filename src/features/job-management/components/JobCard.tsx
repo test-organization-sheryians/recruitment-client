@@ -190,7 +190,7 @@ export default function JobCard({
               </h4>
               <ShowDescription
                 html={job.description}
-                clamp={6}
+                scrollable
                 maxHeight="12rem"
               />
             </div>
