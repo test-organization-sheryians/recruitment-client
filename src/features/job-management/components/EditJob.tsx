@@ -54,7 +54,7 @@ export default function EditJob({
       pincode: "",
       country: "",
     },
-    employmentType: "Full-time",
+    jobType: "Full-Time",
     salary: {
       min: 0,
       max: 0,
@@ -119,9 +119,7 @@ export default function EditJob({
           pincode: "",
           country: "",
         },
-        employmentType:
-          (job as Job & { employmentType?: string })?.employmentType ||
-          "Full-time",
+        jobType: (job as Job & { jobType?: string })?.jobType ?? "Full-Time",
         salary: (job as any)?.salary || {
           min: 0,
           max: 0,
@@ -193,8 +191,9 @@ export default function EditJob({
           title: formData.title,
           description: formData.description,
           education: formData.education,
-          requiredExperience: String(formData.requiredExperience),
+          requiredExperience: formData.requiredExperience,
           category: formData.category,
+          jobType: formData.jobType,
           skills: formData.skills,
           clientId: formData.clientId,
           expiry: formData.expiry
@@ -342,16 +341,14 @@ export default function EditJob({
                       <span className="text-red-600 ml-1">*</span>
                     </>
                   }
-                  value={formData.employmentType || "Full-time"}
+                  value={formData.jobType || "Full-Time"}
                   options={[
-                    { _id: "Full-time", name: "Full-time" },
-                    { _id: "Part-time", name: "Part-time" },
+                    { _id: "Full-Time", name: "Full-time" },
+                    { _id: "Part-Time", name: "Part-time" },
                     { _id: "Hybrid", name: "Hybrid" },
                     { _id: "Remote", name: "Remote" },
                   ]}
-                  onChange={(v) =>
-                    setFormData({ ...formData, employmentType: v })
-                  }
+                  onChange={(v) => setFormData({ ...formData, jobType: v })}
                 />
               </div>
 

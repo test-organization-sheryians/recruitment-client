@@ -82,31 +82,29 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
   } = useGetCategories();
 
   const initialForm: CreateJobFormValues = {
-  title: "",
-  requiredExperience: 0,
-  category: "",
-  education: "",
-  jobType: "Full-Time",
-  description: "",
-  expiry: "",
-  skills: [],
-  salary: {
-    min: 0,
-    max: 0,
-    currency: "INR",
-  },
-  location: {
-    city: "",
-    state: "",
-    pincode: "",
-    country: "India",
-  },
-  clientId: "6915b90df6594de75060410b",
-};
-
+    title: "",
+    requiredExperience: 0,
+    category: "",
+    education: "",
+    jobType: "Full-Time",
+    description: "",
+    expiry: "",
+    skills: [],
+    salary: {
+      min: 0,
+      max: 0,
+      currency: "INR",
+    },
+    location: {
+      city: "",
+      state: "",
+      pincode: "",
+      country: "India",
+    },
+    clientId: "6915b90df6594de75060410b",
+  };
 
   const [form, setForm] = React.useState<CreateJobFormValues>(initialForm);
-
 
   const pincodeStatus = usePincodeLookup(form.location.pincode, (location) => {
     setForm((prev) => ({
@@ -165,7 +163,8 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
       !form.title ||
       !form.description ||
       !form.education ||
-      !form.requiredExperience ||
+      form.requiredExperience === null ||
+      form.requiredExperience === undefined ||
       !form.expiry ||
       !form.category ||
       form.skills.length === 0
@@ -507,10 +506,10 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
                 type="button"
                 className="px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-gray-50 transition cursor-pointer"
                 onClick={() => {
-                setForm(initialForm);
-                if (onClose) onClose();
-                else router.back();
-              }}
+                  setForm(initialForm);
+                  if (onClose) onClose();
+                  else router.back();
+                }}
               >
                 Cancel
               </button>

@@ -40,7 +40,7 @@ const getDefaultOptions = (type: InputType): string[] => {
 }
 
 const EditQuestionForm: React.FC<EditQuestionFormProps> = ({ question, onChange }) => {
-  const { title, description, inputType, options = [], ratingValue = 3, fileValue } = question
+  const { title, description, inputType, options = [], ratingValue = 3, fileValue, isRequired } = question
 
   /* ---------- OPTION HANDLERS ---------- */
   const updateOption = (index: number, value: string) => {
@@ -106,11 +106,7 @@ const EditQuestionForm: React.FC<EditQuestionFormProps> = ({ question, onChange 
           <option value="text">Text</option>
           <option value="textarea">Textarea</option>
           <option value="number">Number</option>
-          <option value="date">Date</option>
           <option value="file">File Upload</option>
-          <option value="rating">Rating</option>
-
-          <option value="radio">Radio</option>
           <option value="checkbox">Checkbox</option>
           <option value="dropdown">Dropdown</option>
           <option value="yes-no">Yes / No</option>
@@ -150,6 +146,28 @@ const EditQuestionForm: React.FC<EditQuestionFormProps> = ({ question, onChange 
           ))}
         </div>
       )}
+      {/* REQUIRED FIELD */}
+<div className="flex items-center justify-between border rounded p-3">
+  <div>
+    <p className="text-sm font-bold">Required</p>
+    <p className="text-xs text-gray-500">
+      Applicant must answer this question.
+    </p>
+  </div>
+
+  <input
+    type="checkbox"
+    checked={isRequired}
+    onChange={() =>
+      onChange({
+        ...question,
+        isRequired: !isRequired,
+      })
+    }
+    className="h-5 w-5 accent-primary"
+  />
+</div>
+
     </div>
   )
 }

@@ -49,7 +49,7 @@ export type JobFormData = {
   expiry: string;
   clientId: string;
   location: LocationForm;
-  employmentType?: string;
+  jobType?: string;
   salary?: {
     min: number;
     max: number;
