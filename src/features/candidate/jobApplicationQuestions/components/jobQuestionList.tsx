@@ -26,16 +26,16 @@ type Question = {
   _id: string;
   title: string;
   inputType:
-    | "text"
-    | "textarea"
-    | "dropdown"
-    | "checkbox"
-    | "radio"
-    | "number"
-    | "file"
-    | "yes-no"
-    | "date"
-    | "rating";
+  | "text"
+  | "textarea"
+  | "dropdown"
+  | "checkbox"
+  | "radio"
+  | "number"
+  | "file"
+  | "yes-no"
+  | "date"
+  | "rating";
   options?: (string | { label: string; value?: string })[];
   isRequired: boolean;
 };
@@ -131,8 +131,8 @@ export default function JobQuestionsForm({
       const answer = updated.join(", ");
       return existing
         ? prev.map((a) =>
-            a.question === questionText ? { question: questionText, answer } : a
-          )
+          a.question === questionText ? { question: questionText, answer } : a
+        )
         : [...prev, { question: questionText, answer }];
     });
   };
@@ -167,24 +167,24 @@ export default function JobQuestionsForm({
   return (
     <>
       {/* HEADER */}
-     <header className="bg-white border-b px-4 sm:px-6">
-  <div className="h-14 max-w-full sm:max-w-7xl mx-auto flex items-center justify-between">
-    <div className="flex items-center gap-2 font-semibold text-blue-600 text-sm sm:text-base">
-      <span className="text-xl">▮</span> Job Application Portal
-    </div>
+      <header className="bg-white border-b px-4 sm:px-6">
+        <div className="h-14 max-w-full sm:max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2 font-semibold text-blue-600 text-sm sm:text-base">
+            <span className="text-xl">▮</span> Job Application Portal
+          </div>
 
-    <div className="flex items-center gap-3 text-sm text-gray-600">
-      <div className="text-right leading-tight">
-        <p className="font-medium text-xs sm:text-sm">
-          {`${profile?.user?.firstName ?? ""} ${profile?.user?.lastName ?? ""}`}
-        </p>
-        <p className="text-xs sm:text-sm">
-          {`${profile?.user?.email ?? ""}`}
-        </p>
-      </div>
-    </div>
-  </div>
-</header>
+          <div className="flex items-center gap-3 text-sm text-gray-600">
+            <div className="text-right leading-tight">
+              <p className="font-medium text-xs sm:text-sm">
+                {`${profile?.user?.firstName ?? ""} ${profile?.user?.lastName ?? ""}`}
+              </p>
+              <p className="text-xs sm:text-sm">
+                {`${profile?.user?.email ?? ""}`}
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
 
 
       {/* JOB TITLE */}
@@ -283,20 +283,20 @@ export default function JobQuestionsForm({
                       />
                     )}
                     {q.inputType === "file" && (
-  <input
-    type="file"
-    className="w-full border px-4 py-2 rounded-lg text-sm file:mr-4 file:py-2 file:px-4 
+                      <input
+                        type="file"
+                        className="w-full border px-4 py-2 rounded-lg text-sm file:mr-4 file:py-2 file:px-4 
                file:rounded-lg file:border-0 file:text-sm file:font-semibold 
                file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-   onChange={(e) => {
-  const file = e.target.files?.[0];
-  if (file) {
-    handleChange(q.title, file);
-  }
-}}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleChange(q.title, file);
+                          }
+                        }}
 
-  />
-)}
+                      />
+                    )}
 
                     {q.inputType === "dropdown" && (
                       <select
@@ -309,7 +309,43 @@ export default function JobQuestionsForm({
                         ))}
                       </select>
                     )}
-                    
+                    {q.inputType === "yes-no" && (
+                      <div className="flex items-center gap-6">
+                        {["Yes", "No"].map((option) => (
+                          <label key={option} className="flex items-center gap-2 text-sm cursor-pointer">
+                            <input
+                              type="radio"
+                              name={q.title} // important for grouping
+                              value={option}
+                              className="accent-blue-600 w-4 h-4"
+                              onChange={(e) => handleChange(q.title, e.target.value)}
+                            />
+                            <span>{option}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    {q.inputType === "checkbox" && (
+                      <div className="flex flex-col gap-3">
+                        {getOptions(q).map((option) => (
+                          <label
+                            key={option}
+                            className="flex items-center gap-2 text-sm cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              value={option}
+                              className="accent-blue-600 w-4 h-4"
+                              onChange={() => handleCheckboxChange(q.title, option)}
+                            />
+                            <span>{option}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+
                   </QuestionWrapper>
                 ))}
               </div>

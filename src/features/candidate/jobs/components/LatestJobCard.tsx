@@ -36,6 +36,9 @@ export default function LatestJobCard({
   onDetails,
   onApply,
 }: LatestJobCardProps) {
+const formattedPostedAt = postedAt;
+
+
   const visibleSkills = skills.slice(0, 4);
   const extraSkills = skills.length - visibleSkills.length;
 
@@ -77,12 +80,14 @@ export default function LatestJobCard({
             )}
 
 
-            {postedAt && (
-              <span className="flex items-center gap-1">
-                <Clock size={15} />
-                {postedAt}
-              </span>
-            )}
+            
+            {formattedPostedAt && (
+  <span className="flex items-center gap-1">
+    <Clock size={15} />
+    {formattedPostedAt}
+  </span>
+)}
+
           </div>
 
           {/* Skills */}

@@ -45,31 +45,10 @@ export default function JobDashboardPage() {
   const router = useRouter();
   const [showAllCategories, setShowAllCategories] = useState(false);
   const queryClient = useQueryClient();
-
-
-
-
-
   const applyJobMutation = useApplyJob()
   const toast = useToast()
 
-  // const handleApplyJob = (jobId: string) => {
-  //   if (profileLoading) {
-  //     toast.error("Profile is loading. Please wait.")
-  //     return
-  //   }
 
-  //   if (!profile?.resumeFile) {
-  //     toast.error("Please upload your resume before applying.")
-  //     return
-  //   }
-
-  //   applyJobMutation.mutate({
-  //     jobId,
-  //     message: "Excited to apply!",
-  //     resumeUrl: profile.resumeFile,
-  //   })
-  // }
 
   const handleApplyJob = async (jobId: string) => {
   if (profileLoading) {
@@ -404,7 +383,16 @@ export default function JobDashboardPage() {
                           ? { min: Number(job.salary), max: Number(job.salary), currency: "₹" }
                           : undefined
                     }
-                    postedAt={job.createdAt ? "Recently" : undefined}
+                    postedAt={
+  job.createdAt
+    ? new Date(job.createdAt).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : undefined
+}
+
                     skills={job.skills?.map((s) => typeof s === "string" ? s : s.name)}
                     applied={job.applied}
                     onDetails={handleJobDetails}

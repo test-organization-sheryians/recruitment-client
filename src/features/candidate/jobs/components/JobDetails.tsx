@@ -172,10 +172,17 @@ const metaItems = [
   },
   { label: "Department", value: job.department },
   { label: "Education", value: job.education },
-  {
-    label: "Date Posted",
-    value: job.expiry ? new Date(job.expiry).toLocaleDateString() : undefined,
-  },
+ {
+  label: "Expiry Date",
+  value: job.expiry
+    ? new Date(job.expiry).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : undefined,
+},
+
 ];
 
 
@@ -210,8 +217,17 @@ const metaItems = [
           company={typeof job.category === "string" ? job.category : job.category?.name}
           location={getLocationString()}
          salary={formatSalary()}
+  postedTime={
+    job.createdAt
+      ? new Date(job.createdAt).toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : undefined
+  }
+          
 
-          postedTime="2 hours ago"
           isSaved={isSaved}
           isExpired={isExpired}
           isApplied={job.applied ?? false}
