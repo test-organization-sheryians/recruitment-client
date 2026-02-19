@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/config/store";
 
@@ -13,6 +13,7 @@ import ResumeSection from "./ResumeSection";
 import SocialLinksSection from "./SocialLinksSection";
 import AvailabilitySection from "./AvailabilitySection";
 import ProfileCompletion from "./ProfileCompletion";
+import EditProfileInfoModal from "./EditProfileInfoModal";
 
 export default function CandidateProfile() {
   const authUser = useSelector((state: RootState) => state.auth.user);
@@ -21,6 +22,9 @@ export default function CandidateProfile() {
   const createProfileMutation = useCreateProfile();
 
   const completion = profile?.completion ?? 0;
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const toggleEdit = () => setIsEditOpen((v) => !v);
 
   useEffect(() => {
     if (isError && authUser?.id) {
@@ -48,11 +52,28 @@ export default function CandidateProfile() {
 
         {/* PERSONAL INFO */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="flex items-center justify-between pb-3">
+            <h2 className="text-lg font-medium text-gray-800">Personal Information</h2>
+            <button
+              onClick={toggleEdit}
+              className="px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Edit
+            </button>
+          </div>
+
           <PersonalInfoSection
             firstName={profile?.user?.firstName ?? ""}
             lastName={profile?.user?.lastName ?? ""}
             email={profile?.user?.email ?? ""}
             phone={profile?.user?.phoneNumber ?? ""}
+          />
+
+          <EditProfileInfoModal
+            profile={profile}
+            isOpen={isEditOpen}
+            onClose={toggleEdit}
+            onUpdated={async () => { await refetch(); }}
           />
         </div>
 
@@ -117,3 +138,4 @@ export default function CandidateProfile() {
     </div>
   );
 }
+

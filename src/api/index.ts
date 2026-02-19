@@ -48,6 +48,7 @@ export * from "./resumeExtract";
 export * from "./users/getAllUsers";
 export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
+export * from "./users/updateMe";
 export * from "./profile/index";
 export * from "./jobApplication/applyJob";
 export * from "./jobApplication/bulkUpdate";
