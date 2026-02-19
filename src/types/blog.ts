@@ -9,7 +9,7 @@ export interface BlogPost {
   subtitle: string;
   readingTime: string;
 
-  category: string; // ObjectId
+  category: string;
   technologies: string[]; // ObjectId[]
 
   hero: {

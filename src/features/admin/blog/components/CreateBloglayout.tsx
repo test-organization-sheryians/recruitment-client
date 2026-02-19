@@ -1,198 +1,247 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
+import { useParams, useRouter } from "next/navigation";
 import type { PartialBlock } from "@blocknote/core";
 import Button from "@/components/Button";
-import PostSettingsPanel from "./PostSettingPannel";
+import PostSettingsPanel from "../components/PostSettingPannel";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
 import { useCreateBlog } from "@/features/admin/blog/hooks/useCreateBlog";
+import { useUpdateBlog } from "@/features/admin/blog/hooks/useUpdateBlog";
+import { useDeleteBlog } from "@/features/admin/blog/hooks/useDeleteBlog";
+import { useBlog } from "@/features/admin/blog/hooks/useBlog";
 
-
-
-// Dynamically import BlogEditor to reduce initial bundle size
 const BlogEditor = dynamic(
   () => import("@/features/admin/blog/components/BlogEditor"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="h-96 animate-pulse rounded-lg bg-slate-100" />
-      </div>
-    ),
-  }
+  { ssr: false },
 );
 
 export default function CreateBlogLayout() {
   const router = useRouter();
+  const params = useParams();
+  const blogId = params?.id as string | undefined;
+  const isEdit = useMemo(() => Boolean(blogId), [blogId]);
 
   const { createBlog, loading: isPublishing } = useCreateBlog();
+  const { updateBlog, loading: isUpdating } = useUpdateBlog();
+  const { deleteBlog: deleteAPI, loading: isDeleting } = useDeleteBlog();
+  const { blog, loading: blogLoading } = useBlog(blogId || "");
 
-  
-  const [blogPost, setBlogPost] = useState({
+  const [blogPost, setBlogPost] = useState<any>({
     title: "",
     slug: "",
-    subtitle: "",
-    readingTime: "0 min read",
-    category: "", // Will store ObjectId
-    technologies: [] as string[], // Will store ObjectId array
-    hero: {
-      imageUrl: "",
-      caption: "",
-      altText: ""
-    },
-    content: [] as PartialBlock[],
-    author: "", // Will store ObjectId
-    seo: {
-      metaTitle: "",
-      metaDescription: "",
-      keywords: [] as string[],
-      ogImage: ""
-    },
-    stats: {
-      views: 0,
-      likes: 0,
-      shares: 0
-    },
-    isPublished: false,
-    publishedAt: null as Date | null,
-    allowNewsletter: true,
-    status: "draft" as "draft" | "published" | "archived"
+    category: "",
+    technologies: [],
+    hero: { imageUrl: "", caption: "", altText: "" },
+    content: [],
+    status: "draft",
   });
 
-  // Console log the entire blog post data whenever it changes
   useEffect(() => {
-    console.log("=== BLOG POST DATA (JSON) ===");
-    console.log(JSON.stringify(blogPost, null, 2));
-    console.log("================================");
-  }, [blogPost]);
+    if (isEdit && blog) {
+      setBlogPost({
+        ...blog,
+
+        // ✅ Always string
+        category:
+          typeof blog.category === "object"
+            ? blog.category?._id
+            : blog.category || "",
+
+        content: Array.isArray(blog.content)
+          ? blog.content
+          : blog.content?.blocks || [],
+      });
+    }
+  }, [isEdit, blog]);
 
   const handleBlogDataChange = useCallback((data: any) => {
-    setBlogPost(prev => ({ ...prev, ...data }));
+    setBlogPost((prev: any) => ({ ...prev, ...data }));
   }, []);
 
-  const handleDeleteDraft = useCallback(() => {
-    // Reset to initial state
-    setBlogPost({
-      title: "",
-      slug: "",
-      subtitle: "",
-      readingTime: "0 min read",
-      category: "",
-      technologies: [],
-      hero: {
-        imageUrl: "",
-        caption: "",
-        altText: ""
-      },
-      content: [],
-      author: "",
-      seo: {
-        metaTitle: "",
-        metaDescription: "",
-        keywords: [],
-        ogImage: ""
-      },
-      stats: {
-        views: 0,
-        likes: 0,
-        shares: 0
-      },
-      isPublished: false,
-      publishedAt: null,
-      allowNewsletter: true,
-      status: "draft"
-    });
-    console.log("✅ Draft deleted successfully!");
-    alert("Draft deleted successfully!");
-    // TODO: Add API call here to delete the draft from backend
-    // await api.delete(`/api/blog/${draftId}`);
-  }, []);
-
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const title = e.target.value;
-    setBlogPost(prev => ({ ...prev, title }));
+  const normalizeCategory = (cat: any) => {
+    if (!cat) return "";
+    return typeof cat === "object" ? cat._id : cat;
   };
 
-  const handleContentChange = (blocks: PartialBlock[]) => {
-    setBlogPost(prev => ({ ...prev, content: blocks }));
+  const buildCreatePayload = (post: any) => ({
+    title: post.title,
+    subtitle: post.subtitle || "",
+    slug: post.slug,
+    category: [normalizeCategory(post.category)], // ✅ array
+    technologies: post.technologies || [],
+    hero: post.hero,
+    content: { blocks: post.content },
+    isPublished: post.status === "published",
+  });
+
+  const buildUpdatePayload = (post: any) => ({
+    title: post.title,
+    subtitle: post.subtitle || "",
+    hero: post.hero,
+    content: { blocks: post.content },
+    category: [normalizeCategory(post.category)], // ✅ array
+    isPublished: post.status === "published",
+  });
+  const handleSave = async () => {
+    if (!blogPost.title?.trim()) {
+      return toast.error("Title is required");
+    }
+
+    if (!blogPost.category) {
+      return toast.error("Category is required");
+    }
+
+    if (!blogPost.hero?.imageUrl) {
+      return toast.error("Featured image is required");
+    }
+
+    try {
+      const payload = isEdit
+        ? buildUpdatePayload(blogPost)
+        : buildCreatePayload(blogPost);
+
+      console.log("Final Payload:", payload);
+
+      if (isEdit && blogId) {
+        await updateBlog(blogId, payload);
+        toast.success("Blog updated successfully!");
+      } else {
+        await createBlog(payload);
+        toast.success("Blog created successfully!");
+      }
+
+      router.push("/admin/blog");
+      router.refresh();
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message || err?.message || "Operation failed";
+      toast.error(msg);
+    }
   };
 
-  const handlePublish = async () => {
-  if (!blogPost.title.trim()) return toast.error("Title is required");
+  if (isEdit && blogLoading)
+    return (
+      <div className="p-20 text-center text-slate-400">
+        Loading editorial...
+      </div>
+    );
 
-  try {
-    const payload = {
-      ...blogPost,
-      status: "published" as const,
-      isPublished: true,
-      publishedAt: new Date(),
-    };
-
-    await createBlog(payload);
-    toast.success("Blog published successfully!");
-    router.push("/admin/blog");
-  } catch (error: any) {
-    toast.error(error.message);
-  }
-};
+  const isBusy = isPublishing || isUpdating || isDeleting;
 
   return (
-    <div className="space-y-6 m-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <nav className="flex items-center gap-5 text-sm font-medium text-slate-500">
-          <button type="button" className="text-blue-600">Posts</button>
-        </nav>
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      {/* Header Bar */}
+      <header className="sticky top-0 z-50 backdrop-blur-md px-8 py-3 rounded-lg flex justify-between items-center bg-white/80 shadow-sm">
+        <div className="flex flex-col">
+          <nav className="flex items-center gap-2 text-[11px] font-sm text-slate-400 uppercase tracking-wider ">
+            <span>Posts</span>
+            <span className="text-slate-300">/</span>
+            <span className="text-slate-600">
+              {isEdit ? "Edit Blog" : "New Editorial"}
+            </span>
+          </nav>
+          <h1 className="text-xl font-bold text-slate-900 leading-tight">
+            {isEdit ? "Edit Editorial" : "Create New Post"}
+          </h1>
+        </div>
+
         <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          <button
+            disabled={isBusy}
+            onClick={async () => {
+              setBlogPost((p: any) => ({ ...p, status: "draft" }));
+              await new Promise((resolve) => setTimeout(resolve, 0));
+              handleSave();
+            }}
+            className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-lg"
           >
-            Preview
-          </Button>
-          <Button
-            type="button"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            onClick={handlePublish}
-            disabled={isPublishing}
+            Save Draft
+          </button>
+          <button
+            disabled={isBusy}
+            onClick={async () => {
+              setBlogPost((p: any) => ({ ...p, status: "published" }));
+              await new Promise((resolve) => setTimeout(resolve, 0));
+              handleSave();
+            }}
+            className="px-5 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
           >
-            {isPublishing ? "Publishing..." : "Publish"}
-          </Button>
+            {isBusy ? "Processing..." : isEdit ? "Update & Publish" : "Publish"}
+          </button>
         </div>
-      </div>
+      </header>
 
-      <div className="text-xs font-semibold uppercase tracking-wide text-slate-900">Posts / New editorial</div>
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <input
-              value={blogPost.title}
-              onChange={handleTitleChange}
-              placeholder="Enter post title..."
-              className="w-full border-0 p-0 text-3xl font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none"
-            />
-            <div className="mt-2 flex items-center gap-4 text-xs text-slate-600">
-              <span>Admin User</span>
-              <span>Oct 24, 2023</span>
+      <main className="flex-1 w-full mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1.5fr_320px] max-w-[1800px] gap-3">
+        {/* Main Editor Section */}
+        <div className="min-w-0 h-[calc(100vh-130px)] overflow-y-auto">
+          <div className="rounded-2xl shadow-lg overflow-hidden px-2 lg:px-2 py-2 lg:py-5">
+            <div className="">
+              <textarea
+                value={blogPost.title}
+                onChange={(e) => {
+                  setBlogPost({ ...blogPost, title: e.target.value });
+                  // Auto-resize
+                  if (e.target) {
+                    e.target.style.height = "auto";
+                    e.target.style.height = e.target.scrollHeight + "px";
+                  }
+                }}
+                placeholder="Enter post title..."
+                className="w-full resize-none text-3xl font-extrabold text-slate-900 placeholder-slate-300 bg-white px-3 py-3 rounded-xl outline-none border-none leading-tight tracking-tight focus:ring-0 min-h-[78px]"
+                style={{
+                  boxShadow: "none",
+                  wordBreak: "break-word",
+                  whiteSpace: "pre-wrap",
+                  overflow: "hidden",
+                }}
+                rows={1}
+                maxLength={200}
+              />
             </div>
-            <p className="mt-4 text-sm text-slate-700">
-              This is where your story begins. Highlight text to format it, or use the menu to add new sections.
-            </p>
+            <div className="pt-6 ">
+              {blogPost.content.length > 0 || !isEdit ? (
+                <BlogEditor
+                  key={
+                    isEdit ? `edit-${blogId}-${blogPost.content.length}` : "new"
+                  }
+                  initialContent={blogPost.content}
+                  onChange={(blocks) =>
+                    setBlogPost((p: any) => ({ ...p, content: blocks }))
+                  }
+                />
+              ) : (
+                <div className="py-32 text-center text-slate-300">
+                  <p className="text-sm">Loading editor content...</p>
+                </div>
+              )}
+            </div>
           </div>
-          <BlogEditor
-            initialContent={blogPost.content}
-            onChange={handleContentChange}
-          />
         </div>
-        <PostSettingsPanel 
-          data={blogPost} 
-          onUpdate={handleBlogDataChange}
-          onDelete={handleDeleteDraft}
-          initialTitle={blogPost.title}
-        />
-      </div>
+
+        {/* Sidebar Section */}
+        <aside className="relative h-[calc(100vh-120px)]">
+          <div className="lg:sticky lg:top-24">
+            <div className="rounded-2xl bg-white shadow-lg border border-slate-100 p-4 md:p-6 xl:p-7 w-full max-w-[360px] mx-auto h-full overflow-y-auto">
+              <PostSettingsPanel
+                data={blogPost}
+                onUpdate={handleBlogDataChange}
+                initialTitle={blogPost.title}
+                isEdit={isEdit}
+                onDeleteBlog={() => {
+                  if (confirm("Delete permanently?")) {
+                    deleteAPI(blogId!).then(() => {
+                      router.push("/admin/blog");
+                      router.refresh();
+                    });
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </aside>
+      </main>
     </div>
   );
 }

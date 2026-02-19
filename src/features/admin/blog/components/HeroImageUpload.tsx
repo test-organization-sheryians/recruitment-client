@@ -35,7 +35,7 @@ export default function HeroImageUploader({ imageUrl, caption, altText, onChange
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+    <div className="space-y-3">
       {!imageUrl ? (
         <div
           onClick={() => fileInputRef.current?.click()}
@@ -44,28 +44,27 @@ export default function HeroImageUploader({ imageUrl, caption, altText, onChange
             e.preventDefault();
             if (e.dataTransfer.files?.[0]) handleUpload(e.dataTransfer.files[0]);
           }}
-          className="flex h-48 flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 text-sm cursor-pointer hover:bg-slate-100 hover:border-blue-300 transition-all group"
+          className="flex h-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 text-sm cursor-pointer hover:bg-slate-100 hover:border-blue-300 transition-all group"
         >
-          <div className="text-center space-y-2">
-            <div className="text-3xl text-slate-400 group-hover:text-blue-400 transition-colors">�️</div>
-            <p className="font-semibold text-slate-700">{isUploading ? "Uploading..." : "Add Hero Image"}</p>
-            <p className="text-xs text-slate-500">Click to browse or drag & drop • Max 5MB</p>
+          <div className="text-center space-y-1">
+            <div className="text-3xl text-slate-300 group-hover:text-blue-400 transition-colors">📸</div>
+            <p className="text-xs text-slate-500">{isUploading ? "Uploading..." : "Drag or click to upload"}</p>
           </div>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="relative group rounded-lg overflow-hidden">
-            <img src={imageUrl} alt="Hero" className="h-48 w-full object-cover group-hover:opacity-90 transition-opacity" />
+            <img src={imageUrl} alt="Hero" className="h-32 w-full object-cover group-hover:opacity-90 transition-opacity" />
             <button
               onClick={() => onChange({ imageUrl: "", caption: "", altText: "" })}
-              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white text-xs px-2.5 py-1 rounded font-medium transition-colors shadow-md"
+              className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-0.5 rounded font-medium transition-colors shadow-md"
             >
               ✕ Remove
             </button>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-600 block mb-1">Caption</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-600 block mb-0.5">Caption</label>
               <Input 
                 value={caption} 
                 onChange={(e) => onChange({ imageUrl, caption: e.target.value, altText })} 
@@ -73,7 +72,7 @@ export default function HeroImageUploader({ imageUrl, caption, altText, onChange
               />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-600 block mb-1">Alt Text</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-600 block mb-0.5">Alt Text</label>
               <Input 
                 value={altText} 
                 onChange={(e) => onChange({ imageUrl, caption, altText: e.target.value })} 

@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { Plus, BookOpen, Pencil, Trash2 } from "lucide-react";
 import { useBlogsAll } from "@/features/admin/blog/hooks/useBlogsAll";
+import { useDeleteBlog } from "@/features/admin/blog/hooks/useDeleteBlog";
 
 export default function BlogManagement() {
   const { blogs, loading, error, refetch } = useBlogsAll();
+  const { deleteBlog } = useDeleteBlog();
 
   // Ensure array
   const blogList = Array.isArray(blogs) ? blogs : [];
@@ -27,10 +29,8 @@ export default function BlogManagement() {
       )
     ) {
       try {
-        // TODO: call delete API here
-        // await deleteBlog(blogId);
-
-        await refetch(); // ✅ correct way
+        await deleteBlog(blogId);
+        await refetch();
         alert("Blog deleted successfully!");
       } catch (err) {
         console.error("Failed to delete blog:", err);
@@ -91,7 +91,7 @@ export default function BlogManagement() {
                     {blog.subtitle}
                   </p>
 
-                  <div className="flex items-center gap-3 mt-2">
+                  <div className="flex items-center gap-3 mt-2 flex-wrap">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         blog.status === "published"
@@ -108,6 +108,12 @@ export default function BlogManagement() {
                     {blog.readingTime && (
                       <span className="text-xs text-slate-500">
                         📖 {blog.readingTime}
+                      </span>
+                    )}
+
+                    {blog.updatedAt && (
+                      <span className="text-xs text-green-600 flex items-center gap-1">
+                        <span>✓</span> {new Date(blog.updatedAt).toLocaleDateString()} {new Date(blog.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                       </span>
                     )}
                   </div>

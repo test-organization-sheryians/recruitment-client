@@ -10,6 +10,9 @@ export function useCreateBlog() {
     try {
       setLoading(true);
       const res = await createBlogPost(payload);
+
+      console.log("Final Payload:", payload);
+console.log("Category type:", typeof payload.category);
       return res;
     } finally {
       setLoading(false);
