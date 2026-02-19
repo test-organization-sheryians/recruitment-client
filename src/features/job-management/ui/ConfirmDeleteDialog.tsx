@@ -64,7 +64,7 @@ export default function ConfirmDeleteDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="h-11 rounded-lg bg-red-50 text-red-800 font-semibold hover:bg-red-100 transition flex justify-center items-center gap-2 border border-red-200 cursor-pointer">
+        <button className="h-11 rounded-lg bg-red-50 text-red-800 px-4 font-semibold hover:bg-red-100 transition flex justify-center items-center gap-2 border border-red-200 cursor-pointer">
           <DeleteIcon className="w-4 h-6" />
           {triggerLabel}
         </button>

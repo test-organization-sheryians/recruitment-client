@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react"
 import { useInfiniteJobsAdmin } from "@/features/admin/jobs/hooks/useJobApi"
 import { useRouter } from "next/navigation"
-import { Archive, CheckCircle2, ChevronDown, Edit3 } from "lucide-react"
+import { Archive, CheckCheck, CheckCircle2, ChevronDown, Edit3 } from "lucide-react"
 
 import CreateJobButton from "../ui/CreateJobButton"
 import FilterButton from "../ui/FilterButton"
@@ -99,7 +99,7 @@ export default function Jobs() {
   }
 
   const filters = [
-    { key: "ALL", label: "All Jobs", icon: ChevronDown },
+    { key: "ALL", label: "All Jobs", icon: CheckCircle2 },
     { key: "ACTIVE", label: "Active", icon: CheckCircle2 },
    
   ] as const
