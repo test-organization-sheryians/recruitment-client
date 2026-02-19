@@ -48,6 +48,7 @@ export * from "./resumeExtract";
 export * from "./users/getAllUsers";
 export * from "./users/updateUserRole";
 export * from "./users/deleteUser";
+export * from "./users/updateMe";
 export * from "./profile/index";
 export * from "./jobApplication/applyJob";
 export * from "./jobApplication/bulkUpdate";
@@ -66,6 +67,7 @@ export * from "./tests/testAttempts";
 export * from "./tests/testInfo";
 export * from "./tests/updateTest";
 export * from "./tests/publishTestResult"
+export * from "./tests/deleteTest";
 
 
 export * from "./password/forgotPassword";
