@@ -16,14 +16,10 @@ export function useBlogsAll() {
 
       console.log("BLOG LIST RESPONSE:", res.data);
 
-      // 🔥 Important: handle structure correctly
-      const blogsArray =
-        res.data?.data?.docs ||   // if pagination
-        res.data?.data?.blogs ||  // if wrapped
-        res.data?.data ||         // if direct
-        [];
+   
+      const blogsArray = res.data?.data?.blogs || [];
 
-      setBlogs(Array.isArray(blogsArray) ? blogsArray : []);
+   setBlogs(blogsArray);
     } catch (err) {
       console.error(err);
       setError("Failed to load blogs");

@@ -69,10 +69,11 @@ export default function CreateBlogLayout() {
     title: post.title,
     subtitle: post.subtitle || "",
     slug: post.slug,
-    category: [normalizeCategory(post.category)], // ✅ array
+    category: normalizeCategory(post.category),
     technologies: post.technologies || [],
     hero: post.hero,
     content: { blocks: post.content },
+    status: post.status,
     isPublished: post.status === "published",
   });
 
@@ -81,35 +82,49 @@ export default function CreateBlogLayout() {
     subtitle: post.subtitle || "",
     hero: post.hero,
     content: { blocks: post.content },
-    category: [normalizeCategory(post.category)], // ✅ array
+    category: [normalizeCategory(post.category)],
     isPublished: post.status === "published",
   });
-  const handleSave = async () => {
-    if (!blogPost.title?.trim()) {
+
+  console.log("Update payload:", buildUpdatePayload(blogPost));
+
+  const savePost = async (status: "draft" | "published" | "archived") => {
+    const postToSave = {
+      ...blogPost,
+      status,
+    };
+
+    console.log("Saving status:", status);
+
+    if (!postToSave.title?.trim()) {
       return toast.error("Title is required");
     }
 
-    if (!blogPost.category) {
+    if (!postToSave.category) {
       return toast.error("Category is required");
-    }
-
-    if (!blogPost.hero?.imageUrl) {
-      return toast.error("Featured image is required");
     }
 
     try {
       const payload = isEdit
-        ? buildUpdatePayload(blogPost)
-        : buildCreatePayload(blogPost);
+        ? buildUpdatePayload(postToSave)
+        : buildCreatePayload(postToSave);
 
       console.log("Final Payload:", payload);
 
       if (isEdit && blogId) {
         await updateBlog(blogId, payload);
-        toast.success("Blog updated successfully!");
+        toast.success(
+          status === "published"
+            ? "Blog published successfully!"
+            : "Draft saved!",
+        );
       } else {
         await createBlog(payload);
-        toast.success("Blog created successfully!");
+        toast.success(
+          status === "published"
+            ? "Blog published successfully!"
+            : "Draft saved!",
+        );
       }
 
       router.push("/admin/blog");
@@ -120,6 +135,12 @@ export default function CreateBlogLayout() {
       toast.error(msg);
     }
   };
+
+  const handleSaveDraft = () => savePost("draft");
+
+  const handlePublish = () => savePost("published");
+
+  const handleArchive = () => savePost("archived"); // optional future use
 
   if (isEdit && blogLoading)
     return (
@@ -148,24 +169,19 @@ export default function CreateBlogLayout() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Save Draft */}
           <button
             disabled={isBusy}
-            onClick={async () => {
-              setBlogPost((p: any) => ({ ...p, status: "draft" }));
-              await new Promise((resolve) => setTimeout(resolve, 0));
-              handleSave();
-            }}
+            onClick={handleSaveDraft}
             className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-lg"
           >
             Save Draft
           </button>
+
+          {/* Publish / Update */}
           <button
             disabled={isBusy}
-            onClick={async () => {
-              setBlogPost((p: any) => ({ ...p, status: "published" }));
-              await new Promise((resolve) => setTimeout(resolve, 0));
-              handleSave();
-            }}
+            onClick={handlePublish}
             className="px-5 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
           >
             {isBusy ? "Processing..." : isEdit ? "Update & Publish" : "Publish"}

@@ -62,35 +62,34 @@ export default function BlogEditor({
   initialContent,
   onChange,
 }: BlogEditorProps) {
-  const [content, setContent] = useState<PartialBlock[]>(
-    initialContent || []
-  );
+  const [content, setContent] = useState<PartialBlock[]>(initialContent || []);
 
   const editor: BlockNoteEditor = useCreateBlockNote({
     initialContent:
-  initialContent && initialContent.length > 0
-    ? initialContent
-    : [
-        {
-          type: "heading",
-          props: { level: 5 },
-          content: "Start writing your blog post here...",
-        },
-        {
-          type: "paragraph",
-          content: "",
-        },
-        {
-          type: "paragraph",
-          content: "",
-        },
-      ],
+      initialContent && initialContent.length > 0
+        ? initialContent
+        : [
+            {
+              type: "heading",
+              props: { level: 5 },
+              content: "Start writing your blog post here...",
+            },
+            {
+              type: "paragraph",
+              content: "",
+            },
+            {
+              type: "paragraph",
+              content: "",
+            },
+          ],
     uploadFile: async (file: File) => {
       try {
         const imageUrl = await uploadFileToS3(file);
         return imageUrl;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Failed to upload image";
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to upload image";
         console.error("❌ Image upload failed:", errorMessage);
         toast.error(errorMessage);
         throw new Error(errorMessage);
@@ -100,74 +99,72 @@ export default function BlogEditor({
 
   const slashItems = useMemo(
     () => getDefaultReactSlashMenuItems(editor),
-    [editor]
+    [editor],
   );
 
-  function filterSuggestionItems(items: DefaultReactSuggestionItem[], query: string): DefaultReactSuggestionItem[] {
-    return items.filter(item =>
-      item.title.toLowerCase().includes(query.toLowerCase())
+  function filterSuggestionItems(
+    items: DefaultReactSuggestionItem[],
+    query: string,
+  ): DefaultReactSuggestionItem[] {
+    return items.filter((item) =>
+      item.title.toLowerCase().includes(query.toLowerCase()),
     );
   }
 
   const SlashMenuGrid = ({
-  items,
-  selectedIndex,
-  onItemClick,
-}: SuggestionMenuProps<DefaultReactSuggestionItem>) => (
-  <div className="w-[340px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl">
-    <div className="px-2 pb-2 text-xs font-semibold uppercase text-slate-400">
-      Add block
-    </div>
+    items,
+    selectedIndex,
+    onItemClick,
+  }: SuggestionMenuProps<DefaultReactSuggestionItem>) => (
+    <div className="w-[340px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl">
+      <div className="px-2 pb-2 text-xs font-semibold uppercase text-slate-400">
+        Add block
+      </div>
 
-    <div className="grid grid-cols-2 gap-2">
-      {items.map((item, index) => (
-        <button
-          key={`${item.title}-${index}`}
-          onClick={() => onItemClick?.(item)}
-          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
-            selectedIndex === index
-              ? "bg-blue-100 text-blue-700"
-              : "text-slate-600 hover:bg-slate-100"
-          }`}
-        >
-          <span className="text-base">{item.icon}</span>
-          <span className="truncate">{item.title}</span>
-        </button>
-      ))}
+      <div className="grid grid-cols-2 gap-1">
+        {items.map((item, index) => (
+          <button
+            key={`${item.title}-${index}`}
+            onClick={() => onItemClick?.(item)}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
+              selectedIndex === index
+                ? "bg-blue-100 text-blue-700"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <span className="text-base">{item.icon}</span>
+            <span className="truncate">{item.title}</span>
+          </button>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
 
   return (
-  <div className=" w-full  ">
-    <div className="w-full ">
-      
-      <BlockNoteView
-        editor={editor}
-        theme={forcedLightTheme}
-        className="min-h-[900px] text-md"
-        slashMenu={false}
-        onChange={() => {
-          const blocks = editor.document;
-          setContent(blocks);
-          onChange?.(blocks);
-        }}
-      >
-        <SuggestionMenuController
-          triggerCharacter="/"
-          getItems={async (query: string) =>
-            filterSuggestionItems(slashItems, query)
-          }
-          suggestionMenuComponent={SlashMenuGrid}
-        />
-      </BlockNoteView>
+    <div className=" w-full  ">
+      <div className="w-full ">
+        <BlockNoteView
+          editor={editor}
+          theme={forcedLightTheme}
+          className="min-h-[900px] text-md"
+          slashMenu={false}
+          onChange={() => {
+            const blocks = editor.document;
+            setContent(blocks);
+            onChange?.(blocks);
+          }}
+        >
+          <SuggestionMenuController
+            triggerCharacter="/"
+            getItems={async (query: string) =>
+              filterSuggestionItems(slashItems, query)
+            }
+            suggestionMenuComponent={SlashMenuGrid}
+          />
+        </BlockNoteView>
 
-      <input type="hidden" value={JSON.stringify(content)} readOnly />
+        <input type="hidden" value={JSON.stringify(content)} readOnly />
+      </div>
     </div>
-  </div>
-);
+  );
 }
-
-
-
-

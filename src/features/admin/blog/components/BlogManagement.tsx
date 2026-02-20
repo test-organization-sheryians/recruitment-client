@@ -13,19 +13,17 @@ export default function BlogManagement() {
   const blogList = Array.isArray(blogs) ? blogs : [];
 
   const publishedCount = blogList.filter(
-    (blog) => blog.status === "published"
+    (blog) => blog.status === "published",
   ).length;
 
-  const draftCount = blogList.filter(
-    (blog) => blog.status === "draft"
-  ).length;
+  const draftCount = blogList.filter((blog) => blog.status === "draft").length;
 
   const totalBlogs = blogList.length;
 
   const handleDelete = async (blogId: string, title: string) => {
     if (
       confirm(
-        `Are you sure you want to delete "${title}"? This action cannot be undone.`
+        `Are you sure you want to delete "${title}"? This action cannot be undone.`,
       )
     ) {
       try {
@@ -44,12 +42,8 @@ export default function BlogManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">
-            Blog Management
-          </h1>
-          <p className="text-slate-600 mt-2">
-            Create and manage blog posts
-          </p>
+          <h1 className="text-3xl font-bold text-slate-900">Blog Management</h1>
+          <p className="text-slate-600 mt-2">Create and manage blog posts</p>
         </div>
 
         <Link
@@ -97,12 +91,19 @@ export default function BlogManagement() {
                         blog.status === "published"
                           ? "bg-green-100 text-green-800"
                           : blog.status === "draft"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-slate-100 text-slate-800"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : blog.status === "archived"
+                              ? "bg-slate-100 text-slate-800"
+                              : "bg-gray-100 text-gray-800"
                       }`}
                     >
-                      {blog.status.charAt(0).toUpperCase() +
-                        blog.status.slice(1)}
+                      {blog.status === "published"
+                        ? "Published"
+                        : blog.status === "draft"
+                          ? "Draft"
+                          : blog.status === "archived"
+                            ? "Archived"
+                            : "Unknown"}
                     </span>
 
                     {blog.readingTime && (
@@ -113,7 +114,12 @@ export default function BlogManagement() {
 
                     {blog.updatedAt && (
                       <span className="text-xs text-green-600 flex items-center gap-1">
-                        <span>✓</span> {new Date(blog.updatedAt).toLocaleDateString()} {new Date(blog.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        <span>✓</span>{" "}
+                        {new Date(blog.updatedAt).toLocaleDateString()}{" "}
+                        {new Date(blog.updatedAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
                     )}
                   </div>
@@ -176,11 +182,7 @@ function ErrorState({
 }
 
 function EmptyState() {
-  return (
-    <div className="text-center py-12 text-slate-500">
-      No blogs yet
-    </div>
-  );
+  return <div className="text-center py-12 text-slate-500">No blogs yet</div>;
 }
 
 function StatCard({
