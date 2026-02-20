@@ -32,7 +32,14 @@ const Navbar = () => {
   if (!user) return null;
 
   return (
-    <nav className="w-full border-b bg-white px-6 py-4 flex items-center justify-between relative z-50">
+<nav className="fixed top-0 left-0 w-full z-50
+                bg-white/60 backdrop-blur-md
+                border-b border-gray-400/20
+                px-35 py-2
+                flex items-center justify-between">
+
+
+
       {/* ---------- BACKDROPS ---------- */}
       {(openMenu || openProfile) && (
         <div

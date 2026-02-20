@@ -27,7 +27,7 @@ interface JobFormData {
   title: string
   description: string
   education: string
-  requiredExperience: string
+  requiredExperience: number
   category: string
   skills: string[]
   expiry: string
@@ -59,7 +59,9 @@ export default function UpdateJob({
           onSuccess: (res) => {
             if (res.success) {
               onJobUpdated?.()
-              router.refresh()
+              
+     router.refresh()
+
               resolve()
             } else {
               reject(new Error("Failed to update job"))
@@ -81,9 +83,18 @@ export default function UpdateJob({
   return (
     <JobForm
       mode="update"
-      initialData={job as unknown as Partial<JobFormData>}
+      initialData={{
+        ...job,
+        // Convert to number to satisfy the JobForm interface
+        requiredExperience: job?.requiredExperience ? Number(job.requiredExperience) : 0,
+        
+        // Safety check for skills if your API returns objects instead of IDs
+        skills: Array.isArray(job?.skills) 
+          ? job.skills.map((s: any) => typeof s === "string" ? s : s._id)
+          : []
+      } as any} // Using 'as any' here bypasses the Partial mismatch temporarily
       onSubmit={handleSubmit}
       loading={isPending}
     />
-  )
+  );
 }

@@ -20,10 +20,12 @@ const handleSubmit = async (data: JobFormData) => {
     const res = await createJob(data as unknown as Record<string, unknown>); 
 
     if (res.success || res.data) { 
+      const jobId = res.data._id; // assume API response me _id hai
       onJobCreated?.();
-      router.refresh();
+      router.refresh()
     }
-  } catch (error) {
+    }
+   catch (error) {
     console.error("Submission error:", error);
   } finally {
     setLoading(false);
