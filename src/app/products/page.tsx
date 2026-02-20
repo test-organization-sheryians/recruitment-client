@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Cookies from "js-cookie";
 
 interface Product {
   _id: string;
@@ -38,12 +39,21 @@ export default function ProductsPage() {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch("http://localhost:9000/api/products");
+      const token = Cookies.get("access");
+      if (!token) throw new Error("No token found");
+
+      const res = await fetch("http://localhost:9000/api/products", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setProducts(data.data || []);
     } catch (error) {
       console.error("Error:", error);
+      alert("Please login again");
     } finally {
       setLoading(false);
     }
@@ -51,7 +61,7 @@ export default function ProductsPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
+    const token = Cookies.get("access");
 
     if (!token) {
       alert("Please login first (check browser console for token)");
@@ -216,23 +226,6 @@ export default function ProductsPage() {
                     className="w-full p-2 border rounded focus:ring-2"
                     rows={2}
                     placeholder="Description"
-                  />
-                  <input
-                    value={editForm.category}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, category: e.target.value })
-                    }
-                    className="w-full p-2 border rounded focus:ring-2"
-                    placeholder="Category"
-                  />
-                  <input
-                    value={editForm.stock}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, stock: e.target.value })
-                    }
-                    className="w-full p-2 border rounded focus:ring-2"
-                    placeholder="Stock"
-                    type="number"
                   />
                   <div className="flex space-x-2 pt-2">
                     <button
