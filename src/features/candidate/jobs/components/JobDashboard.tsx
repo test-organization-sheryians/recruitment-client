@@ -18,7 +18,6 @@ import { useToast } from "@/components/ui/Toast";
 
 import { useDebounce } from "@/features/admin/users/hooks/useDebounce";
 
-
 import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
 import {
   useInfiniteJobs,
@@ -32,11 +31,8 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { getJobQuestions } from "@/api/jobs/jobApplicationQuestion";
 
-
-
-
 export default function JobDashboardPage() {
-  const { data: profile, isLoading: profileLoading } = useGetProfile()
+  const { data: profile, isLoading: profileLoading } = useGetProfile();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,42 +41,38 @@ export default function JobDashboardPage() {
   const router = useRouter();
   const [showAllCategories, setShowAllCategories] = useState(false);
   const queryClient = useQueryClient();
-  const applyJobMutation = useApplyJob()
-  const toast = useToast()
-
-
+  const applyJobMutation = useApplyJob();
+  const toast = useToast();
 
   const handleApplyJob = async (jobId: string) => {
-  if (profileLoading) {
-    toast.error("Profile is loading. Please wait.");
-    return;
-  }
-
-  if (!profile?.resumeFile) {
-    toast.error("Please upload your resume before applying.");
-    return;
-  }
-
-  try {
-    const questions = await getJobQuestions(jobId);
-
-    if (!questions || questions.length === 0) {
-      // ✅ no screening → apply now
-      applyJobMutation.mutate({
-        jobId,
-        message: "Excited to apply!",
-        resumeUrl: profile.resumeFile,
-      });
-    } else {
-      // ✅ screening exists → open form
-      router.push(`/jobs/${jobId}/apply`);
+    if (profileLoading) {
+      toast.error("Profile is loading. Please wait.");
+      return;
     }
-  } catch (err) {
-    toast.error("Failed to check job requirements.");
-  }
-};
 
+    if (!profile?.resumeFile) {
+      toast.error("Please upload your resume before applying.");
+      return;
+    }
 
+    try {
+      const questions = await getJobQuestions(jobId);
+
+      if (!questions || questions.length === 0) {
+        // ✅ no screening → apply now
+        applyJobMutation.mutate({
+          jobId,
+          message: "Excited to apply!",
+          resumeUrl: profile.resumeFile,
+        });
+      } else {
+        // ✅ screening exists → open form
+        router.push(`/jobs/${jobId}/apply`);
+      }
+    } catch (err) {
+      toast.error("Failed to check job requirements.");
+    }
+  };
 
   const {
     data: categoryPages,
@@ -91,23 +83,19 @@ export default function JobDashboardPage() {
   } = useInfiniteJobCategories();
 
   const categories: CategoryItem[] = (categoryPages?.pages ?? []).flatMap(
-    (p) => p.data ?? []
+    (p) => p.data ?? [],
   );
   const handleJobDetails = (jobId: string) => {
     router.push(`/jobs/${jobId}`);
   };
 
-
   // optional: refetch jobs so applied=true updates
-
-
 
   /* ================= FILTER STATES ================= */
   const [jobType, setJobType] = useState<string[]>([]);
   const [experience, setExperience] = useState<string[]>([]);
   const [salaryRange, setSalaryRange] = useState<[number, number]>([
-    0,
-    10000000,
+    0, 10000000,
   ]);
 
   const debouncedMinSalary = useDebounce(salaryRange[0], 600);
@@ -119,9 +107,8 @@ export default function JobDashboardPage() {
   const jobsByCategoryQuery = useInfiniteJobsByCategory(selectedCategory);
 
   // Normalize filter values
-  const normalizedJobType = jobType.filter(j => j && j.trim() !== "");
-  const normalizedExperience = experience.filter(e => e && e.trim() !== "");
-
+  const normalizedJobType = jobType.filter((j) => j && j.trim() !== "");
+  const normalizedExperience = experience.filter((e) => e && e.trim() !== "");
 
   /* ✅ ONLY REAL CHANGE IS HERE */
   const searchJobsQuery = useInfiniteSearchJobs({
@@ -132,9 +119,7 @@ export default function JobDashboardPage() {
     minSalary: debouncedMinSalary,
     maxSalary: debouncedMaxSalary,
     category: selectedCategory ?? undefined,
-
   });
-
 
   // ✅ PUT IT HERE ⬇️
   const isSearchActive = Boolean(
@@ -142,7 +127,7 @@ export default function JobDashboardPage() {
     query.location ||
     normalizedJobType.length ||
     normalizedExperience.length ||
-    !(salaryRange[0] === 0 && salaryRange[1] === 10000000)
+    !(salaryRange[0] === 0 && salaryRange[1] === 10000000),
   );
 
   // useEffect(() => {
@@ -150,7 +135,6 @@ export default function JobDashboardPage() {
   //     setSelectedCategory(null);
   //   }
   // }, [isSearchActive]);
-
 
   // // ✅ AND THIS RIGHT AFTER
   // const activeJobsQuery = isSearchActive
@@ -164,20 +148,15 @@ export default function JobDashboardPage() {
       ? jobsByCategoryQuery
       : allJobsQuery;
 
-
   const jobsPages = activeJobsQuery.data?.pages ?? [];
   const hasMoreJobs = activeJobsQuery.hasNextPage;
   const fetchNextJobs = activeJobsQuery.fetchNextPage;
   const isFetchingMoreJobs = activeJobsQuery.isFetchingNextPage;
 
   const jobsCount =
-    jobsPages.length > 0
-      ? jobsPages[0]?.pagination?.totalRecords ?? 0
-      : 0;
+    jobsPages.length > 0 ? (jobsPages[0]?.pagination?.totalRecords ?? 0) : 0;
 
-  const jobs: CardJob[] = jobsPages
-    .flatMap((p) => p.data ?? []);
-
+  const jobs: CardJob[] = jobsPages.flatMap((p) => p.data ?? []);
 
   const categoriesLoadMoreRef = useRef<HTMLDivElement | null>(null);
   const jobsLoadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -220,7 +199,6 @@ export default function JobDashboardPage() {
       location: searchLocation.trim(),
     });
     setSelectedCategory(null);
-
   };
 
   useEffect(() => {
@@ -234,10 +212,6 @@ export default function JobDashboardPage() {
       document.body.style.overflow = "auto";
     };
   }, [isSidebarOpen]);
-
-
-
-
 
   return (
     <div className="min-h-screen bg-gray-50 border pt-15">
@@ -254,18 +228,17 @@ export default function JobDashboardPage() {
           categories={categories}
           selectedCategory={selectedCategory}
           onSelect={(id) => {
-            setSelectedCategory(id)
-            setQuery({ q: "", location: "" })
+            setSelectedCategory(id);
+            setQuery({ q: "", location: "" });
           }}
           onViewAll={() => setShowAllCategories(true)}
         />
       )}
 
-
       <div className="md:hidden sticky top-0 z-30 bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="p-1.5 rounded bg-white border border-gray-300 shadow-sm"
+          className="p-1.5 rounded bg-white border border-gray-300 shadow-sm cursor-pointer"
         >
           <Menu size={18} className="text-gray-700" />
         </button>
@@ -291,7 +264,7 @@ export default function JobDashboardPage() {
 
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="text-gray-600 text-xl"
+                className="text-gray-600 text-xl cursor-pointer"
               >
                 ✕
               </button>
@@ -337,8 +310,8 @@ export default function JobDashboardPage() {
                     key={category._id}
                     category={category}
                     onClick={() => {
-                      setSelectedCategory(category._id)
-                      setShowAllCategories(false)
+                      setSelectedCategory(category._id);
+                      setShowAllCategories(false);
                     }}
                   />
                 ))}
@@ -361,16 +334,16 @@ export default function JobDashboardPage() {
 
               {/* Job list */}
 
-
-
               <div className="p-4 space-y-4 bg-gray-50">
                 {jobs.map((job) => (
                   <LatestJobCard
                     key={job._id}
                     jobId={job._id}
                     title={job.title}
-                    company={(job as { client?: { company?: string } }).client?.company || "Company"}
-
+                    company={
+                      (job as { client?: { company?: string } }).client
+                        ?.company || "Company"
+                    }
                     location={
                       job.location?.city
                         ? `${job.location.city}, ${job.location.country ?? ""}`
@@ -380,20 +353,25 @@ export default function JobDashboardPage() {
                       job.salary && typeof job.salary === "object"
                         ? job.salary // already correct shape
                         : job.salary != null
-                          ? { min: Number(job.salary), max: Number(job.salary), currency: "₹" }
+                          ? {
+                              min: Number(job.salary),
+                              max: Number(job.salary),
+                              currency: "₹",
+                            }
                           : undefined
                     }
                     postedAt={
-  job.createdAt
-    ? new Date(job.createdAt).toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-    : undefined
-}
-
-                    skills={job.skills?.map((s) => typeof s === "string" ? s : s.name)}
+                      job.createdAt
+                        ? new Date(job.createdAt).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : undefined
+                    }
+                    skills={job.skills?.map((s) =>
+                      typeof s === "string" ? s : s.name,
+                    )}
                     applied={job.applied}
                     onDetails={handleJobDetails}
                     onApply={handleApplyJob}
@@ -405,10 +383,7 @@ export default function JobDashboardPage() {
             </div>
           </div>
         )}
-
-
       </div>
     </div>
   );
 }
-

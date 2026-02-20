@@ -84,13 +84,15 @@ export default function JobHeader({
           {/* LEFT SIDE */}
           <div className="flex items-center gap-6">
             {/* Salary */}
-            
-              <div>
-                <p className="text-xs font-semibold tracking-wide text-gray-400 uppercase">
-                  Salary Range
-                </p>
-                <p className="text-lg font-bold text-blue-600">{salary  || "Not disclosed"}</p>
-              </div>
+
+            <div>
+              <p className="text-xs font-semibold tracking-wide text-gray-400 uppercase">
+                Salary Range
+              </p>
+              <p className="text-lg font-bold text-blue-600">
+                {salary || "Not disclosed"}
+              </p>
+            </div>
 
             {/* Divider */}
             <div className="h-10 w-px bg-gray-200" />
@@ -112,7 +114,7 @@ export default function JobHeader({
               <button
                 onClick={onBookmarkClick}
                 disabled={isExpired || isLoadingBookmark}
-                className="flex items-center gap-2 rounded-lg border border-gray-300 px-5 py-2.5 font-medium text-gray-700 hover:bg-gray-50 transition"
+                className="flex items-center gap-2 rounded-lg border border-gray-300 px-5 py-2.5 font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
               >
                 <Bookmark size={18} className={isSaved ? "fill-current" : ""} />
                 {isLoadingBookmark ? "Saving..." : isSaved ? "Saved" : "Save"}
@@ -122,14 +124,14 @@ export default function JobHeader({
             {onApplyClick && (
               <button
                 onClick={(e) => {
-            e.stopPropagation()
-              onApplyClick(jobId)
-          }}
+                  e.stopPropagation();
+                  onApplyClick(jobId);
+                }}
                 disabled={isExpired || isApplied || isLoadingApply}
                 className={`rounded-lg px-6 py-2.5 font-semibold transition ${
                   isExpired || isApplied
                     ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-blue-600 text-white cursor-pointer hover:bg-blue-700"
                 }`}
               >
                 {isApplied
