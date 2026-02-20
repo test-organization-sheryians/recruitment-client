@@ -11,12 +11,15 @@ import {
   useInfiniteJobsByCategory,
 } from "@/features/candidate/jobs/hooks/useInfiniteJobs";
 import type { CategoryItem } from "@/api/category/getCategoriesPaginated";
+import { SearchQuery } from "@/types/Job";
+import { useInfiniteSearchJobs } from "@/features/candidate/jobs/hooks/useSearchJobs";
 
 export default function JobDashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-
+ const [searchLocation,setSearchLocation] = useState("")
+ const [query, setQuery] = useState<SearchQuery>({q: "", location: "",});
   // const { data: profileCalInfo } = useProfileQuery();
 
   // const completion = profileCalInfo?.data ?? 0;
@@ -38,14 +41,28 @@ export default function JobDashboardPage() {
 
   const allJobsQuery = useInfiniteJobs();
   const jobsByCategoryQuery = useInfiniteJobsByCategory(selectedCategory);
+const searchJobsQuery = useInfiniteSearchJobs({
+  q: query.q,
+  location: query.location,
+});
 
-  const activeJobsQuery = selectedCategory ? jobsByCategoryQuery : allJobsQuery;
+
+const isSearchActive = Boolean(query.q || query.location);
+const activeJobsQuery = isSearchActive
+  ? searchJobsQuery
+  : selectedCategory
+  ? jobsByCategoryQuery
+  : allJobsQuery;
 
   const jobsPages = activeJobsQuery.data?.pages ?? [];
   const jobsLoading = activeJobsQuery.isLoading;
   const hasMoreJobs = activeJobsQuery.hasNextPage;
   const fetchNextJobs = activeJobsQuery.fetchNextPage;
   const isFetchingMoreJobs = activeJobsQuery.isFetchingNextPage;
+
+console.log("Jobs Pages data check ===>:", jobsPages);
+console.log("total job count check ===>:", jobsPages?.[0]?.pagination.totalRecords);
+const jobsCount = jobsPages?.[0]?.pagination.totalRecords || 0;
 
   const jobs: CardJob[] = jobsPages
     .flatMap((p) => p.data ?? [])
@@ -93,26 +110,28 @@ export default function JobDashboardPage() {
     return () => observer.disconnect();
   }, [hasMoreJobs, isFetchingMoreJobs, fetchNextJobs, selectedCategory]);
 
-  const term = searchTerm.toLowerCase();
+ 
 
-  const filteredJobs = jobs.filter((job) => {
-    const title = job.title?.toLowerCase() || "";
-    const department = job.department?.toLowerCase() || "";
-    const skills =
-      job.skills
-        ?.map((s) => (typeof s === "string" ? s : s.name || ""))
-        .join(" ")
-        .toLowerCase() || "";
+  // search button handler
+    const searchHandler = ()=>{
+      
+ 
+    const q = searchTerm.trim();
+  const location = searchLocation.trim();
 
-    return (
-      title.includes(term) || department.includes(term) || skills.includes(term)
-    );
-  });
+  // if (!q ) return;
+
+  setQuery({ q, location });
+  setSelectedCategory(null);
+  setSearchTerm("");
+  setSearchLocation("");
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero with search */}
-      <HeroSection searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      <HeroSection searchTerm={searchTerm} setSearchTerm={setSearchTerm}  onSearch={searchHandler} 
+     searchLocation={searchLocation} setSearchLocation={setSearchLocation} />
 
       {/* Mobile Filter Bar */}
       <div className="md:hidden sticky top-0 z-30 bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
@@ -123,38 +142,48 @@ export default function JobDashboardPage() {
           <Menu size={18} className="text-gray-700" />
         </button>
         <span className="text-sm font-medium text-gray-800">
-          {selectedCategory ? "Filtered" : "All Jobs"} • {filteredJobs.length}{" "}
+          {selectedCategory ? "Filtered" : "All Jobs"} • {jobsCount}{" "}
           found
         </span>
       </div>
 
       {/* Mobile Sidebar */}
-      {isSidebarOpen && (
-        <div className="md:hidden fixed inset-0 z-40 flex">
-          <div
-            className="fixed inset-0 bg-black/40"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-          <div className="bg-white w-72 h-full shadow-2xl p-4 overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold">Categories</h3>
-              <button onClick={() => setIsSidebarOpen(false)} className="p-1">
-                <X size={18} />
-              </button>
-            </div>
-            <Sidebar
-              selected={selectedCategory}
-              onSelect={(id) => {
-                setSelectedCategory(id);
-                setIsSidebarOpen(false);
-              }}
-              categories={categories || []}
-              isLoading={categoriesLoading}
-              loadMoreRef={categoriesLoadMoreRef}
-            />
-          </div>
-        </div>
-      )}
+{isSidebarOpen && (
+  <div className="md:hidden fixed inset-0 z-40 overflow-hidden">
+    {/* Backdrop */}
+    <div
+      className="absolute inset-0 bg-black/40"
+      onClick={() => setIsSidebarOpen(false)}
+    />
+
+    {/* Sidebar */}
+    <div className="absolute left-0 top-0 h-full w-72 bg-white shadow-2xl flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b">
+        <h3 className="text-base font-semibold">Categories</h3>
+        <button onClick={() => setIsSidebarOpen(false)}>
+          <X size={18} />
+        </button>
+      </div>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+        <Sidebar
+          selected={selectedCategory}
+          onSelect={(id) => {
+            setSelectedCategory(id);
+            setIsSidebarOpen(false);
+            setQuery({ q: "", location: "" });
+          }}
+          categories={categories || []}
+          isLoading={categoriesLoading}
+          loadMoreRef={categoriesLoadMoreRef}
+        />
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* Main Grid */}
       <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -166,10 +195,15 @@ export default function JobDashboardPage() {
             </h3>
             <Sidebar
               selected={selectedCategory}
-              onSelect={setSelectedCategory}
+             onSelect={(id) => {
+                setSelectedCategory(id);
+                setIsSidebarOpen(false);
+                setQuery({ q: "", location: "" })
+              }}
               categories={categories || []}
               isLoading={categoriesLoading}
               loadMoreRef={categoriesLoadMoreRef}
+             
             />
           </div>
         </div>
@@ -184,7 +218,7 @@ export default function JobDashboardPage() {
                   {selectedCategory ? "Category Jobs" : "All Jobs"}
                 </h2>
                 <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-                  {filteredJobs.length} jobs
+                  {jobsCount} jobs
                 </span>
               </div>
               {selectedCategory && (
@@ -206,7 +240,7 @@ export default function JobDashboardPage() {
             )}
 
             {/* Empty State */}
-            {!jobsLoading && filteredJobs.length === 0 && (
+            {!jobsLoading && jobsCount === 0 && (
               <div className="p-12 text-center">
                 <p className="text-sm text-gray-500">
                   No jobs match your search.
@@ -219,7 +253,7 @@ export default function JobDashboardPage() {
 
             {/* Job Cards */}
             <div className="divide-y divide-transparent p-2">
-              {filteredJobs.map((job) => (
+              {jobs.map((job) => (
                 <div
                   key={job._id}
                   className="py-5 first:pt-0 hover:bg-gray-50/70 transition-colors duration-150"
