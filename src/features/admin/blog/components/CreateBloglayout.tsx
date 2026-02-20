@@ -11,6 +11,7 @@ import { useCreateBlog } from "@/features/admin/blog/hooks/useCreateBlog";
 import { useUpdateBlog } from "@/features/admin/blog/hooks/useUpdateBlog";
 import { useDeleteBlog } from "@/features/admin/blog/hooks/useDeleteBlog";
 import { useBlog } from "@/features/admin/blog/hooks/useBlog";
+import Link from "next/link";
 
 const BlogEditor = dynamic(
   () => import("@/features/admin/blog/components/BlogEditor"),
@@ -83,6 +84,9 @@ export default function CreateBlogLayout() {
     hero: post.hero,
     content: { blocks: post.content },
     category: [normalizeCategory(post.category)],
+
+    // IMPORTANT
+    status: post.status,
     isPublished: post.status === "published",
   });
 
@@ -156,9 +160,16 @@ export default function CreateBlogLayout() {
       {/* Header Bar */}
       <header className="sticky top-0 z-50 backdrop-blur-md px-8 py-3 rounded-lg flex justify-between items-center bg-white/80 shadow-sm">
         <div className="flex flex-col">
-          <nav className="flex items-center gap-2 text-[11px] font-sm text-slate-400 uppercase tracking-wider ">
-            <span>Posts</span>
+          <nav className="flex items-center gap-2 text-[11px] font-sm uppercase tracking-wider">
+            <Link
+              href="/admin/blog"
+              className="text-slate-400 hover:text-blue-600 transition-colors"
+            >
+              Posts
+            </Link>
+
             <span className="text-slate-300">/</span>
+
             <span className="text-slate-600">
               {isEdit ? "Edit Blog" : "New Editorial"}
             </span>
@@ -169,23 +180,47 @@ export default function CreateBlogLayout() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Save Draft */}
+          {/* Status Badge */}
+          <span
+            className={`px-3 py-1 text-xs font-semibold rounded-full ${
+              blogPost.status === "published"
+                ? "bg-green-100 text-green-700"
+                : blogPost.status === "archived"
+                  ? "bg-slate-200 text-slate-700"
+                  : "bg-yellow-100 text-yellow-700"
+            }`}
+          >
+            {blogPost.status?.toUpperCase()}
+          </span>
+
+          {/* Draft */}
           <button
             disabled={isBusy}
             onClick={handleSaveDraft}
-            className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-lg"
+            className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition"
           >
             Save Draft
           </button>
 
-          {/* Publish / Update */}
+          {/* Publish */}
           <button
             disabled={isBusy}
             onClick={handlePublish}
-            className="px-5 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
+            className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition"
           >
-            {isBusy ? "Processing..." : isEdit ? "Update & Publish" : "Publish"}
+            {isBusy ? "Saving..." : isEdit ? "Update & Publish" : "Publish"}
           </button>
+
+          {/* Archive */}
+          {isEdit && (
+            <button
+              disabled={isBusy}
+              onClick={handleArchive}
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-200 hover:bg-slate-300 rounded-lg transition"
+            >
+              Archive
+            </button>
+          )}
         </div>
       </header>
 

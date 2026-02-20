@@ -9,8 +9,12 @@ export default function BlogManagement() {
   const { blogs, loading, error, refetch } = useBlogsAll();
   const { deleteBlog } = useDeleteBlog();
 
-  // Ensure array
-  const blogList = Array.isArray(blogs) ? blogs : [];
+  const blogList = Array.isArray(blogs)
+    ? blogs.map((blog) => ({
+        ...blog,
+        status: blog.status || (blog.isPublished ? "published" : "draft"),
+      }))
+    : [];
 
   const publishedCount = blogList.filter(
     (blog) => blog.status === "published",
