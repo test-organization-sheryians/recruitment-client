@@ -67,16 +67,8 @@ const Navbar = () => {
 
       {/* ---------- DESKTOP NAV ---------- */}
       <div className="hidden md:flex items-center gap-6">
-        {/* ✅ View Groups Button */}
-        <button
-          onClick={() => router.push("/admin/groups")}
-          className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
-        >
-          <UsersRound className="h-4 w-4" />
-          <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">
-            View Groups
-          </span>
-        </button>
+        
+     
 
         {/* Profile */}
         <div className="relative">
