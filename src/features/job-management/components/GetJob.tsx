@@ -1,4 +1,4 @@
-// "use client"
+"use client"
 
 import { useEffect, useState, useCallback, useMemo } from "react"
 import { useInfiniteJobsAdmin } from "@/features/admin/jobs/hooks/useJobApi"
