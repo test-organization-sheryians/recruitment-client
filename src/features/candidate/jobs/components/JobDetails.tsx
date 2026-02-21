@@ -344,7 +344,7 @@ export default function JobDetails() {
                 Join our talent community to get notified about similar roles in
                 the future.
               </p>
-              <button className="w-full bg-white text-blue-600 font-bold py-2.5 rounded-lg hover:bg-blue-50 transition-colors">
+              <button className="w-full bg-white text-blue-600 font-bold py-2.5 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
                 Join Now
               </button>
             </div>

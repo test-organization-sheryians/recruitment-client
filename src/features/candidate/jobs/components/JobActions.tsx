@@ -39,7 +39,7 @@ export default function JobActions({
         className={`flex-1 rounded-lg px-8 py-3 font-semibold transition-all ${
           isExpired || isApplied
             ? "cursor-not-allowed bg-gray-400 text-white"
-            : "bg-blue-600 text-white hover:bg-blue-700"
+            : "bg-blue-600 text-white cursor-pointer hover:bg-blue-700"
         }`}
       >
         {isApplied ? "Applied" : isLoadingApply ? "Applying..." : isExpired ? "Expired" : "Apply Now"}

@@ -86,7 +86,7 @@ export default function ExploreByCategory({
           </h2>
           <button
             onClick={onViewAll}
-            className="text-sm font-medium text-blue-600 hover:underline"
+            className="text-sm font-medium text-blue-600 hover:underline cursor-pointer"
           >
             View all →
           </button>

@@ -14,15 +14,12 @@ interface LatestJobCardProps {
     max?: number;
   };
 
-
-
   postedAt?: string;
   skills?: string[];
   applied?: boolean;
   onDetails: (jobId: string) => void;
   onApply: (jobId: string) => void;
 }
-
 
 export default function LatestJobCard({
   jobId,
@@ -36,19 +33,17 @@ export default function LatestJobCard({
   onDetails,
   onApply,
 }: LatestJobCardProps) {
-const formattedPostedAt = postedAt;
-
+  const formattedPostedAt = postedAt;
 
   const visibleSkills = skills.slice(0, 4);
   const extraSkills = skills.length - visibleSkills.length;
 
-
-
   return (
-    <div className="bg-white rounded-lg p-6 flex flex-col md:flex-row md:justify-between border gap-6 
+    <div
+      className="bg-white rounded-lg p-6 flex flex-col md:flex-row md:justify-between border gap-6 
                 hover:shadow-lg hover:shadow-gray-500/50 
-                transition-shadow duration-300">
-
+                transition-shadow duration-300"
+    >
       {/* LEFT */}
       <div className="flex gap-4">
         {/* Icon */}
@@ -58,13 +53,9 @@ const formattedPostedAt = postedAt;
 
         {/* Info */}
         <div>
-          <h3 className="text-xl font-bold text-gray-900">
-            {title}
-          </h3>
+          <h3 className="text-xl font-bold text-gray-900">{title}</h3>
 
-          <p className="text-base font-bold text-gray-700 mt-0.5">
-            {company}
-          </p>
+          <p className="text-base font-bold text-gray-700 mt-0.5">{company}</p>
 
           {/* Meta */}
           <div className="flex flex-wrap items-center gap-5 mt-2 text-sm text-gray-500">
@@ -79,15 +70,12 @@ const formattedPostedAt = postedAt;
               </span>
             )}
 
-
-            
             {formattedPostedAt && (
-  <span className="flex items-center gap-1">
-    <Clock size={15} />
-    {formattedPostedAt}
-  </span>
-)}
-
+              <span className="flex items-center gap-1">
+                <Clock size={15} />
+                {formattedPostedAt}
+              </span>
+            )}
           </div>
 
           {/* Skills */}
@@ -95,10 +83,11 @@ const formattedPostedAt = postedAt;
             {visibleSkills.map((skill, index) => (
               <span
                 key={skill}
-                className={`px-4 py-1 text-xs rounded-full ${index === 0
+                className={`px-4 py-1 text-xs rounded-full ${
+                  index === 0
                     ? "bg-blue-50 text-blue-600 font-bold"
                     : "bg-gray-100 text-gray-700 font-bold"
-                  }`}
+                }`}
               >
                 {skill}
               </span>
@@ -117,7 +106,7 @@ const formattedPostedAt = postedAt;
       <div className="flex flex-row md:flex-col md:justify-center gap-4">
         <button
           onClick={() => onDetails(jobId)}
-          className="px-8 py-3 border border-blue-600 text-[16px] text-blue-600 rounded-lg font-bold hover:bg-blue-50"
+          className="px-8 py-3 border border-blue-600 text-[16px] text-blue-600 rounded-lg font-bold hover:bg-blue-50 cursor-pointer"
         >
           Details
         </button>
@@ -125,17 +114,17 @@ const formattedPostedAt = postedAt;
         <button
           disabled={applied}
           onClick={(e) => {
-            e.stopPropagation()
-            onApply(jobId)
+            e.stopPropagation();
+            onApply(jobId);
           }}
-          className={`px-8 py-3 rounded-lg text-[16px] font-bold ${applied
+          className={`px-8 py-3 rounded-lg text-[16px] font-bold ${
+            applied
               ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-              : "bg-blue-600 text-white hover:bg-blue-700"
-            }`}
+              : "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+          }`}
         >
           {applied ? "Applied" : "Apply"}
         </button>
-
       </div>
     </div>
   );

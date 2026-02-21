@@ -118,7 +118,7 @@ export default function HeroSection({
                 hover:bg-blue-700
                 text-white
                 font-semibold
-                transition
+                transition cursor-pointer
                 flex items-center justify-center gap-2
               "
             >

@@ -164,7 +164,7 @@ export default function JobCard({ job }: JobCardProps) {
       {/* Right Section */}
       <div className="flex flex-col items-end gap-3 shrink-0">
         <button
-          className="px-4 py-2 text-sm font-medium rounded-lg border
+          className="px-4 py-2 text-sm font-medium rounded-lg border cursor-pointer
                      border-gray-300 text-gray-700 hover:bg-gray-100"
         >
           Details
@@ -179,7 +179,7 @@ export default function JobCard({ job }: JobCardProps) {
           className={`px-4 py-2 text-sm font-medium rounded-lg text-white ${
             isExpired || job.applied
               ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700 transition"
+              : "bg-blue-600 cursor-pointer hover:bg-blue-700 transition"
           }`}
         >
           {job.applied
