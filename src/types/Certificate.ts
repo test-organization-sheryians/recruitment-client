@@ -1,14 +1,4 @@
-// export interface Certificate {
-//   _id?: string;
-//   name: string;
-//   type: "Completion" | "Internship" | "Offer" | "Other";
-//   fileUrl: string;   
-//   createdAt?: string;
-//   updatedAt?: string;
 
-//   issuedBy?: string;
-//   description?: string;
-// }
 
 
 export type CertificateType =

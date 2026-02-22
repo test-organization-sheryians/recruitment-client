@@ -14,6 +14,20 @@ export const useGetJobApplicationQuestions = (jobId?: string) => {
 
 /* ================= CREATE ================= */
 
+// export const useCreateJobApplicationQuestions = () => {
+//   return useMutation({
+//     mutationKey: ["create-job-application-questions"],
+//     mutationFn: ({
+//       jobId,
+//       questions,
+//     }: {
+//       jobId: string
+//       questions: api.JobQuestionPayload[]
+//     }) => api.createJobQuestions(jobId, questions),
+//     retry: 0,
+//   })
+// }
+
 export const useCreateJobApplicationQuestions = () => {
   return useMutation({
     mutationKey: ["create-job-application-questions"],
@@ -23,10 +37,16 @@ export const useCreateJobApplicationQuestions = () => {
     }: {
       jobId: string
       questions: api.JobQuestionPayload[]
-    }) => api.createJobQuestions(jobId, questions),
+    }) =>
+      api.createJobQuestions({
+        jobId,
+        questions,
+      }), // ✅ correct
     retry: 0,
   })
 }
+
+
 
 /* ================= UPDATE ================= */
 

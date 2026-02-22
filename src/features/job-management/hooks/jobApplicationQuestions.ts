@@ -70,16 +70,33 @@ export const getJobQuestions = async (jobId: string) => {
 }
 
 
-export const createJobQuestions = async (
-  jobId: string,
+// export const createJobQuestions = async (
+//   jobId: string,
+//   questions: JobQuestionPayload[]
+// ) => {
+//   if (!jobId) throw new Error("Job ID is required")
+
+//   const res = await API.post(
+//     `/job-questions/createjobquestions/${jobId}`,
+//     { questions }
+//   )
+//   return res.data
+// }
+
+export const createJobQuestions = async ({
+  jobId,
+  questions,
+}: {
+  jobId: string
   questions: JobQuestionPayload[]
-) => {
+}) => {
   if (!jobId) throw new Error("Job ID is required")
 
   const res = await API.post(
     `/job-questions/createjobquestions/${jobId}`,
     { questions }
   )
+
   return res.data
 }
 

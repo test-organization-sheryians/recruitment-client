@@ -16,11 +16,6 @@ export async function uploadFileToS3(
   file: File,
   apiEndpoint: string = "/api/aws/presignedurl-s3"
 ): Promise<string> {
-//    const allowedTypes = ["application/pdf", "text/html"];
-
-// if (!allowedTypes.includes(file.type)) {
-//   throw new Error("Only PDF and HTML files are allowed.");
-// }
 
 
 const allowedTypes = ["application/pdf", "text/html"];
@@ -38,6 +33,12 @@ if (!isValidType) {
   
   const fileDetails: FileDetails = {
     fileName: file.name + Date.now(),
+
+
+// fileName: `${baseName}-${timestamp}.${extension}`,
+
+  
+
     contentType: file.type,
   };
 console.log("Preparing to upload file:", fileDetails);

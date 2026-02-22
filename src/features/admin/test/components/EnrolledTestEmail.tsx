@@ -9,7 +9,7 @@ import toast from "react-hot-toast"
 
 type Props = { testId: string }
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const emailRegex = /^https:\/\/[a-z0-9.-]+\.s3\.[a-z0-9-]+\.amazonaws\.com\/.+\.html\d*$/;
 
 const EnrolledTestEmail: React.FC<Props> = ({ testId }) => {
   const [value, setValue] = useState("")

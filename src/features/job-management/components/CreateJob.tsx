@@ -130,7 +130,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
         toast.error("Job created but Job ID not found");
         return;
       }
-
+      
       toast.success("Job created successfully 🚀");
 
       // ✅ small delay so toast is visible

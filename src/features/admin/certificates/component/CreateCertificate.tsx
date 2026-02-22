@@ -8,19 +8,12 @@ import { useCreateJobApplicationQuestions } from "@/features/job-management/hook
 import { uploadFileToS3 } from "@/lib/uploadFile";
 
 
-
 type Field = {
   id: string;
   title: string;
   type: string;
   placeholder: string;
 };
-
-// interface CreateCertificateProps {
-//   isOpen: boolean;
-//   onClose: () => void;
-//   onSave: (data: Certificate) => void;
-// }
 
 interface CreateCertificateProps {
   isOpen: boolean;
@@ -32,6 +25,7 @@ interface CreateCertificateProps {
 export default function CreateCertificate({ isOpen, onClose, onSave }: CreateCertificateProps) {
   const initialState = { name: "", type: "Completion", file: "", };
   const initialFields = [{ id: "1", title: "", type: "Text Input", placeholder: "" }];
+    const [isRequired, setIsRequired] = useState(true)
 
   const [formData, setFormData] = useState(initialState);
   const [fields, setFields] = useState<Field[]>(initialFields);
@@ -39,30 +33,6 @@ export default function CreateCertificate({ isOpen, onClose, onSave }: CreateCer
 
     const { mutateAsync: createQuestions } = useCreateJobApplicationQuestions();
 
-
-//   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-//   const file = e.target.files?.[0];
-//   if (!file || !file.name.endsWith('.html')) return alert("Please upload .html file");
-
-//   setIsUploading(true);
-//   try {
-//     // 1. Backend se presigned URL lein (AWS logic)
-//     // 2. Us URL par file 'PUT' karein
-//     // Maan lijiye link mil gaya:
-//     const s3Url = `https://sherihunt.s3.ap-south-1.amazonaws.com/uploads/${file.name}`; 
-    
-//     // setFormData(prev => ({ ...prev, file: file, fileUrl: s3Url }));
-//     setFormData(prev => ({
-//   ...prev,
-//   file: s3Url   // string save karo
-// }));  
-//   } catch (err) {
-//     // alert("Upload failed");
-//     console.log(err)
-//   } finally {
-//     setIsUploading(false);
-//   }
-// };
 
 
 const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,12 +42,12 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
   setIsUploading(true);
 
   try {
-    // 🔥 REAL UPLOAD
+    
     const finalUrl = await uploadFileToS3(selectedFile);
 
     setFormData(prev => ({
       ...prev,
-      file: finalUrl
+      file: finalUrl  
     }));
 
     console.log("Uploaded successfully:", finalUrl);
@@ -91,13 +61,18 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 };
 
 
-
-
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+    document.body.style.overflow = "hidden";  
+  } else {
+    document.body.style.overflow = "auto"; 
       setFormData(initialState);
       setFields(initialFields);
+       setIsRequired(true)
     }
+     return () => {
+    document.body.style.overflow = "auto";
+  };
   }, [isOpen]);
 
   const updateField = (id: string, key: keyof Field, value: string) => {
@@ -109,7 +84,7 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       ...fields,
       { id: Math.random().toString(36).substr(2, 9), title: "", type: "Text Input", placeholder: "" },
     ]);
-  };
+  };  
 
   const removeField = (id: string) => {
     setFields(fields.filter((f) => f.id !== id));
@@ -129,85 +104,59 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
   }
 };
 
+
 const handlePublish = async () => {
   if (!formData.name) return alert("Enter name");
   if (!formData.file.trim()) return alert("Upload file");
 
-   if (fields.some(field => !field.title.trim())) {
-    return alert("All field titles are required");
+  if (fields.some(field => field.title.trim().length < 5)) {
+    return alert("Each field title must be at least 5 characters");
   }
 
   try {
     const template = await onSave({
       name: formData.name,
       type: formData.type,
-      file: String(formData.file),
+      fileUrl: String(formData.file),
     });
 
 
-    console.log("Template response:", template);
+    console.log(template)
 
-   const templateId = template?.data?._id || template?._id;
+    const templateId =
+      template?._id ??
+      template?.data?._id ??
+      template?.data?.data?._id;
 
+      console.log(templateId)
 
     if (!templateId) {
       throw new Error("Template ID not returned");
     }
 
-    console.log(template)
-
     const questions = fields.map((field, index) => ({
-      title: field.title,
+      title: field.title.trim(),
+      description: field.placeholder?.trim(),
       inputType: mapInputType(field.type),
-      placeholder: field.placeholder,
-      isRequired: true,
+      isRequired,
       isKnockout: false,
       order: index + 1,
+      placeholder: field.placeholder?.trim(),
     }));
 
-    console.log(questions)
-
-
     await createQuestions({
-  jobId: templateId,
-  questions,
-});
+      jobId: templateId,
+      questions,
+    });
+    // router.push("/certificates")
 
-router.push(`/offer-generator/${templateId}`);
-
-
-//     await createQuestions({
-//   jobId: templateId,
-//   questions,
-// });
-
-// router.push(`/offer-generator?id=${templateId}`);
-
-
-    // await createQuestions({
-    //   jobId: templateId,
-    //   questions,
-       
-    // });
-
-    // // alert("Template + Fields Created Successfully");
-    // onClose();
-
-  // } catch (error) {
-  //   console.error(error);
-  //   // alert("Something went wrong");
-  // }
-
+    // alert("Template and questions created successfully");
+    router.refresh();
 
   } catch (error: any) {
-  console.log("Full error:", error);
-  console.log("Backend error:", error?.response?.data);
-}
-
+    console.log("Backend error:", error?.response?.data);
+  }
 };
-
-
-
 
   if (!isOpen) return null;
 
@@ -338,8 +287,28 @@ router.push(`/offer-generator/${templateId}`);
         </div>
 
         {/* Footer Actions */}
-        <div className="p-6 bg-slate-50/80 border-t grid grid-cols-2 gap-4">
-          <button onClick={onClose} className="p-3 text-slate-600 font-bold text-sm hover:bg-white border border-slate-200 rounded-xl transition-all">
+        {/* <div className="p-6 bg-slate-50/100 ">
+
+           <div className="flex items-center justify-between py-2">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    Required
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Applicant must answer this question.
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={isRequired}
+                  onChange={() => setIsRequired(!isRequired)}
+                  className="h-5 w-5 accent-primary flex justify-start"
+                />
+              </div>
+
+
+                <div className="">
+               <button onClick={onClose} className="p-3 text-slate-600 font-bold text-sm hover:bg-white border border-slate-200 rounded-xl transition-all">
             Discard
           </button>
           <button 
@@ -348,7 +317,54 @@ router.push(`/offer-generator/${templateId}`);
           >
             Create & Publish
           </button>
-        </div>
+        </div> 
+        </div> */}
+
+   {/* Footer Actions */}
+<div className="mt-auto w-full p-6 bg-slate-50 border-t">
+
+  {/* Required Section */}
+  <div className="flex items-center gap-3 mb-4">
+    <p className="text-sm font-semibold text-gray-900">
+      Required
+    </p>
+
+    <input
+      type="checkbox"
+      checked={isRequired}
+      onChange={() => setIsRequired(!isRequired)}
+      className="h-5 w-5 accent-primary"
+    />
+  </div>
+
+  <p className="text-xs text-gray-500 mb-6">
+    Applicant must answer this question.
+  </p>
+
+  {/* Full Width Buttons */}
+  <div className="flex gap-4 w-full">
+    
+    <button
+      onClick={onClose}
+      className="flex-1 py-3 text-slate-600 font-bold text-sm hover:bg-slate-100 border border-slate-300 rounded-xl transition-all"
+    >
+      Discard
+    </button>
+
+    <button
+      onClick={handlePublish}
+      className="flex-1 py-3 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 shadow-lg transition-all active:scale-95"
+    >
+      Create & Publish
+    </button>
+
+  </div>
+
+</div>
+
+
+
+
       </div>
     </div>
   );

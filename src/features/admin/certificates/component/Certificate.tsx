@@ -25,16 +25,10 @@ export default function Certificate() {
     deleteCertificate 
   } = useCertificate();
   
+  //  console.log(certificates)
+
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-// const handleSave = async (newCert: Certificate) => {
-//   try {
-//     await addCertificate(newCert); // mutation call
-//     // alert("Template created successfully!");
-//   } catch (err) {
-//     console.error(err);
-//     // alert("Failed to create template");
-//   }
-// };
+
 
 
 const handleSave = async (newCert: Certificate) => {
@@ -62,6 +56,7 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
 };
  
   const categories = ["All Templates", "Completion", "Internship", "Offer", "Other"];
+
 
   return (
     <div className="space-y-8 p-2">
@@ -114,22 +109,13 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
 
       {/* 3. Grid Content */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {/* Create From Scratch Card */}
-        {/* <div 
-          onClick={() => setIsDrawerOpen(true)}
-          className="group border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center p-8 hover:border-blue-400 hover:bg-blue-50/50 transition-all cursor-pointer min-h-[300px]"
-        >
-          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors">
-            <Plus className="text-slate-400 group-hover:text-blue-600" size={24} />
-          </div>
-          <span className="text-sm font-bold text-slate-500 group-hover:text-blue-700">Create From Scratch</span>
-        </div> */}
+       
 
         {/* Dynamic Mapping */}
         {certificates.map((certificate) => (
           <div 
             key={certificate._id} 
-            onClick={() => router.push('/admin/certificates/generator')}
+            onClick={() => router.push(`/admin/certificates/generator?jobId=${certificate._id}`)}
             className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group flex flex-col justify-between min-h-[300px] relative overflow-hidden cursor-pointer"
           >
             {/* 🔹 DELETE BUTTON ADDED HERE */}
@@ -142,24 +128,17 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
             </button>
 
             <div>  
-              {/*  this the image part  */}
-              {/* <div className="w-full h-32 bg-slate-800 rounded-xl mb-4 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
-                <FileText classNam
-                e="text-slate-400 group-hover:text-blue-200" size={20} />
-              </div> */}
+            
 
 
 
 <div className="w-full h-32 rounded-xl mb-4 overflow-hidden bg-slate-100 flex items-center justify-center">
   <iframe
-    src={certificate.file}
+    src={certificate.fileUrl}
     className="w-full h-full object-contain"
   />
 </div>
 
-
-
-{/* console.log(certificate.file); */}
 
 
               <div className="inline-block px-2 py-1 rounded-md bg-blue-50 text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-2">
