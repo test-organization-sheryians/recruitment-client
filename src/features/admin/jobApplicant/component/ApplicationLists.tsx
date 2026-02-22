@@ -16,6 +16,9 @@ import {
 } from "@/types/applicant";
 import { updateInterviewStatus } from "@/api/jobApplication/scheduleInterview";
 
+import AnswerPopup, { QuestionAnswer } from "./AnswerPopup";
+import { Eye } from "lucide-react";
+
 
 /* ================= TYPES ================= */
 
@@ -38,6 +41,7 @@ interface ExtendedApplicantRow extends Omit<ApplicantRow, 'id'> {
   experience: string; 
   status: ApplicantStatus;
   resume: string;
+  answers: QuestionAnswer[]; //<-- Add answers to the applicant row -->
 }
 
 // Flat Type for Interview Table Display
@@ -138,6 +142,11 @@ const {
   const [interviewMode, setInterviewMode] = useState<"schedule" | "reschedule">("schedule");
   const [selectedInterviewId, setSelectedInterviewId] = useState<string | null>(null);
 
+  const[isAnswerPopupOpen, setIsAnswerPopupOpen] = useState(false);
+  const [selectedApplicantData, setSelectedApplicantData] = useState<{ 
+    name: string;
+     answers: QuestionAnswer[] } 
+     >({ name: "", answers: []});
   const { mutate, isPending } = useBulkUpdateApplicants();
   const { success, error } = useToast();
 
@@ -201,6 +210,7 @@ const {
       experience: a.jobDetails ? `${a.totalExperienceYears}-${a.jobDetails.requiredExperience} yrs` : `${a.totalExperienceYears} yrs`,
       status: a.status,
       resume: a.resumeUrl,
+      answers: a.answers || [],
     })) ?? [];
 
   const filteredApplicants = activeTab === "all" ? applicants : applicants.filter((a) => a.status === activeTab);
@@ -296,7 +306,7 @@ const {
               </tr>
             ) : (
               // --- APPLICANT HEADERS ---
-              <tr className={`${applicantGrid} px-4 py-3 text-xs font-semibold text-gray-500`}>
+              <tr className={`${applicantGrid} px-4 py-3 text-xs font-semibold text-gray-500 `}>
                 <th className="text-center">Select</th>
                 <th>Name</th>
                 <th>Role</th>
@@ -393,7 +403,34 @@ const {
                     {a.status}
                   </span>
                 </td>
-                <td className="relative flex justify-center">
+   
+        <td className="relative flex justify-center items-center gap-1">
+
+          <button
+
+            onClick={(e)=>{
+              e.stopPropagation();
+              setSelectedApplicantData({
+                name: a.name,
+
+                answers: a.answers || [],
+              });
+              setIsAnswerPopupOpen(true);
+            }
+
+              }
+              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
+              title= "view screening answers"
+              >
+              <Eye size={14}/>
+              Answers
+
+            
+          </button>
+
+         
+
+                
                   {(a.status === "shortlisted" || a.status === "interview") && (
                     <>
                       <button
@@ -478,7 +515,18 @@ const {
   mode={interviewMode}
   interviewId={selectedInterviewId}
 />
+{
+/* 
 
+   // render answer popup */}
+
+   <AnswerPopup
+
+   isOpen={isAnswerPopupOpen}
+   onClose={() => setIsAnswerPopupOpen(false)}
+   applicantName={selectedApplicantData.name}
+    answers= {selectedApplicantData?.answers}
+    />
 
     </div>
   );

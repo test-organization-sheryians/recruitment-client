@@ -29,6 +29,10 @@ export interface ApplicantApi {
   totalExperienceYears: number;
   status: ApplicantStatus;
   resumeUrl: string;
+  answers? :{
+    question: string;
+    answer: string | string[]}[]; // <--- ADDED: Optional answers field
+  
 }
 
 export interface ApplicantsApiResponse {
@@ -45,6 +49,7 @@ export interface ApplicantRow {
   experience: string;
   status: ApplicantStatus;
   resume: string;
+  
 }
 
 export type InterviewStatus =
