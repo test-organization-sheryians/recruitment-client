@@ -39,7 +39,7 @@ export default function OfferGenerator() {
     <div className="absolute inset-0 bg-white flex flex-col font-sans text-slate-700">
       
       {/* HEADER */}
-      <header className="h-14 bg-white border-b px-6 flex items-center justify-between">
+      {/* <header className="h-14 bg-white border-b px-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="bg-blue-600 p-1.5 rounded-lg text-white">
             <FileText size={18} />
@@ -55,7 +55,7 @@ export default function OfferGenerator() {
             <span className="text-slate-800">Offer Generator</span>
           </div>
         </div>
-      </header>
+      </header> */}
 
       {/* MAIN CONTENT */}
       <div className="flex-1 overflow-y-auto p-12 bg-slate-50/30">
