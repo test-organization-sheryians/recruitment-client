@@ -6,6 +6,7 @@ import { Certificate, } from "@/types/Certificate";
 import { useRouter } from "next/navigation";
 import { useCreateJobApplicationQuestions } from "@/features/job-management/hooks/useJobApplicationQuestions";
 import { uploadFileToS3 } from "@/lib/uploadFile";
+import type { InputType } from "@/types/inputTypes";
 
 
 type Field = {
@@ -23,11 +24,17 @@ interface CreateCertificateProps {
 
 
 export default function CreateCertificate({ isOpen, onClose, onSave }: CreateCertificateProps) {
-  const initialState = { name: "", type: "Completion", file: "", };
+  // const initialState = { name: "", type: "Completion", file: "", };
+  const initialState: Certificate = {
+  name: "",
+  type: "Completion",
+  fileUrl: "",
+};
   const initialFields = [{ id: "1", title: "", type: "Text Input", placeholder: "" }];
     const [isRequired, setIsRequired] = useState(true)
 
-  const [formData, setFormData] = useState(initialState);
+  // const [formData, setFormData] = useState(initialState);
+  const [formData, setFormData] = useState<Certificate>(initialState);
   const [fields, setFields] = useState<Field[]>(initialFields);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -47,7 +54,7 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
     setFormData(prev => ({
       ...prev,
-      file: finalUrl  
+      fileUrl: finalUrl  
     }));
 
     console.log("Uploaded successfully:", finalUrl);
@@ -91,7 +98,9 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
   };
   const router = useRouter();
 
-  const mapInputType = (type: string) => {
+
+
+const mapInputType = (type: string): InputType => {
   switch (type) {
     case "Text Input":
       return "text";
@@ -104,10 +113,9 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
   }
 };
 
-
 const handlePublish = async () => {
   if (!formData.name) return alert("Enter name");
-  if (!formData.file.trim()) return alert("Upload file");
+  if (!formData.fileUrl.trim()) return alert("Upload file");
 
   if (fields.some(field => field.title.trim().length < 5)) {
     return alert("Each field title must be at least 5 characters");
@@ -117,18 +125,14 @@ const handlePublish = async () => {
     const template = await onSave({
       name: formData.name,
       type: formData.type,
-      fileUrl: String(formData.file),
+      fileUrl: String(formData.fileUrl),
     });
-
 
     console.log(template)
 
     const templateId =
-      template?._id;
-      // template?.data?._id ??
-      // template?.data?.data?._id;
-
-      console.log(templateId)
+      template._id;
+    //  template.data._id; 
 
     if (!templateId) {
       throw new Error("Template ID not returned");
@@ -136,7 +140,7 @@ const handlePublish = async () => {
 
     const questions = fields.map((field, index) => ({
       title: field.title.trim(),
-      description: field.placeholder?.trim(),
+      // description: field.placeholder?.trim(),
       inputType: mapInputType(field.type),
       isRequired,
       isKnockout: false,
@@ -202,12 +206,12 @@ const handlePublish = async () => {
     <input type="file" accept=".html" id="file-up" onChange={handleFileUpload} className="hidden" />
     
     <div className="flex-1 border border-slate-200 rounded-lg p-3 text-sm bg-slate-50 text-slate-400 truncate">
-      {formData.file ? "✅ File Uploaded" : "No file selected"}
+      {formData.fileUrl ? "✅ File Uploaded" : "No file selected"}
     </div>
 
     <label htmlFor="file-up" className="px-4 py-2 bg-white border border-blue-200 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-50 cursor-pointer flex items-center gap-2">
       {isUploading ? <span className="animate-spin h-3 w-3 border-2 border-blue-600 border-t-transparent rounded-full" /> : <Plus size={14} />}
-      {formData.file ? "Change" : "Upload"}
+      {formData.fileUrl ? "Change" : "Upload"}
     </label>
   </div>
 </div>
@@ -216,7 +220,13 @@ const handlePublish = async () => {
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Category (Type)</label>
               <select
                 value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                // onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                onChange={(e) =>
+  setFormData({
+    ...formData,
+    type: e.target.value as Certificate["type"],
+  })
+}
                 className="w-full border border-slate-200 rounded-lg p-3 text-sm bg-white outline-none"
               >
                 <option value="Completion">Completion</option>

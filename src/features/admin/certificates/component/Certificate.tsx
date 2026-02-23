@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Search, ArrowRight, FileText, Trash2 } from "lucide-react"; // 👈 Trash2 add kiya
 import { useCertificate } from "../hooks/useCertificate";
 import CreateCertificate from "./CreateCertificate";  
-import { Certificate } from "@/types/Certificate";
+import type  { Certificate } from "@/types/Certificate";
 // import { deleteCertificate } from "@/api/certificate/deleteCertificate";
 
 // 👈 API import ki
@@ -21,7 +21,7 @@ export default function Certificate() {
     searchQuery, 
     setSearchQuery,
     addCertificate,
-    setCertificates,// 👈 Hook se setCertificates bhi nikaal lein (taaki UI turant update ho)
+    // setCertificates,
     deleteCertificate 
   } = useCertificate();
   
@@ -40,6 +40,8 @@ const handleSave = async (newCert: Certificate) => {
     throw err;
   }
 };
+
+
 
 
 const handleDelete = async (e: React.MouseEvent, _id: string) => {
@@ -148,7 +150,7 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
                 {certificate.name}
               </h3>
               <p className="text-slate-400 text-xs mt-2 line-clamp-2 italic">
-                {certificate.description || "Professional template for organizational use."}
+                {/* {certificate.description || "Professional template for organizational use."} */}
               </p>
             </div>
 

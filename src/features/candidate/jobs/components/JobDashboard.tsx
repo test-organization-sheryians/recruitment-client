@@ -68,7 +68,7 @@ const jobsCount = jobsPages?.[0]?.pagination.totalRecords || 0;
     .flatMap((p) => p.data ?? [])
     .map((job) => ({
       ...job,
-      salary: typeof job.salary === "number" ? String(job.salary) : job.salary,
+      salary: typeof job.salary === "number" ? Number(job.salary) : job.salary,
       skills: job.skills?.map((s) =>
         typeof s === "string"
           ? { _id: s, name: s }

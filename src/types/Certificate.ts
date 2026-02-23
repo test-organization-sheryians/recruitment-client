@@ -12,7 +12,7 @@ export interface Certificate {
   name: string;
   type: CertificateType;
   // fileUrl: string;
-  file: string;   // frontend se aayega, backend me handle hoke fileUrl ban jayega
+  fileUrl: string;   // frontend se aayega, backend me handle hoke fileUrl ban jayega
   createdAt?: string;
   updatedAt?: string;
 }

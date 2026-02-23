@@ -19,10 +19,10 @@ export interface Job {
   _id: string;
   title: string;
   category?: Category | string;
-  requiredExperience?: string;
+  requiredExperience?: number;
   education?: string;
   expiry?: string | Date;
-  salary?: string;
+  salary?: number;
   department?: string;
   skills?: Skill[];
   applied?: boolean;

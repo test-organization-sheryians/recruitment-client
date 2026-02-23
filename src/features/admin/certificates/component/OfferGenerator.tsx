@@ -29,17 +29,21 @@ export default function OfferGenerator() {
   const [showPreview, setShowPreview] = useState(false);
 
   // 🔥 Initialize dynamic fields from backend
-  useEffect(() => {
-    if (dbData?.data?.length) {
-      const initialState: Record<string, string> = {};
 
-      dbData.data.forEach((question: Field) => {
-        initialState[question.title] = "";
-      });
 
-      setFormData(initialState);
-    }
-  }, [dbData]);
+useEffect(() => {
+  if (dbData?.data?.length) {
+    const initialState: Record<string, string> = {};
+
+    dbData.data.forEach((question: Field) => {
+      initialState[question.title] = "";
+    });
+
+    setFormData(initialState);
+  }
+}, [dbData]);
+
+console.log(dbData)
 
   if (isLoading) {
     return <div className="p-10 text-center">Loading...</div>;
@@ -77,6 +81,7 @@ export default function OfferGenerator() {
 
           {/* 🔥 DYNAMIC FORM FIELDS */}
           <div className="space-y-6">
+         
             {dbData?.data?.map((question: Field) => (
               <div key={question._id} className="space-y-2">
                 <label className="text-xs font-bold uppercase text-slate-500">
