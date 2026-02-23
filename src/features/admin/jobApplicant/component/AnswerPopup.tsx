@@ -52,7 +52,7 @@ export default function AnswerPopup({
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto space-y-5 bg-gray-50 flex-1">
+        <div className="p-6 overflow-y-auto space-y-5 scrollbar-hide bg-gray-50 flex-1">
           {!answers || answers.length === 0 ? (
             <div className="text-center text-gray-500 py-10 bg-white rounded-lg border border-dashed">
               This applicant did not fill out any screening questions.
