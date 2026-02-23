@@ -1,7 +1,12 @@
 export interface Job {
     id: string;
     title: string;
-    location: string;
+    location: {
+      city: string;
+      state: string;
+      pincode: string;
+      country: string;
+    };
     salary: number;
     isRemote: boolean;
     isFeatured: boolean;
@@ -38,10 +43,34 @@ export interface SavedJob {
 export interface JobFormValues {
     title: string;
     description: string;
-    location: string;
+    location: {
+      city: string;
+      state: string;
+      pincode: string;
+      country: string;
+    };
     salary: number;
     category: string;
     skills: string[];
     isRemote: boolean;
     isFeatured: boolean;
 }
+
+
+// export interface PaginatedJobsResponse {
+//    "success": true,
+//   "data": {
+//     "data": [Job],
+//     "pagination": {
+//       "totalRecords": number,
+//       "totalPages": number,
+//       "currentPage": number,
+//       "limit": number
+//     }
+//   }
+// }
+
+export type SearchQuery = {
+  q: string;
+  location: string;
+};
