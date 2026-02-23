@@ -313,8 +313,8 @@ export default function ApplicantsList({
                 <th>Date</th>
                 <th>Experience</th>
                 <th>Resume</th>
-                <th>Status</th>
-                <th className="text-center">Action</th>
+                <th >Status</th>
+                <th >Action</th>
               </tr>
             )}
           </thead>
@@ -353,7 +353,7 @@ export default function ApplicantsList({
                   })}
                 </td>
                 <td>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusColors[int.status] || "bg-gray-100 text-gray-700"}`}>
+                  <span className={`rounded-full px-7 py-1 text-xs font-semibold ${statusColors[int.status] || "bg-gray-100 text-gray-700"}`}>
                     {int.status}
                   </span>
                 </td>
@@ -376,7 +376,7 @@ export default function ApplicantsList({
 
             {/* --- APPLICANT ROWS --- */}
             {activeTab !== 'interview' && filteredApplicants.map((a) => (
-              <tr key={a.id} className={`${applicantGrid} px- py-3 items-center gap-2 hover:bg-gray-5 transition`}>
+              <tr key={a.id} className={`${applicantGrid} px-10 py-3 items-center gap-2 hover:bg-gray-5 transition`}>
                 <td className="flex justify-center">
                   <input
                     type="checkbox"
@@ -387,27 +387,27 @@ export default function ApplicantsList({
                   />
                 </td>
                 <td>
-                  <p className="font-semibold gap-8">{a.name}</p>
-                  <p className="text-xs text-gray-500">{a.email}</p>
+                  <p className="font-semibold gap-500 ">{a.name}</p>
+                  <p className="text-xs text-gray-500 ">{a.email}</p>
                 </td>
                 {/* <td>{a.role}</td>
                 <td>{a.date}</td>
                 <td>{a.experience}</td> */}
-                <td className="px-6 py-5 text-right">{a.role}</td>
-                <td className="px-6 py-5 text-right">{a.date}</td>
-                <td className="px-14 py-5 text-right">{a.experience}</td>
-                <td>
-                  <a href={a.resume} target="_blank" className="rounded-lg border px-8 py-1.5 text-sm hover:bg-gray-100 gap-8" onClick={(e) => e.stopPropagation()}>
+                <td className="px-2 py-5 text-right">{a.role}</td>
+                <td className="px-2 py-5 text-right">{a.date}</td>
+                <td className="px-5 py-5 text-right">{a.experience}</td>
+                <td className="text-right">
+                  <a href={a.resume} target="_blank" className="rounded-lg border px-4 py-1.5 text-sm hover:bg-gray-100 gap-10" onClick={(e) => e.stopPropagation()}>
                     📄 Resume
                   </a>
                 </td>
                 <td>
-                  <span className={`rounded-full px-8 py-1 text-xs gap-4 font-semibold capitalize ${statusColors[a.status]}`}>
+                  <span className={`rounded-full px-10 py-1 text-xs gap-11 font-semibold capitalize ${statusColors[a.status]}`}>
                     {a.status}
                   </span>
                 </td>
 
-                <td className="relative flex justify-center items-center gap-2 px-2">
+               <td className="text-right ">
 
                   <button
 
