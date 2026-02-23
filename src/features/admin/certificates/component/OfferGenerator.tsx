@@ -7,6 +7,15 @@ import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { CheckCircle2, ChevronRight, FileText } from "lucide-react";
 
+
+
+type Field = {
+  _id: string;
+  title: string;
+  inputType: string;
+  placeholder: string;
+};
+
 export default function OfferGenerator() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -15,15 +24,16 @@ export default function OfferGenerator() {
   const { data: dbData, isLoading } =
     useGetJobApplicationQuestions(jobId ?? "");
 
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  // const [formData, setFormData] = useState<Record<string, Field>>({});
+  const [formData, setFormData] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState(false);
 
   // 🔥 Initialize dynamic fields from backend
   useEffect(() => {
     if (dbData?.data?.length) {
-      const initialState: Record<string, any> = {};
+      const initialState: Record<string, string> = {};
 
-      dbData.data.forEach((question: any) => {
+      dbData.data.forEach((question: Field) => {
         initialState[question.title] = "";
       });
 
@@ -67,7 +77,7 @@ export default function OfferGenerator() {
 
           {/* 🔥 DYNAMIC FORM FIELDS */}
           <div className="space-y-6">
-            {dbData?.data?.map((question: any) => (
+            {dbData?.data?.map((question: Field) => (
               <div key={question._id} className="space-y-2">
                 <label className="text-xs font-bold uppercase text-slate-500">
                   {question.title}

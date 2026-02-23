@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
-import { Certificate } from "@/types/Certificate"; 
+import { Certificate, } from "@/types/Certificate"; 
 // import { createCertificate , createFields} from "@/api/certificate/createCertificate"; 
 import { useRouter } from "next/navigation";
 import { useCreateJobApplicationQuestions } from "@/features/job-management/hooks/useJobApplicationQuestions";
@@ -124,9 +124,9 @@ const handlePublish = async () => {
     console.log(template)
 
     const templateId =
-      template?._id ??
-      template?.data?._id ??
-      template?.data?.data?._id;
+      template?._id;
+      // template?.data?._id ??
+      // template?.data?.data?._id;
 
       console.log(templateId)
 
@@ -146,7 +146,7 @@ const handlePublish = async () => {
 
     await createQuestions({
       jobId: templateId,
-      questions,
+    questions,
     });
     // router.push("/certificates")
 
