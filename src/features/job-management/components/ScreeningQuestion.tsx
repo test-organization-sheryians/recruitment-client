@@ -204,7 +204,7 @@ const ScreeningQuestions: React.FC = () => {
               {/* Jobs */}
               <button
                 type="button"
-                onClick={() => router.push("/Crew/getJob")}
+                onClick={() => router.push("/admin")}
                 className="hover:text-primary transition font-medium cursor-pointer"
               >
                 Jobs
@@ -357,7 +357,7 @@ const ScreeningQuestions: React.FC = () => {
                   <div className="mt-4 flex items-center justify-between text-xs text-[#616889]">
                     <span className="opacity-80">
                       Order:{" "}
-                      <span className="font-bold">{q.order ?? index + 1}</span>
+                      <span className="font-bold">{index + 1}</span>
                     </span>
 
                     <span className="opacity-0 group-hover:opacity-100 transition">

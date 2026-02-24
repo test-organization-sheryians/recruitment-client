@@ -86,7 +86,7 @@ export default function JobDescriptionEditor({
 
   return (
     <div className="flex flex-col gap-2 mt-2">
-      <label className="text-sm font-bold">Job Description</label>
+      
 
       <div className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900">
 
