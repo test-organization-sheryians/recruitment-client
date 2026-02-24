@@ -398,7 +398,7 @@ export default function ApplicantsList({
                 <td className="px-5 py-5 text-right">{a.experience}</td>
                 <td className="text-right">
                   <a href={a.resume} target="_blank" className="rounded-lg border px-4 py-1.5 text-sm hover:bg-gray-100 gap-10" onClick={(e) => e.stopPropagation()}>
-                    📄 Resume
+                    📄Resume
                   </a>
                 </td>
                 <td>
@@ -436,7 +436,7 @@ export default function ApplicantsList({
 
                   {(a.status === "shortlisted" || a.status === "interview") && (
                     <>
-                      <button
+                      {/* <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setActiveActionId(activeActionId === a.id ? null : a.id);
@@ -445,7 +445,7 @@ export default function ApplicantsList({
                         className="p-1 rounded-full hover:bg-gray-200 transition"
                       >
                         <ThreeDotsIcon />
-                      </button>
+                      </button> */}
                       {activeActionId === a.id && (
                         <div className="absolute right-8 top-1/2 -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
                           <button
