@@ -86,7 +86,7 @@ const ScreeningQuestions: React.FC = () => {
     try {
       await refetch()
       toast.success("All changes saved successfully")
-      router.push(`/Crew/getJob`)
+      router.push(`/admin`)
     } catch (error) {
       toast.error("Failed to save changes")
     }
