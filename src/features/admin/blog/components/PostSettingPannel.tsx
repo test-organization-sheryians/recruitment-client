@@ -117,6 +117,19 @@ export default function PostSettingsPanel({
         </select>
       </div>
 
+      {/* Subtitle Section */}
+      <div className="space-y-1.5">
+        <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+          Subtitle
+        </h3>
+        <input
+          value={data.subtitle || ""}
+          onChange={(e) => onUpdate({ subtitle: e.target.value })}
+          placeholder="Add a short subtitle for the blog"
+          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
+
       {/* URL Slug Section */}
       <div className="space-y-1.5">
         <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">

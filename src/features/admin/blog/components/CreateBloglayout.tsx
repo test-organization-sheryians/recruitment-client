@@ -152,11 +152,13 @@ export default function CreateBlogLayout() {
         Loading editorial...
       </div>
     );
-
   const isBusy = isPublishing || isUpdating || isDeleting;
+  const isDraft = blogPost.status === "draft";
+  const isPublished = blogPost.status === "published";
+  const isArchived = blogPost.status === "archived";
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
       {/* Header Bar */}
       <header className="sticky top-0 z-50 backdrop-blur-md px-8 py-3 rounded-lg flex justify-between items-center bg-white/80 shadow-sm">
         <div className="flex flex-col">
@@ -183,9 +185,9 @@ export default function CreateBlogLayout() {
           {/* Status Badge */}
           <span
             className={`px-3 py-1 text-xs font-semibold rounded-full ${
-              blogPost.status === "published"
+              isPublished
                 ? "bg-green-100 text-green-700"
-                : blogPost.status === "archived"
+                : isArchived
                   ? "bg-slate-200 text-slate-700"
                   : "bg-yellow-100 text-yellow-700"
             }`}
@@ -193,30 +195,42 @@ export default function CreateBlogLayout() {
             {blogPost.status?.toUpperCase()}
           </span>
 
-          {/* Draft */}
+          {/* Save Draft */}
           <button
-            disabled={isBusy}
+            disabled={isBusy || !isDraft}
             onClick={handleSaveDraft}
-            className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition"
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+              isDraft
+                ? "text-slate-600 hover:bg-slate-100"
+                : "text-slate-300 cursor-not-allowed"
+            }`}
           >
             Save Draft
           </button>
 
           {/* Publish */}
           <button
-            disabled={isBusy}
+            disabled={isBusy || !isPublished}
             onClick={handlePublish}
-            className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition"
+            className={`px-5 py-2 text-sm font-semibold rounded-lg shadow-sm transition ${
+              isPublished
+                ? "text-white bg-blue-600 hover:bg-blue-700"
+                : "bg-slate-200 text-slate-400 cursor-not-allowed"
+            }`}
           >
-            {isBusy ? "Saving..." : isEdit ? "Update & Publish" : "Publish"}
+            {isBusy ? "Saving..." : "Update & Publish"}
           </button>
 
           {/* Archive */}
           {isEdit && (
             <button
-              disabled={isBusy}
+              disabled={isBusy || !isArchived}
               onClick={handleArchive}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-200 hover:bg-slate-300 rounded-lg transition"
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                isArchived
+                  ? "text-slate-700 bg-slate-200 hover:bg-slate-300"
+                  : "bg-slate-100 text-slate-400 cursor-not-allowed"
+              }`}
             >
               Archive
             </button>
@@ -224,72 +238,55 @@ export default function CreateBlogLayout() {
         </div>
       </header>
 
-      <main className="flex-1 w-full mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1.5fr_320px] max-w-[1800px] gap-3">
+      <main className="flex-1 overflow-hidden w-full mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-[1fr_320px] xl:grid-cols-[1.4fr_340px] max-w-[1800px] gap-4">
         {/* Main Editor Section */}
-        <div className="min-w-0 h-[calc(100vh-130px)] overflow-y-auto">
-          <div className="rounded-2xl shadow-lg overflow-hidden px-2 lg:px-2 py-2 lg:py-5">
-            <div className="">
-              <textarea
-                value={blogPost.title}
-                onChange={(e) => {
-                  setBlogPost({ ...blogPost, title: e.target.value });
-                  // Auto-resize
-                  if (e.target) {
-                    e.target.style.height = "auto";
-                    e.target.style.height = e.target.scrollHeight + "px";
-                  }
-                }}
-                placeholder="Enter post title..."
-                className="w-full resize-none text-3xl font-extrabold text-slate-900 placeholder-slate-300 bg-white px-3 py-3 rounded-xl outline-none border-none leading-tight tracking-tight focus:ring-0 min-h-[78px]"
-                style={{
-                  boxShadow: "none",
-                  wordBreak: "break-word",
-                  whiteSpace: "pre-wrap",
-                  overflow: "hidden",
-                }}
-                rows={1}
-                maxLength={200}
+        <div className="min-w-0 h-full overflow-y-auto pr-2">
+          <div className="rounded-2xl shadow-sm bg-white px-3 py-5 overflow-visible">
+            {/* Title */}
+            <textarea
+              value={blogPost.title}
+              onChange={(e) => {
+                setBlogPost({ ...blogPost, title: e.target.value });
+                e.target.style.height = "auto";
+                e.target.style.height = e.target.scrollHeight + "px";
+              }}
+              placeholder="Enter post title..."
+              className="w-full resize-none text-3xl font-extrabold text-slate-900 placeholder-slate-300 bg-white px-3 py-3 rounded-xl outline-none border-none leading-tight tracking-tight min-h-[78px]"
+              rows={1}
+              maxLength={200}
+            />
+
+            <div className="pt-6">
+              <BlogEditor
+                key={
+                  isEdit ? `edit-${blogId}-${blogPost.content.length}` : "new"
+                }
+                initialContent={blogPost.content}
+                onChange={(blocks) =>
+                  setBlogPost((p: any) => ({ ...p, content: blocks }))
+                }
               />
-            </div>
-            <div className="pt-6 ">
-              {blogPost.content.length > 0 || !isEdit ? (
-                <BlogEditor
-                  key={
-                    isEdit ? `edit-${blogId}-${blogPost.content.length}` : "new"
-                  }
-                  initialContent={blogPost.content}
-                  onChange={(blocks) =>
-                    setBlogPost((p: any) => ({ ...p, content: blocks }))
-                  }
-                />
-              ) : (
-                <div className="py-32 text-center text-slate-300">
-                  <p className="text-sm">Loading editor content...</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
 
         {/* Sidebar Section */}
-        <aside className="relative h-[calc(100vh-120px)]">
-          <div className="lg:sticky lg:top-24">
-            <div className="rounded-2xl bg-white shadow-lg border border-slate-100 p-4 md:p-6 xl:p-7 w-full max-w-[360px] mx-auto h-full overflow-y-auto">
-              <PostSettingsPanel
-                data={blogPost}
-                onUpdate={handleBlogDataChange}
-                initialTitle={blogPost.title}
-                isEdit={isEdit}
-                onDeleteBlog={() => {
-                  if (confirm("Delete permanently?")) {
-                    deleteAPI(blogId!).then(() => {
-                      router.push("/admin/blog");
-                      router.refresh();
-                    });
-                  }
-                }}
-              />
-            </div>
+        <aside className="h-full overflow-hidden">
+          <div className="h-full rounded-2xl bg-white shadow-sm border border-slate-200 p-5 overflow-y-auto">
+            <PostSettingsPanel
+              data={blogPost}
+              onUpdate={handleBlogDataChange}
+              initialTitle={blogPost.title}
+              isEdit={isEdit}
+              onDeleteBlog={() => {
+                if (confirm("Delete permanently?")) {
+                  deleteAPI(blogId!).then(() => {
+                    router.push("/admin/blog");
+                    router.refresh();
+                  });
+                }
+              }}
+            />
           </div>
         </aside>
       </main>

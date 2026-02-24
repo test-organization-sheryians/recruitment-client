@@ -4,10 +4,12 @@ import Link from "next/link";
 import { Plus, BookOpen, Pencil, Trash2 } from "lucide-react";
 import { useBlogsAll } from "@/features/admin/blog/hooks/useBlogsAll";
 import { useDeleteBlog } from "@/features/admin/blog/hooks/useDeleteBlog";
+import { useRef, useEffect } from "react";
 
 export default function BlogManagement() {
   const { blogs, loading, error, refetch } = useBlogsAll();
   const { deleteBlog } = useDeleteBlog();
+  // const { hasMore, lastBlogRef } = useInfiniteBlogs();
 
   const blogList = Array.isArray(blogs)
     ? blogs.map((blog) => ({
@@ -40,6 +42,28 @@ export default function BlogManagement() {
       }
     }
   };
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  // useEffect(() => {
+  //   if (!hasMore || loading) return;
+
+  //   const observer = new IntersectionObserver(
+  //     (entries) => {
+  //       if (entries[0].isIntersecting) {
+  //         fetchNext();
+  //       }
+  //     },
+  //     { rootMargin: "200px" },
+  //   );
+
+  //   const el = loadMoreRef.current;
+  //   if (el) observer.observe(el);
+
+  //   return () => {
+  //     if (el) observer.unobserve(el);
+  //   };
+  // }, [hasMore, loading]);
 
   return (
     <div className="space-y-6 m-6">
@@ -150,6 +174,23 @@ export default function BlogManagement() {
             ))}
           </div>
         )}
+
+        {/* <div className="space-y-6">
+          {blogs.map((blog, index) => {
+            if (index === blogs.length - 1) {
+              return (
+                <div ref={lastBlogRef} key={blog.id}>
+                  <BlogCard blog={blog} />
+                </div>
+              );
+            }
+
+            return <BlogCard key={blog.id} blog={blog} />;
+          })}
+
+          {loading && <p className="text-center">Loading more blogs...</p>}
+          {!hasMore && <p className="text-center">No more blogs</p>}
+        </div> */}
       </div>
     </div>
   );
