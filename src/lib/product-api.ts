@@ -1,7 +1,7 @@
 import axios from "axios";
+// using axios 
 
-//  using axios 
-// for product API
+
 
 export const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000/api",
@@ -27,6 +27,6 @@ apiClient.interceptors.response.use(
     }
 
     return Promise.reject(error);
-    
+
   }
 );
