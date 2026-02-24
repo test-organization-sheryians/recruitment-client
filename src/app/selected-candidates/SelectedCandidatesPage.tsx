@@ -145,15 +145,16 @@ export default function SelectedCandidatesPage() {
   /* ================= UI ================= */
 
   return (
-    <div className="min-h-screen bg-slate-50 px-6 py-8">
+    <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex items-center justify-between">
+        {/* Header - Responsive Flex: Column on mobile, Row on desktop */}
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-slate-800">
               {groupName}
             </h1>
 
-            <p className="text-slate-700 text-sm">
+            <p className="text-slate-700 text-sm mt-1">
               <span className="mr-1 text-sm font-normal text-slate-800">
                 {uiCandidates.length}
               </span>
@@ -163,21 +164,23 @@ export default function SelectedCandidatesPage() {
 
           <button
             onClick={() => router.push("/")}
-            className="flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            className="flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 w-full sm:w-auto"
           >
             <Home className="h-4 w-4" />
             Home
           </button>
         </div>
 
-        <div className="grid grid-cols-12 gap-6">
+        {/* Main Grid - Responsive: Stacked (1 col) on mobile, Split (12 cols) on desktop */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          
           {/* LEFT LIST */}
-          <aside className="col-span-4 overflow-hidden rounded-xl border bg-white shadow-sm">
-            <div className="border-b px-5 py-4 text-sm font-semibold text-slate-700 bg-slate-50/50">
+          <aside className="lg:col-span-4 overflow-hidden rounded-xl border bg-white shadow-sm flex flex-col h-auto lg:max-h-[70vh]">
+            <div className="border-b px-5 py-4 text-sm font-semibold text-slate-700 bg-slate-50/50 shrink-0">
               Candidates
             </div>
 
-            <div className="divide-y max-h-[70vh] overflow-y-auto">
+            <div className="divide-y overflow-y-auto flex-1 min-h-0">
               {uiCandidates.length > 0 ? (
                 uiCandidates.map((c) => (
                   <button
@@ -213,18 +216,19 @@ export default function SelectedCandidatesPage() {
           </aside>
 
           {/* RIGHT DETAILS */}
-          <section className="col-span-8 max-h-[80vh] overflow-y-auto rounded-xl border bg-white shadow-sm">
+          <section className="lg:col-span-8 max-h-none lg:max-h-[80vh] overflow-y-auto rounded-xl border bg-white shadow-sm">
             {activeCandidate ? (
-              <div className="p-8">
-                <div className="flex items-center gap-6 border-b pb-6">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-slate-800 text-2xl font-bold text-white shadow-md">
+              <div className="p-6 sm:p-8">
+                {/* Profile Header - Stack on mobile, row on desktop */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 border-b pb-6">
+                  <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-xl bg-slate-800 text-xl sm:text-2xl font-bold text-white shadow-md shrink-0">
                     {activeCandidate.name.charAt(0)}
                   </div>
                   <div>
-                    <h2 className="text-2xl font-semibold text-slate-800">
+                    <h2 className="text-xl sm:text-2xl font-semibold text-slate-800">
                       {activeCandidate.name}
                     </h2>
-                    <p className="mt-2 text-sm text-slate-500">
+                    <p className="mt-1 sm:mt-2 text-sm text-slate-500">
                       Shared at:{" "}
                       {activeCandidate.createdAt
                         ? new Date(activeCandidate.createdAt).toLocaleString()
@@ -233,7 +237,8 @@ export default function SelectedCandidatesPage() {
                   </div>
                 </div>
 
-                <div className="mt-8 grid grid-cols-2 gap-6">
+                {/* Info Grid - Single column mobile, Double column desktop */}
+                <div className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <InfoCard
                     icon={<Mail className="h-5 w-5" />}
                     label="Email"
@@ -247,7 +252,7 @@ export default function SelectedCandidatesPage() {
                   />
 
                   {activeCandidate.skills.length > 0 && (
-                    <div className="col-span-2">
+                    <div className="col-span-1 sm:col-span-2">
                       <p className="mb-2 text-sm font-semibold text-slate-700">
                         Skills
                       </p>
@@ -265,7 +270,7 @@ export default function SelectedCandidatesPage() {
                   )}
 
                   {activeCandidate.experiences.length > 0 && (
-                    <div className="col-span-2">
+                    <div className="col-span-1 sm:col-span-2">
                       <p className="mb-3 text-sm font-semibold text-slate-700">
                         Experience
                       </p>
@@ -275,7 +280,7 @@ export default function SelectedCandidatesPage() {
                             key={index}
                             className="rounded-xl border p-4 hover:bg-slate-50 transition"
                           >
-                            <div className="flex items-start justify-between">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                               <div>
                                 <p className="text-sm font-semibold text-slate-900">
                                   {exp.title || exp.role}
@@ -284,7 +289,7 @@ export default function SelectedCandidatesPage() {
                                   {exp.company}
                                 </p>
                               </div>
-                              <span className="text-xs text-slate-500">
+                              <span className="text-xs text-slate-500 whitespace-nowrap">
                                 {formatDate(exp.startDate)} –{" "}
                                 {formatDate(exp.endDate)}
                               </span>
@@ -296,11 +301,11 @@ export default function SelectedCandidatesPage() {
                   )}
 
                   {activeCandidate.resumeFile && (
-                    <div className="col-span-2">
+                    <div className="col-span-1 sm:col-span-2">
                       <a
                         href={activeCandidate.resumeFile}
                         target="_blank"
-                        className="flex items-center gap-2 rounded-lg border bg-blue-50 p-4 text-blue-600 font-semibold hover:underline"
+                        className="flex items-center justify-center gap-2 rounded-lg border bg-blue-50 p-4 text-blue-600 font-semibold hover:underline"
                       >
                         <FileText className="h-5 w-5" />
                         Download Resume
@@ -310,7 +315,7 @@ export default function SelectedCandidatesPage() {
                 </div>
               </div>
             ) : (
-              <div className="flex h-full items-center justify-center p-12 text-slate-400">
+              <div className="flex h-full min-h-[300px] items-center justify-center p-12 text-slate-400">
                 <p>Select a candidate to view details</p>
               </div>
             )}
@@ -375,7 +380,7 @@ function InfoCard({
         <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
           {label}
         </p>
-        <p className="text-sm font-bold text-slate-800">{value}</p>
+        <p className="text-sm font-bold text-slate-800 break-all">{value}</p>
       </div>
     </div>
   );
