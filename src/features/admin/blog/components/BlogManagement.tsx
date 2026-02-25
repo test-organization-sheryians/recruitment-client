@@ -4,25 +4,31 @@ import Link from "next/link";
 import { Plus, BookOpen, Pencil, Trash2 } from "lucide-react";
 import { useBlogsAll } from "@/features/admin/blog/hooks/useBlogsAll";
 import { useDeleteBlog } from "@/features/admin/blog/hooks/useDeleteBlog";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useMemo, useCallback } from "react";
 
 export default function BlogManagement() {
   const { blogs, loading, error, hasMore, loadMore, refetch } = useBlogsAll();
   const { deleteBlog } = useDeleteBlog();
   // const { hasMore, lastBlogRef } = useInfiniteBlogs();
 
-  const blogList = Array.isArray(blogs)
-    ? blogs.map((blog) => ({
-        ...blog,
-        status: blog.status || (blog.isPublished ? "published" : "draft"),
-      }))
-    : [];
+  const blogList = useMemo(() => {
+    return Array.isArray(blogs)
+      ? blogs.map((blog) => ({
+          ...blog,
+          status: blog.status || (blog.isPublished ? "published" : "draft"),
+        }))
+      : [];
+  }, [blogs]);
 
-  const publishedCount = blogList.filter(
-    (blog) => blog.status === "published",
-  ).length;
+  const publishedCount = useMemo(
+    () => blogList.filter((blog) => blog.status === "published").length,
+    [blogList],
+  );
 
-  const draftCount = blogList.filter((blog) => blog.status === "draft").length;
+  const draftCount = useMemo(
+    () => blogList.filter((blog) => blog.status === "draft").length,
+    [blogList],
+  );
 
   const totalBlogs = blogList.length;
 
@@ -47,15 +53,17 @@ export default function BlogManagement() {
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
+    // Only create observer once
+    if (observerRef.current) return;
     if (!hasMore) return;
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !loading) {
+        if (entries[0].isIntersecting && !loading && hasMore) {
           loadMore();
         }
       },
-      { rootMargin: "10px", threshold: 0.1 },
+      { rootMargin: "200px", threshold: 0.01 },
     );
 
     const el = loadMoreRef.current;
@@ -64,9 +72,10 @@ export default function BlogManagement() {
     return () => {
       if (observerRef.current && el) {
         observerRef.current.unobserve(el);
+        observerRef.current = null;
       }
     };
-  }, [hasMore, loading, loadMore]);
+  }, []);
 
   return (
     <div className="space-y-6 m-6">
@@ -95,11 +104,9 @@ export default function BlogManagement() {
 
       {/* Content */}
       <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
-        {loading ? (
-          <Loader />
-        ) : error ? (
+        {error ? (
           <ErrorState error={error} onRetry={refetch} />
-        ) : blogList.length === 0 ? (
+        ) : blogList.length === 0 && !loading ? (
           <EmptyState />
         ) : (
           <div className="space-y-3">
@@ -186,15 +193,13 @@ export default function BlogManagement() {
               <span className="text-slate-600">Loading more blogs...</span>
             </div>
           )}
-
-          {!loading && hasMore && (
+          {/* 
+          {/* {!loading && hasMore && (
             <button
               onClick={loadMore}
               className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            >
-              Load More
-            </button>
-          )}
+            ></button>
+          )} */}
 
           {!hasMore && <p className="text-slate-400">No more blogs to load</p>}
         </div>

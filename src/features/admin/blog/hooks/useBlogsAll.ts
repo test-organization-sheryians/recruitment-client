@@ -25,7 +25,11 @@ export function useBlogsAll() {
         const skip = (page - 1) * LIMIT;
 
         const res = await api.get(`/api/blogs`, {
-          params: { skip, limit: LIMIT },
+          params: {
+            skip,
+            limit: LIMIT,
+            type: "admin", // ⭐ IMPORTANT
+          },
         });
 
         const newBlogs = res.data?.data?.blogs || [];
