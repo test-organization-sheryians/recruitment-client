@@ -10,13 +10,15 @@ export function useUpdateBlog() {
   const updateBlog = async (id: string, payload: any) => {
     try {
       setLoading(true);
+      console.log("UPDATE BLOG PAYLOAD:", payload);
       setError(null);
-      console.log("Sending update payload:", payload);
+
       const res = await api.patch(`/api/blogs/update/${id}`, payload);
       console.log("Update response:", res.data);
       return res.data;
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || err?.message || "Failed to update blog";
+      const errorMsg =
+        err?.response?.data?.message || err?.message || "Failed to update blog";
       console.error("Update error:", errorMsg, err?.response?.data);
       setError(errorMsg);
       throw err; // Re-throw to let the component handle it

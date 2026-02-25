@@ -7,7 +7,7 @@ import { useDeleteBlog } from "@/features/admin/blog/hooks/useDeleteBlog";
 import { useRef, useEffect } from "react";
 
 export default function BlogManagement() {
-  const { blogs, loading, error, refetch } = useBlogsAll();
+  const { blogs, loading, error, hasMore, loadMore, refetch } = useBlogsAll();
   const { deleteBlog } = useDeleteBlog();
   // const { hasMore, lastBlogRef } = useInfiniteBlogs();
 
@@ -44,26 +44,29 @@ export default function BlogManagement() {
   };
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
-  // useEffect(() => {
-  //   if (!hasMore || loading) return;
+  useEffect(() => {
+    if (!hasMore) return;
 
-  //   const observer = new IntersectionObserver(
-  //     (entries) => {
-  //       if (entries[0].isIntersecting) {
-  //         fetchNext();
-  //       }
-  //     },
-  //     { rootMargin: "200px" },
-  //   );
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loading) {
+          loadMore();
+        }
+      },
+      { rootMargin: "10px", threshold: 0.1 },
+    );
 
-  //   const el = loadMoreRef.current;
-  //   if (el) observer.observe(el);
+    const el = loadMoreRef.current;
+    if (el) observerRef.current.observe(el);
 
-  //   return () => {
-  //     if (el) observer.unobserve(el);
-  //   };
-  // }, [hasMore, loading]);
+    return () => {
+      if (observerRef.current && el) {
+        observerRef.current.unobserve(el);
+      }
+    };
+  }, [hasMore, loading, loadMore]);
 
   return (
     <div className="space-y-6 m-6">
@@ -175,22 +178,26 @@ export default function BlogManagement() {
           </div>
         )}
 
-        {/* <div className="space-y-6">
-          {blogs.map((blog, index) => {
-            if (index === blogs.length - 1) {
-              return (
-                <div ref={lastBlogRef} key={blog.id}>
-                  <BlogCard blog={blog} />
-                </div>
-              );
-            }
+        {/* Intersection Observer Trigger & Load More Button */}
+        <div ref={loadMoreRef} className="pt-6 text-center space-y-4">
+          {loading && (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-5 h-5 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+              <span className="text-slate-600">Loading more blogs...</span>
+            </div>
+          )}
 
-            return <BlogCard key={blog.id} blog={blog} />;
-          })}
+          {!loading && hasMore && (
+            <button
+              onClick={loadMore}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              Load More
+            </button>
+          )}
 
-          {loading && <p className="text-center">Loading more blogs...</p>}
-          {!hasMore && <p className="text-center">No more blogs</p>}
-        </div> */}
+          {!hasMore && <p className="text-slate-400">No more blogs to load</p>}
+        </div>
       </div>
     </div>
   );

@@ -9,10 +9,9 @@ export function useCreateBlog() {
   const createBlog = async (payload: any) => {
     try {
       setLoading(true);
+      console.log("Final Payload:", payload);
       const res = await createBlogPost(payload);
 
-      console.log("Final Payload:", payload);
-console.log("Category type:", typeof payload.category);
       return res;
     } finally {
       setLoading(false);

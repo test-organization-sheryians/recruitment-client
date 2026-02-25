@@ -41,15 +41,29 @@ export default function CreateBlogLayout() {
 
   useEffect(() => {
     if (isEdit && blog) {
+      const normalizedTechs = Array.isArray(blog.technologies)
+        ? blog.technologies.map((tech: any) =>
+            typeof tech === "object" ? tech._id : tech,
+          )
+        : [];
+
+      console.log("🔄 Loading blog for edit:", blog._id);
+      console.log("📝 Raw technologies:", blog.technologies);
+      console.log("✅ Normalized technologies:", normalizedTechs);
+
       setBlogPost({
         ...blog,
 
-        // ✅ Always string
+        // Category → always id
         category:
           typeof blog.category === "object"
             ? blog.category?._id
             : blog.category || "",
 
+        // ✅ Technologies → convert to id array
+        technologies: normalizedTechs,
+
+        // Content fix
         content: Array.isArray(blog.content)
           ? blog.content
           : blog.content?.blocks || [],
@@ -70,7 +84,7 @@ export default function CreateBlogLayout() {
     title: post.title,
     subtitle: post.subtitle || "",
     slug: post.slug,
-    category: normalizeCategory(post.category),
+    category: [normalizeCategory(post.category)],
     technologies: post.technologies || [],
     hero: post.hero,
     content: { blocks: post.content },
@@ -83,9 +97,13 @@ export default function CreateBlogLayout() {
     subtitle: post.subtitle || "",
     hero: post.hero,
     content: { blocks: post.content },
+
+    // ✅ MUST BE ARRAY
     category: [normalizeCategory(post.category)],
 
-    // IMPORTANT
+    // ✅ SEND TAGS AGAIN (YOU WERE MISSING THIS)
+    technologies: post.technologies || [],
+
     status: post.status,
     isPublished: post.status === "published",
   });
@@ -98,7 +116,8 @@ export default function CreateBlogLayout() {
       status,
     };
 
-    console.log("Saving status:", status);
+    console.log("💾 Saving status:", status);
+    console.log("📌 Technologies to save:", postToSave.technologies);
 
     if (!postToSave.title?.trim()) {
       return toast.error("Title is required");
@@ -113,7 +132,8 @@ export default function CreateBlogLayout() {
         ? buildUpdatePayload(postToSave)
         : buildCreatePayload(postToSave);
 
-      console.log("Final Payload:", payload);
+      console.log("📤 Final Payload:", payload);
+      console.log("📤 Payload technologies:", payload.technologies);
 
       if (isEdit && blogId) {
         await updateBlog(blogId, payload);
@@ -136,6 +156,7 @@ export default function CreateBlogLayout() {
     } catch (err: any) {
       const msg =
         err?.response?.data?.message || err?.message || "Operation failed";
+      console.error("❌ Save error:", err);
       toast.error(msg);
     }
   };
@@ -195,41 +216,45 @@ export default function CreateBlogLayout() {
             {blogPost.status?.toUpperCase()}
           </span>
 
-          {/* Save Draft */}
-          <button
-            disabled={isBusy || !isDraft}
-            onClick={handleSaveDraft}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-              isDraft
-                ? "text-slate-600 hover:bg-slate-100"
-                : "text-slate-300 cursor-not-allowed"
-            }`}
-          >
-            Save Draft
-          </button>
-
-          {/* Publish */}
-          <button
-            disabled={isBusy || !isPublished}
-            onClick={handlePublish}
-            className={`px-5 py-2 text-sm font-semibold rounded-lg shadow-sm transition ${
-              isPublished
-                ? "text-white bg-blue-600 hover:bg-blue-700"
-                : "bg-slate-200 text-slate-400 cursor-not-allowed"
-            }`}
-          >
-            {isBusy ? "Saving..." : "Update & Publish"}
-          </button>
-
-          {/* Archive */}
-          {isEdit && (
+          {/* Save Draft - Only show if status is draft */}
+          {isDraft && (
             <button
-              disabled={isBusy || !isArchived}
+              disabled={isBusy}
+              onClick={handleSaveDraft}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                !isBusy
+                  ? "text-slate-600 hover:bg-slate-100 cursor-pointer"
+                  : "text-slate-300 cursor-not-allowed opacity-50"
+              }`}
+            >
+              Save Draft
+            </button>
+          )}
+
+          {/* Publish - Only show if status is published */}
+          {isPublished && (
+            <button
+              disabled={isBusy}
+              onClick={handlePublish}
+              className={`px-5 py-2 text-sm font-semibold rounded-lg shadow-sm transition ${
+                !isBusy
+                  ? "text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                  : "bg-slate-200 text-slate-400 cursor-not-allowed opacity-50"
+              }`}
+            >
+              {isBusy ? "Saving..." : "Update & Publish"}
+            </button>
+          )}
+
+          {/* Archive - Only show if status is archived */}
+          {isArchived && (
+            <button
+              disabled={isBusy}
               onClick={handleArchive}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                isArchived
-                  ? "text-slate-700 bg-slate-200 hover:bg-slate-300"
-                  : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                !isBusy
+                  ? "text-slate-700 hover:bg-slate-100 cursor-pointer"
+                  : "text-slate-400 cursor-not-allowed opacity-50"
               }`}
             >
               Archive

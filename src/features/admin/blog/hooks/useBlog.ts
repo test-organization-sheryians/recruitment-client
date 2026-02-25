@@ -11,7 +11,12 @@ export function useBlog(id: string) {
     try {
       setLoading(true);
       const res = await api.get(`/api/blogs/${id}`);
-      setBlog(res.data.data || res.data);
+      const blogData = res.data.data || res.data;
+      console.log("✅ Fetched blog data:", blogData);
+      console.log("📌 Technologies from response:", blogData?.technologies);
+      setBlog(blogData);
+    } catch (err) {
+      console.error("❌ Error fetching blog:", err);
     } finally {
       setLoading(false);
     }

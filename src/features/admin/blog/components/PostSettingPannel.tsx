@@ -6,7 +6,9 @@ import HeroImageUploader from "./HeroImageUpload";
 import TechStackSelector from "./TanStackSelector";
 import { BlogPost } from "@/types/blog";
 import { getCategories } from "@/api/category/getCategories";
+import { getAllSkills } from "@/api/skills/getAllSkills";
 import type { JobCategory } from "@/types/JobCategeory";
+import type { Skill } from "@/types/skilll";
 
 interface PostSettingsPanelProps {
   data: BlogPost;
@@ -30,9 +32,24 @@ export default function PostSettingsPanel({
   const [categories, setCategories] = useState<JobCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [savedTime, setSavedTime] = useState<Date | null>(new Date());
+  const [allSkills, setAllSkills] = useState<Skill[]>([]);
 
   // Tech names are managed locally by TechStackSelector
   // Display names are synced via onChange callback, no API fetching needed
+
+  useEffect(() => {
+    // Fetch all skills to map IDs to names
+    const fetchSkills = async () => {
+      try {
+        const skills = await getAllSkills();
+        setAllSkills(Array.isArray(skills) ? skills : []);
+        console.log("✅ Fetched all skills:", skills);
+      } catch (error) {
+        console.error("Failed to fetch skills:", error);
+      }
+    };
+    fetchSkills();
+  }, []);
 
   useEffect(() => {
     // Fetch categories on mount
@@ -59,6 +76,31 @@ export default function PostSettingsPanel({
       onUpdate({ slug: generated });
     }
   }, [initialTitle]); // Runs whenever the main title changes
+
+  useEffect(() => {
+    // Sync tech names when technologies IDs change
+    if (
+      Array.isArray(data.technologies) &&
+      data.technologies.length > 0 &&
+      allSkills.length > 0
+    ) {
+      console.log("📌 Technologies IDs from data:", data.technologies);
+
+      // Map IDs to names
+      const names = data.technologies.map((techId: string) => {
+        const skill = allSkills.find((s) => s._id === techId);
+        return skill?.name || techId;
+      });
+
+      console.log("📌 Mapped technology names:", names);
+      setTechNames(names);
+    } else if (
+      !Array.isArray(data.technologies) ||
+      data.technologies.length === 0
+    ) {
+      setTechNames([]);
+    }
+  }, [data.technologies, allSkills]);
 
   const generateSlug = () => {
     // Use current title if available, fallback to initialTitle
