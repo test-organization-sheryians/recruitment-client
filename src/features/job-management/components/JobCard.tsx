@@ -84,12 +84,13 @@ export default function JobCard({
         className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-3 px-4 sm:px-6 py-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl cursor-pointer"
       >
         <div className="w-full">
-          <div className="flex items-center gap-3">
+          <div className="flex items-start justify-between gap-3">
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white break-words">
               {job.title}
             </h3>
+
             <span
-              className={`px-2.5 py-0.5 rounded text-xs font-bold tracking-wide ${statusStyles(
+              className={`shrink-0 px-2.5 py-0.5 rounded text-xs font-bold tracking-wide ${statusStyles(
                 status,
               )}`}
             >
