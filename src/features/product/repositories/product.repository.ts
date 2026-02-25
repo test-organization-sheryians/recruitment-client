@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/product-api";
+import { apiClient } from "@/lib/product.api";
 import { Prodcut } from "../domin/Prodcut";
 
 export class ProductRepository {

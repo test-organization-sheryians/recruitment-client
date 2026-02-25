@@ -1,21 +1,21 @@
 import { ProductRepository } from "../repositories/product.repository";
 
-export class ProdcutService{
-  private repository :ProductRepository
+export class ProductService {
+  private repository: ProductRepository;
   constructor() {
-    this.repository = new ProductRepository()
+    this.repository = new ProductRepository();
   }
 
-  async  getProduct(){
-    return this.repository.getAll()
+  async getProduct() {
+    return this.repository.getAll();
   }
 
-  async createProdcut (data:any){
-     if (!data.name) throw new Error("Name is required");
-    if (!data.price) throw new Error("Price is required");
+  async createProduct(data: any) {
+    if (!data.name) throw new Error("Name is required");
+    if (data.price == null) throw new Error("Price is required");
     return this.repository.create(data);
   }
-  async getOneProduct (id:string){
+  async getOneProduct(id: string) {
     if (!id) throw new Error("id is required");
     return this.repository.getOne(id);
   }

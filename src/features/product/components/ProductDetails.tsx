@@ -1,8 +1,8 @@
 "use client"
 
-import React from "react";
+import React, { useMemo } from "react";
 import { useProduct } from "../hooks/useProduct";
-import { ProdcutService } from "../services/product.service";
+import { ProductService } from "../services/product.service";
 import { useRouter } from "next/navigation";
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
 
 export default function ProductDetails({ id }: Props) {
   const { product, loading, error } = useProduct(id);
-  const service = new ProdcutService();
+  const service = useMemo(() => new ProductService(), []);
   const router = useRouter();
   const [editing, setEditing] = React.useState(false);
   const [form, setForm] = React.useState({

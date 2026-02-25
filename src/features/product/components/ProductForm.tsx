@@ -1,9 +1,9 @@
 "use client"
-import React, { useState } from 'react'
-import { ProdcutService } from "../services/product.service"
+import React, { useState, useMemo } from 'react'
+import { ProductService } from "../services/product.service"
 
 export default function ProductForm(){
-  const service = new ProdcutService()
+  const service = useMemo(() => new ProductService(), [])
   const [form, setForm] = useState({
     name:"",
      description: "",
@@ -13,7 +13,7 @@ export default function ProductForm(){
   })
   const handleSubmit = async(e:any)=>{
     e.preventDefault()
-    await service.createProdcut({
+    await service.createProduct({
       ...form,
       price:Number(form.price),
       stock:Number(form.stock)
