@@ -8,7 +8,7 @@ import { useGetProfile } from "@/features/candidate/Profile/hooks/useProfileApi"
 import { uploadFileToS3 } from "@/lib/uploadFile";
 import type { CandidateProfile } from "@/types/profile";
 import type { Job } from "@/types/Job";
-
+import { useToast } from "@/components/ui/Toast";
 type Props = {
   jobId: string;
   onSuccess?: () => void;
@@ -73,6 +73,7 @@ export default function JobQuestionsForm({
   userProfile,
   jobDetails,
 }: Props) {
+  const toast = useToast();
   const { data, isLoading, isError } = useGetJobQuestions(jobId);
   const { data: profile } = useGetProfile();
 
@@ -137,28 +138,41 @@ export default function JobQuestionsForm({
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (submitting) return;
+  
+ 
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (submitting) return;
 
-    for (const q of questions) {
-      const value = answers.find((a) => a.question === q.title)?.answer;
-      if (q.isRequired && (!value || value.length === 0)) {
-        setError(`${q.title} is required`);
-        return;
-      }
+  for (const q of questions) {
+    const value = answers.find((a) => a.question === q.title)?.answer;
+    if (q.isRequired && (!value || value.length === 0)) {
+      setError(`${q.title} is required`);
+      toast.error(`${q.title} is required`);
+      return;
     }
+  }
 
+  try {
     setSubmitting(true);
+
     await applyJob({
       jobId,
       resumeUrl: profile?.resumeFile,
       answers,
     });
 
-    setSubmitting(false);
+    toast.success("Application submitted successfully!");
+
     onSuccess?.();
-  };
+  } catch (error: any) {
+    toast.error(
+      error?.response?.data?.message || "Failed to submit application ❌"
+    );
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   if (isLoading) return null;
   if (isError)
@@ -227,7 +241,7 @@ export default function JobQuestionsForm({
       </div>
 
       {/* QUESTIONS FORM */}
-      <div className="px-4 sm:px-6 pb-8 min-h-screen">
+      <div className="px-4 sm:px-6 pb-8">
         <div className="max-w-full sm:max-w-3xl mx-auto space-y-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-white rounded-2xl border flex flex-col overflow-hidden">
