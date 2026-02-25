@@ -407,7 +407,24 @@ export default function ApplicantsList({
                   </span>
                 </td>
 
-               <td className="text-right ">
+               <td className="text-right flex justify-center items-center relative">
+
+                {a.status == "applied" && a.answers && a.answers.length >0 &&(
+                  <button
+                  onClick={(e)=>{
+                    e.stopPropagation(); // Prevent row click
+                    setSelectedApplicantData({name: a.name, answers: a.answers || []});
+                    setIsAnswerPopupOpen(true);
+
+                  }}
+                  className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
+                  > 
+                  <Eye size={14} />
+                  Answers
+                  </button>
+                )}
+
+
 
 
 
