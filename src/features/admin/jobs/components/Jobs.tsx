@@ -23,17 +23,17 @@ interface Category {
   _id: string;
   name: string;
 }
-interface Job {
-  _id: string;
-  title: string;
-  description: string;
-  education: string;
-  requiredExperience?: string;
-  skills?: Skill[];
-  expiry?: string;
-  category?: Category | Category[];
-  client?: { _id: string; email?: string };
-}
+// interface Job {
+//   _id: string;
+//   title: string;
+//   description: string;
+//   education: string;
+//   requiredExperience?: string;
+//   skills?: Skill[];
+//   expiry?: string;
+//   category?: Category | Category[];
+//   client?: { _id: string; email?: string };
+// }
 
 export default function Jobs() {
   const router = useRouter();
