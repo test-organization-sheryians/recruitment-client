@@ -28,7 +28,7 @@ export default function JobDeleteButton({
       }}
       onDeleted={onDeleted}
       redirectAfterDelete={() => {
-        router.push('/Crew/getJob');
+        router.push('/admin');
         router.refresh();
       }}
     />
