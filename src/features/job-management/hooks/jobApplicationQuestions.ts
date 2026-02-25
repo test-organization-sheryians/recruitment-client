@@ -1,24 +1,5 @@
 import { InputType } from "@/types/inputTypes"
-import axios from "axios"
-
-const API = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000/api",
-  withCredentials: true,
-})
-
-/* ================= INTERCEPTOR ================= */
-
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token")
-
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-
-  return config
-})
-
-/* ================= TYPES ================= */
+import api from '@/config/axios'
 
 export type JobQuestionPayload = {
   title: string
@@ -57,13 +38,13 @@ export interface UpdateQuestionPayload {
 }
 }
 
-/* ================= API FUNCTIONS ================= */
+/* ================= api FUNCTIONS ================= */
 /* NOTE: routes are mounted on /api/job-questions */
 
 export const getJobQuestions = async (jobId: string) => {
   if (!jobId) throw new Error("Job ID is required")
 
-  const res = await API.get(
+  const res = await api.get(
     `/job-questions/getjobquestions/${jobId}`
   )
   return res.data
@@ -75,7 +56,7 @@ export const createJobQuestions = async (
 ) => {
   if (!jobId) throw new Error("Job ID is required")
 
-  const res = await API.post(
+  const res = await api.post(
     `/job-questions/createjobquestions/${jobId}`,
     { questions }
   )
@@ -88,7 +69,7 @@ export const updateJobQuestion = async (
 ) => {
   if (!jobId) throw new Error("Job ID is required")
 
-  const res = await API.patch(
+  const res = await api.patch(
     `/job-questions/updatejobquestion/${jobId}`,
     payload
   )
@@ -103,7 +84,7 @@ export const deleteJobQuestion = async (
     throw new Error("Job ID and Question ID are required")
   }
 
-  const res = await API.delete(
+  const res = await api.delete(
     `/job-questions/deletejobquestion/${jobId}`,
     {
       data: { questionId },
