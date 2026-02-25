@@ -1,16 +1,17 @@
 "use client";
 
-import React from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import apiClient from "@/lib/api-client";
-import { createJob } from "../hooks/jobs.api";
-import { useGetCategories } from "../hooks/useJobApi";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { Briefcase } from "lucide-react";
+
+// Clean imports pointing to your dedicated hook files
+import { useCreateJob } from "@/features/admin/jobs/hooks/useJobApi";
+// Note: Ensure you have created useGetSkills in your useJobApi file!
+import { useGetCategories, useGetSkills } from "../hooks/useJobApi";
+import { usePincodeLookup } from "../hooks/usePincodeLookup";
 
 import JobDescriptionEditor from "./JobDescriptionEditor";
-import { Briefcase } from "lucide-react";
-import { usePincodeLookup } from "../hooks/usePincodeLookup";
-import { useRouter } from "next/navigation";
-import toast from "react-hot-toast"; // ✅ ADDED
 
 /* ================= TYPES ================= */
 
@@ -46,19 +47,14 @@ type CreateJobFormValues = {
     currency?: string;
   };
   location: LocationForm;
-  clientId: string; // ✅ ADD
+  clientId: string;
 };
 
 type CreateJobPayload = Omit<CreateJobFormValues, "skills"> & {
   skills: string[];
 };
 
-/* ================= API ================= */
-
-const fetchSkills = async (): Promise<Skill[]> => {
-  const res = await apiClient.get("/skills");
-  return res.data.data;
-};
+/* ================= CONSTANTS ================= */
 
 const today = new Date().toISOString().split("T")[0];
 
@@ -67,12 +63,10 @@ const today = new Date().toISOString().split("T")[0];
 export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
   const router = useRouter();
 
-  const [skillQuery, setSkillQuery] = React.useState("");
+  const [skillQuery, setSkillQuery] = useState("");
 
-  const { data: skills = [] } = useQuery({
-    queryKey: ["skills"],
-    queryFn: fetchSkills,
-  });
+  // Replaced inline useQuery and fetchSkills with a clean custom hook
+  const { data: skills = [] } = useGetSkills();
 
   const {
     data: categories = [],
@@ -104,7 +98,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
     clientId: "6915b90df6594de75060410b",
   };
 
-  const [form, setForm] = React.useState<CreateJobFormValues>(initialForm);
+  const [form, setForm] = useState<CreateJobFormValues>(initialForm);
 
   const pincodeStatus = usePincodeLookup(form.location.pincode, (location) => {
     setForm((prev) => ({
@@ -116,33 +110,16 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
     }));
   });
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: createJob,
+  // Using your custom mutation hook instead of raw useMutation
+  const { mutate: createNewJob, isPending, error } = useCreateJob();
 
-    onSuccess: (res) => {
-      toast.dismiss(); // ✅ remove loading if any
-
-      const jobId = res?.data?.data?._id;
-
-      if (!jobId) {
-        toast.error("Job created but Job ID not found");
-        return;
-      }
-
-      toast.success("Job created successfully 🚀");
-
-      // ✅ small delay so toast is visible
-      setTimeout(() => {
-        router.push(`/admin/screen/${jobId}`);
-      }, 800);
-    },
-
-    onError: (error: any) => {
-      toast.dismiss(); // ✅ remove loading if any
-      const message = error?.response?.data?.message || "Failed to create job";
+  useEffect(() => {
+    if (error) {
+      toast.dismiss();
+      const message = (error as any)?.response?.data?.message || "Failed to create job";
       toast.error(message);
-    },
-  });
+    }
+  }, [error]);
 
   const submitJob = () => {
     const t = new Date();
@@ -176,33 +153,50 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
     // ✅ show loading toast
     toast.loading("Creating job...");
 
-    mutate({
-      title: form.title,
-      description: form.description,
-      education: form.education,
-      requiredExperience: form.requiredExperience,
-      expiry: form.expiry,
-      category: form.category,
+    // Execute the renamed mutation
+    createNewJob(
+      {
+        title: form.title,
+        description: form.description,
+        education: form.education,
+        requiredExperience: form.requiredExperience,
+        expiry: form.expiry,
+        category: form.category,
+        skills: form.skills.map((s) => s._id),
+        jobType: form.jobType || "Full-Time",
+        salary: {
+          min: form.salary.min,
+          max: form.salary.max,
+          currency: form.salary.currency || "INR",
+        },
+        location: {
+          city: form.location.city,
+          state: form.location.state,
+          pincode: form.location.pincode,
+          country: form.location.country || "India",
+        },
+        clientId: form.clientId,
+      } as CreateJobPayload,
+      {
+        // Handle success logic here
+        onSuccess: (res: any) => {
+          toast.dismiss(); 
 
-      skills: form.skills.map((s) => s._id),
+          const jobId = res?.data?.data?._id;
 
-      jobType: form.jobType || "Full-Time",
+          if (!jobId) {
+            toast.error("Job created but Job ID not found");
+            return;
+          }
 
-      salary: {
-        min: form.salary.min,
-        max: form.salary.max,
-        currency: form.salary.currency || "INR",
-      },
+          toast.success("Job created successfully 🚀");
 
-      location: {
-        city: form.location.city,
-        state: form.location.state,
-        pincode: form.location.pincode,
-        country: form.location.country || "India",
-      },
-
-      clientId: form.clientId,
-    } as CreateJobPayload);
+          setTimeout(() => {
+            router.push(`/admin/screen/${jobId}`);
+          }, 800);
+        },
+      }
+    );
   };
 
   return (
@@ -310,11 +304,10 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
 
                   {pincodeStatus.message && (
                     <p
-                      className={`text-xs mt-1 ${
-                        pincodeStatus.type === "error"
+                      className={`text-xs mt-1 ${pincodeStatus.type === "error"
                           ? "text-red-600"
                           : "text-blue-600"
-                      }`}
+                        }`}
                     >
                       {pincodeStatus.loading && (
                         <span className="inline-block w-3 h-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin align-middle" />
@@ -437,14 +430,14 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
                   <div className="flex flex-wrap gap-2">
                     {skills
                       .filter(
-                        (s) =>
+                        (s: Skill) =>
                           s.name
                             .toLowerCase()
                             .includes(skillQuery.toLowerCase()) &&
                           !form.skills.some((x) => x._id === s._id),
                       )
                       .slice(0, 8)
-                      .map((s) => (
+                      .map((s: Skill) => (
                         <button
                           key={s._id}
                           onClick={() => {
@@ -486,7 +479,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
 
                 <JobDescriptionEditor
                   value={form.description}
-                  onChange={(html) =>
+                  onChange={(html: string) =>
                     setForm({
                       ...form,
                       description: html,
@@ -498,17 +491,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
           </section>
 
           <div className="flex items-center justify-between mt-10">
-            {/* <button
-              type="button"
-              className="text-sm font-semibold text-gray-500 hover:text-gray-700 transition"
-              onClick={() => {
-                toast("Draft save coming soon 🙂");
-              }}
-            >
-              Save Draft
-            </button> */}
-
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 ml-auto">
               <button
                 type="button"
                 className="px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-gray-50 transition cursor-pointer"
@@ -570,8 +553,6 @@ type SelectProps = {
   value: string;
   options: Category[];
   onChange: (v: string) => void;
-
-  // infinite scroll props
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
@@ -585,18 +566,8 @@ function Select({
   onLoadMore,
   hasMore = false,
   isLoadingMore = false,
-}: {
-  label: React.ReactNode;
-  value: string;
-  options: Category[];
-  onChange: (v: string) => void;
-  onLoadMore?: () => void;
-  hasMore?: boolean;
-  isLoadingMore?: boolean;
-}) {
-  // allow optional infinite-loading props when provided
-  // @ts-ignore
-  const [open, setOpen] = React.useState(false);
+}: SelectProps) {
+  const [open, setOpen] = useState(false);
   const ref = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {

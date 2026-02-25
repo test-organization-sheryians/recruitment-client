@@ -11,7 +11,7 @@ export type JobQuestionPayload = {
 
 
 /* ================= CREATE QUESTIONS ================= */
-// POST /api/job-application-questions/createjobquestions/:id
+
 export const createJobApplicationQuestions = async (
   jobId: string,
   payload: JobQuestionPayload
@@ -24,7 +24,7 @@ export const createJobApplicationQuestions = async (
 };
 
 /* ================= GET QUESTIONS ================= */
-// GET /api/job-application-questions/getjobquestions/:id
+
 export const getJobQuestions = async (jobId: string) => {
   const res = await api.get(
     `/api/job-questions/getjobquestions/${jobId}`
@@ -33,7 +33,7 @@ export const getJobQuestions = async (jobId: string) => {
 };
 
 /* ================= UPDATE QUESTION ================= */
-// PATCH /api/job-application-questions/updatejobquestion/:id
+
 export const updateJobApplicationQuestion = async (
   questionId: string,
   payload: JobQuestionPayload
@@ -46,7 +46,7 @@ export const updateJobApplicationQuestion = async (
 };
 
 /* ================= DELETE QUESTION ================= */
-// DELETE /api/job-application-questions/deletejobquestion/:id
+
 export const deleteJobApplicationQuestion = async (questionId: string) => {
   const res = await api.delete(
     `/api/job-questions/deletejobquestion/${questionId}`

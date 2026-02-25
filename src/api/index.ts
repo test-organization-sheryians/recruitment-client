@@ -20,7 +20,7 @@ export * from "./category/deleteCategory";
 export * from "./category/updateCategory";
 
 /* ================= JOBS ================= */
-export * from "./jobs/getjobs";
+export * from "./jobs/getJobs";
 export * from "./jobs/createJob";
 export * from "./jobs/updateJob";
 export * from "./jobs/deleteJob";

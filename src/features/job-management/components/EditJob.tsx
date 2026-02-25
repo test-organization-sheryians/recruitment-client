@@ -5,9 +5,8 @@ import { usePincodeLookup } from "../hooks/usePincodeLookup";
 import {
   useGetJobById,
   useUpdateJob,
-  useGetCategories,
-  useGetSkills,
-} from "@/features/job-management/hooks/useJobApi";
+} from "@/features/admin/jobs/hooks/useJobApi";
+import { useGetCategories, useGetSkills } from "../hooks/useJobApi";
 import { useToast } from "@/components/ui/Toast";
 import JobDescriptionEditor from "@/features/job-management/components/JobDescriptionEditor";
 import { X } from "lucide-react";
@@ -611,11 +610,10 @@ export default function EditJob({
                   />
                   {pincodeStatus.message && (
                     <p
-                      className={`text-xs mt-1 ${
-                        pincodeStatus.type === "error"
+                      className={`text-xs mt-1 ${pincodeStatus.type === "error"
                           ? "text-red-600"
                           : "text-blue-600"
-                      }`}
+                        }`}
                     >
                       {pincodeStatus.loading && (
                         <span className="inline-block w-3 h-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin align-middle" />
@@ -759,11 +757,10 @@ function CustomSelect({
                   onChange("");
                   setOpen(false);
                 }}
-                className={`w-full text-left px-4 py-2 text-sm ${
-                  !value
+                className={`w-full text-left px-4 py-2 text-sm ${!value
                     ? "font-semibold text-[#111218] dark:text-white"
                     : "text-gray-600 dark:text-gray-200"
-                } cursor-pointer`}
+                  } cursor-pointer`}
               >
                 Select
               </button>
@@ -776,11 +773,10 @@ function CustomSelect({
                     onChange(c._id);
                     setOpen(false);
                   }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition ${
-                    value === c._id
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition ${value === c._id
                       ? "bg-[#2b4bee] text-white"
                       : "text-gray-700 dark:text-gray-200"
-                  } cursor-pointer`}
+                    } cursor-pointer`}
                 >
                   {c.name}
                 </button>
