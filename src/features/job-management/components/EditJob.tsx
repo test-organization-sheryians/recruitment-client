@@ -383,12 +383,7 @@ export default function EditJob({
               </div>
 
               {/* Job Description */}
-              {/* Job Description */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-[#111218] dark:text-gray-300">
-                  Job Description <span className="text-red-600 ml-1">*</span>
-                </label>
-
                 <JobDescriptionEditor
                   value={formData.description}
                   onChange={(content: string) =>

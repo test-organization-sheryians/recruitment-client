@@ -133,7 +133,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
 
       // ✅ small delay so toast is visible
       setTimeout(() => {
-        router.push(`/admin/screen/${jobId}`);
+        router.push(`/Crew/${jobId}/screen`);
       }, 800);
     },
 
@@ -478,22 +478,15 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
                 isLoadingMore={!!isFetchingMoreCategories}
               />
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-bold">
-                  <span>Job Description</span>
-                  <span className="text-red-600 ml-1">*</span>
-                </label>
-
-                <JobDescriptionEditor
-                  value={form.description}
-                  onChange={(html) =>
-                    setForm({
-                      ...form,
-                      description: html,
-                    })
-                  }
-                />
-              </div>
+              <JobDescriptionEditor
+                value={form.description}
+                onChange={(html) =>
+                  setForm({
+                    ...form,
+                    description: html,
+                  })
+                }
+              />
             </div>
           </section>
 
