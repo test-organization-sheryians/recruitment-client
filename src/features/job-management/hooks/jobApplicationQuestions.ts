@@ -45,7 +45,7 @@ export const getJobQuestions = async (jobId: string) => {
   if (!jobId) throw new Error("Job ID is required")
 
   const res = await api.get(
-    `/job-questions/getjobquestions/${jobId}`
+    `/api/job-questions/getjobquestions/${jobId}`
   )
   return res.data
 }
@@ -57,7 +57,7 @@ export const createJobQuestions = async (
   if (!jobId) throw new Error("Job ID is required")
 
   const res = await api.post(
-    `/job-questions/createjobquestions/${jobId}`,
+    `/api/job-questions/createjobquestions/${jobId}`,
     { questions }
   )
   return res.data
@@ -70,7 +70,7 @@ export const updateJobQuestion = async (
   if (!jobId) throw new Error("Job ID is required")
 
   const res = await api.patch(
-    `/job-questions/updatejobquestion/${jobId}`,
+    `/api/job-questions/updatejobquestion/${jobId}`,
     payload
   )
   return res.data
@@ -85,7 +85,7 @@ export const deleteJobQuestion = async (
   }
 
   const res = await api.delete(
-    `/job-questions/deletejobquestion/${jobId}`,
+    `/api/job-questions/deletejobquestion/${jobId}`,
     {
       data: { questionId },
     }
