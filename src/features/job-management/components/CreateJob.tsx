@@ -6,10 +6,10 @@ import toast from "react-hot-toast";
 import { Briefcase } from "lucide-react";
 
 // Clean imports pointing to your dedicated hook files
-import { useCreateJob } from "@/features/admin/jobs/hooks/useJobApi";
-// Note: Ensure you have created useGetSkills in your useJobApi file!
+import { useCreateJob } from "../hooks/useJobApi";
 import { useGetCategories, useGetSkills } from "../hooks/useJobApi";
 import { usePincodeLookup } from "../hooks/usePincodeLookup";
+import { JobSelect } from "../ui/JobSelect";
 
 import JobDescriptionEditor from "./JobDescriptionEditor";
 
@@ -180,9 +180,11 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
       {
         // Handle success logic here
         onSuccess: (res: any) => {
-          toast.dismiss(); 
+          toast.dismiss();
 
-          const jobId = res?.data?.data?._id;
+          // if jobId is not present in response then return
+          // const jobId = res?.data?.data?._id; 
+          const jobId = res?.data?._id;
 
           if (!jobId) {
             toast.error("Job created but Job ID not found");
@@ -241,7 +243,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
               />
 
               <TwoCol>
-                <Select
+                <JobSelect
                   label="Job Type"
                   value={form.jobType}
                   options={[
@@ -250,7 +252,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
                     { _id: "Part-Time", name: "Part-Time" },
                     { _id: "Hybrid", name: "Hybrid" },
                   ]}
-                  onChange={(v) => setForm({ ...form, jobType: v })}
+                  onChange={(v: string) => setForm({ ...form, jobType: v })}
                 />
 
                 <Input
@@ -305,8 +307,8 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
                   {pincodeStatus.message && (
                     <p
                       className={`text-xs mt-1 ${pincodeStatus.type === "error"
-                          ? "text-red-600"
-                          : "text-blue-600"
+                        ? "text-red-600"
+                        : "text-blue-600"
                         }`}
                     >
                       {pincodeStatus.loading && (
@@ -453,7 +455,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
                 )}
               </div>
 
-              <Select
+              <JobSelect
                 label={
                   <>
                     <span>Job Category</span>
@@ -544,121 +546,6 @@ function Input({
         {...props}
         className="px-4 py-3 rounded-lg border bg-gray-50 dark:bg-gray-800"
       />
-    </div>
-  );
-}
-
-type SelectProps = {
-  label: React.ReactNode;
-  value: string;
-  options: Category[];
-  onChange: (v: string) => void;
-  onLoadMore?: () => void;
-  hasMore?: boolean;
-  isLoadingMore?: boolean;
-};
-
-function Select({
-  label,
-  value,
-  options,
-  onChange,
-  onLoadMore,
-  hasMore = false,
-  isLoadingMore = false,
-}: SelectProps) {
-  const [open, setOpen] = useState(false);
-  const ref = React.useRef<HTMLDivElement | null>(null);
-
-  React.useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (!ref.current) return;
-      if (!ref.current.contains(e.target as Node)) setOpen(false);
-    }
-
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  const selected = options.find((o) => o._id === value);
-
-  return (
-    <div className="flex flex-col gap-1.5" ref={ref}>
-      <label className="text-sm font-bold">{label}</label>
-
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setOpen((s) => !s)}
-          aria-haspopup="listbox"
-          aria-expanded={open}
-          className="w-full flex items-center justify-between px-4 py-3 rounded-lg border bg-white dark:bg-gray-800 text-left shadow-sm hover:shadow-md transition cursor-pointer"
-        >
-          <span className={`${selected ? "" : "text-gray-400"}`}>
-            {selected ? selected.name : "Select"}
-          </span>
-
-          <svg
-            className={`w-4 h-4 ml-2 transform transition ${open ? "rotate-180" : "rotate-0"}`}
-            viewBox="0 0 20 20"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M6 8l4 4 4-4"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-
-        {open && (
-          <ul
-            role="listbox"
-            tabIndex={-1}
-            onScroll={(e) => {
-              const target = e.currentTarget;
-              if (!onLoadMore || !hasMore) return;
-              if (
-                target.scrollTop + target.clientHeight >=
-                target.scrollHeight - 8
-              ) {
-                if (!isLoadingMore) onLoadMore();
-              }
-            }}
-            className="absolute z-40 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg border shadow-lg max-h-48 overflow-auto"
-          >
-            <li>
-              <button
-                type="button"
-                onClick={() => {
-                  onChange("");
-                  setOpen(false);
-                }}
-                className={`w-full text-left px-4 py-2 text-sm ${!value ? "font-semibold" : "text-gray-600 dark:text-gray-200"} cursor-pointer`}
-              >
-                Select
-              </button>
-            </li>
-            {options.map((c) => (
-              <li key={c._id}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange(c._id);
-                    setOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition ${value === c._id ? "bg-[#2b4bee] text-white" : "text-gray-700 dark:text-gray-200"} cursor-pointer`}
-                >
-                  {c.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
     </div>
   );
 }

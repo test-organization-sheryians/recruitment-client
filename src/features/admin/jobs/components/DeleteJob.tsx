@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import { deleteJob } from '@/api/index';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -12,56 +12,43 @@ interface DeleteJobProps {
   onJobDeleted?: () => void;
 }
 
-export default function DeleteJob({jobId,jobTitle,onJobDeleted}:DeleteJobProps) {
-  const router = useRouter();
+export default function DeleteJob({ jobId, jobTitle, onJobDeleted }: DeleteJobProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
-
   const handleDelete = async () => {
     if (!jobId) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
+      toast.loading('Deleting job...');
       const response = await deleteJob(jobId);
       if (response) {
-        setIsOpen(false); // Close the dialog
-        onJobDeleted?.(); // Notify parent if needed
-        router.push('/admin/jobs');
-        router.refresh();
+        toast.dismiss();
+        toast.success('Job deleted successfully');
+        setIsOpen(false);
+        onJobDeleted?.();
       } else {
-        setError(response?.message || 'Failed to delete job');
+        toast.dismiss();
+        setError('Failed to delete job');
+        toast.error('Failed to delete job');
       }
     } catch (err) {
-      console.error('Error deleting job:', err);
+      toast.dismiss();
+      toast.error('An error occurred while deleting the job');
       setError('An error occurred while deleting the job');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!jobId) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-red-500">No job ID provided for deletion</p>
-        <button
-          onClick={() => router.push('/admin/jobs')}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-        >
-          Back to Jobs
-        </button>
-      </div>
-    );
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <button
-          onClick={() => router.push('/admin/jobs')}
           className="px-4 py-2 text-red-600 bg-red-50 rounded-full hover:text-white hover:bg-red-200"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
@@ -73,17 +60,17 @@ export default function DeleteJob({jobId,jobTitle,onJobDeleted}:DeleteJobProps) 
         <DialogHeader>
           <DialogTitle>Delete Job</DialogTitle>
         </DialogHeader>
-        
+
         {error && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
             {error}
           </div>
         )}
-        
+
         <p className="text-gray-600 mb-6">
           Are you sure you want to delete {jobTitle} Job? This action cannot be undone.
         </p>
-        
+
         <div className="flex justify-end space-x-3">
           <button
             onClick={() => setIsOpen(false)}
@@ -97,10 +84,10 @@ export default function DeleteJob({jobId,jobTitle,onJobDeleted}:DeleteJobProps) 
             disabled={loading}
             className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
           >
-            {loading ? 'Deleting...': 'Delete Job'}
+            {loading ? 'Deleting...' : 'Delete Job'}
           </button>
         </div>
-        
+
       </DialogContent>
     </Dialog>
   );
