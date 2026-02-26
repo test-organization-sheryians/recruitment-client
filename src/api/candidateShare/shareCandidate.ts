@@ -52,19 +52,20 @@ export const getAllGroups = async (): Promise<Group[]> => {
    GET SINGLE SHARE / GROUP DETAILS
 ===================================================== */
 
-export const getShareCandidate = async (
-  shareId: string
-): Promise<ShareCandidate[]> => {
-  if (!shareId) return [];
 
-  const res = await api.get<BackendResponse<ShareCandidate[]>>(
-    `/api/share/${shareId}`
-  );
 
-  return extractData(res.data) ?? [];
+export const getShareCandidate = async (shareId: string): Promise<any> => {
+  if (!shareId) return null;
+
+  
+  const res = await api.get<BackendResponse<any>>(`/api/share/share/${shareId}`);
+  
+ 
+  return res.data; 
 };
 
-/* =====================================================
+
+/*=====================================================
    UPDATE GROUP NAME
 ===================================================== */
 

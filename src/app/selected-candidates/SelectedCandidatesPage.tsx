@@ -19,10 +19,26 @@ interface BackendSkill {
   name?: string;
 }
 
+// interface BackendCandidate {
+//   _id?: string;
+//   id?: string; // id field console mein dikh rahi hai
+//   firstName?: string;
+//   lastName?: string;
+//   email?: string;
+//   user?: {
+//     id?: string;
+//     firstName?: string;
+//     lastName?: string;
+//     email?: string;
+//   };
+//   availability?: string;
+//   resumeFile?: string;
+//   skills?: BackendSkill[];
+//   experiences?: Experience[];
+//   createdAt?: string;
+// }
 interface BackendCandidate {
   _id?: string;
-  userId?: string;
-  user?: BackendUser;
   firstName?: string;
   lastName?: string;
   email?: string;
@@ -31,18 +47,37 @@ interface BackendCandidate {
   skills?: BackendSkill[];
   experiences?: Experience[];
   createdAt?: string;
+  // Fallback for nested user object
+  user?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
 }
-
+// interface ShareCandidatesResponseShape {
+//   groupName?: string;
+//   selectedUsers?: BackendCandidate[];
+//   data?:
+//     | {
+//         groupName?: string;
+//         selectedUsers?: BackendCandidate[];
+//       }
+//     | BackendCandidate[]
+//     | null;
+// }
 interface ShareCandidatesResponseShape {
+  success?: boolean;
+  message?: string;
   groupName?: string;
-  selectedUsers?: BackendCandidate[];
-  data?:
-    | {
-        groupName?: string;
-        selectedUsers?: BackendCandidate[];
-      }
-    | BackendCandidate[]
-    | null;
+  count?: number;
+  // Backend ab is 'data' object ke andar sab bhej raha hai
+  data?: {
+    _id?: string;
+    groupName?: string;
+    selectedUsers?: BackendCandidate[];
+    createdAt?: string;
+    updatedAt?: string;
+  };
 }
 
 interface UIShareCandidate {
@@ -78,43 +113,49 @@ export default function SelectedCandidatesPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  /* ================= SAFE MAPPING ================= */
 
-  const uiCandidates: UIShareCandidate[] = useMemo(() => {
-    let rawList: BackendCandidate[] = [];
+/* ================= SAFE MAPPING ================= */
 
-    if (Array.isArray(response?.data)) {
-      // case: data is array
+const uiCandidates: UIShareCandidate[] = useMemo(() => {
+  // rawList ko BackendCandidate array define kiya hai
+  let rawList: BackendCandidate[] = [];
+
+  // 1. Check karein ki response ke andar profiles ka array kahan hai
+  if (response?.data) {
+    if (Array.isArray(response.data)) {
+      // Case: data seedha array hai
       rawList = response.data;
-    } else if (response?.data?.selectedUsers) {
-      // case: data object with selectedUsers
+    } else if ('selectedUsers' in response.data && Array.isArray(response.data.selectedUsers)) {
+      // Case: data ke andar selectedUsers array hai (aapke console log ke mutabiq)
       rawList = response.data.selectedUsers;
-    } else if (response?.selectedUsers) {
-      // case: root selectedUsers
-      rawList = response.selectedUsers;
     }
+  }
 
-    return rawList.map((c) => ({
-      _id: c?._id || Math.random().toString(),
-      userId: c?.userId || "",
-      name:
-        `${c?.user?.firstName || c?.firstName || ""} ${
-          c?.user?.lastName || c?.lastName || ""
-        }`.trim() || "Candidate",
-      email: c?.user?.email || c?.email || "N/A",
-      availability: c?.availability || "N/A",
-      resumeFile: c?.resumeFile,
-      skills: (c?.skills ?? []).map((skill) => ({
-        _id: skill?._id ?? "",
-        name: skill?.name ?? "",
-      })),
-      experiences: c?.experiences ?? [],
-      createdAt: c?.createdAt,
-    }));
-  }, [response]);
-
-  /* ================= GROUP NAME ================= */
-
+  // 2. Mapping logic with proper typing
+  return rawList.map((c: BackendCandidate): UIShareCandidate => {
+    // Name logic: nested user object ya direct fields dono handle honge
+    const firstName = c.user?.firstName || c.firstName || "";
+    const lastName = c.user?.lastName || c.lastName || "";
+    
+    return {
+      _id: c._id || Math.random().toString(),
+      // Backend aggregation ke baad ID yahan mil sakti hai
+      userId: (c as any).userId || c._id || "", 
+      name: `${firstName} ${lastName}`.trim() || "Candidate",
+      email: c.user?.email || c.email || "N/A",
+      availability: c.availability || "Immediate",
+      resumeFile: c.resumeFile,
+      skills: Array.isArray(c.skills) 
+        ? c.skills.map(s => ({ _id: s._id || "", name: s.name || "" })) 
+        : [],
+      experiences: Array.isArray(c.experiences) ? c.experiences : [],
+      createdAt: c.createdAt,
+    };
+  });
+}, [response]);
+  
+  
+  /* ================= GROUP NAME =============== */
   const groupName =
     response?.groupName ||
     (typeof response?.data === "object" && !Array.isArray(response?.data)
@@ -385,3 +426,5 @@ function InfoCard({
     </div>
   );
 }
+
+
