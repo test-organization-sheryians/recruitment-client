@@ -75,10 +75,12 @@ export default function CreateBlogLayout() {
     setBlogPost((prev: any) => ({ ...prev, ...data }));
   }, []);
 
-  const normalizeCategory = (cat: any) => {
-    if (!cat) return "";
-    return typeof cat === "object" ? cat._id : cat;
-  };
+  function normalizeCategory(category: any) {
+    if (!category) return "";
+    if (typeof category === "string") return category;
+    if (category.value) return category.value;
+    return String(category);
+  }
 
   const buildCreatePayload = (post: any) => ({
     title: post.title,
@@ -97,11 +99,7 @@ export default function CreateBlogLayout() {
     subtitle: post.subtitle || "",
     hero: post.hero,
     content: { blocks: post.content },
-
-    // ✅ MUST BE ARRAY
     category: [normalizeCategory(post.category)],
-
-    // ✅ SEND TAGS AGAIN (YOU WERE MISSING THIS)
     technologies: post.technologies || [],
 
     status: post.status,

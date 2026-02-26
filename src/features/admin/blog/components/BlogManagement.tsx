@@ -4,21 +4,59 @@ import Link from "next/link";
 import { Plus, BookOpen, Pencil, Trash2 } from "lucide-react";
 import { useBlogsAll } from "@/features/admin/blog/hooks/useBlogsAll";
 import { useDeleteBlog } from "@/features/admin/blog/hooks/useDeleteBlog";
-import { useRef, useEffect, useMemo, useCallback } from "react";
+import { useRef, useEffect, useMemo, useState } from "react";
+import { Search } from "lucide-react";
+import { useSearchBlogBySlug } from "../hooks/useSearchBlogBySlug";
 
 export default function BlogManagement() {
-  const { blogs, loading, error, hasMore, loadMore, refetch } = useBlogsAll();
+  const {
+    blogs,
+    loading: deleteLoading,
+    error,
+    hasMore,
+    loadMore,
+    refetch,
+  } = useBlogsAll();
   const { deleteBlog } = useDeleteBlog();
+  const [slug, setSlug] = useState("");
+  const { searchBlog, loading: searchLoading } = useSearchBlogBySlug();
   // const { hasMore, lastBlogRef } = useInfiniteBlogs();
+  const [searchedBlog, setSearchedBlog] = useState<any[] | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (!slug.trim()) {
+        setSearchedBlog(null);
+        return;
+      }
+
+      const blogs = await searchBlog(slug);
+      setSearchedBlog(blogs);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [slug]);
+
+  const handleSearch = async () => {
+    if (!slug.trim()) {
+      setSearchedBlog(null);
+      return;
+    }
+
+    const blogs = await searchBlog(slug);
+    setSearchedBlog(blogs);
+  };
 
   const blogList = useMemo(() => {
-    return Array.isArray(blogs)
-      ? blogs.map((blog) => ({
+    const source = searchedBlog !== null ? searchedBlog : blogs;
+
+    return Array.isArray(source)
+      ? source.map((blog) => ({
           ...blog,
           status: blog.status || (blog.isPublished ? "published" : "draft"),
         }))
       : [];
-  }, [blogs]);
+  }, [blogs, searchedBlog]);
 
   const publishedCount = useMemo(
     () => blogList.filter((blog) => blog.status === "published").length,
@@ -59,11 +97,17 @@ export default function BlogManagement() {
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !loading && hasMore) {
+        const isSearching = searchedBlog !== null;
+        if (
+          entries[0].isIntersecting &&
+          !searchLoading &&
+          hasMore &&
+          !isSearching
+        ) {
           loadMore();
         }
       },
-      { rootMargin: "200px", threshold: 0.01 },
+      { rootMargin: "150px", threshold: 0.01 },
     );
 
     const el = loadMoreRef.current;
@@ -102,11 +146,40 @@ export default function BlogManagement() {
         <StatCard title="Drafts" value={draftCount} color="yellow" />
       </div>
 
+      {/* Search Icon  */}
+      <div className="mt-6 mb-4">
+        <div className="relative max-w-md">
+          {/* Icon */}
+          <Search
+            size={18}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
+
+          {/* Input */}
+          <input
+            type="text"
+            placeholder="Search blog by slug..."
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            className="w-full pl-10 pr-24 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          {/* Button */}
+          <button
+            onClick={handleSearch}
+            disabled={searchLoading}
+            className="absolute right-1 top-1/2 -translate-y-1/2 bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700"
+          >
+            {searchLoading ? "..." : "Search"}
+          </button>
+        </div>
+      </div>
+
       {/* Content */}
       <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
         {error ? (
           <ErrorState error={error} onRetry={refetch} />
-        ) : blogList.length === 0 && !loading ? (
+        ) : blogList.length === 0 && !deleteLoading ? (
           <EmptyState />
         ) : (
           <div className="space-y-3">
@@ -187,7 +260,7 @@ export default function BlogManagement() {
 
         {/* Intersection Observer Trigger & Load More Button */}
         <div ref={loadMoreRef} className="pt-6 text-center space-y-4">
-          {loading && (
+          {deleteLoading && (
             <div className="flex items-center justify-center gap-2">
               <div className="w-5 h-5 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
               <span className="text-slate-600">Loading more blogs...</span>
