@@ -445,7 +445,7 @@ export default function ApplicantsList({
                       </button>
                       {activeActionId === a.id && (
                         <div className="absolute right-8 top-1/2 -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
-                          
+                          {a.answers && a.answers.length >0 && (
                   <button
 
                     onClick={(e) => {
@@ -467,6 +467,7 @@ export default function ApplicantsList({
 
 
                   </button> 
+                          )}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
