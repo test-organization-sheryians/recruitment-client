@@ -1,55 +1,75 @@
-import api from '@/config/axios';
+import api from "@/config/axios"
+
+/* ================= TYPES ================= */
 
 export type JobQuestionPayload = {
-  title: string;
-  inputType: string;
-  isRequired: boolean;
-  options?: string[];
-  description?: string;
-};
+  title: string
+  inputType: string
+  isRequired: boolean
+  options?: string[]
+  description?: string
+  isKnockout?: boolean
+  order?: number
+  ratingValue?: number
+  fileValue?: {
+    name: string
+    size: number
+    type: string
+  }
+}
 
+export type UpdateQuestionPayload = Partial<JobQuestionPayload> & {
+  questionId: string
+}
 
+/* ================= ENDPOINTS ================= */
 
-/* ================= CREATE QUESTIONS ================= */
+const BASE = "/api/job-questions"
+
+/* ================= CREATE ================= */
 
 export const createJobApplicationQuestions = async (
   jobId: string,
-  payload: JobQuestionPayload
+  questions: JobQuestionPayload[]
 ) => {
-  const res = await api.post(
-    `/api/job-questions/createjobquestions/${jobId}`,
-    payload
-  );
-  return res.data;
-};
+  const { data } = await api.post(`${BASE}/createjobquestions/${jobId}`, { questions })
+  return data
+}
 
-/* ================= GET QUESTIONS ================= */
+/* ================= GET ================= */
 
 export const getJobQuestions = async (jobId: string) => {
-  const res = await api.get(
-    `/api/job-questions/getjobquestions/${jobId}`
-  );
-  return res.data.data;
-};
+  const { data } = await api.get(`${BASE}/getjobquestions/${jobId}`)
+  return data.data
+}
 
-/* ================= UPDATE QUESTION ================= */
+/* ================= UPDATE ================= */
 
-export const updateJobApplicationQuestion = async (
-  questionId: string,
-  payload: JobQuestionPayload
-) => {
-  const res = await api.patch(
-    `/api/job-questions/updatejobquestion/${questionId}`,
-    payload
-  );
-  return res.data;
-};
+export const updateJobQuestion = async ({
+  jobId,
+  payload
+}: {
+  jobId: string;
+  payload: UpdateQuestionPayload;
+}) => {
+  const { data } = await api.patch(`${BASE}/updatejobquestion/${jobId}`, payload)
+  return data
+}
 
-/* ================= DELETE QUESTION ================= */
+/* ================= DELETE ================= */
 
-export const deleteJobApplicationQuestion = async (questionId: string) => {
-  const res = await api.delete(
-    `/api/job-questions/deletejobquestion/${questionId}`
-  );
-  return res.data;
-};
+export const deleteJobApplicationQuestion = async ({ 
+  jobId, 
+  questionId 
+}: { 
+  jobId: string; 
+  questionId: string 
+}) => {
+  const { data } = await api.delete(
+    `${BASE}/deletejobquestion/${jobId}`, 
+    {
+      data: { questionId } 
+    }
+  )
+  return data
+}

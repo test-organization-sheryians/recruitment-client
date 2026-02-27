@@ -53,7 +53,7 @@ export default function LogoutButton() {
     <button
       onClick={handleLogout}
       className={clsx(
-        'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium',
+        'w-full flex items-center gap-2 md:gap-3 px-3 py-2.5 md:px-4 md:py-3 flex-shrink-0 whitespace-nowrap rounded-xl text-sm font-medium',
         'text-red-600 hover:bg-red-50 transition-all duration-200',
         'border border-red-200 cursor-pointer'
       )}

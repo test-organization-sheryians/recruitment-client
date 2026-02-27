@@ -1,61 +1,54 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
-import * as api from "./jobApplicationQuestions"
+import * as api from "@/api"
 
 /* ================= GET ================= */
 
-export const useGetJobApplicationQuestions = (jobId?: string) => {
-  return useQuery({
+export const useGetJobApplicationQuestions = (jobId?: string) =>
+  useQuery({
     queryKey: ["job-application-questions", jobId],
-    queryFn: () => api.getJobQuestions(jobId!),
-    enabled: !!jobId,
-    retry: 0,
+    queryFn: () => {
+      if (!jobId) throw new Error("jobId is required")
+      return api.getJobQuestions(jobId)
+    },
+    enabled: Boolean(jobId),
   })
-}
 
 /* ================= CREATE ================= */
 
-export const useCreateJobApplicationQuestions = () => {
-  return useMutation({
-    mutationKey: ["create-job-application-questions"],
-    mutationFn: ({
-      jobId,
-      questions,
-    }: {
-      jobId: string
-      questions: api.JobQuestionPayload[]
-    }) => api.createJobQuestions(jobId, questions),
-    retry: 0,
-  })
+type CreateQuestionsInput = {
+  jobId: string
+  questions: api.JobQuestionPayload[]
 }
+
+export const useCreateJobApplicationQuestions = () =>
+  useMutation({
+    mutationFn: ({ jobId, questions }: CreateQuestionsInput) =>
+      api.createJobApplicationQuestions(jobId, questions),
+  })
 
 /* ================= UPDATE ================= */
 
+type UpdateQuestionInput = {
+  jobId: string
+  payload: api.UpdateQuestionPayload
+}
+
 export const useUpdateJobApplicationQuestion = () => {
   return useMutation({
-    mutationKey: ["update-job-application-question"],
-    mutationFn: ({
-      jobId,
-      payload,
-    }: {
-      jobId: string
-      payload: api.UpdateQuestionPayload
-    }) => api.updateJobQuestion(jobId, payload),
-    retry: 0,
+    mutationFn: ({ jobId, payload }: UpdateQuestionInput) =>
+      api.updateJobQuestion({ jobId, payload }),
   })
 }
 
 /* ================= DELETE ================= */
 
-export const useDeleteJobApplicationQuestion = () => {
-  return useMutation({
-    mutationKey: ["delete-job-application-question"],
-    mutationFn: ({
-      jobId,
-      questionId,
-    }: {
-      jobId: string
-      questionId: string
-    }) => api.deleteJobQuestion(jobId, questionId),
-    retry: 0,
-  })
+type DeleteQuestionInput = {
+  jobId: string;
+  questionId: string;
 }
+
+export const useDeleteJobApplicationQuestion = () =>
+  useMutation({
+    mutationFn: (input: DeleteQuestionInput) =>
+      api.deleteJobApplicationQuestion(input), // Passes { jobId, questionId }
+  })

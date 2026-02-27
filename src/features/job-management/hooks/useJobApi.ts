@@ -52,6 +52,7 @@ export const useDeleteJob = () => {
     retry: 0,
   });
 };
+
 // Fetch jobs by category
 export const useGetJobsByCategory = (categoryId: string | null) => {
   return useQuery({

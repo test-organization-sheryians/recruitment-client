@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+import {useToast } from "@/components/ui/Toast";
 import { Briefcase } from "lucide-react";
 
 // Clean imports pointing to your dedicated hook files
@@ -64,9 +64,8 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
   const router = useRouter();
 
   const [skillQuery, setSkillQuery] = useState("");
-
-  // Replaced inline useQuery and fetchSkills with a clean custom hook
   const { data: skills = [] } = useGetSkills();
+  const { success, error: showError } = useToast();
 
   const {
     data: categories = [],
@@ -115,24 +114,23 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
 
   useEffect(() => {
     if (error) {
-      toast.dismiss();
       const message = (error as any)?.response?.data?.message || "Failed to create job";
-      toast.error(message);
+      showError(message);
     }
-  }, [error]);
+  }, [error, showError]);
 
   const submitJob = () => {
     const t = new Date();
     t.setHours(0, 0, 0, 0);
 
     if (!form.expiry) {
-      toast.error("Please select an application deadline");
+      showError("Please select an application deadline");
       return;
     }
 
     const selectedDate = new Date(form.expiry);
     if (selectedDate < t) {
-      toast.error("Application deadline cannot be in the past");
+      showError("Application deadline cannot be in the past");
       return;
     }
 
@@ -146,14 +144,10 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
       !form.category ||
       form.skills.length === 0
     ) {
-      toast.error("Please fill all required fields");
+      showError("Please fill all required fields");
       return;
     }
 
-    // ✅ show loading toast
-    toast.loading("Creating job...");
-
-    // Execute the renamed mutation
     createNewJob(
       {
         title: form.title,
@@ -180,18 +174,16 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
       {
         // Handle success logic here
         onSuccess: (res: any) => {
-          toast.dismiss();
-
           // if jobId is not present in response then return
           // const jobId = res?.data?.data?._id; 
           const jobId = res?.data?._id;
 
           if (!jobId) {
-            toast.error("Job created but Job ID not found");
+            showError("Job created but Job ID not found");
             return;
           }
 
-          toast.success("Job created successfully 🚀");
+          success("Job created successfully 🚀");
 
           setTimeout(() => {
             router.push(`/admin/screen/${jobId}`);
