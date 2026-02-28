@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCreateJobApplicationQuestions } from "@/features/job-management/hooks/useJobApplicationQuestions";
 import { uploadFileToS3 } from "@/lib/uploadFile";
 import type { InputType } from "@/types/inputTypes";
+import { toast } from "react-toastify"
 
 
 type Field = {
@@ -47,8 +48,11 @@ export default function CreateCertificate({ isOpen, onClose, onSave }: CreateCer
 
 const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
   const selectedFile = e.target.files?.[0];
-  if (!selectedFile || !selectedFile.name.endsWith('.html')) return alert("Please upload .html file");
-
+  if (!selectedFile || !selectedFile.name.endsWith('.html')) {
+    toast.error("please upload .html file")
+    return ;
+  }
+     
   setIsUploading(true);
 
   try {
@@ -120,10 +124,19 @@ const handlePublish = async () => {
   if (!formData.name) return console.log("Enter name");
   if (!formData.fileUrl.trim()) return console.log("Upload file");
 
-  if (fields.some(field => field.title.trim().length < 5)) {
-    // return alert("Each field title must be at least 5 characters");
-    return console.log("Please Enter minimumm 5 charactor")
-  }
+  // if (fields.some(field => field.title.trim().length < 5)) {
+  //   // return alert("Each field title must be at least 5 characters");
+  //   return console.log("Please Enter minimumm 5 charactor")
+  // }
+
+  // If user added fields but titles are invalid
+if (
+  fields.length > 0 &&
+  fields.some((field) => field.title.trim().length < 5)
+) {
+  toast.error("Each field title must be at least 5 characters");
+  return;
+}
 
   try {
      setIsSubmitting(true);
@@ -145,31 +158,31 @@ const handlePublish = async () => {
       throw new Error("Template ID not returned");
     }
 
-    const questions = fields.map((field, index) => ({
-      title: field.title.trim(),
-      // description: field.placeholder?.trim(),
-      inputType: mapInputType(field.type),
-      isRequired,
-      isKnockout: false,
-      order: index + 1,
-      placeholder: field.placeholder?.trim(),
-    }));
+    // Only create questions if fields exist
+if (fields.length > 0) {
+  const questions = fields.map((field, index) => ({
+    title: field.title.trim(),
+    inputType: mapInputType(field.type),
+    isRequired,
+    isKnockout: false,
+    order: index + 1,
+    placeholder: field.placeholder?.trim(),
+  }));
 
-    await createQuestions({
-      jobId: templateId,
+  await createQuestions({
+    jobId: templateId,
     questions,
-    });
+  });
+}
+    toast.success("Template created successfully 🎉")
     onClose();
     router.push("/admin/certificates")
 
-    // alert("Template and questions created successfully");
-    router.refresh();
 
-  // } catch (error: any) {
-  //   console.log("Backend error:", error?.response?.data);
-  // }
+    router.refresh();
   } catch (error: unknown) {
   if (error instanceof Error) {
+    toast.error("Something went wrong ❌")
     console.log("Error message:", error.message);
        
   }
@@ -199,9 +212,6 @@ const handlePublish = async () => {
           </button>
         </div>
 
-        {/* Scrollable Form */}
-        {/* <div className="flex-1 overflow-y-auto p-8 space-y-8"> */}
-        {/* Scrollable Form */}
 <form
   onSubmit={(e) => {
     e.preventDefault();
@@ -363,6 +373,7 @@ const handlePublish = async () => {
   disabled={isSubmitting}
   className="flex-1 py-3 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 shadow-lg transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
 >
+  
   {isSubmitting ? (
     <>
       <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>

@@ -6,5 +6,5 @@ export const getCertificateById = async (
   certificateId: string
 ): Promise<Certificate> => {
   const response = await api.get(`/api/certificates/${certificateId}`);
-  return response.data.data;
+  return response.data?.data;
 };

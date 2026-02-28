@@ -75,6 +75,13 @@ export * from "./password/resetPassword";
 
 export * from "./jobApplication/scheduleInterview";
 
+/* ================= CERTIFICATE ================= */
+
+export*from"./certificate/createCertificate"
+export*from"./certificate/updateCertificate"
+export*from"./certificate/deleteCertificate"
+export*from"./certificate/getAllCertificate"
+
 
 
 

@@ -7,8 +7,8 @@ import { useCertificate } from "../hooks/useCertificate";
 import CreateCertificate from "./CreateCertificate";  
 import type  { Certificate } from "@/types/Certificate";
 // import { deleteCertificate } from "@/api/certificate/deleteCertificate";
+import { toast } from "react-toastify"
 
-// 👈 API import ki
 
 
 export default function Certificate() {
@@ -49,9 +49,11 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
   
     try {
       await deleteCertificate(_id);
+     toast.success("Template deleted successfully ✅")
       // alert("Deleted successfully");
     } catch (err) {
       console.error(err);
+       toast.error("Failed to delete template ❌")
       // alert("Failed to delete");
     }
  
@@ -59,6 +61,16 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
  
   const categories = ["All Templates", "Completion", "Internship", "Offer", "Other"];
 
+
+  const filteredCertificates = certificates.filter((cert) => {
+  const matchesFilter =
+    activeFilter === "All Templates" || cert.type === activeFilter;
+
+  const matchesSearch =
+    cert.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+  return matchesFilter && matchesSearch;
+});
 
   return (
     <div className="space-y-8 p-2">
@@ -114,7 +126,9 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
        
 
         {/* Dynamic Mapping */}
-        {certificates.map((certificate) => (
+        {/* {certificates.map((certificate) => ( */}
+      {filteredCertificates.length > 0 ? (
+  filteredCertificates.map((certificate) => (
           <div 
             key={certificate._id} 
             onClick={() => router.push(`/admin/certificates/generator?jobId=${certificate._id}`)}
@@ -132,25 +146,16 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
             <div>  
             
 
-
-
-{/* <div className="w-full h-32 rounded-xl mb-4 overflow-hidden bg-slate-100 flex items-center justify-center">
-  <iframe
-    src={certificate.fileUrl}
-    className="w-full h-full border-none"
-  />
-</div> */}
-
 <div className="w-full h-32 rounded-xl mb-4 overflow-hidden bg-slate-100 relative border">
   <iframe
     src={certificate.fileUrl}
     title="Certificate Preview"
     className="absolute top-0 left-0 border-none origin-top-left"
     style={{
-      width: '400%',    // Iframe ko 4 guna bada rakha taaki content dikhe
-      height: '400%',   // Iframe ko 4 guna bada rakha
-      transform: 'scale(0.25)', // Phir use 1/4th chota kar diya container ke liye
-      pointerEvents: 'none'      // Scroll disable karne ke liye
+      width: '400%',    
+      height: '400%',   
+      transform: 'scale(0.25)', 
+      pointerEvents: 'none'      
     }}
     scrolling="no"
   />
@@ -192,7 +197,19 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
               </button>
             </div>
           </div>
-        ))}
+        )) 
+       ) : (
+    <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+      <FileText size={50} className="text-slate-300 mb-4" />
+      <h2 className="text-lg font-semibold text-slate-600">
+        No template available
+      </h2>
+      <p className="text-sm text-slate-400 mt-2">
+        There are no templates under this filter.
+      </p>
+    </div>
+  )}
+      
       </div>
 
       <CreateCertificate 

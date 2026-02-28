@@ -3,9 +3,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { Certificate } from "@/types/Certificate";
-import { createCertificate } from "@/api/certificate/createCertificate";
-import { getAllCertificates } from "@/api/certificate/getAllCertificate";
-import { deleteCertificate } from "@/api/certificate/deleteCertificate";
+import { createCertificate } from "@/api/index";
+import { getAllCertificates } from "@/api/index";
+import { deleteCertificate } from "@/api/index";
 
 export const useCertificate = () => {
   const queryClient = useQueryClient();

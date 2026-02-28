@@ -3,5 +3,5 @@ import { Certificate, CertificateField } from "@/types/Certificate";
 /* ================= GET ALL CERTIFICATES ================= */
 export const getAllCertificates = async (): Promise<Certificate[]> => {
   const response = await api.get("/api/certificates");
-  return response.data.data;
+  return response.data?.data;
 };

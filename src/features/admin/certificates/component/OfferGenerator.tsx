@@ -9,7 +9,7 @@ import { CheckCircle2, ChevronRight, FileText,X } from "lucide-react";
 import { useGenerateAndSend } from "@/features/admin/certificates/hooks/useGenerateAndSend";
 import { useCertificate } from "@/features/admin/certificates/hooks/useCertificate";
 import { useCertificateById } from "../hooks/useCertificateById";
-
+import { toast } from "react-toastify"
 
 
 
@@ -36,13 +36,9 @@ export default function OfferGenerator() {
   const { handleGenerate, loading } = useGenerateAndSend();
    const [excelFile, setExcelFile] = useState<File | null>(null);
 
+   const [isGenerated, setIsGenerated] = useState(false);
+
    const { data: currentCertificate } = useCertificateById(jobId ?? "");
-
-//    const { certificates } = useCertificate();
-
-// const currentCertificate = certificates.find(
-//   (cert) => cert._id === jobId
-// );
 
   // 🔥 Initialize dynamic fields from backend
 
@@ -133,14 +129,6 @@ useEffect(() => {
           {/* ACTION BUTTONS */}
           <div className="flex flex-col items-center gap-4 pt-8 border-t">
 
-            {/* <button
-              onClick={() => setShowPreview(true)}
-              className="px-10 py-3 bg-blue-600 text-white rounded-xl font-bold text-xs uppercase flex items-center gap-2"
-            >
-              <CheckCircle2 size={16} />
-              Generate Document
-            </button> */}
-
             {/*  for the send pdf on email */}
 
            <div className="flex flex-col items-center gap-4 pt-8 border-t">
@@ -156,7 +144,7 @@ useEffect(() => {
   />
 
   {/* Generate Button */}
-  <button
+  {/* <button
     onClick={async () => {
       if (!excelFile) {
         alert("Please upload Excel file");
@@ -177,9 +165,51 @@ useEffect(() => {
     }}
     disabled={loading}
     className="px-10 py-3 bg-blue-600 text-white rounded-xl"
+    
   >
     {loading ? "Generating..." : "Generate & Send"}
-  </button>
+     
+  </button> */}
+
+  <button
+ onClick={async () => {
+  if (!excelFile) {
+    toast.error("Please upload Excel file ❌");
+    return;
+  }
+
+  if (!currentCertificate?.fileUrl) {
+    toast.error("Template not found ❌");
+    return;
+  }
+
+  try {
+    await handleGenerate(
+      excelFile,
+      currentCertificate.fileUrl
+    );
+
+    toast.success("Certificate generated successfully 🎉");
+
+    setIsGenerated(true); // 👈 button text change karega
+
+  } catch (error) {
+    toast.error("Generation failed ❌");
+  }
+}}
+  disabled={loading || isGenerated}
+  className={`px-10 py-3 rounded-xl text-white transition-all ${
+    isGenerated
+      ? "bg-green-600"
+      : "bg-blue-600 hover:bg-blue-700"
+  }`}
+>
+{isGenerated
+  ? "Generated ✅"
+  : loading
+  ? "Generating..."
+  : "Generate & Send"}
+</button>
 
 </div>
 
