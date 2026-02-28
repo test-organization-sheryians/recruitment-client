@@ -279,7 +279,7 @@ export default function SelectedCandidatesPage() {
                     <div className="flex items-center justify-between mb-4 px-1">
                       <p className="text-sm font-bold text-slate-800">Resume Document</p>
                       {activeCandidate.resumeFile && (
-                        <a href={activeCandidate.resumeFile} download target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-blue-700 shadow-sm active:scale-95">
+                        <a href={activeCandidate.resumeFile} download target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-blue-700 shadow-sm active:scale-95 whitespace-nowrap">
                           <Download className="h-3.5 w-3.5" />
                           <span>Download PDF</span>
                         </a>
@@ -287,13 +287,25 @@ export default function SelectedCandidatesPage() {
                     </div>
 
                     {activeCandidate.resumeFile ? (
-                      <div className="relative w-full rounded-xl border border-slate-200 bg-white overflow-hidden group shadow-md">
+                      <div className="relative w-full max-w-full rounded-xl border border-slate-200 bg-white overflow-hidden group shadow-md ">
                         {/* Aspect ratio fix for all screens - standard A4 */}
-                        <div className="w-full aspect-[1/1.41] md:aspect-[1/1.3] bg-white relative">
+                        <div className="w-full  h-[400px] md:h-[800px] md:aspect-[1/1.3] bg-white overflow-hidden relative "
+                       
+                        >
                           <iframe
                             src={`${activeCandidate.resumeFile}#view=FitH&navpanes=0&toolbar=0`}
-                            className="absolute inset-0 w-full h-full border-none"
-                            style={{ display: 'block', backgroundColor: '#ffffff' }}
+                            className="w-full h-[60vh] min-h-[400px] md:h-[800px] bg-white relative"
+                            style={{
+                              display: 'block',
+                              maxWidth: '100%',
+                              backgroundColor: '#ffffff',
+                              width: '100%',
+            height: '100%',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            border: 'none'
+                            }}
                             title="Resume"
                           />
                         </div>
@@ -333,3 +345,6 @@ function InfoCard({ icon, label, value }: { icon: React.ReactNode; label: string
     </div>
   );
 }
+
+
+
