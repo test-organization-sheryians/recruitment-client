@@ -30,12 +30,15 @@ export default function CreateCertificate({ isOpen, onClose, onSave }: CreateCer
   type: "Completion",
   fileUrl: "",
 };
-  const initialFields = [{ id: "1", title: "", type: "Text Input", placeholder: "" }];
+  const initialFields = [{ id: "", title: "", type: "Text Input", placeholder: "" }];
     const [isRequired, setIsRequired] = useState(true)
 
   // const [formData, setFormData] = useState(initialState);
   const [formData, setFormData] = useState<Certificate>(initialState);
   const [fields, setFields] = useState<Field[]>(initialFields);
+
+   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [isUploading, setIsUploading] = useState(false);
 
     const { mutateAsync: createQuestions } = useCreateJobApplicationQuestions();
@@ -61,7 +64,7 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
   } catch (err) {
     console.error(err);
-    alert("Upload failed");
+    console.log("Upload failed");
   } finally {
     setIsUploading(false);
   }
@@ -114,14 +117,16 @@ const mapInputType = (type: string): InputType => {
 };
 
 const handlePublish = async () => {
-  if (!formData.name) return alert("Enter name");
-  if (!formData.fileUrl.trim()) return alert("Upload file");
+  if (!formData.name) return console.log("Enter name");
+  if (!formData.fileUrl.trim()) return console.log("Upload file");
 
   if (fields.some(field => field.title.trim().length < 5)) {
-    return alert("Each field title must be at least 5 characters");
+    // return alert("Each field title must be at least 5 characters");
+    return console.log("Please Enter minimumm 5 charactor")
   }
 
   try {
+     setIsSubmitting(true);
     const template = await onSave({
       name: formData.name,
       type: formData.type,
@@ -133,6 +138,8 @@ const handlePublish = async () => {
     const templateId =
       template._id;
     //  template.data._id; 
+
+    console.log(templateId)
 
     if (!templateId) {
       throw new Error("Template ID not returned");
@@ -152,13 +159,24 @@ const handlePublish = async () => {
       jobId: templateId,
     questions,
     });
-    // router.push("/certificates")
+    onClose();
+    router.push("/admin/certificates")
 
     // alert("Template and questions created successfully");
     router.refresh();
 
-  } catch (error: any) {
-    console.log("Backend error:", error?.response?.data);
+  // } catch (error: any) {
+  //   console.log("Backend error:", error?.response?.data);
+  // }
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.log("Error message:", error.message);
+       
+  }
+}
+
+  finally {
+    setIsSubmitting(false);
   }
 };
 
@@ -182,7 +200,15 @@ const handlePublish = async () => {
         </div>
 
         {/* Scrollable Form */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+        {/* <div className="flex-1 overflow-y-auto p-8 space-y-8"> */}
+        {/* Scrollable Form */}
+<form
+  onSubmit={(e) => {
+    e.preventDefault();
+    handlePublish();
+  }}
+  className="flex-1 overflow-y-auto p-8 space-y-8"
+>
           
           {/* General Information */}
           <div className="space-y-4">
@@ -294,43 +320,11 @@ const handlePublish = async () => {
               <Plus size={18} /> Add New Field
             </button>
           </div>
-        </div>
+          
+      
+             
 
-        {/* Footer Actions */}
-        {/* <div className="p-6 bg-slate-50/100 ">
-
-           <div className="flex items-center justify-between py-2">
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                    Required
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Applicant must answer this question.
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={isRequired}
-                  onChange={() => setIsRequired(!isRequired)}
-                  className="h-5 w-5 accent-primary flex justify-start"
-                />
-              </div>
-
-
-                <div className="">
-               <button onClick={onClose} className="p-3 text-slate-600 font-bold text-sm hover:bg-white border border-slate-200 rounded-xl transition-all">
-            Discard
-          </button>
-          <button 
-            onClick={handlePublish}
-            className="p-3 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95"
-          >
-            Create & Publish
-          </button>
-        </div> 
-        </div> */}
-
-   {/* Footer Actions */}
+   {/* Footer Actions */} 
 <div className="mt-auto w-full p-6 bg-slate-50 border-t">
 
   {/* Required Section */}
@@ -356,23 +350,34 @@ const handlePublish = async () => {
     
     <button
       onClick={onClose}
-      className="flex-1 py-3 text-slate-600 font-bold text-sm hover:bg-slate-100 border border-slate-300 rounded-xl transition-all"
+      className="flex-1 py-3 text-slate-600 font-bold text-sm hover:bg-slate-100 border border-slate-300 rounded-xl transition-all cursor-pointer"
     >
       Discard
     </button>
 
+
+
+
     <button
-      onClick={handlePublish}
-      className="flex-1 py-3 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 shadow-lg transition-all active:scale-95"
-    >
-      Create & Publish
-    </button>
+  type="submit"
+  disabled={isSubmitting}
+  className="flex-1 py-3 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 shadow-lg transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+>
+  {isSubmitting ? (
+    <>
+      <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+      Processing...
+    </>
+  ) : (
+    "Create & Publish"
+  )}
+</button>
 
   </div>
 
 </div>
 
-
+  </form>
 
 
       </div>

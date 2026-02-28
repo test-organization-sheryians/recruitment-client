@@ -30,17 +30,20 @@ if (!isValidType) {
 }
 
 
-  
-  const fileDetails: FileDetails = {
-    fileName: file.name + Date.now(),
 
 
-// fileName: `${baseName}-${timestamp}.${extension}`,
+const extension = file.name.split(".").pop();
+const baseName = file.name.replace(`.${extension}`, "");
+const timestamp = Date.now();
 
-  
+const fileDetails: FileDetails = {
+  fileName: `${timestamp}-${baseName}.${extension}`,
+  contentType: file.type,
+};
 
-    contentType: file.type,
-  };
+
+
+
 console.log("Preparing to upload file:", fileDetails);
   try {
     const response = await api.post<string>(apiEndpoint, fileDetails, {

@@ -46,7 +46,7 @@ const handleSave = async (newCert: Certificate) => {
 
 const handleDelete = async (e: React.MouseEvent, _id: string) => {
   e.stopPropagation();
-  if (confirm("Are you sure to delete this template?")) {
+  
     try {
       await deleteCertificate(_id);
       // alert("Deleted successfully");
@@ -54,7 +54,7 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
       console.error(err);
       // alert("Failed to delete");
     }
-  }
+ 
 };
  
   const categories = ["All Templates", "Completion", "Internship", "Offer", "Other"];
@@ -83,7 +83,7 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
           </div>
           <button 
             onClick={() => setIsDrawerOpen(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-lg transition-all active:scale-95"
+            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-lg transition-all active:scale-95 cursor-pointer"
           >
             <Plus size={18} />
             Add New Template
@@ -98,7 +98,7 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
             <button 
               key={cat}
               onClick={() => setActiveFilter(cat)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 activeFilter === cat 
                 ? "bg-blue-600 text-white shadow-md shadow-blue-200" 
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
@@ -134,10 +134,25 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
 
 
 
-<div className="w-full h-32 rounded-xl mb-4 overflow-hidden bg-slate-100 flex items-center justify-center">
+{/* <div className="w-full h-32 rounded-xl mb-4 overflow-hidden bg-slate-100 flex items-center justify-center">
   <iframe
     src={certificate.fileUrl}
-    className="w-full h-full object-contain"
+    className="w-full h-full border-none"
+  />
+</div> */}
+
+<div className="w-full h-32 rounded-xl mb-4 overflow-hidden bg-slate-100 relative border">
+  <iframe
+    src={certificate.fileUrl}
+    title="Certificate Preview"
+    className="absolute top-0 left-0 border-none origin-top-left"
+    style={{
+      width: '400%',    // Iframe ko 4 guna bada rakha taaki content dikhe
+      height: '400%',   // Iframe ko 4 guna bada rakha
+      transform: 'scale(0.25)', // Phir use 1/4th chota kar diya container ke liye
+      pointerEvents: 'none'      // Scroll disable karne ke liye
+    }}
+    scrolling="no"
   />
 </div>
 
@@ -150,7 +165,7 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
                 {certificate.name}
               </h3>
               <p className="text-slate-400 text-xs mt-2 line-clamp-2 italic">
-                {/* {certificate.description || "Professional template for organizational use."} */}
+                {"Professional template for organizational use."}
               </p>
             </div>
 

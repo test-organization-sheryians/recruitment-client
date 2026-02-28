@@ -1,5 +1,5 @@
 "use client";
-import Certificate from "@/features/admin/certificates/component/Certificate"; // Path check kar lena sahi ho 
+import Certificate from "@/features/admin/certificates/component/Certificate"; 
 export default function CertificatePage() {
   return (
     <div className="p-6">
