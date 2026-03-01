@@ -142,7 +142,7 @@ export default function PostSettingsPanel({
 
       {/* Status Section */}
       <div>
-        <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+        <h3 className="text-xs font-bold text-slate-600  uppercase tracking-wider mb-2">
           Status
         </h3>
         <select
@@ -151,7 +151,7 @@ export default function PostSettingsPanel({
             setSavedTime(new Date());
             onUpdate({ status: e.target.value as any });
           }}
-          className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm bg-white"
+          className="w-full border cursor-pointer border-slate-300 rounded-lg px-3 py-2.5 text-sm bg-white"
         >
           <option value="draft">Draft</option>
           <option value="published">Published</option>
@@ -179,10 +179,10 @@ export default function PostSettingsPanel({
         </h3>
         <div className="flex gap-2">
           <input
-            value={data.slug}
-            onChange={(e) => onUpdate({ slug: e.target.value })}
+            value={data.slug || ""}
+            onChange={(e) => onUpdate({ slug: formatSlug(e.target.value) })}
             placeholder="my-awesome-post-slug"
-            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm  focus:border-transparent"
+            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-transparent"
           />
           <SparkleButton onClick={generateSlug} className="px-4 py-2 text-sm">
             Generate
@@ -198,7 +198,7 @@ export default function PostSettingsPanel({
         <select
           value={data.category}
           onChange={(e) => onUpdate({ category: e.target.value })}
-          className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          className="w-full border border-slate-300 cursor-pointer rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
           disabled={loadingCategories}
         >
           <option value="">Select a category...</option>
@@ -229,7 +229,7 @@ export default function PostSettingsPanel({
       {isEdit && (
         <button
           onClick={onDeleteBlog}
-          className="w-full py-3 text-sm font-semibold text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition-all flex items-center justify-center gap-2 bg-white"
+          className="w-full py-3 text-sm font-semibold cursor-pointer text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition-all flex items-center justify-center gap-2 bg-white"
         >
           <span>🗑️</span>
           Delete Draft

@@ -1,85 +1,85 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+"use client";
+
+import { useState, useEffect, useRef, useCallback } from "react";
 import api from "@/config/axios";
-import type { BlogPost } from "@/types/blog";
 
-const LIMIT = 10;
-
-export function useBlogsAll() {
-  const [blogs, setBlogs] = useState<BlogPost[]>([]);
+export function useBlogsAll(limit = 10) {
+  const [blogs, setBlogs] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState("");
   const [hasMore, setHasMore] = useState(true);
+
   const isFetchingRef = useRef(false);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    if (isFetchingRef.current || !hasMore) return;
+  // ---------------- Fetch Blogs ----------------
+  const fetchBlogs = useCallback(
+    async (pageNumber: number) => {
+      if (isFetchingRef.current) return;
 
-    const fetchBlogs = async () => {
       try {
         isFetchingRef.current = true;
         setLoading(true);
-        setError(null);
+        setError("");
 
-        const skip = (page - 1) * LIMIT;
+        const skip = (pageNumber - 1) * limit;
 
-        const res = await api.get(`/api/blogs`, {
+        const res = await api.get("/api/blogs/admin", {
           params: {
+            page: pageNumber,
             skip,
-            limit: LIMIT,
-            type: "admin", // ⭐ IMPORTANT
+            limit,
           },
         });
 
-        const newBlogs = res.data?.data?.blogs || [];
+        const newBlogs =
+          res.data?.data?.blogs || res.data?.blogs || res.data?.data || [];
+        const pagination = res.data?.data?.pagination;
 
         setBlogs((prev) => {
-          const blogIds = new Set(prev.map((b: BlogPost) => b._id));
-          const uniqueNewBlogs = newBlogs.filter(
-            (b: BlogPost) => !blogIds.has(b._id),
-          );
-          return [...prev, ...uniqueNewBlogs];
+          const combined = pageNumber === 1 ? newBlogs : [...prev, ...newBlogs];
+
+          // remove duplicates
+          const map = new Map();
+          combined.forEach((b) => b?._id && map.set(b._id, b));
+          return Array.from(map.values());
         });
 
-        if (newBlogs.length < LIMIT) {
-          setHasMore(false);
+        // Use hasNext from pagination if available, otherwise check length
+        if (pagination) {
+          setHasMore(pagination.hasNext ?? false);
+        } else {
+          setHasMore(newBlogs.length === limit);
         }
       } catch (err) {
         console.error(err);
         setError("Failed to load blogs");
+        setHasMore(false);
       } finally {
         setLoading(false);
         isFetchingRef.current = false;
       }
-    };
+    },
+    [limit],
+  );
 
-    fetchBlogs();
-  }, [page, hasMore]);
+  // ---------------- Initial + Pagination ----------------
+  useEffect(() => {
+    fetchBlogs(page);
+  }, [page, fetchBlogs]);
 
+  // ---------------- Load More ----------------
   const loadMore = useCallback(() => {
-    if (isFetchingRef.current || loading || !hasMore) return;
-
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    debounceRef.current = setTimeout(() => {
-      setPage((prev) => prev + 1);
-    }, 200);
+    if (loading || !hasMore || isFetchingRef.current) return;
+    setPage((prev) => prev + 1);
   }, [loading, hasMore]);
-
+  // ---------------- Refetch ----------------
   const refetch = useCallback(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    isFetchingRef.current = false;
     setBlogs([]);
     setPage(1);
     setHasMore(true);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
+    fetchBlogs(1);
+  }, [fetchBlogs]);
 
   return {
     blogs,

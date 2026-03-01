@@ -1,6 +1,6 @@
-export async function getAllBlogs(skip = 0, limit = 10) {
+export async function getAllBlogs(page = 1, limit = 10) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs?skip=${skip}&limit=${limit}&type=admin`,
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blogs/admin?page=${page}&limit=${limit}`,
   );
 
   if (!res.ok) {

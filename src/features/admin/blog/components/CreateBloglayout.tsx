@@ -75,9 +75,10 @@ export default function CreateBlogLayout() {
     setBlogPost((prev: any) => ({ ...prev, ...data }));
   }, []);
 
-  function normalizeCategory(category: any) {
+  function normalizeCategory(category: any): string {
     if (!category) return "";
     if (typeof category === "string") return category;
+    if (category._id) return category._id;
     if (category.value) return category.value;
     return String(category);
   }
@@ -85,8 +86,10 @@ export default function CreateBlogLayout() {
   const buildCreatePayload = (post: any) => ({
     title: post.title,
     subtitle: post.subtitle || "",
-    slug: post.slug,
-    category: [normalizeCategory(post.category)],
+    slug: formatSlug(post.slug || post.title),
+
+    category: normalizeCategory(post.category), // string
+
     technologies: post.technologies || [],
     hero: post.hero,
     content: { blocks: post.content },
@@ -99,9 +102,11 @@ export default function CreateBlogLayout() {
     subtitle: post.subtitle || "",
     hero: post.hero,
     content: { blocks: post.content },
-    category: [normalizeCategory(post.category)],
-    technologies: post.technologies || [],
 
+    // IMPORTANT
+    category: [normalizeCategory(post.category)],
+
+    technologies: post.technologies || [],
     status: post.status,
     isPublished: post.status === "published",
   });
@@ -175,6 +180,15 @@ export default function CreateBlogLayout() {
   const isDraft = blogPost.status === "draft";
   const isPublished = blogPost.status === "published";
   const isArchived = blogPost.status === "archived";
+
+  function formatSlug(text: string) {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, "") // remove special chars
+      .replace(/\s+/g, "-") // spaces → hyphen
+      .replace(/-+/g, "-"); // multiple hyphens
+  }
 
   return (
     <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
