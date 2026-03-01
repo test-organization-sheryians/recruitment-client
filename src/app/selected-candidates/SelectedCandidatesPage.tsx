@@ -308,7 +308,8 @@ const uiCandidates: UIShareCandidate[] = useMemo(() => {
                         {Object.entries(activeCandidate.socialLinks).map(([platform, url]) => {
                           if (!url) return null;
                           const colors: any = { linkedin: 'bg-[#0077b5]', github: 'bg-slate-900', portfolio: 'bg-emerald-600', twitter: 'bg-sky-500' };
-                          const icons: any = { linkedin: <Linkedin className="h-3 w-3 text-white" />, github: <Github className="h-3 w-3 text-white" />, portfolio: <Globe className="h-3 w-3 text-white" />, twitter: <Twitter className="h-3 w-3 text-white" /> };
+                          
+                          const icons: any = { linkedin: <Linkedin className="h-5 w-5  ${brandColors.linkedin} text-white fill-card" />, github: <Github className="h-5 w-5 text-white fill-card ${brandColors.github}" />, portfolio: <Globe className="h-5 w-5 text-white " />, twitter: <Twitter className="h-3 w-3 text-white" /> };
                           return (
                             <a key={platform} href={url.startsWith("http") ? url : `https://${url}`} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-all">
                               <div className={`p-1 rounded ${colors[platform] || 'bg-slate-500'}`}>{icons[platform] || <Globe className="h-3 w-3 text-white" />}</div>
