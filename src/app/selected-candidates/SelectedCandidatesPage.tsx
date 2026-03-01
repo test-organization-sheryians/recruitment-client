@@ -33,6 +33,7 @@ interface BackendCandidate {
     phone?: string;
   };
   user?: {
+    _id?: string;
     firstName?: string;
     lastName?: string;
     email?: string;
@@ -45,13 +46,7 @@ interface ShareCandidatesResponseShape {
   message?: string;
   groupName?: string;
   count?: number;
-  data?: {
-    _id?: string;
-    groupName?: string;
-    selectedUsers?: BackendCandidate[];
-    createdAt?: string;
-    updatedAt?: string;
-  };
+  data?: BackendCandidate[] | any; // Flexibile for both array and object
 }
 
 interface UIShareCandidate {
@@ -93,41 +88,92 @@ export default function SelectedCandidatesPage() {
 
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const uiCandidates: UIShareCandidate[] = useMemo(() => {
-    let rawList: BackendCandidate[] = [];
-    if (response?.data) {
-      if (Array.isArray(response.data)) {
-        rawList = response.data;
-      } else if (response.data.selectedUsers && Array.isArray(response.data.selectedUsers)) {
-        rawList = response.data.selectedUsers;
-      }
+  // const uiCandidates: UIShareCandidate[] = useMemo(() => {
+  //   let rawList: BackendCandidate[] = [];
+    
+  //   // Aggregation pipeline logic: data directly contains the array of profiles
+  //   if (response?.data) {
+  //     if (Array.isArray(response.data)) {
+  //       rawList = response.data;
+  //     } else if (typeof response.data === 'object' && response.data.selectedUsers) {
+  //       rawList = response.data.selectedUsers;
+  //     }
+  //   }
+
+  //   return rawList.map((c: BackendCandidate): UIShareCandidate => {
+  //     // User data aggregation ke baad nested ho sakta hai ya flat
+  //     const userObj = c.user || {};
+  //     const firstName = userObj.firstName || c.firstName || "";
+  //     const lastName = userObj.lastName || c.lastName || "";
+      
+  //     return {
+  //       _id: c._id || Math.random().toString(),
+  //       userId: userObj._id || c._id || "",
+  //       name: `${firstName} ${lastName}`.trim() || "Candidate",
+  //       email: userObj.email || c.email || "N/A",
+  //       availability: c.availability || "Immediate",
+  //       resumeFile: c.resumeFile,
+  //       skills: Array.isArray(c.skills) ? c.skills.map((s) => ({ _id: s._id || "", name: s.name || "" })) : [],
+  //       experiences: Array.isArray(c.experiences) ? c.experiences : [],
+  //       createdAt: c.createdAt,
+  //       socialLinks: {
+  //         linkedin: c.socialLinks?.linkedin || "",
+  //         github: c.socialLinks?.github || "",
+  //         portfolio: c.socialLinks?.portfolio || "",
+  //         twitter: c.socialLinks?.twitter || "",
+  //       },
+  //       phoneNumber: c.contactInfo?.phone || userObj.phoneNumber || "Not Provided",
+  //     };
+  //   });
+  // }, [response]);
+
+// useMemo block ko isse replace karein
+const uiCandidates: UIShareCandidate[] = useMemo(() => {
+  let rawList: BackendCandidate[] = [];
+  
+  // 1. Backend response structure ko safely check karein
+  if (response && response.success && response.data) {
+    if (Array.isArray(response.data)) {
+      rawList = response.data;
+    } else if ((response.data as any).selectedUsers) {
+      rawList = (response.data as any).selectedUsers;
     }
+  }
 
-    return rawList.map((c: BackendCandidate): UIShareCandidate => {
-      const firstName = c.user?.firstName || c.firstName || "";
-      const lastName = c.user?.lastName || c.lastName || "";
-      return {
-        _id: c._id || Math.random().toString(),
-        userId: (c as any).userId || c._id || "",
-        name: `${firstName} ${lastName}`.trim() || "Candidate",
-        email: c.user?.email || c.email || "N/A",
-        availability: c.availability || "Immediate",
-        resumeFile: c.resumeFile,
-        skills: Array.isArray(c.skills) ? c.skills.map((s) => ({ _id: s._id || "", name: s.name || "" })) : [],
-        experiences: Array.isArray(c.experiences) ? c.experiences : [],
-        createdAt: c.createdAt,
-        socialLinks: {
-          linkedin: c.socialLinks?.linkedin || "",
-          github: c.socialLinks?.github || "",
-          portfolio: c.socialLinks?.portfolio || "",
-          twitter: c.socialLinks?.twitter || "",
-        },
-        phoneNumber: c.contactInfo?.phone || c.user?.phoneNumber || "Not Provided",
-      };
-    });
-  }, [response]);
+  // 2. Data mapping with extra safety
+  return rawList.map((c: any): UIShareCandidate => {
+    // Backend aggregation pipeline aksar user ko array mein bhejta hai
+    const userObj = Array.isArray(c.user) ? c.user[0] : (c.user || {});
+    
+    const firstName = userObj?.firstName || c?.firstName || "";
+    const lastName = userObj?.lastName || c?.lastName || "";
+    
+    return {
+      _id: c?._id || Math.random().toString(),
+      userId: userObj?._id || c?.userId || "",
+      name: `${firstName} ${lastName}`.trim() || "Candidate",
+      email: userObj?.email || c?.email || "N/A",
+      availability: c?.availability || "Immediate",
+      resumeFile: c?.resumeFile,
+      skills: Array.isArray(c?.skills) 
+        ? c.skills.map((s: any) => ({ _id: s?._id || "", name: s?.name || "" })) 
+        : [],
+      experiences: Array.isArray(c?.experiences) ? c.experiences : [],
+      createdAt: c?.createdAt,
+      socialLinks: {
+        linkedin: c?.socialLinks?.linkedin || "",
+        github: c?.socialLinks?.github || "" ,
+        portfolio: c?.socialLinks?.portfolio || "",
+        twitter: c?.socialLinks?.twitter || "",
+      },
+      phoneNumber: c?.contactInfo?.phone || userObj?.phoneNumber || "Not Provided",
+    };
+  });
+}, [response]);
 
-  const groupName = response?.groupName || response?.data?.groupName || "Shared Group";
+
+  
+  const groupName = response?.groupName || "Shared Group";
 
   useEffect(() => {
     if (uiCandidates.length > 0 && !activeId) {
@@ -198,7 +244,7 @@ export default function SelectedCandidatesPage() {
           {/* RIGHT DETAILS */}
           <section className="lg:col-span-8 rounded-xl border bg-white shadow-sm overflow-hidden flex flex-col">
             {activeCandidate ? (
-              <div className="p-4 sm:p-8">
+              <div className="p-4 sm:p-8 overflow-y-auto">
                 {/* Profile Header */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 border-b pb-6">
                   <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-xl bg-slate-800 text-xl sm:text-2xl font-bold text-white shadow-md shrink-0">
@@ -274,59 +320,60 @@ export default function SelectedCandidatesPage() {
                     </div>
                   )}
 
-                  {/* ULTIMATE FIXED RESUME SECTION */}
+
+                     {/* ULTIMATE FIXED RESUME SECTION */}
                   <div className="col-span-1 sm:col-span-2 mt-8">
-                    <div className="flex items-center justify-between mb-4 px-1">
-                      <p className="text-sm font-bold text-slate-800">Resume Document</p>
-                      {activeCandidate.resumeFile && (
-                        <a href={activeCandidate.resumeFile} download target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-blue-700 shadow-sm active:scale-95 whitespace-nowrap">
+                     <div className="flex items-center justify-between mb-4 px-1">
+                     <p className="text-sm font-bold text-slate-800">Resume Document</p>
+                       {activeCandidate.resumeFile && (
+                         <a href={activeCandidate.resumeFile} download target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-blue-700 shadow-sm active:scale-95 whitespace-nowrap">
                           <Download className="h-3.5 w-3.5" />
-                          <span>Download PDF</span>
+                           <span>Download PDF</span>
                         </a>
-                      )}
-                    </div>
+                      )}                     </div>
 
                     {activeCandidate.resumeFile ? (
                       <div className="relative w-full max-w-full rounded-xl border border-slate-200 bg-white overflow-hidden group shadow-md ">
-                        {/* Aspect ratio fix for all screens - standard A4 */}
-                        <div className="w-full  h-[400px] md:h-[800px] md:aspect-[1/1.3] bg-white overflow-hidden relative "
+                         {/* Aspect ratio fix for all screens - standard A4 */}
+                         <div className="w-full  h-[400px] md:h-[800px] md:aspect-[1/1.3] bg-white overflow-hidden relative "
                        
                         >
                           <iframe
-                            src={`${activeCandidate.resumeFile}#view=FitH&navpanes=0&toolbar=0`}
+                             src={`${activeCandidate.resumeFile}#view=FitH&navpanes=0&toolbar=0`}
                             className="w-full h-[60vh] min-h-[400px] md:h-[800px] bg-white relative"
                             style={{
                               display: 'block',
                               maxWidth: '100%',
-                              backgroundColor: '#ffffff',
+                               backgroundColor: '#ffffff',
                               width: '100%',
             height: '100%',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            border: 'none'
+             position: 'absolute',
+             top: 0,
+             left: 0,
+             border: 'none',
                             }}
                             title="Resume"
-                          />
+                         />
                         </div>
-                        {/* Overlay to catch accidental touches on mobile */}
+//                         {/* Overlay to catch accidental touches on mobile */}
                         <div className="absolute inset-0 pointer-events-none border-2 border-transparent group-hover:border-blue-200 transition-colors rounded-xl" />
                       </div>
                     ) : (
                       <div className="p-10 text-center border-2 border-dashed rounded-xl text-slate-400 bg-slate-50">
                         <FileText className="h-10 w-10 mx-auto mb-2 opacity-20" />
                         <p className="text-sm font-medium">No resume available</p>
-                      </div>
+                     </div>
                     )}
                   </div>
                 </div>
-              </div>
+             </div>
             ) : (
               <div className="flex h-full min-h-[60vh] flex-col items-center justify-center text-slate-400">
                 <User className="h-12 w-12 mb-2 opacity-10" />
                 <p className="font-medium">Select a candidate to view details</p>
-              </div>
-            )}
+             </div>
+           )}
+                  
           </section>
         </div>
       </div>
@@ -345,6 +392,3 @@ function InfoCard({ icon, label, value }: { icon: React.ReactNode; label: string
     </div>
   );
 }
-
-
-
