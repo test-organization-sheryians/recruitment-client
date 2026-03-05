@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Plus, BookOpen, Pencil, Trash2 } from "lucide-react";
 import { useBlogsAll } from "@/features/admin/blog/hooks/useBlogsAll";
 import { useDeleteBlog } from "@/features/admin/blog/hooks/useDeleteBlog";
@@ -9,6 +10,7 @@ import { Search, X } from "lucide-react";
 import { useSearchBlogBySlug } from "../hooks/useSearchBlogBySlug";
 
 export default function BlogManagement() {
+  const router = useRouter();
   const {
     blogs,
     loading: blogsLoading,
@@ -244,7 +246,8 @@ export default function BlogManagement() {
             {blogList.map((blog) => (
               <div
                 key={blog._id}
-                className="flex items-center justify-between p-4 border border-slate-100 rounded-lg hover:border-slate-300 hover:bg-slate-50 transition-all group"
+                onClick={() => router.push(`/admin/blog/edit/${blog._id}`)}
+                className="flex items-center justify-between p-4 border border-slate-100 rounded-lg hover:border-slate-300 hover:bg-slate-50 transition-all group cursor-pointer"
               >
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-slate-900 truncate">
@@ -294,19 +297,27 @@ export default function BlogManagement() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div
+                  className="flex items-center gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Link
                     href={`/admin/blog/edit/${blog._id}`}
                     className="p-2 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
                   >
                     <Pencil className="w-4 h-4" />
                   </Link>
 
                   <button
                     className="p-2 hover:bg-red-50 rounded-lg text-red-600 transition-colors"
-                    onClick={() =>
-                      blog._id && handleDelete(blog._id, blog.title)
-                    }
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      blog._id && handleDelete(blog._id, blog.title);
+                    }}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

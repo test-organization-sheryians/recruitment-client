@@ -12,6 +12,7 @@ import { useUpdateBlog } from "@/features/admin/blog/hooks/useUpdateBlog";
 import { useDeleteBlog } from "@/features/admin/blog/hooks/useDeleteBlog";
 import { useBlog } from "@/features/admin/blog/hooks/useBlog";
 import Link from "next/link";
+import { ChevronRight, FileText, Plus } from "lucide-react";
 
 const BlogEditor = dynamic(
   () => import("@/features/admin/blog/components/BlogEditor"),
@@ -197,38 +198,43 @@ export default function CreateBlogLayout() {
   return (
     <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
       {/* Header Bar */}
-      <header className="sticky top-0 z-50 backdrop-blur-md px-8 py-3 rounded-lg flex justify-between items-center bg-white/80 shadow-sm">
-        <div className="flex flex-col">
-          <nav className="flex items-center gap-2 text-[11px] font-sm uppercase tracking-wider">
+      <header className="sticky top-0 z-50 backdrop-blur-md px-8 py-4 flex justify-between items-center bg-white/90 shadow-sm border-b border-slate-200">
+        <div className="flex flex-col gap-3">
+          {/* Breadcrumb Navigation */}
+          <nav className="flex items-center gap-1">
             <Link
               href="/admin/blog"
-              className="text-slate-400 hover:text-blue-600 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-slate-100 rounded-md transition-all duration-200"
             >
-              Posts
+              <FileText className="w-4 h-4" />
+              <span>Posts</span>
             </Link>
 
-            <span className="text-slate-300">/</span>
+            <ChevronRight className="w-4 h-4 text-slate-400" />
 
-            <span className="text-slate-600">
-              {isEdit ? "Edit Blog" : "New Editorial"}
+            <span className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-900 bg-slate-100 rounded-md">
+              {isEdit ? "Edit Blog" : "Create New"}
             </span>
           </nav>
-          <h1 className="text-xl font-bold text-slate-900 leading-tight">
+
+          {/* Page Title */}
+          <h1 className="text-2xl font-bold text-slate-900 leading-tight">
             {isEdit ? "Edit Editorial" : "Create New Post"}
           </h1>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {/* Status Badge */}
           <span
-            className={`px-3 py-1 text-xs font-semibold rounded-full ${
+            className={`inline-flex items-center px-4 py-1.5 text-xs font-semibold rounded-full border transition-all ${
               isPublished
-                ? "bg-green-100 text-green-700"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                 : isArchived
-                  ? "bg-slate-200 text-slate-700"
-                  : "bg-yellow-100 text-yellow-700"
+                  ? "bg-slate-100 text-slate-700 border-slate-200"
+                  : "bg-amber-50 text-amber-700 border-amber-200"
             }`}
           >
+            <span className="w-2 h-2 rounded-full mr-2 bg-current" />
             {blogPost.status?.toUpperCase()}
           </span>
 
@@ -237,10 +243,10 @@ export default function CreateBlogLayout() {
             <button
               disabled={isBusy}
               onClick={handleSaveDraft}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+              className={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
                 !isBusy
-                  ? "text-slate-600 hover:bg-slate-100 cursor-pointer"
-                  : "text-slate-300 cursor-not-allowed opacity-50"
+                  ? "text-slate-700 bg-slate-100 hover:bg-slate-200 cursor-pointer border border-slate-200"
+                  : "text-slate-400 bg-slate-50 cursor-not-allowed opacity-50 border border-slate-100"
               }`}
             >
               Save Draft
@@ -252,10 +258,10 @@ export default function CreateBlogLayout() {
             <button
               disabled={isBusy}
               onClick={handlePublish}
-              className={`px-5 py-2 text-sm font-semibold rounded-lg shadow-sm transition ${
+              className={`px-5 py-2 text-sm font-semibold rounded-lg shadow-sm transition-all ${
                 !isBusy
-                  ? "text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
-                  : "bg-slate-200 text-slate-400 cursor-not-allowed opacity-50"
+                  ? "text-white bg-blue-600 hover:bg-blue-700 cursor-pointer border border-blue-600 hover:shadow-md"
+                  : "bg-slate-200 text-slate-400 cursor-not-allowed opacity-50 border border-slate-200"
               }`}
             >
               {isBusy ? "Saving..." : "Update & Publish"}
@@ -267,10 +273,10 @@ export default function CreateBlogLayout() {
             <button
               disabled={isBusy}
               onClick={handleArchive}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+              className={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
                 !isBusy
-                  ? "text-slate-700 hover:bg-slate-100 cursor-pointer"
-                  : "text-slate-400 cursor-not-allowed opacity-50"
+                  ? "text-slate-700 bg-slate-100 hover:bg-slate-200 cursor-pointer border border-slate-200"
+                  : "text-slate-400 bg-slate-50 cursor-not-allowed opacity-50 border border-slate-100"
               }`}
             >
               Archive
