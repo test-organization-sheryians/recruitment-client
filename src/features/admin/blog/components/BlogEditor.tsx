@@ -71,11 +71,12 @@ export default function BlogEditor({
         : [
             {
               type: "paragraph",
-              content: "",
             },
           ],
 
-    placeholder: "Start writing your blog post here...",
+    placeholders: {
+      emptyDocument: "Start writing your blog post here...",
+    },
 
     uploadFile: async (file: File) => {
       try {
@@ -91,10 +92,13 @@ export default function BlogEditor({
     },
   });
 
-  const slashItems = useMemo(
-    () => getDefaultReactSlashMenuItems(editor),
-    [editor],
-  );
+  const slashItems = useMemo(() => {
+    const items = getDefaultReactSlashMenuItems(editor);
+    // Filter out Audio and Video options
+    return items.filter(
+      (item) => item.title !== "Audio" && item.title !== "Video",
+    );
+  }, [editor]);
 
   function filterSuggestionItems(
     items: DefaultReactSuggestionItem[],
