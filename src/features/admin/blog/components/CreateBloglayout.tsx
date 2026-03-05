@@ -264,7 +264,7 @@ export default function CreateBlogLayout() {
                   : "bg-slate-200 text-slate-400 cursor-not-allowed opacity-50 border border-slate-200"
               }`}
             >
-              {isBusy ? "Saving..." : "Update & Publish"}
+              {isBusy ? "Saving..." : "Publish"}
             </button>
           )}
 

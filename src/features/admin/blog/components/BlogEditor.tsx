@@ -70,19 +70,13 @@ export default function BlogEditor({
         ? initialContent
         : [
             {
-              type: "heading",
-              props: { level: 5 },
-              content: "Start writing your blog post here...",
-            },
-            {
-              type: "paragraph",
-              content: "",
-            },
-            {
               type: "paragraph",
               content: "",
             },
           ],
+
+    placeholder: "Start writing your blog post here...",
+
     uploadFile: async (file: File) => {
       try {
         const imageUrl = await uploadFileToS3(file);

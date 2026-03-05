@@ -78,6 +78,11 @@ export default function BlogManagement() {
     [blogList],
   );
 
+  const archivedCount = useMemo(
+    () => blogList.filter((blog) => blog.status === "archived").length,
+    [blogList],
+  );
+
   const totalBlogs = blogList.length;
 
   const handleDelete = async (blogId: string, title: string) => {
@@ -144,10 +149,11 @@ export default function BlogManagement() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard title="Total Blogs" value={totalBlogs} />
         <StatCard title="Published" value={publishedCount} color="green" />
         <StatCard title="Drafts" value={draftCount} color="yellow" />
+        <StatCard title="Archived" value={archivedCount} color="slate" />
       </div>
 
       {/* Search + Filter */}
@@ -393,7 +399,7 @@ function StatCard({
 }: {
   title: string;
   value: number;
-  color?: "blue" | "green" | "yellow";
+  color?: "blue" | "green" | "yellow" | "slate";
 }) {
   return (
     <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
