@@ -29,7 +29,7 @@ export const useCreateShareCandidate = () => {
 
       // Direct share (array)
       if (Array.isArray(payload)) {
-        return createShareCandidate(undefined, payload);
+        return createShareCandidate("", payload);
       }
 
       // Group creation
@@ -48,10 +48,13 @@ export const useCreateShareCandidate = () => {
    GET SHARED CANDIDATES
 ===================================================== */
 
+
+
 export const useShareCandidates = (shareId: string) => {
-  return useQuery<ShareCandidate[]>({
-    queryKey: ["share-candidates", shareId],
-    queryFn: () => getShareCandidate(shareId),
+  return useQuery({
+    queryKey: ['shareCandidates', shareId],
+    queryFn: () => getShareCandidate(shareId), // Ensure this calls the service
     enabled: !!shareId,
+    retry: 1,
   });
 };
