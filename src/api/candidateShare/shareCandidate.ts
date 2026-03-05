@@ -21,34 +21,20 @@ const extractData = <T>(res: BackendResponse<T>): T => {
    CREATE SHARE / GROUP
 ===================================================== */
 
-// export const createShareCandidate = async (
-//   groupName: string ,
-//   users: ShareCandidatePayload[]
-// ): Promise<ShareResponse> => {
-//   const payload =
-//     groupName && groupName.trim().length > 0
-//       ? {
-//           groupName,
-//           users: users.map((u) => u.candidateId),
-//         }
-//       : users.map((u) => u.candidateId);
-
-//   const res = await api.post<ShareResponse>("/api/share", payload);
-
-//   return res.data;
-// };
-
 export const createShareCandidate = async (
-  groupName: string, // isko required rakhein kyunki backend mein validation hai
+  groupName: string | undefined,
   users: ShareCandidatePayload[]
 ): Promise<ShareResponse> => {
-  // Backend strictly expects an object with groupName and users array
-  const payload = {
-    groupName: groupName,
-    users: users.map((u) => u.candidateId),
-  };
+  const payload =
+    groupName && groupName.trim().length > 0
+      ? {
+          groupName,
+          users: users.map((u) => u.candidateId),
+        }
+      : users.map((u) => u.candidateId);
 
   const res = await api.post<ShareResponse>("/api/share", payload);
+
   return res.data;
 };
 
@@ -66,27 +52,19 @@ export const getAllGroups = async (): Promise<Group[]> => {
    GET SINGLE SHARE / GROUP DETAILS
 ===================================================== */
 
+export const getShareCandidate = async (
+  shareId: string
+): Promise<ShareCandidate[]> => {
+  if (!shareId) return [];
 
+  const res = await api.get<BackendResponse<ShareCandidate[]>>(
+    `/api/share/${shareId}`
+  );
 
-export const getShareCandidate = async (shareId: string): Promise<any> => {
-  if (!shareId) return null;
-
-  
-  const res = await api.get(`/api/share/share/${shareId}`);
-  
- 
-  return res.data; 
+  return extractData(res.data) ?? [];
 };
 
 /* =====================================================
-   GET SINGLE GROUP DETAILS (Admin/Edit View)
-===================================================== */
-export const getSingleGroupDetails = async (groupId: string): Promise<any> => {
-  const res = await api.get<BackendResponse<any>>(`/api/share/${groupId}`);
-  return extractData(res.data);
-};
-
-/*=====================================================
    UPDATE GROUP NAME
 ===================================================== */
 
@@ -100,10 +78,6 @@ export const updateGroupName = async (
 
   return res.data;
 };
-
-
-  
-
 
 /* =====================================================
    DELETE GROUP
