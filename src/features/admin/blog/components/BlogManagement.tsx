@@ -162,7 +162,7 @@ export default function BlogManagement() {
             {/* Input */}
             <input
               type="text"
-              placeholder="Search blogs by title, slug or subtitle..."
+              placeholder="Search blogs slug or subtitle..."
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               className="w-full pl-10 pr-10 py-2.5 text-sm

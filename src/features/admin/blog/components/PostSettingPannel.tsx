@@ -9,6 +9,7 @@ import { getCategories } from "@/api/category/getCategories";
 import { getAllSkills } from "@/api/skills/getAllSkills";
 import type { JobCategory } from "@/types/JobCategeory";
 import type { Skill } from "@/types/skilll";
+import toast from "react-hot-toast";
 
 interface PostSettingsPanelProps {
   data: BlogPost;
@@ -102,6 +103,15 @@ export default function PostSettingsPanel({
     }
   }, [data.technologies, allSkills]);
 
+  const formatSlug = (text: string) => {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, "") // remove special chars
+      .replace(/\s+/g, "-") // spaces → hyphen
+      .replace(/-+/g, "-"); // multiple hyphens
+  };
+
   const generateSlug = () => {
     // Use current title if available, fallback to initialTitle
     const titleToUse = data.title || initialTitle || "blog-post";
@@ -113,6 +123,10 @@ export default function PostSettingsPanel({
       "-" +
       Date.now().toString(36);
     onUpdate({ slug });
+  };
+
+  const handleSlugAttemptToChange = () => {
+    toast.error("URL slug can't be changed once Saved");
   };
 
   return (
@@ -175,19 +189,43 @@ export default function PostSettingsPanel({
       {/* URL Slug Section */}
       <div className="space-y-1.5">
         <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-          URL Slug
+          Slug
         </h3>
         <div className="flex gap-2">
           <input
             value={data.slug || ""}
-            onChange={(e) => onUpdate({ slug: formatSlug(e.target.value) })}
+            onChange={(e) => {
+              if (isEdit) {
+                handleSlugAttemptToChange();
+              } else {
+                onUpdate({ slug: formatSlug(e.target.value) });
+              }
+            }}
+            onFocus={() => {
+              if (isEdit) {
+                handleSlugAttemptToChange();
+              }
+            }}
             placeholder="my-awesome-post-slug"
-            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-transparent"
+            disabled={isEdit}
+            className={`flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-transparent ${
+              isEdit
+                ? "bg-slate-100 cursor-not-allowed text-slate-500"
+                : "bg-white cursor-text"
+            }`}
           />
-          <SparkleButton onClick={generateSlug} className="px-4 py-2 text-sm">
+          <SparkleButton
+            onClick={isEdit ? handleSlugAttemptToChange : generateSlug}
+            className="px-4 py-2 text-sm"
+          >
             Generate
           </SparkleButton>
         </div>
+        {isEdit && (
+          <p className="text-xs text-slate-500 italic mt-2">
+            ℹ️ URL slug cannot be changed once the post is saved
+          </p>
+        )}
       </div>
 
       {/* Category Section */}
