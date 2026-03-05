@@ -143,14 +143,18 @@ export default function CreateBlogLayout() {
         toast.success(
           status === "published"
             ? "Blog published successfully!"
-            : "Draft saved!",
+            : status === "archived"
+              ? "Blog archived!"
+              : "Draft saved!",
         );
       } else {
         await createBlog(payload);
         toast.success(
           status === "published"
             ? "Blog published successfully!"
-            : "Draft saved!",
+            : status === "archived"
+              ? "Blog archived!"
+              : "Draft saved!",
         );
       }
 
@@ -168,7 +172,7 @@ export default function CreateBlogLayout() {
 
   const handlePublish = () => savePost("published");
 
-  const handleArchive = () => savePost("archived"); // optional future use
+  const handleArchive = () => savePost("archived");
 
   if (isEdit && blogLoading)
     return (
