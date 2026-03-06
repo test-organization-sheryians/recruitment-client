@@ -7,9 +7,9 @@ import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { CheckCircle2, ChevronRight, FileText,X } from "lucide-react";
 import { useGenerateAndSend } from "@/features/admin/certificates/hooks/useGenerateAndSend";
-import { useCertificate } from "@/features/admin/certificates/hooks/useCertificate";
+
 import { useCertificateById } from "../hooks/useCertificateById";
-import { toast } from "react-toastify"
+import { useToast } from "../../../../components/ui/Toast";
 
 
 
@@ -21,6 +21,7 @@ type Field = {
 };
 
 export default function OfferGenerator() {
+  const{ success, error } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const jobId = searchParams.get("jobId");
@@ -171,7 +172,7 @@ useEffect(() => {
      
   </button> */}
 
-  <button
+  {/* <button
  onClick={async () => {
   if (!excelFile) {
     toast.error("Please upload Excel file ❌");
@@ -209,7 +210,32 @@ useEffect(() => {
   : loading
   ? "Generating..."
   : "Generate & Send"}
-</button>
+</button> */}
+<button
+    onClick={async () => {
+      if (!excelFile) {
+        error("Please upload Excel file ❌");
+        return;
+      }
+      if (!currentCertificate?.fileUrl) {
+        error("Template not found ❌");
+        return;
+      }
+
+      // NO TRY-CATCH HERE! 
+      // Hook ka handleGenerate (mutation) automatic error toast handle karega
+      await handleGenerate({ file: excelFile, templateUrl: currentCertificate.fileUrl });
+      
+      // Agar yahan tak aaya, matlab success!
+      setIsGenerated(true); 
+    }}
+    disabled={loading || isGenerated}
+    className={`px-10 py-3 rounded-xl text-white transition-all ${
+      isGenerated ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"
+    }`}
+  >
+    {isGenerated ? "Generated ✅" : loading ? "Generating..." : "Generate & Send"}
+  </button>
 
 </div>
 

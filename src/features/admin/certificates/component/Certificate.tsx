@@ -7,12 +7,13 @@ import { useCertificate } from "../hooks/useCertificate";
 import CreateCertificate from "./CreateCertificate";  
 import type  { Certificate } from "@/types/Certificate";
 // import { deleteCertificate } from "@/api/certificate/deleteCertificate";
-import { toast } from "react-toastify"
+import { useToast } from "../../../../components/ui/Toast";
 
 
 
 export default function Certificate() {
   const router = useRouter(); 
+const { success, error } = useToast();
   
   const { 
     certificates, 
@@ -25,7 +26,7 @@ export default function Certificate() {
     deleteCertificate 
   } = useCertificate();
   
-  //  console.log(certificates)
+
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -36,7 +37,7 @@ const handleSave = async (newCert: Certificate) => {
     const created = await addCertificate(newCert);
     return created; // 🔥 IMPORTANT
   } catch (err) {
-    console.error(err);
+      error("Failed to create template. Please try again ❌");
     throw err;
   }
 };
@@ -49,12 +50,11 @@ const handleDelete = async (e: React.MouseEvent, _id: string) => {
   
     try {
       await deleteCertificate(_id);
-     toast.success("Template deleted successfully ✅")
+     
+     success("Template deleted successfully ✅");
       // alert("Deleted successfully");
     } catch (err) {
-      console.error(err);
-       toast.error("Failed to delete template ❌")
-      // alert("Failed to delete");
+     error("Failed to delete template ❌");
     }
  
 };
