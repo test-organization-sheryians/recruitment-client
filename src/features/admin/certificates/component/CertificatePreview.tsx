@@ -2,9 +2,17 @@
 
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
+interface CertificateFormData {
+  name?: string;
+  jobTitle?: string;
+  startDate?: string;
+  endDate?: string;
+  probation?: string;
+  description?: string;
+}
 
 interface Props {
-  formData: any;
+  formData: CertificateFormData;
   onClose: () => void;
 }
 

@@ -19,6 +19,11 @@ type Field = {
   inputType: string;
   placeholder: string;
 };
+type CertificateSummary = {
+  totalRows: number;
+  successCount: number;
+  failedCount: number;
+};
 
 export default function OfferGenerator() {
   const{ success, error } = useToast();
@@ -33,7 +38,7 @@ export default function OfferGenerator() {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState(false);
   //  state for show the how manny email send 
-  const [resultData, setResultData] = useState<any>(null);
+  const [resultData, setResultData] = useState<CertificateSummary|null>(null);
 
   //  for the Send and pdf to email 
   const { handleGenerate, loading } = useGenerateAndSend();

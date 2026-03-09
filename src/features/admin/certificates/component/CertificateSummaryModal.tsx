@@ -1,6 +1,16 @@
 "use client";
 
-export default function CertificateSummaryModal({ data, onClose }: any) {
+interface CertificateSummary {
+  totalRows: number;
+  successCount: number;
+  failedCount: number;
+}
+interface Props {
+  data: CertificateSummary | null;
+  onClose: () => void;
+}
+
+export default function CertificateSummaryModal({ data, onClose }: Props) {
 
   if (!data) return null;
 
