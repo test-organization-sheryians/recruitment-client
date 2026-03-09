@@ -10,7 +10,7 @@ import { useGenerateAndSend } from "@/features/admin/certificates/hooks/useGener
 
 import { useCertificateById } from "../hooks/useCertificateById";
 import { useToast } from "../../../../components/ui/Toast";
-
+import CertificateSummaryModal from "@/features/admin/certificates/component/CertificateSummaryModal";
 
 
 type Field = {
@@ -32,6 +32,8 @@ export default function OfferGenerator() {
   // const [formData, setFormData] = useState<Record<string, Field>>({});
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState(false);
+  //  state for show the how manny email send 
+  const [resultData, setResultData] = useState<any>(null);
 
   //  for the Send and pdf to email 
   const { handleGenerate, loading } = useGenerateAndSend();
@@ -145,72 +147,9 @@ useEffect(() => {
   />
 
   {/* Generate Button */}
-  {/* <button
-    onClick={async () => {
-      if (!excelFile) {
-        alert("Please upload Excel file");
-        return;
-      }
+ 
 
-      if (!currentCertificate?.fileUrl) {
-  alert("Template not found");
-  return;
-}
-
-     await handleGenerate(
-  excelFile,
-  currentCertificate?.fileUrl as string
-);
-
-
-    }}
-    disabled={loading}
-    className="px-10 py-3 bg-blue-600 text-white rounded-xl"
-    
-  >
-    {loading ? "Generating..." : "Generate & Send"}
-     
-  </button> */}
-
-  {/* <button
- onClick={async () => {
-  if (!excelFile) {
-    toast.error("Please upload Excel file ❌");
-    return;
-  }
-
-  if (!currentCertificate?.fileUrl) {
-    toast.error("Template not found ❌");
-    return;
-  }
-
-  try {
-    await handleGenerate(
-      excelFile,
-      currentCertificate.fileUrl
-    );
-
-    toast.success("Certificate generated successfully 🎉");
-
-    setIsGenerated(true); // 👈 button text change karega
-
-  } catch (error) {
-    toast.error("Generation failed ❌");
-  }
-}}
-  disabled={loading || isGenerated}
-  className={`px-10 py-3 rounded-xl text-white transition-all ${
-    isGenerated
-      ? "bg-green-600"
-      : "bg-blue-600 hover:bg-blue-700"
-  }`}
->
-{isGenerated
-  ? "Generated ✅"
-  : loading
-  ? "Generating..."
-  : "Generate & Send"}
-</button> */}
+ 
 <button
     onClick={async () => {
       if (!excelFile) {
@@ -224,10 +163,23 @@ useEffect(() => {
 
       // NO TRY-CATCH HERE! 
       // Hook ka handleGenerate (mutation) automatic error toast handle karega
-      await handleGenerate({ file: excelFile, templateUrl: currentCertificate.fileUrl });
+      // await handleGenerate({ file: excelFile, templateUrl: currentCertificate.fileUrl });
       
-      // Agar yahan tak aaya, matlab success!
-      setIsGenerated(true); 
+      // // Agar yahan tak aaya, matlab success!
+      // setIsGenerated(true); 
+
+
+
+      const response = await handleGenerate({
+  file: excelFile,
+  templateUrl: currentCertificate.fileUrl
+});
+
+setIsGenerated(true);
+
+// popup data set
+setResultData(response.data);
+
     }}
     disabled={loading || isGenerated}
     className={`px-10 py-3 rounded-xl text-white transition-all ${
@@ -239,26 +191,7 @@ useEffect(() => {
 
 </div>
 
-            {/* <button
-              onClick={async () => {
-                const element = document.getElementById("preview");
-                if (!element) return;
-
-                const canvas = await html2canvas(element, {
-                  backgroundColor: "#ffffff",
-                  useCORS: true,
-                });
-
-                const imgData = canvas.toDataURL("image/png");
-
-                const pdf = new jsPDF("landscape");
-                pdf.addImage(imgData, "PNG", 10, 10, 270, 180);
-                pdf.save("OfferLetter.pdf");
-              }}
-              className="bg-green-600 text-white px-6 py-2 rounded-lg"
-            >
-              Download PDF
-            </button> */}
+          
 
           </div>
 
@@ -295,6 +228,13 @@ useEffect(() => {
               </div>
             </div>
           )}
+
+          {resultData && (
+  <CertificateSummaryModal
+    data={resultData}
+    onClose={() => setResultData(null)}
+  />
+)}
 
         </div>
       </div>

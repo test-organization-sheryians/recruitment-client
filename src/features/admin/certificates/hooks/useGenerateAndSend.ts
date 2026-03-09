@@ -1,35 +1,4 @@
-// import { useState } from "react";
-// import { generateAndSendCertificates } from "@/api/certificate/genrate-and-send_certificate";
-// import axios from "axios";
 
-// export const useGenerateAndSend = () => {
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
-
-//   const handleGenerate = async (file: File, templateUrl: string) => {
-//     try {
-//       setLoading(true);
-//       setError(null);
-
-//       const response = await generateAndSendCertificates(
-//         file,
-//         templateUrl
-//       );
-
-//       return response;
-//     } catch (err: unknown) {
-//   if (axios.isAxiosError(err)) {
-//     setError(err.response?.data?.message || "API Error");
-//   } else if (err instanceof Error) {
-//     setError(err.message);
-//   } else {
-//     setError("Something went wrong");
-//   }
-//   throw err;
-// }
-//   }
-//   return { handleGenerate, loading, error };
-// }
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { generateAndSendCertificates } from "@/api/certificate/genrate-and-send_certificate";
@@ -43,7 +12,7 @@ export const useGenerateAndSend = () => {
     mutationFn: ({ file, templateUrl }: { file: File; templateUrl: string }) => 
       generateAndSendCertificates(file, templateUrl),
     
-    onSuccess: () => {
+    onSuccess: () => {  
       // ✅ Success message (Clear response)
       success("Certificates generated and sent successfully");
       queryClient.invalidateQueries({ queryKey: ["certificates"] });
