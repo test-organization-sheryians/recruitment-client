@@ -26,22 +26,36 @@ interface Category {
   name: string;
 }
 
-interface JobFormData {
+interface Location {
+  city: string;
+  state: string;
+  pincode: string;
+  country: string
+}
+
+export interface JobFormData {
   _id?: string;
   title: string;
   description: string;
   education: string;
   requiredExperience: string;
-  category: Category;
-  skills: Skill[];
+  category: string;
+  skills: string[];
   expiry: string;
   clientId: string;
+  location: Location; // added Location
+    // ✅ REQUIRED BY BACKEND
+  jobType: string;
+  salary: {
+    min: number;
+    max: number;
+  };
 }
 
 interface JobFormProps {
   mode: "create" | "update";
   initialData?: Partial<JobFormData>;
-  onSubmit: (data: { [key: string]: string | string[] }) => Promise<void>;
+  onSubmit: (data: JobFormData) => Promise<void>;
   loading?: boolean;
 }
 
@@ -51,23 +65,53 @@ export default function JobForm({
   onSubmit,
   loading = false,
 }: JobFormProps) {
+  const safeInitialData = initialData || {};
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [pincodeStatus, setPincodeStatus] = useState<{
+    loading: boolean;
+    message: string;
+    type: "info" | "error" | "";
+  }>({
+    loading: false,
+    message: "",
+    type: "",
+  });
 
   const { data: categories = [] } = useGetJobCategories();
   const { data: skillsResponse = [] } = useGetAllSkills();
 
   const [formData, setFormData] = useState({
-    title: initialData?.title || "",
-    requiredExperience: initialData?.requiredExperience || "",
-    category: (initialData?.category as Category)?._id || "",
-    education: initialData?.education || "",
-    description: initialData?.description || "",
-    skills: initialData?.skills?.map((s: { _id: string }) => s._id) || [],
-    expiry: initialData?.expiry
-      ? new Date(initialData.expiry).toISOString().split("T")[0]
+    title: safeInitialData.title || "",
+    requiredExperience: safeInitialData.requiredExperience || "",
+    category: typeof safeInitialData.category === "string"
+      ? (safeInitialData.category as string)
+      : (safeInitialData.category as unknown as Category)?._id || "",
+    education: safeInitialData.education || "",
+    description: safeInitialData.description || "",
+    location: {
+      city: safeInitialData.location?.city || "",
+      state: safeInitialData.location?.state || "",
+      pincode: safeInitialData.location?.pincode || "",
+      country: safeInitialData.location?.country || "",
+    },       // added Location 
+    skills: Array.isArray(safeInitialData.skills)
+      ? (safeInitialData.skills as (string | Skill)[]).map((s) =>
+        typeof s === "string" ? s : s._id
+      )
+      : [],
+    expiry: safeInitialData.expiry
+      ? new Date(safeInitialData.expiry).toISOString().split("T")[0]
       : "",
-    clientId: initialData?.clientId || "6915b90df6594de75060410b",
+    clientId: safeInitialData.clientId || "6915b90df6594de75060410b",
+     // ✅ ADD ONLY FUNCTIONAL FIELDS (NO UI)
+jobType: safeInitialData.jobType || "Full-Time",
+
+salary: {
+  min: (safeInitialData as any)?.salary?.min || 10000,
+  max: (safeInitialData as any)?.salary?.max || 30000,
+},
   });
 
   useEffect(() => {
@@ -79,8 +123,15 @@ export default function JobForm({
     }
   }, [categories]);
 
-  const handleChange = (e: { target: { name: string; value: string } }) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (
+  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+) => {
+  const { name, value } = e.target
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }))
+}
 
   const handleSkillToggle = (skillId: string) => {
     setFormData((prev) => ({
@@ -91,10 +142,107 @@ export default function JobForm({
     }));
   };
 
+  const handleLocationChange = (key: keyof Location, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        [key]: value,
+      },
+    }));
+  };
+
+  // 🔎 Auto-fill city/state/country based on pincode (India-focused)
+  useEffect(() => {
+    const pincode = formData.location.pincode?.trim();
+
+    // Reset helper if no pincode
+    if (!pincode) {
+      setPincodeStatus({ loading: false, message: "", type: "" });
+      return;
+    }
+
+    // Only trigger for 6-digit numeric Indian pincodes
+    if (pincode.length !== 6 || !/^\d{6}$/.test(pincode)) {
+      setPincodeStatus({
+        loading: false,
+        message: "Please enter a valid 6-digit pincode",
+        type: "error",
+      });
+      return;
+    }
+
+    let cancelled = false;
+    setPincodeStatus({
+      loading: true,
+      message: "Looking up location from pincode...",
+      type: "info",
+    });
+
+    // Small debounce so we don't hit API on every keystroke
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://api.postalpincode.in/pincode/${encodeURIComponent(pincode)}`
+        );
+        const data = await res.json();
+
+        if (cancelled) return;
+
+        if (
+          !Array.isArray(data) ||
+          !data[0] ||
+          data[0].Status !== "Success" ||
+          !Array.isArray(data[0].PostOffice) ||
+          !data[0].PostOffice[0]
+        ) {
+          setPincodeStatus({
+            loading: false,
+            message: "No location found for this pincode",
+            type: "error",
+          });
+          return;
+        }
+
+        const po = data[0].PostOffice[0];
+
+        setFormData((prev) => ({
+          ...prev,
+          location: {
+            ...prev.location,
+            city: po.District || prev.location.city,
+            state: po.State || prev.location.state,
+            country: po.Country || prev.location.country || "India",
+          },
+        }));
+
+        setPincodeStatus({
+          loading: false,
+          message: `Detected ${po.District}, ${po.State}, ${po.Country || "India"}`,
+          type: "info",
+        });
+      } catch (err) {
+        if (cancelled) return;
+        setPincodeStatus({
+          loading: false,
+          message: "Failed to fetch location for this pincode. Please fill manually.",
+          type: "error",
+        });
+      }
+    }, 500);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [formData.location.pincode]);
+
+
   const handleSubmit = async () => {
     setError("");
 
-    // Validate all required fields
+    const isLocationValid = Object.values(formData.location).every(Boolean);
+
     const requiredFields = [
       "title",
       "description",
@@ -103,6 +251,8 @@ export default function JobForm({
       "expiry",
       "category",
       "skills",
+      "jobType",   // ✅
+  "salary",
     ];
 
     const missingFields = requiredFields.filter((field) => {
@@ -110,8 +260,12 @@ export default function JobForm({
       return !value || (Array.isArray(value) && value.length === 0);
     });
 
+    if (!isLocationValid) {
+      setError("Please fill all location fields");
+      return;
+    }
+
     if (missingFields.length > 0) {
-      setError(`Please fill all required fields: ${missingFields.join(", ")}`);
       if (step === 1) {
         const step1Fields = [
           "title",
@@ -120,9 +274,11 @@ export default function JobForm({
           "requiredExperience",
           "expiry",
         ];
+
         const step1Missing = missingFields.filter((field) =>
-          step1Fields.includes(field as string)
+          step1Fields.includes(field)
         );
+
         if (step1Missing.length > 0) {
           setError(
             `Please fill all required fields: ${step1Missing.join(", ")}`
@@ -130,12 +286,33 @@ export default function JobForm({
           return;
         }
       } else {
+        setError(`Please fill all required fields: ${missingFields.join(", ")}`);
         return;
       }
     }
+  if (!formData.salary) {
+  setError("Salary is required");
+  return;
+}
 
-    await onSubmit(formData);
+if (!formData.jobType) {
+  setError("Job type is required");
+  return;
+}
+
+    try {
+      console.log("Submitting Payload:", formData);
+      await onSubmit(formData);
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string
+      };
+      const msg = error.response?.data?.message || error.message || "Update failed";
+      setError(msg);
+    }
   };
+
 
   const getMinDate = () =>
     new Date(Date.now() + 86400000).toISOString().split("T")[0];
@@ -145,13 +322,17 @@ export default function JobForm({
     formData.description &&
     formData.education &&
     formData.expiry &&
-    formData.requiredExperience;
+    formData.requiredExperience &&
+    formData.location.city &&
+    formData.location.state &&
+    formData.location.pincode &&
+    formData.location.country;
 
   return (
     <div className="w-full h-full py-3 rounded-md mb-2">
       <div className="w-full mx-auto">
         {/* Form Card */}
-        <div className="bg-white rounded-3xl shadow-xl p-2 border border-gray-100">
+        <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100 max-h-[85vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {error && (
             <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
               <p className="text-red-700 font-medium">{error}</p>
@@ -226,7 +407,6 @@ export default function JobForm({
                       className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                     />
                   </div>
-
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                       <Clock className="w-4 h-4 text-blue-600" />
@@ -240,6 +420,60 @@ export default function JobForm({
                       className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                     />
                   </div>
+
+                  {/* {/* Location Added */}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                      Location Required *
+                    </label>
+
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      <input
+                        placeholder="City"
+                        value={formData.location.city}
+                        onChange={(e) => handleLocationChange("city", e.target.value)}
+                        className="w-full border-2 border-gray-100 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+
+                      <input
+                        placeholder="State"
+                        value={formData.location.state}
+                        onChange={(e) => handleLocationChange("state", e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+
+                      <input
+                        placeholder="Pincode"
+                        value={formData.location.pincode}
+                        onChange={(e) => handleLocationChange("pincode", e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+
+                      <input
+                        placeholder="Country"
+                        value={formData.location.country}
+                        onChange={(e) => handleLocationChange("country", e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+
+                    {pincodeStatus.message && (
+                      <p
+                        className={`mt-2 text-xs ${
+                          pincodeStatus.type === "error"
+                            ? "text-red-600"
+                            : "text-blue-600"
+                        }`}
+                      >
+                        {pincodeStatus.loading && (
+                          <span className="inline-block w-3 h-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin align-middle" />
+                        )}
+                        {pincodeStatus.message}
+                      </p>
+                    )}
+                  </div>
+
                 </div>
 
                 <div className="flex justify-end pt-4">
@@ -281,32 +515,62 @@ export default function JobForm({
                     Required Skills *
                   </label>
 
-                  <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
-                    {skillsResponse.map((skill: { _id: string; name: string }) => (
-                      <label
-                        key={skill._id}
-                        className="group flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-white transition-all border-2 border-transparent hover:border-blue-200"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.skills.includes(skill._id)}
-                          onChange={() => handleSkillToggle(skill._id)}
-                          className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                        />
-                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                          {skill.name}
-                        </span>
-                      </label>
-                    ))}
+                  {/* 1. Search Bar */}
+                  <input
+                    type="text"
+                    placeholder="Search and add skills (e.g. React, Node...)"
+                    className="w-full border-2 border-gray-100 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    onChange={(e) => setSearchTerm(e.target.value)} // You'll need to add a [searchTerm, setSearchTerm] state
+                  />
+
+                  {/* 2. Search Results */}
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2">
+                    {skillsResponse
+                      .filter(s =>
+                        s.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+                        !formData.skills.includes(s._id)
+                      )
+                      .slice(0, 10)
+                      .map((skill) => (
+                        <button
+                          key={skill._id}
+                          type="button"
+                          onClick={() => {
+                            handleSkillToggle(skill._id);
+                            setSearchTerm("");
+                          }}
+                          className="px-3 py-1 rounded-full text-xs font-medium border bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all"
+                        >
+                          + {skill.name}
+                        </button>
+                      ))}
                   </div>
 
+                  {/* 3. Selected Skills Display (The "Tags" view) */}
                   {formData.skills.length > 0 && (
-                    <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <CheckCircle2 className="w-5 h-5 text-blue-600" />
-                      <p className="text-sm font-semibold text-blue-700">
-                        {formData.skills.length} skill
-                        {formData.skills.length !== 1 ? "s" : ""} selected
-                      </p>
+                    <div className="mt-4">
+                      <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Selected Skills:</p>
+                      <div className="flex flex-wrap gap-2 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
+                        {formData.skills.map((skillId) => {
+                          // ADD THE ARRAY CHECK HERE
+                          const skillName = Array.isArray(skillsResponse)
+                            ? skillsResponse.find(s => s._id === skillId)?.name
+                            : "Loading..."; // Fallback if data isn't an array yet
+
+                          return (
+                            <span key={skillId} className="flex items-center gap-1 bg-white text-blue-700 px-3 py-1 rounded-full text-sm border border-blue-200 shadow-sm">
+                              {skillName}
+                              <button
+                                type="button"
+                                onClick={() => handleSkillToggle(skillId)}
+                                className="hover:text-red-500 font-bold ml-1"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>

@@ -45,7 +45,7 @@ export default function UnderConstruction({
               </Button>
             )}
             <Button
-              onClick={() => window.location.href = '/admin/dashboard'}
+              onClick={() => window.location.href = '/admin'}
               className="bg-[#1270B0] hover:bg-[#0f5a8c]"
             >
               Back to Dashboard

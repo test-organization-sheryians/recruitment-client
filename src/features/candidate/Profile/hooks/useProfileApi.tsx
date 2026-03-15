@@ -29,6 +29,8 @@ export const useCreateProfile = () => {
   });
 };
 
+
+
 // UPDATE
 export const useUpdateProfile1 = () => {
   const queryClient = useQueryClient();
@@ -62,6 +64,20 @@ export const useUpdateAvailability = () => {
       api.updateAvailability(availability),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["candidateProfile"] });
+    },
+  });
+};
+
+// UPDATE USER INFO (firstName, lastName, phoneNumber)
+export const useUpdateMe = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updateMe"],
+    mutationFn: (data: api.UpdateMeInput) => api.updateMe(data),
+    onSuccess: () => {
+      // Invalidate both candidate profile and auth user to sync updates
+      queryClient.invalidateQueries({ queryKey: ["candidateProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
     },
   });
 };
