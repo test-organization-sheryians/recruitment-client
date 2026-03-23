@@ -10,6 +10,7 @@ import {
   Bookmark,
   BookCheck,
   Briefcase,
+  UsersRound,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -17,9 +18,12 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/config/store";
 import React, { useState } from "react";
 import Logout from "@/features/auth/components/Logout";
+import { useRouter } from "next/navigation";
 
 const Navbar = () => {
   const user = useSelector((state: RootState) => state.auth.user);
+
+  const router = useRouter();
 
   const [openMenu, setOpenMenu] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
@@ -28,7 +32,14 @@ const Navbar = () => {
   if (!user) return null;
 
   return (
-    <nav className="w-full border-b bg-white px-6 py-4 flex items-center justify-between relative z-50">
+<nav className="fixed top-0 left-0 w-full z-50
+                bg-white/60 backdrop-blur-md
+                border-b border-gray-400/20
+                px-35 py-2
+                flex items-center justify-between">
+
+
+
       {/* ---------- BACKDROPS ---------- */}
       {(openMenu || openProfile) && (
         <div
@@ -56,14 +67,16 @@ const Navbar = () => {
 
       {/* ---------- DESKTOP NAV ---------- */}
       <div className="hidden md:flex items-center gap-6">
-        {/* Notifications */}
-        {/* <button
-          className="relative p-2 hover:bg-gray-100 rounded-full"
-          onClick={() => setOpenNotif(!openNotif)}
+        {/* ✅ View Groups Button */}
+        <button
+          onClick={() => router.push("/admin/groups")}
+          className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
         >
-          <BellDot size={22} className="text-gray-600" />
-          <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full border border-white" />
-        </button> */}
+          <UsersRound className="h-4 w-4" />
+          <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">
+            View Groups
+          </span>
+        </button>
 
         {/* Profile */}
         <div className="relative">
@@ -105,7 +118,6 @@ const Navbar = () => {
                   <User size={18} /> My Profile
                 </Link>
 
-                {/* ✅ Applied Jobs */}
                 <Link
                   href="/appliedjobs"
                   onClick={() => setOpenProfile(false)}
@@ -181,7 +193,6 @@ const Navbar = () => {
               <ChevronRight size={16} />
             </Link>
 
-            {/* ✅ Applied Jobs */}
             <Link
               href="/appliedjobs"
               onClick={() => setOpenMenu(false)}
@@ -222,20 +233,6 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-
-      {/* ---------- NOTIFICATIONS ---------- */}
-      {/* <div
-        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl border-l z-[999] transition-transform ${
-          openNotif ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        <div className="p-5 border-b flex justify-between">
-          <h2 className="font-semibold">Notifications</h2>
-          <button onClick={() => setOpenNotif(false)}>
-            <X size={22} />
-          </button>
-        </div>
-      </div> */}
     </nav>
   );
 };

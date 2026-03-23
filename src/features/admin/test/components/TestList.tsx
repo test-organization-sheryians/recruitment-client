@@ -4,15 +4,16 @@ import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Clock, GraduationCap, EllipsisVertical, Search } from "lucide-react";
 import Modal from "@/components/ui/Modal"; // Add this import
-
-import {
-  useGetAllTests,
-  usePublishTestResult
-} from "@/features/admin/test/hooks/useTest";
+import {useGetAllTests, usePublishTestResult} from "@/features/admin/test/hooks/useTest";
 
 import EnrolledPopup from "@/features/admin/test/components/EnrolledPopUp";
 import TestDetails from "./TestDetails";
 import CreateTestModal from "./CreateTestForm";
+import { useDeleteTest } from "@/features/admin/test/hooks/useTest";
+
+
+
+
 
 /* ---------- TYPES ---------- */
 interface Test {
@@ -24,6 +25,7 @@ interface Test {
   showResults: boolean;
   skills?: string[];
 }
+
 
 export default function TestList() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,6 +40,8 @@ export default function TestList() {
 
   const { data, isLoading, isError } = useGetAllTests();
   const { mutate, isPending } = usePublishTestResult();
+  const { mutate: deleteTest, isPending: isDeleting } = useDeleteTest();
+
 
 
   const tests: Test[] = useMemo(() => {
@@ -103,6 +107,9 @@ const selectedTest = tests.find(test => test._id === disclosingTestId);
     setPublishStatus('idle');
     setOpenMenu(null);
   };
+
+  
+
 
   return (
     <div className="min-h-screen bg-white relative">
@@ -183,8 +190,38 @@ const selectedTest = tests.find(test => test._id === disclosingTestId);
                         onClick={() => openDiscloseModal(test._id)}
                       >
                         Disclose Result
-                      </button>
+                      </button> 
                     )}
+
+
+
+
+                  {/* <button
+                   className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50"
+                   disabled={isDeleting}
+                   onClick={() => {
+                   deleteTest(test._id);
+                   setOpenMenu(null);
+                   }}
+                  >
+                  {isDeleting ? "Deleting..." : "Delete Test"}
+                 </button> */}
+
+                 <button
+  className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50"
+  disabled={isDeleting}
+  onClick={() => {
+    if (isDeleting) return;   // 👈 VERY IMPORTANT
+    deleteTest(test._id);
+    setOpenMenu(null);
+  }}
+>
+  {isDeleting ? "Deleting..." : "Delete Test"}
+</button>
+
+
+
+
                   </div>
                 )}
               </div>
@@ -308,10 +345,28 @@ const selectedTest = tests.find(test => test._id === disclosingTestId);
               >
                 Disclose Results
               </Button>
+
+
+            
+
+
+             
+
+
             </div>
           )}
         </div>
       </Modal>
     </div>
+    
   );
 }
+
+
+
+
+
+
+
+
+

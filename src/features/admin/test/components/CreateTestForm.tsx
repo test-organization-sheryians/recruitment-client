@@ -85,9 +85,11 @@ export default function CreateTestModal({
     let finalValue: string | number = value;
 
     if (name === "duration") {
+      if (Number(value) < 0) { finalValue = "1"; }
       if (Number(value) > 120) { finalValue = "120"; }
     }
     if (name === "passingScore") {
+      if (Number(value) < 0) finalValue = "1";
       if (Number(value) > 100) finalValue = "100";
     }
     if (name === "questionCount") {
@@ -114,6 +116,11 @@ export default function CreateTestModal({
     });
   };
 
+  const selectedSkillNames = formData.skills
+    .map(id => skillsResponse.find(s => s._id === id)?.name)
+    .filter(Boolean);
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -123,18 +130,23 @@ export default function CreateTestModal({
 
     // Final Validation Alert
     if (durationNum > 120) return error("Duration cannot be more than 120 minutes.");
-    if (scoreNum > 100) return error("Passing score cannot exceed 100%.");
+    if (scoreNum < 1 && scoreNum > 100) return error("Passing score cannot exceed 100%.");
 
     const formatInstruction = formData.questionType === "THEORY"
       ? "GENERATE OPEN-ENDED THEORY QUESTIONS ONLY. DO NOT PROVIDE MULTIPLE CHOICE OPTIONS OR A/B/C/D ANSWERS."
       : "GENERATE MULTIPLE CHOICE QUESTIONS (MCQ) WITH 4 OPTIONS EACH AND ONE CORRECT ANSWER.";
 
-    const enhancedPrompt = `${formData.aiPrompt}
-  
-  STRICT REQUIREMENTS:
-- Format: ${formData.questionType}
+    const enhancedPrompt = `
+${formData.aiPrompt}
+
+STRICT REQUIREMENTS:
 - Question Count: ${formData.questionCount}
-- Instructions: ${formatInstruction}`;
+- Format: ${formData.questionType}
+- Questions MUST be generated ONLY from these skills:
+  ${selectedSkillNames.join(", ")}
+- ${formatInstruction}
+`;
+
 
     const payload: TestFormValues = {
       title: formData.title,
@@ -147,8 +159,12 @@ export default function CreateTestModal({
       showResults: false,
       questionCount: formData.questionCount, // added question no.
       questionType: formData.questionType as "MCQ" | "THEORY", // added Types
-      skills: formData.skills, // Add skills to payload
+      skills: selectedSkillNames as string[], // Add skills to payload
     };
+    if (selectedSkillNames.length === 0) {
+      return error("Please select at least one skill.");
+    }
+
 
     try {
       if (testId) {

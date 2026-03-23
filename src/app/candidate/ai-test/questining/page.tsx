@@ -2,11 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import type * as monaco from "monaco-editor";
 
 // Hooks
+import { useTestInfo } from "@/features/test/hooks/testInfo";
 import { useActiveQuestions } from "@/features/test/hooks/useActivation";
 import { useEvaluateAnswers } from "@/features/AITest/hooks/aiTestApi";
 import { useSubmitResult } from "@/features/test/hooks/useResultTest";
@@ -17,6 +18,7 @@ import { usePreventNavigation } from "@/features/test/hooks/usePreventNavigation
 import { useTestPersistence } from "@/features/test/hooks/useTestPersistence";
 import { useSplitEditor } from "@/features/test/hooks/useSplitEditor";
 import { useAntiCheat } from "@/features/test/hooks/antiCheat";
+import { enableDevToolsGuard, enforceFullScreen } from '@/lib/devtoolsAndScreenGuard'
 
 // Icons
 import { ChevronLeft, ChevronRight, CheckCircle2, Flag, Clock, } from "lucide-react";
@@ -56,6 +58,8 @@ export default function UniversalInterviewPage() {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const attemptId =
     typeof window !== "undefined" ? localStorage.getItem("attemptId") : null;
+  const params = useParams();
+
 
   const { data: attempt } = useQuery({
     queryKey: ["attempt", attemptId],
@@ -73,7 +77,7 @@ export default function UniversalInterviewPage() {
   /* ---------- API MUTATIONS ---------- */
   const evaluateMutation = useEvaluateAnswers();
   const submitMutation = useSubmitResult();
-  const { data: rqQuestions } = useActiveQuestions();
+  const { data: rqQuestions, refetch } = useActiveQuestions();
   const { containerRef, width, startDrag } = useSplitEditor();
 
   const STORAGE_KEY =
@@ -81,7 +85,11 @@ export default function UniversalInterviewPage() {
       ? `testProgress:${localStorage.getItem("testId") ?? "temp"}`
       : "testProgress:temp";
 
-  const {restored,state,persist,} = useTestPersistence<Question, CandidateAnswer>(STORAGE_KEY,INITIAL_STATE);
+  const testId = params?.testId as string;
+
+  const { restored, state, persist, } = useTestPersistence<Question, CandidateAnswer>(STORAGE_KEY, INITIAL_STATE);
+
+
 
   const step = state.step;
   const savedQuestions = state.questions;
@@ -89,17 +97,32 @@ export default function UniversalInterviewPage() {
   const savedSteps = new Set(state.saved);
   const reviewSteps = new Set(state.review);
   const activeQuestion = savedQuestions[step] ?? null;
+  const initializedRef = useRef(false);
+
+  useEffect(() => {
+    const cleanup = enableDevToolsGuard();
+    const fullScreen = enforceFullScreen()
+    return () => {
+      cleanup?.();
+      fullScreen?.();
+    };
+  }, [])
 
   useEffect(() => {
     if (!restored) return;
-    if (state.questions.length > 0) return;
     if (!rqQuestions?.length) return;
+    if (initializedRef.current) return;
+    if (state.questions.length > 0) return; 
+
+    initializedRef.current = true;
 
     persist({
       questions: rqQuestions,
       visited: [0],
+      step: 0,
     });
-  }, [restored, rqQuestions]);
+  }, [restored, rqQuestions, state.questions.length]);
+
 
 
 
@@ -108,45 +131,59 @@ export default function UniversalInterviewPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const secondsLeftRef = useRef(0);
-  useAntiCheat(attemptId, () => setBlocked(true));
+  useAntiCheat(attemptId, () => {
+    setBlocked(true);
+    submitTest()
+  });
   const [testDuration, setTestDuration] = useState(0);
   const finalQuestions = state.questions;
-  const {text,setText,code,setCode,isDirty,} = useAnswers(activeQuestion,step,state.answers);
+  const { text, setText, code, setCode, isDirty, } = useAnswers(activeQuestion, step, state.answers);
   const [showCode, setShowCode] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
 
+
+  const { data: test } = useTestInfo(testId);
   useEffect(() => {
+
     const duration = Number(localStorage.getItem("duration"));
     if (duration > 0) {
       setTestDuration(duration);
-}
+    }
   }, []);
   useEffect(() => {
-    if (attempt?.isDisqualified) {
-      setBlocked(true);
-    }
+    const rawDuration = localStorage.getItem("duration");
+    const storedDuration = Number(rawDuration);
+
+    if (rawDuration && !isNaN(storedDuration) && storedDuration > 0) {
+      setTestDuration(storedDuration);
+    } 
   }, [attempt]);
   /* ---------- TIMER LOGIC ---------- */
   const questions = Array.isArray(finalQuestions) ? finalQuestions : [];
   const isResumeTest = questions.some(q => q.source === "ai");
   const isActiveTest = !isResumeTest;
 
+  const secondsLeft = useTestTimer(
+    testDuration,
+    isActiveTest && !blocked && testDuration > 0,
+    () => submitTest()
+  );
+
   const { submitTest } = useTestSubmission({
     questions: finalQuestions,
     answers: state.answers,
     blocked,
-    secondsLeft: secondsLeftRef.current,
+    secondsLeft: secondsLeft,
     testDuration,
     evaluateMutation,
     submitMutation,
     setIsSubmitting,
   });
 
-  const secondsLeft = useTestTimer(testDuration,isActiveTest && !blocked,
-    () => submitTest()
-  );
+  useEffect(() => {
+    secondsLeftRef.current = secondsLeft;
+  }, [secondsLeft]);
 
-  secondsLeftRef.current = secondsLeft;
   const prevent = (e: React.ClipboardEvent<HTMLTextAreaElement>) => e.preventDefault();
 
   const onFinishClick = () => {
@@ -157,6 +194,7 @@ export default function UniversalInterviewPage() {
   const confirmSubmit = async () => {
     setShowConfirm(false);
     setIsSubmitting(true);
+    localStorage.removeItem("test_deadline_timestamp");
     await submitTest();
   };
 
@@ -167,7 +205,7 @@ export default function UniversalInterviewPage() {
     }
   }, [secondsLeft, isActiveTest, blocked, submitTest]);
 
-  const {tryNavigate,showSaveWarning,pendingNav,clearWarning,confirmAndNavigate,}= usePreventNavigation({
+  const { tryNavigate, showSaveWarning, pendingNav, clearWarning, confirmAndNavigate, } = usePreventNavigation({
     isDirty,
     isReviewed: reviewSteps.has(step),
   });
@@ -233,19 +271,20 @@ export default function UniversalInterviewPage() {
 
   return (
     <div className="min-h-screen flex bg-indigo-50">
-     {showInstructions && (<TestInstructionsModal onClose={() => setShowInstructions(false)} />)}
-      
-      {showSaveWarning && (<SaveWarningModal onStay={clearWarning} onSaveAndNavigate={()=>{
+      {showInstructions && (<TestInstructionsModal onClose={() => setShowInstructions(false)} />)}
+
+      {showSaveWarning && (<SaveWarningModal onStay={clearWarning} onSaveAndNavigate={() => {
         onSave();
-        confirmAndNavigate();}}/>)}
+        confirmAndNavigate();
+      }} />)}
 
       {/* 1. DISQUALIFIED OVERLAY */}
-      {blocked && (<TestTerminatedModal/>)}
+      {blocked && (<TestTerminatedModal />)}
 
       {/* 2. SUBMIT CONFIRM MODAL */}
       {showConfirm && (<SubmitConfirmModal
-    onCancel={() => setShowConfirm(false)}
-    onConfirm={confirmSubmit}/> )}
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={confirmSubmit} />)}
 
       {isSubmitting && (
         <div className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center">
@@ -312,7 +351,7 @@ export default function UniversalInterviewPage() {
             Instructions
           </button>
           {/* TIMER */}
-          {testDuration > 0 && (
+          {/* {testDuration > 0 ? (
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-gray-700" />
               <div className="text-lg font-semibold text-gray-900">
@@ -320,7 +359,18 @@ export default function UniversalInterviewPage() {
                 {String(secondsLeft % 60).padStart(2, "0")}
               </div>
             </div>
+          ) : (
+            <div className="text-xs text-gray-400">Loading Timer...</div>
+          )} */}
+          {secondsLeft > 0 ? (
+            <div className="text-lg font-semibold">
+              {Math.floor(secondsLeft / 60)}:
+              {String(secondsLeft % 60).padStart(2, "0")}
+            </div>
+          ) : (
+            <span className="text-xs text-gray-400">Loading timer…</span>
           )}
+
           <div className="w-[100px]" />
         </div>
 
@@ -330,7 +380,7 @@ export default function UniversalInterviewPage() {
             <div className="text-xs font-semibold text-blue-600 mb-1 uppercase tracking-wide">
               Question {step + 1} of {finalQuestions.length}
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 px-4">
+            <h2 className="text-xl font-semibold text-gray-900 px-4 select-none">
               {activeQuestion?.question}
             </h2>
           </div>
@@ -364,15 +414,15 @@ export default function UniversalInterviewPage() {
               /* ================= MCQ UI ================= */
               <div className="w-full max-w-2xl mx-auto grid gap-4">
                 {activeQuestion.options!.map((opt, i) => (<button key={i} onClick={() => setText(opt)} className={`p-4 rounded-lg border-2 text-left transition-all${text === opt
-                        ? "border-blue-600 bg-blue-50"
-                        : "border-gray-200 hover:border-blue-300"}`}>
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2
-                        className={`w-5 h-5 ${text === opt ? "text-blue-600" : "text-gray-300"
-                          }`} />
-                      <span className="font-medium text-gray-800">{opt}</span>
-                    </div>
-                  </button>
+                  ? "border-blue-600 bg-blue-50"
+                  : "border-gray-200 hover:border-blue-300"}`}>
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2
+                      className={`w-5 h-5 ${text === opt ? "text-blue-600" : "text-gray-300"
+                        }`} />
+                    <span className="font-medium text-gray-800">{opt}</span>
+                  </div>
+                </button>
                 ))}
               </div>
             ) : (
@@ -403,21 +453,55 @@ export default function UniversalInterviewPage() {
                     {/* HEADER */}
                     <div className="flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-[#333]">
                       <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wider"> Code Editor</h3>
-                      <button onClick={() => setShowCode(false)}className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition-colors ">
-                      Hide Code</button>
+                      <button onClick={() => setShowCode(false)} className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition-colors ">
+                        Hide Code</button>
                     </div>
-
                     {/* EDITOR */}
-                    <div className="flex-1">
+                    <div className="flex-1"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => e.preventDefault()}>
                       <Editor
-                        height="100%" defaultLanguage="javascript" value={code} theme="vs-dark" 
-                        onMount={(editor) => {
+                        height="100%" defaultLanguage="javascript" value={code} theme="vs-dark"
+                        onMount={(editor, monaco) => {
                           editorRef.current = editor;
                           editor.focus();
+                          // ----- BLOCK KEYBOARD SHORTCUTS ----- //
+                          const block = () => null;
+                          editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC, block);
+                          editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV, block);
+                          editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyX, block);
+                          editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyA, block);
+                          // ----- DISABLE SELECTION DRAGGING ----- //
+                          editor.updateOptions({
+                            dragAndDrop: false,
+                            selectionClipboard: false,
+                          });
+                          editor.onMouseDown((e) => {
+                            if (e.event.leftButton) {
+                              e.event.preventDefault();
+                              e.event.stopPropagation();
+                            }
+                          });
+                          // ----- BLOCK DOM EVENTS ----- //
+                          const domNode = editor.getDomNode();
+                          if (!domNode) return;
+                          const prevent = (e: Event) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          };
+                          ["copy", "paste", "cut", "dragstart", "drop"].forEach(ev =>
+                            domNode.addEventListener(ev, prevent, true));
+                          editor.onDidDispose(() => {
+                            ["copy", "paste", "cut", "dragstart", "drop"].forEach(ev =>
+                              domNode.removeEventListener(ev, prevent, true));
+                          });
                         }}
                         onChange={(v) => setCode(v ?? "")}
-                        options={{ fontSize: 15, fontFamily: "Fira Code, monospace", lineHeight: 22,
-                          minimap: { enabled: false }, automaticLayout: true, scrollBeyondLastLine: false, smoothScrolling: true, cursorBlinking: "smooth", cursorSmoothCaretAnimation: "on", wordWrap: "on", tabSize: 2, padding: { top: 12, bottom: 12 }, renderLineHighlight: "all", scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8,},}}/>
+                        options={{
+                          dragAndDrop: false,
+                          fontSize: 15, fontFamily: "Fira Code, monospace", lineHeight: 22, contextmenu: false, quickSuggestions: false,
+                          minimap: { enabled: false }, automaticLayout: true, scrollBeyondLastLine: false, smoothScrolling: true, cursorBlinking: "smooth", cursorSmoothCaretAnimation: "on", wordWrap: "on", tabSize: 2, padding: { top: 12, bottom: 12 }, renderLineHighlight: "all", scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8, },
+                        }} />
                     </div>
                   </div>)}
               </div>)}
@@ -437,5 +521,5 @@ export default function UniversalInterviewPage() {
         </div>
       </div>
     </div>
-  );}
-  
+  )
+}

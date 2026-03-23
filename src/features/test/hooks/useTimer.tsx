@@ -1,40 +1,58 @@
 import { useEffect, useRef, useState } from "react";
 
+const TIMER_END_TIME_KEY = "test_deadline_timestamp";
+
 export function useTestTimer(
   durationMinutes: number,
   enabled: boolean,
   onExpire: () => void
 ) {
-  const secondsRef = useRef(durationMinutes * 60);
+  const [secondsLeft, setSecondsLeft] = useState<number>(0);
   const onExpireRef = useRef(onExpire);
-  const [, forceRender] = useState(0);
 
   useEffect(() => {
     onExpireRef.current = onExpire;
   }, [onExpire]);
 
-    useEffect(() => {
-    if (durationMinutes > 0) {
-      secondsRef.current = durationMinutes * 60;
-    }
-  }, [durationMinutes]);
-
-
   useEffect(() => {
-    if (!enabled || secondsRef.current <= 0) return;
+    //Timer must not run unless enabled & duration exists
+    if (!enabled || durationMinutes <= 0) return;
 
-    const id = setInterval(() => {
-      secondsRef.current -= 1;
-      forceRender((n) => n + 1);
+    const deadlineRaw = localStorage.getItem(TIMER_END_TIME_KEY);
 
-      if (secondsRef.current <= 0) {
-        clearInterval(id);
+    //If no deadline exists, DO NOTHING (test not started properly)
+    if (!deadlineRaw) return;
+
+    const deadline = Number(deadlineRaw);
+
+    const getRemainingSeconds = () => {
+      const diff = deadline - Date.now();
+      return Math.max(0, Math.floor(diff / 1000));
+    };
+
+    // ✅ Sync immediately
+    const initialRemaining = getRemainingSeconds();
+    setSecondsLeft(initialRemaining);
+
+    if (initialRemaining <= 0) {
+      localStorage.removeItem(TIMER_END_TIME_KEY);
+      onExpireRef.current();
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      const remaining = getRemainingSeconds();
+      setSecondsLeft(remaining);
+
+      if (remaining <= 0) {
+        clearInterval(intervalId);
+        localStorage.removeItem(TIMER_END_TIME_KEY);
         onExpireRef.current();
       }
     }, 1000);
 
-    return () => clearInterval(id);
-  }, [enabled, durationMinutes]);
+    return () => clearInterval(intervalId);
+  }, [durationMinutes, enabled]);
 
-  return secondsRef.current;
+  return secondsLeft;
 }

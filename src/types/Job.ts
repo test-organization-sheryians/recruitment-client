@@ -1,62 +1,73 @@
-export interface Job {
-  id: string;
-  title: string;
-  location:
-     string
-    | {
-        city: string;
-        state: string;
-        pincode: string;
-        country: string;
-      };
-  salary?: {
-    min: number;
-    max: number;
-    currency: string;
-  };
+// ================= SHARED MODELS =================
 
-  isRemote: boolean;
-  isFeatured: boolean;
-  createdAt: string;
-  updatedAt: string;
-  _id: string;
-  requiredExperience?: string;
-  category?: Category | string;
-  education?: string;
-  description?: string;
-  skills?: (Skill | string)[];
-  department?: string;
-  expiry?: string;
-  applied?: boolean;
-
-  // optional backend fields
-}
-// Category can be an object or string
-interface Category {
-  _id: string;
-  name: string;
-}
-
-// Skill can be an object or string
 export interface Skill {
   _id?: string;
   name: string;
 }
 
-export interface SavedJob {
+export interface Category {
   _id: string;
-  jobId: Job;
+  name: string;
+}
+
+export interface LocationForm {
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
+}
+
+// ================= JOB MODEL =================
+
+export interface Job {
+  _id: string;
+  title: string;
+  requiredExperience: number; // Consistently number for your MERN logic
+  education?: string;
+  description?: string;
+  expiry?: string;
+  category?: Category | string;
+  skills?: (Skill | string)[];
+  location?: LocationForm;
+  department?: string;
+  status?: "ACTIVE" | "DRAFT" | "INTERVIEWING" | "FILLED";
+  applicantsCount?: number;
+  salary: number; // Changed to number for consistency
+  isRemote: boolean;
+  isFeatured: boolean;
+  jobType?: "Remote" | "Hybrid" | "Full-Time" | "Part-Time";
+  client?: {
+    company?: string;
+    _id?: string;
+    [key: string]: unknown;
+  };
+  applied?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// ================= FORM MODELS =================
+
+export interface CreateJobFormValues {
+  title: string;
+  requiredExperience: number;
+  category: string;
+  education: string;
+  description: string;
+  expiry: string;
+  skills: Skill[];
+  location: LocationForm;
+}
+
+export interface CreateJobRequest extends Omit<CreateJobFormValues, 'skills'> {
+  skills: string[]; // Backend expects IDs
+  clientId: string;
 }
 
 export interface JobFormValues {
   title: string;
   description: string;
-  location: {
-    city: string;
-    state: string;
-    pincode: string;
-    country: string;
-  };
+  location: LocationForm;
   salary: number;
   category: string;
   skills: string[];
@@ -64,39 +75,24 @@ export interface JobFormValues {
   isFeatured: boolean;
 }
 
-// export interface PaginatedJobsResponse {
-//    "success": true,
-//   "data": {
-//     "data": [Job],
-//     "pagination": {
-//       "totalRecords": number,
-//       "totalPages": number,
-//       "currentPage": number,
-//       "limit": number
-//     }
-//   }
-// }
+export interface SavedJob {
+  _id: string;
+  jobId: Job;
+}
+
+// ================= SEARCH MODELS =================
 
 export type SearchQuery = {
   q: string;
   location: string;
 };
 
-export interface JobCardJob {
-  _id: string;
-  title: string;
-  category?: Category | string;
-
-  requiredExperience?: string;
-  education?: string;
-
-  department?: string; // ✅ ADD THIS
-
-  skills?: {
-    _id: string;
-    name: string;
-  }[];
-
-  expiry?: string;
-  applied?: boolean;
+export interface SearchParams {
+  q?: string;
+  location?: string;
+  jobType?: string[];
+  experience?: string[];
+  minSalary?: number;
+  maxSalary?: number;
+  category?: string;
 }
