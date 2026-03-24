@@ -1,8 +1,8 @@
-import React from 'react'
-import { TestLayout } from '../TestLayout'
+import React from "react";
+import { TestLayout } from "../TestLayout";
 
 const layout = ({ children }: { children: React.ReactNode }) => {
-  return <TestLayout> {children} </TestLayout>
-}
+  return <TestLayout> {children} </TestLayout>;
+};
 
-export default layout
+export default layout;
