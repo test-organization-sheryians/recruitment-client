@@ -83,3 +83,6 @@ export * from "./jobApplication/scheduleInterview";
  export * from "./categoriess/deleteCategoriess"
 
 
+/* ================= PRODUcts ================= */
+
+export * from "./products/product"
