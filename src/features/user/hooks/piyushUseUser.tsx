@@ -21,7 +21,7 @@ export const usePiyushCreateUser = () => {
       api.piyushCreateUser(data),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["piyush-users"] }); // 🔥 FIX
+      queryClient.invalidateQueries({ queryKey: ["piyush-users"] }); 
     },
 
     retry: 0,
@@ -36,7 +36,7 @@ export const usePiyushDeleteUser = () => {
     mutationFn: (id: string) => api.piyushDeleteUser(id),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["piyush-users"] }); // 🔥 FIX
+      queryClient.invalidateQueries({ queryKey: ["piyush-users"] }); 
     },
 
     retry: 0,
@@ -58,7 +58,7 @@ export const usePiyushUpdateUser = () => {
     }) => api.piyushUpdateUser(id, data),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["piyush-users"] }); // 🔥 FIX
+      queryClient.invalidateQueries({ queryKey: ["piyush-users"] }); 
     },
 
     retry: 0,

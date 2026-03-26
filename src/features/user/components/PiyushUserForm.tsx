@@ -57,38 +57,38 @@ const PiyushUserForm = ({
       <h2>{editUser ? "Update User" : "Create User"}</h2>
 
       <LabelInput
-  label="Name"
-  type="text"   // ✅ add this
-  placeholder="Enter name"
-  {...register("name", { required: true })}
-/>
+        label="Name"
+        type="text" // ✅ add this
+        placeholder="Enter name"
+        {...register("name", { required: true })}
+      />
 
-<LabelInput
-  label="Email"
-  type="email"
-  placeholder="Enter email"
-  {...register("email", { required: true })}
-/>
+      <LabelInput
+        label="Email"
+        type="email"
+        placeholder="Enter email"
+        {...register("email", { required: true })}
+      />
 
-<LabelInput
-  label="Password"
-  type="password"
-  placeholder="Enter password"
-  {...register("password")}
-/>
+      <LabelInput
+        label="Password"
+        type="password"
+        placeholder="Enter password"
+        {...register("password")}
+      />
       <button
-  type="submit"
-  disabled={isPending}
-  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md transition"
->
-  {isPending
-    ? editUser
-      ? "Updating..."
-      : "Creating..."
-    : editUser
-    ? "Update User"
-    : "Create User"}
-</button>
+        type="submit"
+        disabled={isPending}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md transition"
+      >
+        {isPending
+          ? editUser
+            ? "Updating..."
+            : "Creating..."
+          : editUser
+            ? "Update User"
+            : "Create User"}
+      </button>
     </form>
   );
 };
