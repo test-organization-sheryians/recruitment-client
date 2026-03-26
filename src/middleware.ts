@@ -24,13 +24,17 @@ export function middleware(req: NextRequest) {
   const role = req.cookies.get("role");
 
   const publicRoutes = [
-    "/",
-    "/login",
-    "/register",
-    "/forgot-password",
-    "/un-verified",
-    "/unauthorized",
-    "/reset-password"
+    '/',
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/un-verified',
+    '/unauthorized',
+    '/reset-password',
+    '/user-verification',
+    '/selected-candidates',
+    '/api/car/create',
+    '/Cars'
   ];
 
   const isPublic = publicRoutes.some(
