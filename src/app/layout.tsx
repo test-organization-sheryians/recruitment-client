@@ -35,7 +35,7 @@ export default function RootLayout({
           <AuthProvider>
             {children}
             <ToastContainer />
-          </AuthProvider>
+          </AuthProvider>  
         </Wrapper>
       </body>
     </html>

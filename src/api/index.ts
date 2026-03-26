@@ -74,3 +74,11 @@ export * from "./password/resetPassword";
 
 export * from "./jobApplication/scheduleInterview";
 
+// ================================CAR=====================
+
+export * from "./car/createCar";
+export * from "./car/deleteCar";
+export * from "./car/getAllCars";
+export * from "./car/getCar";
+export * from "./car/getCarByTitle";
+export * from "./car/updateCar";

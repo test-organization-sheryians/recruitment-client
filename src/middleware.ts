@@ -33,6 +33,8 @@ export function middleware(req: NextRequest) {
     '/reset-password',
     '/user-verification',
     '/selected-candidates',
+    '/api/car/create',
+    '/Cars'
   ];
 
   const isPublic = publicRoutes.some(

@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import * as api from "@/api"; 
 
 export const useRegister = () => {
+  
   return useMutation({
     mutationKey: ["register"],
     mutationFn: (data: FormData) => api.register(data),
