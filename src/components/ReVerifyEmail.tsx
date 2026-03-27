@@ -49,8 +49,7 @@ export default function ReVerifyEmailPage({ email, isVerified }: Props) {
           };
         };
       }) => {
-        // 1️⃣ Save new access token
-        Cookies.set("access", res.data.token);
+        // backend provides HTTP-only token cookie, no explicit set needed
 
         // 2️⃣ Update redux user
         dispatch(

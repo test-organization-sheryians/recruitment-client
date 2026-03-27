@@ -14,14 +14,7 @@ const apiClient = axios.create({
  */
 apiClient.interceptors.request.use(
   (config) => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
-
-      if (token) {
-        config.headers = config.headers ?? {};
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
+    // Authentication via cookie "token" (withCredentials: true) is now the single source of truth.
     return config;
   },
   (error) => Promise.reject(error)
@@ -33,7 +26,6 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       console.warn("Unauthorized – please login again");
-      localStorage.removeItem("token");
     }
     return Promise.reject(error);
   }

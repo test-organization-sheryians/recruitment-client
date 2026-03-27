@@ -21,7 +21,7 @@ if (!JWT_SECRET) {
 export async function getCurrentUser(): Promise<User | null> {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("access")?.value;
+    const token = cookieStore.get("token")?.value;
     if (!token) {
       console.log("No token found");
       return null;
@@ -36,7 +36,7 @@ export async function getCurrentUser(): Promise<User | null> {
       console.log("Token expired at:", err?.expiredAt);
       try {
         const cookieStore = await cookies();
-        cookieStore.delete("access");
+        cookieStore.delete("token");
       } catch {}
       return null;
     }

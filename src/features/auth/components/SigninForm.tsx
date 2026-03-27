@@ -56,7 +56,6 @@ const SigninForm = () => {
           };
         };
       }) => {
-        Cookies.set("access", res.data.token);
         Cookies.set("role", res.data.user?.role?.name || "user");
 
         dispatch(

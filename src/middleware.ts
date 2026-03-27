@@ -20,7 +20,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = req.cookies.get("access");
+  const token = req.cookies.get("token");
   const role = req.cookies.get("role");
 
   const publicRoutes = [
