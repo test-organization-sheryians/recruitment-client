@@ -6,63 +6,40 @@ import Cookies from "js-cookie";
 import { logout as logoutSlice } from "../slice";
 import { useLogout } from "../hooks/useAuthApi";
 
-
-
 const Logout = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-
   const { mutate: logoutUser, isPending } = useLogout();
 
   const handleLogout = () => {
+    // 1. Call API to invalidate session on server
     logoutUser(undefined, {
-      onSuccess: () => {
-        Cookies.remove("accessToken", { path: '/' });
-        Cookies.remove("refreshToken", { path: '/' });
-        Cookies.remove("role", { path: '/' });
-        Cookies.remove("access", { path: '/' });
+      onSettled: () => {
+        // We use onSettled so cleanup happens even if the API call fails
+        
+        // 2. Clear Redux State
+        dispatch(logoutSlice());
+
+        // 3. Clear Cookies (Use the exact keys from your Axios/Login logic)
+        const cookieOptions = { path: '/' };
+        Cookies.remove("access", cookieOptions);
+        Cookies.remove("role", cookieOptions);
+        // Remove these if your backend uses them, otherwise stick to "access"
+        Cookies.remove("refreshToken", cookieOptions); 
+        Cookies.remove("accessToken", cookieOptions);
+
+        // 4. Clear Storage
         try {
           localStorage.clear();
           sessionStorage.clear();
-        } catch {}
-        dispatch(logoutSlice());
-        router.replace("/login");
-        setTimeout(() => {
-          try {
-            // try to close window in environments that allow it (electron, opened windows)
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            window.open('', '_self');
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            window.close();
-          } catch {}
-          window.location.href = '/login';
-        }, 50);
-      },
-      onError: (error) => {
-        console.error("Logout failed:", error);
-        Cookies.remove("accessToken", { path: '/' });
-        Cookies.remove("refreshToken", { path: '/' });
-        Cookies.remove("role", { path: '/' });
-        Cookies.remove("access", { path: '/' });
-        try {
-          localStorage.clear();
-          sessionStorage.clear();
-        } catch {}
-        dispatch(logoutSlice());
-        router.replace("/login");
-        setTimeout(() => {
-          try {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            window.open('', '_self');
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            window.close();
-          } catch {}
-          window.location.href = '/login';
-        }, 50);
+        } catch (e) {
+          console.error("Storage clear failed", e);
+        }
+
+        // 5. Redirect and Force Refresh
+        // router.replace is good, but window.location.href ensures 
+        // all memory-leaked states are destroyed.
+        window.location.href = "/login";
       },
     });
   };
