@@ -76,7 +76,7 @@ export default function ProductsList() {
                 />
                 <input
                   value={editPrice}
-                  onChange={(e) => setEditPrice(e.target.value)}
+                  onChange={(e) => setEditPrice(String(product.price))}
                   className="border p-1 w-full"
                 />
 
