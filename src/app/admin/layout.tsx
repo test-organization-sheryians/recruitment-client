@@ -1,6 +1,7 @@
 // app/admin/layout.tsx
 import  Sidebar  from "@/features/admin/static_pages/Sidebar";
 import { getCurrentUser } from "@/lib/auth";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
@@ -11,16 +12,21 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
+  const refreshToken =cookies().get("refreshToken");
 
-if (!user) {
+  if (!user && !refreshToken) {
     redirect("/login");
-  } else {
-    if (!user?.isVerified) {
-      console.log("user is" ,user)
-      redirect("/un-verified");
-    }
   }
-    if (user.role !== "admin") redirect("/unauthorized");
+
+  if (user && !user.isVerified) {
+    console.log("user is", user);
+    redirect("/un-verified");
+  }
+
+  if (user && user.role !== "admin") {
+    redirect("/unauthorized");
+  }
+
 
   return (
     <div className="min-h-screen w-full bg-[#F0F2F5] font-[satoshi]">

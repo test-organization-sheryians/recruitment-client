@@ -19,32 +19,77 @@ if (!JWT_SECRET) {
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
-    if (!token) {
-      console.log("No token found");
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+  const refreshToken = cookieStore.get("refreshToken")?.value;
+
+  const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+  const usersMeUrl = `${apiBase}/api/users/me`;
+  const refreshUrl = `${apiBase}/api/auth/refresh`;
+
+  const callMe = async (): Promise<User | null> => {
+    try {
+      const response = await fetch(usersMeUrl, {
+        method: "GET",
+        cache: "no-store",
+        credentials: "include",
+      });
+
+      if (!response.ok) return null;
+
+      const body = (await response.json()) as { data?: User };
+      return body.data ?? null;
+    } catch (error) {
+      console.error("getCurrentUser callMe failed", error);
       return null;
     }
-    const payload = jwt.verify(token, JWT_SECRET, {
-      ignoreExpiration: false,
-    }) as User;
-    return payload;
-  } catch (error: unknown) {
-    const err = error as { name?: string; expiredAt?: Date }; 
-    if (err?.name === "TokenExpiredError") {
-      console.log("Token expired at:", err?.expiredAt);
-      try {
-        const cookieStore = await cookies();
-        cookieStore.delete("token");
-      } catch {}
+  };
+
+  const callRefreshAndMe = async (): Promise<User | null> => {
+    if (!refreshToken) return null;
+
+    try {
+      const refreshResponse = await fetch(refreshUrl, {
+        method: "POST",
+        cache: "no-store",
+        credentials: "include",
+      });
+
+      if (!refreshResponse.ok) return null;
+
+      return await callMe();
+    } catch (error) {
+      console.error("getCurrentUser refresh failed", error);
       return null;
     }
-    if (err?.name === "JsonWebTokenError") {
-      console.log("Invalid token");
+  };
+
+  if (token) {
+    try {
+      const payload = jwt.verify(token, JWT_SECRET, {
+        ignoreExpiration: false,
+      }) as User;
+      return payload;
+    } catch (error: unknown) {
+      const err = error as { name?: string; expiredAt?: Date };
+      if (err?.name === "TokenExpiredError" || err?.name === "JsonWebTokenError") {
+        console.log("Token invalid/expired in getCurrentUser:", err?.name);
+        if (refreshToken) {
+          return await callRefreshAndMe();
+        }
+        return null;
+      }
+      console.error("Unexpected error in getCurrentUser:", error);
       return null;
     }
-    console.error("Unexpected error in getCurrentUser:", error);
-    return null;
   }
+
+  // No token but maybe refresh token available
+  if (refreshToken) {
+    const meResult = await callMe();
+    if (meResult) return meResult;
+    return await callRefreshAndMe();
+  }
+
+  return null;
 }

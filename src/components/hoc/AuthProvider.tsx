@@ -1,6 +1,6 @@
 'use client';
 
-import { setUser } from '@/features/auth/slice';
+import { setUser, setAuthLoading } from '@/features/auth/slice';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import api from '@/config/axios';
@@ -12,26 +12,30 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     let isMounted = true;
 
     const initializeAuth = async () => {
-  try {
-    let res;
+      dispatch(setAuthLoading(true));
 
-    try {
-      // 🔥 force protected API
-      res = await api.get('/api/users/me');
-    } catch {
-      // 401 → refresh
-      await api.post('/api/auth/refresh');
+      try {
+        let res;
 
-      // retry
-      res = await api.get('/api/users/me');
-    }
+        try {
+          res = await api.get('/api/users/me');
+        } catch (error: any) {
+          const status = error?.response?.status;
+          if (status === 401 || status === 403) {
+            await api.post('/api/auth/refresh');
+            res = await api.get('/api/users/me');
+          } else {
+            throw error;
+          }
+        }
 
-    dispatch(setUser(res.data.data ?? null));
-
-  } catch {
-    dispatch(setUser(null));
-  }
-};
+        dispatch(setUser(res.data.data ?? null));
+      } catch {
+        dispatch(setUser(null));
+      } finally {
+        dispatch(setAuthLoading(false));
+      }
+    };
 
     initializeAuth();
 
