@@ -287,7 +287,7 @@ export default function UniversalInterviewPage() {
         onConfirm={confirmSubmit} />)}
 
       {isSubmitting && (
-        <div className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center">
+        <div className="fixed inset-0 z-300 bg-black/90 flex items-center justify-center">
           <div className="spinner">
             <div></div>
             <div></div>
@@ -304,7 +304,7 @@ export default function UniversalInterviewPage() {
         {/* Timeline */}
         <div className="relative flex flex-col items-center gap-5 pb-6 min-w-max">
           {/* Vertical connecting line */}
-          <div className="absolute top-0 bottom-0 w-[2px] bg-indigo-300" />
+          <div className="absolute top-0 bottom-0 w-0.5 bg-indigo-300" />
           {finalQuestions.map((_, i) => {
             const isCurrent = i === step;
             const isReview = reviewSteps.has(i);
@@ -371,7 +371,7 @@ export default function UniversalInterviewPage() {
             <span className="text-xs text-gray-400">Loading timer…</span>
           )}
 
-          <div className="w-[100px]" />
+          <div className="w-25" />
         </div>
 
         {/* ===== QUESTION HEADER ===== */}

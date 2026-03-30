@@ -134,7 +134,7 @@ export default function StartTestPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 bg-white rounded-3xl shadow-lg border overflow-hidden">
         {/* ================= LEFT ================= */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-10">
+        <div className="bg-linear-to-br from-blue-50 to-indigo-50 p-10">
           <div className="flex items-center gap-3 mb-4">
             <span className="px-4 py-1.5 bg-white rounded-full text-xs font-semibold text-blue-700">
               {test.category}
