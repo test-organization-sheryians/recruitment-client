@@ -1,11 +1,12 @@
 "use client";
-import React from "react";
+import { useFetchSingleProduct } from "../hooks/useFetchSingleProduct";
 
 const ViewProduct = ({ id }: any) => {
- console.log(id);
- 
+  const { data, isLoading, error } = useFetchSingleProduct(id);
+    if(isLoading)return <h1>loading...</h1>
+    
   const handleEdit = () => {
-    console.log("Edit clicked");
+   
   };
 
   const handleDelete = () => {
@@ -18,17 +19,17 @@ const ViewProduct = ({ id }: any) => {
         
         {/* Title */}
         <h1 className="text-2xl font-bold mb-4">
-          {id?.title}
+          {data?.data.product?.name}
         </h1>
 
         {/* Description */}
         <p className="text-gray-600 mb-4">
-          {id?.description}
+          {data?.data.product?.seller}
         </p>
 
         {/* Price */}
         <p className="text-xl font-semibold text-green-600 mb-6">
-          ₹{id?.price}
+          ₹{data?.data.product?.price}
         </p>
 
         {/* Buttons */}
