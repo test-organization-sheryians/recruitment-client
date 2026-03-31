@@ -87,4 +87,8 @@ export * from "./jobApplication/scheduleInterview";
 
  /* ================= PRODUCTS ================= */
 
- export * from "./products/fetchedProducts"
+ export * from "./products/createProduct";
+ export * from "./products/fetchAllProducts";
+ export * from "./products/fetchProductById";
+ export * from "./products/updateProduct";
+ export * from "./products/deleteProduct"

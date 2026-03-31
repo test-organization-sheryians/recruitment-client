@@ -97,7 +97,7 @@ const SignupForm = () => {
   return (
     <div className="w-full min-h-full bg-white rounded-2xl font-[satoshi] md:py-4 py-3 md:px-[4%] px-[3%] flex flex-col justify-center">
       <h1
-  className="
+        className="
     font-bold
     text-center
     text-gray-800
@@ -105,9 +105,9 @@ const SignupForm = () => {
     mb-2 xs:mb-3 sm:mb-4 md:mb-5
     text-[clamp(1.7rem,2vw,2rem)]
   "
->
-  Sign-up Account
-</h1>
+      >
+        Sign-up Account
+      </h1>
 
 
       <form className="mt-1 space-y-2 " onSubmit={handleSubmit(onSubmit)}>
@@ -146,28 +146,27 @@ const SignupForm = () => {
         />
 
 
-<div className="relative">
-  <LabelInput
-    label="Password"
-    placeholder="8+ characters"
-    type={showPassword && passwordValue ? "text" : "password"}
-    {...register("password", { required: true })}
-  />
+        <div className="relative">
+          <LabelInput
+            label="Password"
+            placeholder="8+ characters"
+            type={showPassword && passwordValue ? "text" : "password"}
+            {...register("password", { required: true })}
+          />
 
-  <button
-    type="button"
-    disabled={!passwordValue}
-    onClick={() => setShowPassword((p) => !p)}
-    className={`absolute right-3 top-[69%] -translate-y-1/2
-      ${
-        passwordValue
-          ? "text-gray-500 hover:text-gray-700"
-          : "text-gray-300 cursor-not-allowed"
-      }`}
-  >
-    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-  </button>
-</div>
+          <button
+            type="button"
+            disabled={!passwordValue}
+            onClick={() => setShowPassword((p) => !p)}
+            className={`absolute right-3 top-[69%] -translate-y-1/2
+      ${passwordValue
+                ? "text-gray-500 hover:text-gray-700"
+                : "text-gray-300 cursor-not-allowed"
+              }`}
+          >
+            {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+          </button>
+        </div>
 
 
 
@@ -182,8 +181,8 @@ const SignupForm = () => {
             Account created! Redirecting...
           </div>
         )}
-        
-        
+
+
 
         <button
           type="submit"
@@ -213,8 +212,8 @@ const SignupForm = () => {
           )}
         </button>
 
- {/* commented google signup */}
- 
+        {/* commented google signup */}
+
         {/* <div className="flex items-center justify-center my-2">
           <span className="flex-1 border-t border-gray-300" />
           <span className="mx-4 text-gray-400 text-xs font-medium">OR</span>
@@ -245,10 +244,10 @@ const SignupForm = () => {
 
       <p className="text-center text-gray-600 text-sm mt-3 mb-2">
         Already a user?{" "}
-        <a 
-           href="/login" 
-           className="text-[#4C62ED] underline font-medium"
-           >
+        <a
+          href="/login"
+          className="text-[#4C62ED] underline font-medium"
+        >
           Sign In
         </a>
       </p>
