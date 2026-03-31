@@ -1,21 +1,18 @@
+import api from "@/config/axios";
 import axios from "axios";
 
-interface Rating {
-  rate: Number;
-  count: Number;
-}
-
 export interface Products {
-  id: Number;
+  _id: string;
   title: string;
-  price: number;
+  price: {
+    amount: number;
+    currency: String;
+  };
   description: string;
-  category: string;
   image: string;
-  rating: Rating;
 }
 
 export const getProducts = async (): Promise<Products[]> => {
-  const response = await axios.get("https://fakestoreapi.com/products");
-  return response.data;
+  const response = await api.get("api/products");
+  return response.data.data.products;
 };
