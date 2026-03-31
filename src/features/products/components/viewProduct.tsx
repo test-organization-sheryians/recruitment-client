@@ -19,7 +19,7 @@ const ViewProduct = ({ id }: any) => {
         
         {/* Title */}
         <h1 className="text-2xl font-bold mb-4">
-          {data?.data.product?.name}
+          {data?.data.product?.title}
         </h1>
 
         {/* Description */}

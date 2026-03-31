@@ -2,15 +2,13 @@
 import { fetchProduct } from "../hooks/fetchproduct";
 import { useRouter } from "next/navigation";
 
-const FetchProducts = () => {
+const FetchProducts = () => {  
   const { data, isLoading, error } = fetchProduct();
   const router = useRouter(); // ✅ ALWAYS TOP
-
-  if (isLoading) return <p>Loading...</p>;
-  if (error) return <p>Something went wrong</p>;
-
+  if(isLoading)return <p>loading...</p>
   return (
     <div className="flex flex-wrap gap-6 p-6">
+     
       {data?.products.map((e: any) => (
         <div
           key={e._id}
