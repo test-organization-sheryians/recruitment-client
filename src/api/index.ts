@@ -85,4 +85,4 @@ export * from "./jobApplication/scheduleInterview";
 
 /* ================= PRODUcts ================= */
 
-export * from "./products/product"
+export * from "./products/fetchProduct"
