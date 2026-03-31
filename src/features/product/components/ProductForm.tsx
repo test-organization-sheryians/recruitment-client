@@ -2,111 +2,126 @@
 
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { useCreateProduct } from "../hooks/useProductApi";
 import toast from "react-hot-toast";
 import axios from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 
 export type ProductFormData = {
     title: string;
     description?: string;
     price: number;
-    category: string
+    category: string;
 };
 
 const CreateProductForm = () => {
     const router = useRouter();
+    const queryClient = useQueryClient();
 
-    const { register, handleSubmit, watch, reset } = useForm<ProductFormData>();
+    const { register, handleSubmit, reset } =
+        useForm<ProductFormData>();
 
-    //   const images = watch("images");
-
-    const { mutate: createProduct, error, isPending } = useCreateProduct();
+    const { mutate: createProduct, isPending } =
+        useCreateProduct();
 
     const onSubmit = async (data: ProductFormData) => {
         const formData = new FormData();
+
         formData.append("title", data.title);
-        if (data.description) {
+        if (data.description)
             formData.append("description", data.description);
-        }
 
         formData.append("price", String(data.price));
         formData.append("category", data.category);
 
         createProduct(formData, {
             onSuccess: (res) => {
-                console.log(res)
                 toast.success(res.msg);
-                reset()
+
+                queryClient.invalidateQueries({ queryKey: ["allProducts"] })
+                reset();
+                router.push("/products");
             },
             onError: (err) => {
                 if (axios.isAxiosError(err)) {
-                    toast.error(err.response?.data.msg)
+                    toast.error(err.response?.data.msg);
                 }
-            }
-        })
-        router.push("/products");
+            },
+        });
     };
 
     return (
-        <div className="w-full bg-white shadow-md rounded-xl p-4">
-            <h1 className="text-xl font-bold mb-4 text-center">
-                Create Product
-            </h1>
+        <div className="w-full max-w-lg bg-white rounded-2xl shadow-lg border p-8">
+            <div className="mb-6 text-center">
+                <h1 className="text-2xl font-bold text-gray-800">
+                    Create Product
+                </h1>
+                <p className="text-sm text-gray-500">
+                    Add a new product to your store
+                </p>
+            </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-                <input
-                    type="text"
-                    placeholder="Product name"
-                    {...register("title", { required: true })}
-                    className="w-full border px-3 py-2 rounded"
-                />
+            <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="space-y-5"
+            >
+                <div>
+                    <label className="text-sm font-medium text-gray-700">
+                        Product Name
+                    </label>
+                    <input
+                        {...register("title", { required: true })}
+                        placeholder="iPhone 15"
+                        className="mt-1 w-full rounded-lg border px-3 py-2 outline-none
+            focus:ring-2 focus:ring-black focus:border-transparent"
+                    />
+                </div>
 
-                <textarea
-                    placeholder="Product description"
-                    {...register("description")}
-                    className="w-full border px-3 py-2 rounded"
-                />
+                <div>
+                    <label className="text-sm font-medium text-gray-700">
+                        Description
+                    </label>
+                    <textarea
+                        rows={3}
+                        {...register("description")}
+                        placeholder="Product details..."
+                        className="mt-1 w-full rounded-lg border px-3 py-2 outline-none
+            focus:ring-2 focus:ring-black focus:border-transparent"
+                    />
+                </div>
 
-                <div className="flex gap-2">
+                <div>
+                    <label className="text-sm font-medium text-gray-700">
+                        Price
+                    </label>
                     <input
                         type="number"
-                        placeholder="Amount"
                         {...register("price", { required: true })}
-                        className="w-full border px-3 py-2 rounded"
+                        placeholder="999"
+                        className="mt-1 w-full rounded-lg border px-3 py-2 outline-none
+            focus:ring-2 focus:ring-black focus:border-transparent"
                     />
                 </div>
 
-                <div className="flex gap-2">
+                <div>
+                    <label className="text-sm font-medium text-gray-700">
+                        Category
+                    </label>
                     <input
-                        type="text"
-                        placeholder="Category"
                         {...register("category", { required: true })}
-                        className="w-full border px-3 py-2 rounded"
+                        placeholder="Electronics"
+                        className="mt-1 w-full rounded-lg border px-3 py-2 outline-none
+            focus:ring-2 focus:ring-black focus:border-transparent"
                     />
                 </div>
-
-                {/* Images
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          {...register("images")}
-          className="w-full border px-3 py-2 rounded"
-        />
-
-        {images?.length > 0 && (
-          <p className="text-sm text-gray-500">
-            {images.length} file(s) selected
-          </p>
-        )} */}
 
                 <button
                     disabled={isPending}
                     type="submit"
-                    className="w-full bg-black text-white py-2 rounded"
+                    className="w-full bg-black text-white py-3 rounded-lg font-medium
+          hover:bg-gray-800 transition disabled:opacity-50"
                 >
-                    Create Product
+                    {isPending ? "Creating..." : "Create Product"}
                 </button>
             </form>
         </div>

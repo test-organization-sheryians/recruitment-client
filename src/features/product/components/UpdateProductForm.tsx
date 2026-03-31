@@ -1,23 +1,29 @@
-import React, { useEffect } from 'react'
-import { useForm } from 'react-hook-form';
-import { ProductFormData } from './ProductForm';
-import { useUpdateProduct } from '../hooks/useProductApi';
-import toast from 'react-hot-toast';
-import axios from 'axios';
-import { useRouter } from 'next/navigation';
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { ProductFormData } from "./ProductForm";
+import { useUpdateProduct } from "../hooks/useProductApi";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 
-export interface updateData {
-    data: ProductFormData,
-    id: string
-}
+export interface updateData { data: ProductFormData, id: string }
 
-const UpdateProductForm = ({ form, productId }: { form: any, productId: string }) => {
+const UpdateProductForm = ({
+    form,
+    productId,
+}: {
+    form: any;
+    productId: string;
+}) => {
     const router = useRouter();
     const queryClient = useQueryClient();
-    const { register, handleSubmit, reset } = useForm<ProductFormData>();
 
-    const { mutate: productUpdate, error, isPending } = useUpdateProduct();
+    const { register, handleSubmit, reset } =
+        useForm<ProductFormData>();
+
+    const { mutate: productUpdate, isPending } =
+        useUpdateProduct();
 
     useEffect(() => {
         if (form) {
@@ -25,73 +31,92 @@ const UpdateProductForm = ({ form, productId }: { form: any, productId: string }
                 title: form.title,
                 description: form.description,
                 price: form.price,
-                category: form.category
+                category: form.category,
             });
         }
     }, [form, reset]);
 
-    const onSubmit = async (data: ProductFormData) => {
-        productUpdate({ data, id: productId }, {
-            onSuccess: (res) => {
-                toast.success(res.msg);
+    const onSubmit = (data: ProductFormData) => {
+        productUpdate(
+            { data, id: productId },
+            {
+                onSuccess: (res) => {
+                    toast.success(res.msg);
 
-                queryClient.invalidateQueries({ queryKey: ["allProducts"] });
-                queryClient.invalidateQueries({ queryKey: ["product", productId] })
-                router.push("/products");
-                reset()
-            },
+                    queryClient.invalidateQueries({
+                        queryKey: ["allProducts"],
+                    });
 
-            onError: (err) => {
-                if (axios.isAxiosError(err)) {
-                    toast.error(err.response?.data.msg)
-                }
+                    queryClient.invalidateQueries({
+                        queryKey: ["product", productId],
+                    });
+
+                    router.push("/products");
+                },
+                onError: (err) => {
+                    if (axios.isAxiosError(err)) {
+                        toast.error(err.response?.data.msg);
+                    }
+                },
             }
-        })
-    }
-
+        );
+    };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-            <input
-                type="text"
-                placeholder="Product name"
-                {...register("title", { required: true })}
-                className="w-full border px-3 py-2 rounded"
-            />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <h2 className="text-xl font-semibold mb-2">
+                Update Product
+            </h2>
 
-            <textarea
-                placeholder="Product description"
-                {...register("description")}
-                className="w-full border px-3 py-2 rounded"
-            />
-
-            <div className="flex gap-2">
+            <div>
+                <label className="text-sm font-medium">Title</label>
                 <input
-                    type="number"
-                    placeholder="Amount"
-                    {...register("price", { required: true })}
-                    className="w-full border px-3 py-2 rounded"
+                    {...register("title", { required: true })}
+                    className="mt-1 w-full border rounded-lg px-3 py-2
+          focus:ring-2 focus:ring-black outline-none"
                 />
             </div>
 
-            <div className="flex gap-2">
+            <div>
+                <label className="text-sm font-medium">
+                    Description
+                </label>
+                <textarea
+                    rows={3}
+                    {...register("description")}
+                    className="mt-1 w-full border rounded-lg px-3 py-2
+          focus:ring-2 focus:ring-black outline-none"
+                />
+            </div>
+
+            <div>
+                <label className="text-sm font-medium">Price</label>
                 <input
-                    type="text"
-                    placeholder="Category"
+                    type="number"
+                    {...register("price", { required: true })}
+                    className="mt-1 w-full border rounded-lg px-3 py-2
+          focus:ring-2 focus:ring-black outline-none"
+                />
+            </div>
+
+            <div>
+                <label className="text-sm font-medium">Category</label>
+                <input
                     {...register("category", { required: true })}
-                    className="w-full border px-3 py-2 rounded"
+                    className="mt-1 w-full border rounded-lg px-3 py-2
+          focus:ring-2 focus:ring-black outline-none"
                 />
             </div>
 
             <button
                 disabled={isPending}
-                type="submit"
-                className="w-full bg-black text-white py-2 rounded"
+                className="w-full bg-black text-white py-3 rounded-lg
+        hover:bg-gray-800 transition disabled:opacity-50"
             >
-                Save
+                {isPending ? "Saving..." : "Save Changes"}
             </button>
         </form>
-    )
-}
+    );
+};
 
-export default UpdateProductForm
+export default UpdateProductForm;
