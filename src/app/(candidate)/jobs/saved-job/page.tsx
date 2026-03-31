@@ -83,6 +83,7 @@ export default function SavedJobsPage() {
             return (
               <div
                 key={_id}
+                 onClick={() => router.push(`/job-details?id=${jobId._id}`)}
                 className="rounded-xl border bg-white p-5 transition hover:shadow"
                 onClick={() => jobId?._id && router.push(`/jobs/${jobId._id}`)}
 
