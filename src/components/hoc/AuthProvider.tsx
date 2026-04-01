@@ -1,22 +1,40 @@
-'use client';
+"use client";
 
-import { setUser } from '@/features/auth/slice';
-import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useEffect } from "react";
+import { useAppDispatch } from "@/redux/hooks";
+import { setUser, setLoading } from "@/redux/slices/authSlice";
 
-export default function AuthProvider({ children }: { children: React.ReactNode }) {
-  const dispatch = useDispatch();
+export default function AuthProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    fetch('/api/auth/me', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => {
-        console.log(data , "this is from the authProvider")
-        dispatch(setUser(data.user || null));
-      })
-      .catch(() => {
-        dispatch(setUser(null));
-      });
+    const fetchUser = async () => {
+      try {
+        dispatch(setLoading(true));
+
+        const res = await fetch("http://localhost:9000/api/auth/me", {
+          credentials: "include", 
+        });
+
+        if (!res.ok) {
+          throw new Error("Not authenticated");
+        }
+
+        const data = await res.json();
+
+        dispatch(setUser(data.user)); 
+      } catch (error) {
+        dispatch(setUser(null)); 
+      } finally {
+        dispatch(setLoading(false));
+      }
+    };
+
+    fetchUser();
   }, [dispatch]);
 
   return <>{children}</>;

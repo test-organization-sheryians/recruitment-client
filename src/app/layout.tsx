@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+
 import Wrapper from "@/components/hoc/Wrapper";
 import AuthProvider from "@/components/hoc/AuthProvider";
+import ReduxProvider from "@/redux/provider";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,7 +12,7 @@ import "react-toastify/dist/ReactToastify.css";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-  display: 'swap',
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -25,19 +27,23 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
-        
-        <Wrapper>
-          <AuthProvider>
-            {children}
-            <ToastContainer />
-          </AuthProvider>
-        </Wrapper>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
+      >
+        <ReduxProvider>
+          <Wrapper>
+            <AuthProvider>
+              {children}
+              <ToastContainer />
+            </AuthProvider>
+          </Wrapper>
+        </ReduxProvider>
       </body>
     </html>
   );
