@@ -5,6 +5,7 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
     ?.split("=")[1];
 
   let res = await fetch(url, {
+    
     ...options,
     headers: {
       ...options.headers,

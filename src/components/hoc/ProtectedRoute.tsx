@@ -16,7 +16,8 @@ export default function ProtectedRoute({
     if (!loading && !user) {
       router.push("/"); 
     }
-  }, [user, loading, router]);
+  }, [user, loading, router]
+);
 
   if (loading) return <p>Checking authentication...</p>;
 

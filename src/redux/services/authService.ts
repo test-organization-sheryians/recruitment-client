@@ -23,4 +23,5 @@ export const fetchUser = async (dispatch: AppDispatch) => {
   } finally {
     dispatch(setLoading(false));
   }
+  
 };

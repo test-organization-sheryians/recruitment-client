@@ -9,6 +9,7 @@ export default function DashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
+    
     if (!loading && !user) {
       router.replace("/google-auth");
     }

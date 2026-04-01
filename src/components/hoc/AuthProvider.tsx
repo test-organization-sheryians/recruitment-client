@@ -12,6 +12,7 @@ export default function AuthProvider({
   const dispatch = useAppDispatch();
 
   useEffect(() => {
+    
     const fetchUser = async () => {
       try {
         dispatch(setLoading(true));

@@ -46,6 +46,7 @@ const role = req.cookies.get("role")?.value;
       return NextResponse.redirect(loginUrl);
     }
 
+    
     if (role !== "admin") {
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
