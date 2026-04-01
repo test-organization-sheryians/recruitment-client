@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -20,17 +19,19 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = req.cookies.get("access");
-  const role = req.cookies.get("role");
+const token = req.cookies.get("access")?.value;
+const role = req.cookies.get("role")?.value;
 
   const publicRoutes = [
-    "/",
-    "/login",
-    "/register",
-    "/forgot-password",
-    "/un-verified",
-    "/unauthorized",
-    "/reset-password"
+    '/',
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/un-verified',
+    '/unauthorized',
+    '/reset-password',
+    '/user-verification',
+    '/selected-candidates',
   ];
 
   const isPublic = publicRoutes.some(
@@ -45,7 +46,8 @@ export function middleware(req: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    if (role?.value !== "admin") {
+    
+    if (role !== "admin") {
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
 

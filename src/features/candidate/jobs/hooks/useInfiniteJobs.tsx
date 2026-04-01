@@ -4,9 +4,12 @@ import {
   type BackendPaginatedResponse,
 } from "@/api/jobs/getJobsPaginated";
 import { getJobsByCategoryPaginated } from "@/api/jobs/getJobsByCategoryPaginated";
+import { searchJobsPaginated } from "@/api/jobs/getSearchJobsPaginated";
 import type { Job } from "@/types/Job";
 
 const DEFAULT_LIMIT = 10;
+
+/* ---------------- ALL JOBS ---------------- */
 
 export const useInfiniteJobs = (limit: number = DEFAULT_LIMIT) => {
   return useInfiniteQuery<BackendPaginatedResponse<Job>>({
@@ -24,6 +27,8 @@ export const useInfiniteJobs = (limit: number = DEFAULT_LIMIT) => {
     },
   });
 };
+
+/* ---------------- JOBS BY CATEGORY ---------------- */
 
 export const useInfiniteJobsByCategory = (
   categoryId: string | null,
@@ -49,3 +54,59 @@ export const useInfiniteJobsByCategory = (
     },
   });
 };
+
+/* ---------------- SEARCH + FILTERS ---------------- */
+
+interface SearchJobsParams {
+  q?: string;
+  location?: string;
+  jobType?: string[];
+  experience?: string[];
+  minSalary?: number;
+  maxSalary?: number;
+
+  category?: string;
+  limit?: number;
+}
+
+export const useInfiniteSearchJobs = ({
+  q = "",
+  location = "",
+  jobType = [],
+  experience = [],
+  minSalary,
+  maxSalary,
+  category,
+  limit = DEFAULT_LIMIT,
+}: SearchJobsParams) => {
+  return useInfiniteQuery<BackendPaginatedResponse<Job>>({
+    queryKey: [
+      "searchJobs",
+      q,
+      location,
+      jobType.join(","),
+      experience.join(","),
+      minSalary ?? "",
+      maxSalary ?? "",
+      category ?? "",
+      limit,
+    ],
+
+    initialPageParam: 1,
+
+    queryFn: ({ pageParam }) =>
+      searchJobsPaginated(
+        { q, location, jobType, experience, minSalary, maxSalary, category },
+        pageParam as number,
+        limit
+      ),
+
+    getNextPageParam: (lastPage) => {
+      const { pagination } = lastPage;
+      if (!pagination) return undefined;
+      const next = (pagination.currentPage ?? 1) + 1;
+      return next <= (pagination.totalPages ?? 0) ? next : undefined;
+    },
+  });
+};
+

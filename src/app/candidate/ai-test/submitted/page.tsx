@@ -1,10 +1,26 @@
 "use client";
 
+import { useEffect } from 'react'
 import { CheckCircle, ArrowRight, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function TestSubmittedPage() {
   const router = useRouter();
+
+
+  useEffect(() => {
+    const attemptId = localStorage.getItem("attemptId");
+
+    if (attemptId) {
+      sessionStorage.removeItem(`cheat-count:${attemptId}`);
+      localStorage.removeItem(`testProgress:${attemptId}`);
+    }
+
+    localStorage.removeItem("activeQuestions");
+    localStorage.removeItem("attemptId");
+    localStorage.removeItem("duration");
+    localStorage.removeItem("startTime");
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#E7E9F1] to-white flex items-center justify-center p-6">
@@ -15,11 +31,11 @@ export default function TestSubmittedPage() {
         </div>
 
         <h1 className="text-3xl font-bold text-gray-900 mb-3">
-          Test Submitted Successfully 
+          Test Submitted Successfully
         </h1>
 
         <p className="text-gray-600 text-md mb-6">
-          Your responses have been securely recorded.  
+          Your responses have been securely recorded.
           <br />Thank you for completing the assessment.
         </p>
 
@@ -32,7 +48,7 @@ export default function TestSubmittedPage() {
 
         <div className="flex flex-col gap-4">
           <button
-            onClick={() => router.push("/candidate")}
+            onClick={() => router.push("/tests")}
             className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl text-lg font-semibold hover:opacity-90 transition"
           >
             Go to Dashboard

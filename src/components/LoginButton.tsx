@@ -1,0 +1,11 @@
+export default function LoginButton() {
+  return (
+    <a
+      href="http://localhost:9000/api/auth/google"
+      className="flex items-center justify-center gap-3 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+    >
+      Continue with Google
+      
+    </a>
+  );
+}
