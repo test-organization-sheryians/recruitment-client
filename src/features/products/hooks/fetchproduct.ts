@@ -5,6 +5,5 @@ export const fetchProduct = () => {
         queryKey: ["products"],
       queryFn: api.fetchProduct,
        staleTime:5000
-       
     },)
 }

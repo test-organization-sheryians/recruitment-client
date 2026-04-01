@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 const page = () => {
     const { id } = useParams()
   return (
-      <ViewProduct id={id} />
+       <ViewProduct id={id} />
   )
 }
 

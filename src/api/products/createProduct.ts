@@ -1,5 +1,5 @@
 import api from "@/config/axios"
 
-export const createProduct = async () => {
-    return await api.get("/api/products/create")
+export const createProduct = async (data:any) => {
+    return await api.post("/api/products/create",data)
 }

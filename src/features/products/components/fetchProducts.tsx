@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 const FetchProducts = () => {  
   const { data, isLoading, error } = fetchProduct();
   const router = useRouter(); // ✅ ALWAYS TOP
-  if(isLoading)return <p>loading...</p>
+  if (isLoading) return <p>loading...</p>
+  
   return (
     <div className="flex flex-wrap gap-6 p-6">
      
@@ -15,7 +16,7 @@ const FetchProducts = () => {
           className="w-[250px] border rounded-xl p-4 shadow-md hover:shadow-lg transition"
         >
           <div className="flex flex-col gap-2">
-            <h1 className="text-lg font-semibold">{e.title}</h1>
+            <h1 className="text-lg font-semibold">{e.name}</h1>
 
             <p className="text-sm text-gray-600 line-clamp-2">
               {e.description}

@@ -3,7 +3,7 @@ import * as api from "@/api"
 export const useFetchProduct = () => {
    return useQuery({
         queryKey: ["products"],
-       queryFn: api.fetchPrpoduct,
+       queryFn: api.fetchProduct,
         staleTime:10000
     })
 }
