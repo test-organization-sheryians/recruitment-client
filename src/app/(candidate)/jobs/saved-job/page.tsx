@@ -24,10 +24,6 @@ export default function SavedJobsPage() {
 
   const { mutate: unsaveJob, isPending } = useUnsaveJob();
 
-  const stripHtml = (html: string) => {
-    return html.replace(/<[^>]+>/g, "");
-  };
-
   // Infinite scroll sentinel
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -114,8 +110,10 @@ export default function SavedJobsPage() {
 
                 {/* Description */}
                 {jobId.description && (
-                  <p className="mt-3 line-clamp-2 text-sm text-gray-600"
-                  >{stripHtml(jobId.description)}</p>
+                  <div
+                    className="mt-3 line-clamp-2 text-sm text-gray-600"
+                    dangerouslySetInnerHTML={{ __html: jobId.description }}
+                  />
                 )}
 
                 {/* Expiry */}
