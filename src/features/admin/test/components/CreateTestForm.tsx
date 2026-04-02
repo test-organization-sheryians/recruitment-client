@@ -21,10 +21,22 @@ interface FormData {
   duration: string;
   passingScore: string;
   aiPrompt: string;
-  questionCount: number; // Number of Questions 
-  questionType: string; // MCQ/Theory
+  questionCount: number;
+  questionType: string;
   skills: string[];
 }
+
+const initialFormData: FormData = {
+  title: "",
+  summary: "",
+  category: "",
+  duration: "",
+  passingScore: "",
+  aiPrompt: "",
+  questionCount: 10,
+  questionType: "THEORY",
+  skills: [],
+};
 
 export default function CreateTestModal({
   open,
@@ -35,7 +47,7 @@ export default function CreateTestModal({
   onClose: () => void;
   testId?: string;
 }) {
-  const { data: skillsData } = useGetAllSkills()
+  const { data: skillsData } = useGetAllSkills();
   const { data: categoriesData } = useGetJobCategories();
   const { success, error } = useToast();
   const skillsResponse = skillsData ?? [];
@@ -47,18 +59,15 @@ export default function CreateTestModal({
   const createTest = useCreateTest();
   const updateTest = useUpdateTest();
 
+  const [formData, setFormData] = useState<FormData>(initialFormData);
 
-  const [formData, setFormData] = useState<FormData>({
-    title: "",
-    summary: "",
-    category: "",
-    duration: "",
-    passingScore: "",
-    aiPrompt: "",
-    questionCount: 10, // Default to 10
-    questionType: "THEORY", // Default to MCQ
-    skills: []
-  });
+  /* ---------- RESET ON NEW ---------- */
+  useEffect(() => {
+    if (open && !testId) {
+      setFormData(initialFormData);
+      setSearchTerm("");
+    }
+  }, [open, testId]);
 
   /* ---------- PREFILL ---------- */
   useEffect(() => {
@@ -74,7 +83,7 @@ export default function CreateTestModal({
       aiPrompt: data.prompt ?? "",
       questionCount: data.questionCount ?? 10,
       questionType: (data.questionType as string)?.toUpperCase() === "THEORY" ? "THEORY" : "MCQ",
-      skills: data.skills ?? []
+      skills: data.skills ?? [],
     });
   }, [data, testId]);
 
@@ -85,8 +94,8 @@ export default function CreateTestModal({
     let finalValue: string | number = value;
 
     if (name === "duration") {
-      if (Number(value) < 0) { finalValue = "1"; }
-      if (Number(value) > 120) { finalValue = "120"; }
+      if (Number(value) < 0) finalValue = "1";
+      if (Number(value) > 120) finalValue = "120";
     }
     if (name === "passingScore") {
       if (Number(value) < 0) finalValue = "1";
@@ -95,13 +104,12 @@ export default function CreateTestModal({
     if (name === "questionCount") {
       finalValue = Number(value);
     }
-
     if (name === "questionType") {
       finalValue = value.toUpperCase();
     }
 
     const key = name as keyof FormData;
-    setFormData(prev => ({ ...prev, [key]: finalValue as FormData[typeof key] }));
+    setFormData((prev) => ({ ...prev, [key]: finalValue as FormData[typeof key] }));
   };
 
   /* ---------- SKILL LOGIC ---------- */
@@ -117,24 +125,23 @@ export default function CreateTestModal({
   };
 
   const selectedSkillNames = formData.skills
-    .map(id => skillsResponse.find(s => s._id === id)?.name)
+    .map((id) => skillsResponse.find((s) => s._id === id)?.name)
     .filter(Boolean);
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-
     const durationNum = Number(formData.duration);
     const scoreNum = Number(formData.passingScore);
 
-    // Final Validation Alert
     if (durationNum > 120) return error("Duration cannot be more than 120 minutes.");
     if (scoreNum < 1 && scoreNum > 100) return error("Passing score cannot exceed 100%.");
+    if (selectedSkillNames.length === 0) return error("Please select at least one skill.");
 
-    const formatInstruction = formData.questionType === "THEORY"
-      ? "GENERATE OPEN-ENDED THEORY QUESTIONS ONLY. DO NOT PROVIDE MULTIPLE CHOICE OPTIONS OR A/B/C/D ANSWERS."
-      : "GENERATE MULTIPLE CHOICE QUESTIONS (MCQ) WITH 4 OPTIONS EACH AND ONE CORRECT ANSWER.";
+    const formatInstruction =
+      formData.questionType === "THEORY"
+        ? "GENERATE OPEN-ENDED THEORY QUESTIONS ONLY. DO NOT PROVIDE MULTIPLE CHOICE OPTIONS OR A/B/C/D ANSWERS."
+        : "GENERATE MULTIPLE CHOICE QUESTIONS (MCQ) WITH 4 OPTIONS EACH AND ONE CORRECT ANSWER.";
 
     const enhancedPrompt = `
 ${formData.aiPrompt}
@@ -147,7 +154,6 @@ STRICT REQUIREMENTS:
 - ${formatInstruction}
 `;
 
-
     const payload: TestFormValues = {
       title: formData.title,
       summury: formData.summary,
@@ -157,14 +163,10 @@ STRICT REQUIREMENTS:
       passingScore: scoreNum,
       prompt: enhancedPrompt,
       showResults: false,
-      questionCount: formData.questionCount, // added question no.
-      questionType: formData.questionType as "MCQ" | "THEORY", // added Types
-      skills: selectedSkillNames as string[], // Add skills to payload
+      questionCount: formData.questionCount,
+      questionType: formData.questionType as "MCQ" | "THEORY",
+      skills: selectedSkillNames as string[],
     };
-    if (selectedSkillNames.length === 0) {
-      return error("Please select at least one skill.");
-    }
-
 
     try {
       if (testId) {
@@ -185,12 +187,11 @@ STRICT REQUIREMENTS:
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 bg-black/50  z-50 backdrop-blur-sm" />
+      <div className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" />
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-10">
         <div className="w-full max-w-6xl bg-white border border-gray-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
-
 
           {/* ---------- HEADER ---------- */}
           <div className="sticky top-0 z-20 bg-white p-6 border-b border-gray-800 flex items-start justify-between shrink-0 rounded-t-2xl">
@@ -202,19 +203,12 @@ STRICT REQUIREMENTS:
                 <h1 className="text-xl font-semibold text-black">
                   {testId ? "Update Assessment" : "Create New Assessment"}
                 </h1>
-                <p className="text-sm text-gray-500">
-                  Configure assessment details
-                </p>
+                <p className="text-sm text-gray-500">Configure assessment details</p>
               </div>
             </div>
 
             <div className="flex gap-3">
-
-              <Button
-                form="test-form"
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-700"
-              >
+              <Button form="test-form" type="submit" className="bg-blue-600 hover:bg-blue-700">
                 Save & Generate
               </Button>
               <Button variant="outline" onClick={onClose}>
@@ -232,6 +226,7 @@ STRICT REQUIREMENTS:
             >
               {/* ---------- LEFT ---------- */}
               <div className="lg:col-span-2 space-y-6">
+
                 {/* Basic Information */}
                 <div className="bg-white rounded-xl border p-5 space-y-4">
                   <h2 className="font-semibold text-lg">Basic Information</h2>
@@ -260,28 +255,16 @@ STRICT REQUIREMENTS:
                       >
                         <option value="">Select Category</option>
                         {categories.map((cat) => (
-                          <option key={cat._id} value={cat.name}>{cat.name}</option>
+                          <option key={cat._id} value={cat.name}>
+                            {cat.name}
+                          </option>
                         ))}
                       </select>
                     </div>
                   </div>
-
-                  {/* <div>
-                  <label className="text-sm font-medium">Description</label>
-                  <textarea
-                    name="summary"
-                    value={formData.summary}
-                    onChange={handleChange}
-                    rows={3}
-                    className="mt-1 w-full border rounded-lg p-3"
-                    placeholder="Enter Description"
-                    required
-                  />
-                </div> */}
                 </div>
 
-
-                {/* SKILLS SECTION (NEWLY ADDED) */}
+                {/* Skills Section */}
                 <div className="bg-white rounded-xl border p-5 space-y-3">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <Sparkles className="w-4 h-4 text-blue-600" />
@@ -299,9 +282,10 @@ STRICT REQUIREMENTS:
                   {/* Search Results */}
                   <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2">
                     {skillsResponse
-                      .filter(s =>
-                        s.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-                        !formData.skills.includes(s._id)
+                      .filter(
+                        (s) =>
+                          s.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+                          !formData.skills.includes(s._id)
                       )
                       .slice(0, 10)
                       .map((skill) => (
@@ -322,14 +306,25 @@ STRICT REQUIREMENTS:
                   {/* Selected Skills Tags */}
                   {formData.skills.length > 0 && (
                     <div className="mt-4">
-                      <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Selected Skills:</p>
+                      <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">
+                        Selected Skills:
+                      </p>
                       <div className="flex flex-wrap gap-2 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
                         {formData.skills.map((skillId) => {
-                          const skillName = skillsResponse.find(s => s._id === skillId)?.name;
+                          const skillName = skillsResponse.find((s) => s._id === skillId)?.name;
                           return (
-                            <span key={skillId} className="flex items-center gap-1 bg-white text-blue-700 px-3 py-1 rounded-full text-sm border border-blue-200 shadow-sm">
+                            <span
+                              key={skillId}
+                              className="flex items-center gap-1 bg-white text-blue-700 px-3 py-1 rounded-full text-sm border border-blue-200 shadow-sm"
+                            >
                               {skillName}
-                              <button type="button" onClick={() => handleSkillToggle(skillId)} className="hover:text-red-500 font-bold ml-1">×</button>
+                              <button
+                                type="button"
+                                onClick={() => handleSkillToggle(skillId)}
+                                className="hover:text-red-500 font-bold ml-1"
+                              >
+                                ×
+                              </button>
                             </span>
                           );
                         })}
@@ -365,7 +360,7 @@ STRICT REQUIREMENTS:
                       name="questionCount"
                       type="number"
                       min={1}
-                      max={50} // Optional limit
+                      max={50}
                       value={formData.questionCount}
                       onChange={handleChange}
                       className="mt-1 w-full border rounded-lg p-3"
@@ -373,7 +368,7 @@ STRICT REQUIREMENTS:
                     />
                   </div>
 
-                  {/* Question Type Selection */}
+                  {/* Question Type */}
                   <div>
                     <label className="text-sm font-medium">Question Type</label>
                     <select
@@ -387,6 +382,7 @@ STRICT REQUIREMENTS:
                     </select>
                   </div>
 
+                  {/* Duration */}
                   <div>
                     <label className="text-sm font-medium">Duration (min)</label>
                     <input
@@ -403,6 +399,7 @@ STRICT REQUIREMENTS:
                     <p className="text-[10px] text-gray-400 mt-1">Maximum limit: 120 minutes (2 hours)</p>
                   </div>
 
+                  {/* Passing Score */}
                   <div>
                     <label className="text-sm font-medium">Passing Score (%)</label>
                     <input
@@ -422,6 +419,7 @@ STRICT REQUIREMENTS:
               </div>
             </form>
           </div>
+
         </div>
       </div>
     </>
