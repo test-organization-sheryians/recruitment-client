@@ -15,10 +15,4 @@ export const fetchAllProducts = async (): Promise<Product[]> => {
   return data;
 };
 
-// 3. Fetch Single Product (for Routing/Details)
-export const fetchProductById = async (id: string): Promise<Product> => {
-  const { data } = await api.get<Product>(`/products/${id}`);
-  return data;
-};
-
 export default api;
