@@ -90,7 +90,7 @@ export default function SavedJobsPage() {
                 {/* Title + Unsave */}
                 <div className="flex items-start justify-between">
                   <h2
-                   
+
                     className="cursor-pointer text-lg font-semibold text-gray-900"
                   >
                     {jobId.title}
@@ -110,9 +110,10 @@ export default function SavedJobsPage() {
 
                 {/* Description */}
                 {jobId.description && (
-                  <p className="mt-3 line-clamp-2 text-sm text-gray-600">
-                    {jobId.description}
-                  </p>
+                  <div
+                    className="mt-3 line-clamp-2 text-sm text-gray-600"
+                    dangerouslySetInnerHTML={{ __html: jobId.description }}
+                  />
                 )}
 
                 {/* Expiry */}
