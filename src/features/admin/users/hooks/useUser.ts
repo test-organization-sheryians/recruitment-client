@@ -57,3 +57,23 @@ export const useUpdateUserRole = () => {
       api.put(`/api/users/update-role/${userId}`, { roleId: role }),
   });
 };
+
+//blast
+export const useBlastUsers = () => {
+  return useMutation({
+    mutationFn: ({
+      userIds,
+      subject,
+      message,
+    }: {
+      userIds: string[];
+      subject: string;
+      message: string;
+    }) =>
+      api.post("/api/users/blast", {
+        userIds,
+        subject,
+        message,
+      }),
+  });
+};

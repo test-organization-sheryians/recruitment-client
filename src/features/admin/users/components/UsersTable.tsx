@@ -24,6 +24,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useDebounce } from "@/features/admin/users/hooks/useDebounce";
 import { useCreateShareCandidate } from "@/features/admin/users/hooks/useShareuser";
+import { useBlastUsers } from "@/features/admin/users/hooks/useUser";
 import {
   useDeleteUser,
   useInfiniteUsers,
@@ -111,8 +112,9 @@ export default function UsersTable() {
     selectedUserIds.length > 0 && selectedUserIds.length < users.length;
 
   /* ---------------- SHARE & GROUP MUTATION ---------------- */
-  const { mutate: shareCandidates, isPending: isSharing } = useCreateShareCandidate();
-  
+  const { mutate: shareCandidates, isPending: isSharing } =
+    useCreateShareCandidate();
+
   // Modal State for Group Creation
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
@@ -128,7 +130,7 @@ export default function UsersTable() {
   const [copied, setCopied] = useState(false);
   const loadMoreRef = useRef<HTMLTableRowElement | null>(null);
 
-
+  const blastMutation = useBlastUsers();
   const deleteUser = useDeleteUser();
   const updateUserRole = useUpdateUserRole();
   const queryClient = useQueryClient();
@@ -140,6 +142,10 @@ export default function UsersTable() {
   const [visiblePhones, setVisiblePhones] = useState<Record<string, boolean>>(
     {},
   );
+  //BLAST
+  const [isBlastModalOpen, setIsBlastModalOpen] = useState(false);
+  const [blastSubject, setBlastSubject] = useState("");
+  const [blastMessage, setBlastMessage] = useState("");
 
   /* ---------------- URL SYNC ---------------- */
   useEffect(() => {
@@ -262,89 +268,185 @@ export default function UsersTable() {
     }
   };
 
-  /* ---------------- SHARE & CREATE GROUP LOGIC ---------------- */
-const handleViewSelected = () => {
-  if (selectedUserIds.length === 0) {
-    error("Please select at least one user");
-    return;
-  }
+  // Blast feature
 
-  const payload: ShareMutationPayload = selectedUserIds.map((id) => ({
-    candidateId: id,
-  }));
+  const handleSendBlast = () => {
+    if (!blastSubject.trim() || !blastMessage.trim()) {
+      error("Subject & message required");
+      return;
+    }
 
-  shareCandidates(payload, {
-    onSuccess: (res: ShareResponse) => {
-      setSelectedUserIds([]);
-      const shareId = res.shareLink.split("/").pop();
-      setLink(
-        `https://hire.sheryians.com/selected-candidates?shareId=${shareId}`
-      );
-      setShowLink(true);
-    },
-    onError: () => error("Failed to share candidates"),
-  });
-};
-
-const handleCreateGroupSubmit = () => {
-  if (!newGroupName.trim()) {
-    error("Please enter a group name");
-    return;
-  }
-
-  const payload: ShareMutationPayload = {
-    groupName: newGroupName.trim(),
-    users: selectedUserIds.map((id) => ({
-      candidateId: id,
-    })),
+    blastMutation.mutate(
+      {
+        userIds: selectedUserIds,
+        subject: blastSubject,
+        message: blastMessage,
+      },
+      {
+        onSuccess: (res) => {
+          success(res.data.message || "Blast queued");
+          setIsBlastModalOpen(false);
+          setBlastSubject("");
+          setBlastMessage("");
+          setSelectedUserIds([]);
+        },
+        onError: (err: any) => {
+          error(err?.response?.data?.message || "Blast failed");
+        },
+      },
+    );
   };
 
-  shareCandidates(payload, {
-    onSuccess: () => {
-      success("Group created successfully");
-      setIsGroupModalOpen(false);
-      setNewGroupName("");
-      setSelectedUserIds([]);
-      router.push("/admin/groups");
-    },
-    onError: () => error("Failed to create group"),
-  });
-};
+  /* ---------------- SHARE & CREATE GROUP LOGIC ---------------- */
+  const handleViewSelected = () => {
+    if (selectedUserIds.length === 0) {
+      error("Please select at least one user");
+      return;
+    }
 
-const handleCopy = async () => {
-  try {
-    await navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  } catch (err) {
-    console.error("Failed to copy", err);
-  }
-};
+    const payload: ShareMutationPayload = selectedUserIds.map((id) => ({
+      candidateId: id,
+    }));
+
+    shareCandidates(payload, {
+      onSuccess: (res: ShareResponse) => {
+        setSelectedUserIds([]);
+        const shareId = res.shareLink.split("/").pop();
+        setLink(
+          `https://hire.sheryians.com/selected-candidates?shareId=${shareId}`,
+        );
+        setShowLink(true);
+      },
+      onError: () => error("Failed to share candidates"),
+    });
+  };
+
+  const handleCreateGroupSubmit = () => {
+    if (!newGroupName.trim()) {
+      error("Please enter a group name");
+      return;
+    }
+
+    const payload: ShareMutationPayload = {
+      groupName: newGroupName.trim(),
+      users: selectedUserIds.map((id) => ({
+        candidateId: id,
+      })),
+    };
+
+    shareCandidates(payload, {
+      onSuccess: () => {
+        success("Group created successfully");
+        setIsGroupModalOpen(false);
+        setNewGroupName("");
+        setSelectedUserIds([]);
+        router.push("/admin/groups");
+      },
+      onError: () => error("Failed to create group"),
+    });
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy", err);
+    }
+  };
 
   if (isLoading) return <p className="py-10 text-center">Loading users…</p>;
-  if (isError) return <p className="py-10 text-center text-red-500">Failed to load users</p>;
+  if (isError)
+    return (
+      <p className="py-10 text-center text-red-500">Failed to load users</p>
+    );
 
   return (
     <>
       {/* HEADER */}
       <div className="mb-6 flex items-center justify-between">
+        {isBlastModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="w-[420px] rounded-2xl bg-white p-6 shadow-2xl">
+              <h2 className="text-xl font-bold mb-4">Send Blast</h2>
+
+              <div className="space-y-4">
+                <input
+                  placeholder="Subject"
+                  value={blastSubject}
+                  onChange={(e) => setBlastSubject(e.target.value)}
+                  className="w-full border px-4 py-2 rounded-xl"
+                />
+
+                <textarea
+                  placeholder="Message..."
+                  value={blastMessage}
+                  onChange={(e) => setBlastMessage(e.target.value)}
+                  className="w-full border px-4 py-2 rounded-xl h-28"
+                />
+
+                <p className="text-xs text-gray-400">
+                  Sending to {selectedUserIds.length} users
+                </p>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => {
+                      setIsBlastModalOpen(false);
+                      setBlastSubject("");
+                      setBlastMessage("");
+                    }}
+                    className="px-4 py-2 text-gray-500"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    onClick={handleSendBlast}
+                    disabled={
+                      blastMutation.isPending ||
+                      !blastSubject.trim() ||
+                      !blastMessage.trim()
+                    }
+                    className="bg-blue-600 text-white px-5 py-2 rounded-xl disabled:opacity-50"
+                  >
+                    {blastMutation.isPending ? "Sending..." : "Send"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="space-y-3">
           {showLink && (
             <div className="relative flex max-w-xl items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm animate-in fade-in slide-in-from-top-2">
               <div className="flex flex-1 items-center gap-2 overflow-hidden">
                 <LinkIcon className="h-4 w-4 text-gray-400" />
-                <p className="truncate text-sm font-medium text-gray-700">{link}</p>
+                <p className="truncate text-sm font-medium text-gray-700">
+                  {link}
+                </p>
               </div>
               <button
                 onClick={handleCopy}
                 className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition"
               >
-                {copied ? <><Check className="h-3 w-3" /> Copied</> : <><Copy className="h-3 w-3" /> Copy</>}
+                {copied ? (
+                  <>
+                    <Check className="h-3 w-3" /> Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3 w-3" /> Copy
+                  </>
+                )}
               </button>
               <button
                 onClick={() => setShowLink(false)}
                 className="ml-1 flex h-6 w-6 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 transition"
-              >✕</button>
+              >
+                ✕
+              </button>
             </div>
           )}
         </div>
@@ -370,24 +472,38 @@ const handleCopy = async () => {
                 <input
                   type="checkbox"
                   checked={isAllSelected}
-                  ref={(el) => { if (el) el.indeterminate = isSomeSelected; }}
+                  ref={(el) => {
+                    if (el) el.indeterminate = isSomeSelected;
+                  }}
                   onChange={toggleSelectAll}
                   className="h-4 w-4 accent-blue-600 cursor-pointer"
                 />
               </th>
-              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">Name</th>
-              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">Email</th>
-              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">Phone</th>
-              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">Role</th>
+              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
+                Name
+              </th>
+              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
+                Email
+              </th>
+              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
+                Phone
+              </th>
+              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
+                Role
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y">
             {users.map((user) => {
               const isSelected = selectedUserIds.includes(user._id);
-              const initials = `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase();
+              const initials =
+                `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase();
               const fullName = `${user.firstName || ""}${user.lastName || ""}`;
               return (
-                <tr key={user._id} className={`group transition-colors ${isSelected ? "bg-blue-50/60" : "hover:bg-slate-50"}`}>
+                <tr
+                  key={user._id}
+                  className={`group transition-colors ${isSelected ? "bg-blue-50/60" : "hover:bg-slate-50"}`}
+                >
                   <td className="pl-6 pr-4 py-5">
                     <input
                       type="checkbox"
@@ -398,7 +514,9 @@ const handleCopy = async () => {
                   </td>
                   <td className="px-4 py-5">
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm ${getAvatarColor(fullName)}`}>
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm ${getAvatarColor(fullName)}`}
+                      >
                         {initials}
                       </div>
                       <div className="inline-flex items-center rounded-xl border bg-gradient-to-r px-3 py-1 text-sm font-semibold">
@@ -408,25 +526,45 @@ const handleCopy = async () => {
                   </td>
                   <td className="px-4 py-5">
                     {visibleEmails[user._id] ? (
-                      <span className="text-sm text-slate-700">{user.email}</span>
+                      <span className="text-sm text-slate-700">
+                        {user.email}
+                      </span>
                     ) : (
-                      <button onClick={() => toggleEmailVisibility(user._id)} className="text-blue-600 text-xs font-semibold uppercase flex items-center gap-2"><FiEye />Click to view</button>
+                      <button
+                        onClick={() => toggleEmailVisibility(user._id)}
+                        className="text-blue-600 text-xs font-semibold uppercase flex items-center gap-2"
+                      >
+                        <FiEye />
+                        Click to view
+                      </button>
                     )}
                   </td>
                   <td className="px-4 py-5">
                     {visiblePhones[user._id] ? (
-                      <span className="text-sm text-slate-700">{user.phoneNumber}</span>
+                      <span className="text-sm text-slate-700">
+                        {user.phoneNumber}
+                      </span>
                     ) : (
-                      <button onClick={() => togglePhoneVisibility(user._id)} className="text-blue-600 text-xs uppercase font-semibold flex items-center gap-2"><FiEye />Click to view</button>
+                      <button
+                        onClick={() => togglePhoneVisibility(user._id)}
+                        className="text-blue-600 text-xs uppercase font-semibold flex items-center gap-2"
+                      >
+                        <FiEye />
+                        Click to view
+                      </button>
                     )}
                   </td>
                   <td className="px-4 py-5">
-                    <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">{user.role?.name || "no-role"}</span>
+                    <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                      {user.role?.name || "no-role"}
+                    </span>
                   </td>
                 </tr>
               );
             })}
-            <tr ref={loadMoreRef}><td colSpan={5} /></tr>
+            <tr ref={loadMoreRef}>
+              <td colSpan={5} />
+            </tr>
           </tbody>
         </table>
       </div>
@@ -436,46 +574,78 @@ const handleCopy = async () => {
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
           <div className="bg-white border border-slate-200 shadow-2xl px-8 py-4 rounded-full flex items-center gap-10">
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">{selectedUserIds.length}</div>
-              <span className="text-sm font-semibold text-slate-700">Selected</span>
+              <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                {selectedUserIds.length}
+              </div>
+              <span className="text-sm font-semibold text-slate-700">
+                Selected
+              </span>
             </div>
-            
+
             {/* Action buttons */}
             <div className="flex items-center gap-8">
               {/* SHARE BUTTON */}
-              
 
               {/* CREATE GROUP BUTTON (Right Side of Share) */}
-              <button 
-                onClick={() => setIsGroupModalOpen(true)} 
+              <button
+                onClick={() => setIsGroupModalOpen(true)}
                 className="flex flex-col items-center gap-1 text-slate-600 hover:text-blue-700 transition"
               >
                 <UserPlus className="h-4 w-4" />
-                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">Create Group</span>
-              </button> 
+                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">
+                  Create Group
+                </span>
+              </button>
 
               {/* <button onClick={() => router.push("/admin/groups")} className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition">
                 <UsersRound className="h-4 w-4" />
                 <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">View Groups</span>
               </button> */}
 
-              <button onClick={openBulkRoleModal} className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition" title="Edit role for selected">
+              <button
+                onClick={openBulkRoleModal}
+                className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
+                title="Edit role for selected"
+              >
                 <ArrowRightLeft className="h-4 w-4" />
-                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">Edit Role</span>
+                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">
+                  Edit Role
+                </span>
               </button>
 
-              <button className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition" title="Blast email">
+              <button
+                onClick={() => {
+                  if (!selectedUserIds.length) {
+                    error("Select at least one user");
+                    return;
+                  }
+                  setIsBlastModalOpen(true);
+                }}
+                className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
+                title="Blast email"
+              >
                 <Mail className="h-4 w-4" />
-                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">Blast</span>
+                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">
+                  Blast
+                </span>
               </button>
 
-              <button onClick={handleBulkDelete} className="flex flex-col items-center gap-1 text-red-500 hover:text-red-600 transition" title="Delete selected">
+              <button
+                onClick={handleBulkDelete}
+                className="flex flex-col items-center gap-1 text-red-500 hover:text-red-600 transition"
+                title="Delete selected"
+              >
                 <Trash2 className="h-4 w-4" />
-                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">Delete</span>
+                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">
+                  Delete
+                </span>
               </button>
             </div>
 
-            <button onClick={handleViewSelected} className="ml-6 bg-blue-600 text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-full shadow-lg shadow-blue-600/30 hover:bg-blue-700 active:scale-95 transition-all whitespace-nowrap">
+            <button
+              onClick={handleViewSelected}
+              className="ml-6 bg-blue-600 text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-full shadow-lg shadow-blue-600/30 hover:bg-blue-700 active:scale-95 transition-all whitespace-nowrap"
+            >
               Apply Actions
             </button>
           </div>
@@ -487,30 +657,49 @@ const handleCopy = async () => {
         <div className="fixed inset-0 z-[100]  cursor-pointer flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="w-[400px] rounded-2xl bg-white p-6 shadow-2xl animate-in zoom-in duration-200">
             <div className="flex items-center gap-3 mb-6 border-b pb-4">
-              <div className="bg-blue-100 p-2 rounded-lg text-blue-600"><Users size={20} /></div>
-              <h2 className="text-xl font-bold text-slate-800">Create New Group</h2>
+              <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+                <Users size={20} />
+              </div>
+              <h2 className="text-xl font-bold text-slate-800">
+                Create New Group
+              </h2>
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase">Group Name</label>
+                <label className="text-xs font-bold text-slate-500 uppercase">
+                  Group Name
+                </label>
                 <input
                   autoFocus
                   className="w-full rounded-xl border-2 border-slate-100 px-4 py-3 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
                   placeholder="e.g. Frontend Team"
                   value={newGroupName}
                   onChange={(e) => setNewGroupName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleCreateGroupSubmit()}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && handleCreateGroupSubmit()
+                  }
                 />
               </div>
-              <p className="text-xs text-slate-400 italic font-medium">Adding {selectedUserIds.length} selected candidates.</p>
+              <p className="text-xs text-slate-400 italic font-medium">
+                Adding {selectedUserIds.length} selected candidates.
+              </p>
               <div className="flex justify-end gap-3 pt-4">
-                <button onClick={() => setIsGroupModalOpen(false)} className="px-4 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50 rounded-xl transition">Cancel</button>
-                <button 
+                <button
+                  onClick={() => setIsGroupModalOpen(false)}
+                  className="px-4 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50 rounded-xl transition"
+                >
+                  Cancel
+                </button>
+                <button
                   onClick={handleCreateGroupSubmit}
                   disabled={isSharing || !newGroupName.trim()}
                   className="bg-blue-600 text-white px-6 py-2 cursor-pointer rounded-xl text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition shadow-lg shadow-blue-200 flex items-center gap-2"
                 >
-                  {isSharing ? <Loader2 className="animate-spin h-4 w-4" />:<Plus className="h-3 w-3 -ml-0.5 mt-0.5" /> }
+                  {isSharing ? (
+                    <Loader2 className="animate-spin h-4 w-4" />
+                  ) : (
+                    <Plus className="h-3 w-3 -ml-0.5 mt-0.5" />
+                  )}
                   Create Group
                 </button>
               </div>
@@ -536,8 +725,16 @@ const handleCopy = async () => {
             </select>
             <div className="mt-6 cursor-pointer flex justify-end gap-3">
               <button onClick={() => setIsModalOpen(false)}>Cancel</button>
-              <button onClick={handleSaveRole} disabled={isSaving} className="rounded-lg bg-blue-600 px-4 py-2 text-white">
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+              <button
+                onClick={handleSaveRole}
+                disabled={isSaving}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-white"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Save"
+                )}
               </button>
             </div>
           </div>
