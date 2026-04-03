@@ -13,8 +13,8 @@ type User = {
 
 const NAV_ITEMS = [
   { name: "Dashboard", href: "/admin" },
-  { name: "Jobs", href: "/admin/jobs" },
-  { name: "Clients", href: "/admin/clients" },
+  // { name: "Jobs", href: "/admin/jobs" },
+  // { name: "Clients", href: "/admin/clients" },
   { name: "Skills", href: "/admin/skills" },
   { name: "Categories", href: "/admin/categories" },
   { name: "Users", href: "/admin/users" },
