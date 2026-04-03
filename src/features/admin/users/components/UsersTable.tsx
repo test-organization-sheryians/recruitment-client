@@ -284,7 +284,7 @@ export default function UsersTable() {
       },
       {
         onSuccess: (res) => {
-          success(res.data.message || "Blast queued 🚀");
+          success(res.data.message || "Blast queued");
           setIsBlastModalOpen(false);
           setBlastSubject("");
           setBlastMessage("");
