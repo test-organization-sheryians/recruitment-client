@@ -73,6 +73,7 @@ const Schedule = ({ height, className = "" }: ScheduleProps) => {
 
   // 1. Fetch Data
   const { data: rawData, isLoading, error } = useGetAllInterviews();
+  console.debug("useGetAllInterviews rawData:", rawData);
 
   // 2. Filter & Map Data
   const events = useMemo(() => {
@@ -86,6 +87,8 @@ const Schedule = ({ height, className = "" }: ScheduleProps) => {
     }
 
     if (interviews.length === 0) return [];
+
+    console.debug("mapped interviews count:", interviews.length);
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
