@@ -13,6 +13,8 @@ import { useState } from "react";
 import { useLogin } from "../hooks/useAuthApi";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
+import useGoogleAuth from "../hooks/useGoogleAuth";
+
 type SigninFormData = {
   email: string;
   password: string;
@@ -34,6 +36,8 @@ const SigninForm = () => {
   const passwordValue = watch("password");
 
   const { mutate: loginUser, isPending: isLoggingIn, error } = useLogin();
+
+  const { handleGoogleLogin } = useGoogleAuth();
 
   const onSubmit = (formData: SigninFormData) => {
     setErrorMsg("");
@@ -67,7 +71,7 @@ const SigninForm = () => {
             lastName: res.data.user.lastName,
             role: res.data.user?.role?.name || "user",
             isVerified: res.data.user.isVerified,
-          })
+          }),
         );
 
         if (res.data.user?.role?.name === "admin") {
@@ -83,7 +87,7 @@ const SigninForm = () => {
         setErrorMsg(
           err?.response?.data?.message ||
             err?.message ||
-            "Invalid email or password. Please try again."
+            "Invalid email or password. Please try again.",
         );
       },
     });
@@ -220,6 +224,15 @@ const SigninForm = () => {
             <FcGoogle className="text-xl md:text-2xl lg:text-3xl" />
             <span className="truncate">Continue with Google</span>
           </button> */}
+
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            className="w-full bg-[#3B3A3A] hover:bg-black transition-colors text-white font-medium rounded-base py-3 flex items-center justify-center gap-2"
+          >
+            <FcGoogle className="text-xl" />
+            Continue with Google
+          </button>
         </form>
 
         <p
