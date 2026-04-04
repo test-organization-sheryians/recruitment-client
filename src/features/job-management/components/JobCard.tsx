@@ -74,9 +74,8 @@ export default function JobCard({
 
   return (
     <div
-      className={`${
-        isOpen ? "border-blue-500 ring-2 ring-blue-200" : "border-gray-200"
-      } flex flex-col rounded-xl border border-[#dbdde6] dark:border-gray-700 bg-white dark:bg-[#1a1e2e] shadow-sm overflow-hidden transition-all duration-300`}
+      className={`${isOpen ? "border-blue-500 ring-2 ring-blue-200" : "border-gray-200"
+        } flex flex-col rounded-xl border border-[#dbdde6] dark:border-gray-700 bg-white dark:bg-[#1a1e2e] shadow-sm overflow-hidden transition-all duration-300`}
     >
       {/* HEADER ROW */}
       <div

@@ -110,7 +110,7 @@ export default function Jobs() {
   return (
     <div className="bg-[#f7f8fb] min-h-screen px-4 py-8">
       <div className="max-w-6xl mx-auto flex flex-col h-[calc(100vh-80px)]">
-        
+
         {/* HEADER - Remains Static */}
         <div className="flex flex-wrap justify-between items-end gap-4 pb-6">
           <div className="flex flex-col gap-1">
@@ -169,7 +169,7 @@ export default function Jobs() {
         onClose={() => setShareJob(null)}
         jobTitle={shareJob?.title ?? ""}
         jobRef={shareJob?._id ?? ""}
-        applicationUrl={shareJob ? `${process.env.NEXT_PUBLIC_APP_URL}/jobs/${shareJob._id}` : ""}
+        applicationUrl={shareJob ? `${process.env.NEXT_PUBLIC_URL}/jobs/${shareJob._id}` : ""}
         onSave={(settings) => console.log("Saved:", settings)}
       />
 

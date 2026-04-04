@@ -131,10 +131,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
 
       toast.success("Job created successfully 🚀");
 
-      // ✅ small delay so toast is visible
-      setTimeout(() => {
-        router.push(`/admin/screen/${jobId}`);
-      }, 800);
+      router.push(`/admin/screen/${jobId}`);
     },
 
     onError: (error: any) => {
@@ -204,6 +201,21 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
       clientId: form.clientId,
     } as CreateJobPayload);
   };
+
+  const filteredSkills = React.useMemo(() => {
+    return skills.filter((s) => {
+      const notSelected = !form.skills.some((x) => x._id === s._id);
+
+      if (skillQuery) {
+        return (
+          s.name.toLowerCase().includes(skillQuery.toLowerCase()) &&
+          notSelected
+        );
+      }
+
+      return notSelected;
+    });
+  }, [skills, form.skills, skillQuery]);
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-[#111218] dark:text-white min-h-screen">
@@ -310,11 +322,10 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
 
                   {pincodeStatus.message && (
                     <p
-                      className={`text-xs mt-1 ${
-                        pincodeStatus.type === "error"
-                          ? "text-red-600"
-                          : "text-blue-600"
-                      }`}
+                      className={`text-xs mt-1 ${pincodeStatus.type === "error"
+                        ? "text-red-600"
+                        : "text-blue-600"
+                        }`}
                     >
                       {pincodeStatus.loading && (
                         <span className="inline-block w-3 h-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin align-middle" />
@@ -406,58 +417,54 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
                   Required Skills <span className="text-red-600 ml-1">*</span>
                 </label>
 
+                {/* Selected Skills + Input */}
                 <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 items-center">
                   {form.skills.map((s) => (
                     <span
                       key={s._id}
                       className="flex items-center gap-1 px-3 py-1 bg-white dark:bg-gray-700 border rounded-full text-xs font-semibold cursor-pointer"
                       onClick={() =>
-                        setForm({
-                          ...form,
-                          skills: form.skills.filter((x) => x._id !== s._id),
-                        })
+                        setForm((prev) => ({
+                          ...prev,
+                          skills: prev.skills.filter((x) => x._id !== s._id),
+                        }))
                       }
                     >
                       {s.name}
-                      <span className="text-gray-400 hover:text-red-500">
-                        ✕
-                      </span>
+                      <span className="text-gray-400 hover:text-red-500">✕</span>
                     </span>
                   ))}
 
                   <input
                     value={skillQuery}
                     onChange={(e) => setSkillQuery(e.target.value)}
-                    placeholder="Type to search skills..."
+                    placeholder="Search or select skills..."
                     className="flex-grow min-w-[140px] bg-transparent outline-none text-sm"
                   />
                 </div>
 
-                {skillQuery && (
-                  <div className="flex flex-wrap gap-2">
-                    {skills
-                      .filter(
-                        (s) =>
-                          s.name
-                            .toLowerCase()
-                            .includes(skillQuery.toLowerCase()) &&
-                          !form.skills.some((x) => x._id === s._id),
-                      )
-                      .slice(0, 8)
-                      .map((s) => (
-                        <button
-                          key={s._id}
-                          onClick={() => {
-                            setForm({ ...form, skills: [...form.skills, s] });
-                            setSkillQuery("");
-                          }}
-                          className="px-3 py-1 text-xs rounded-full border border-dashed border-primary text-primary hover:bg-primary/10 transition cursor-pointer"
-                        >
-                          + {s.name}
-                        </button>
-                      ))}
-                  </div>
-                )}
+                {/* Suggestions */}
+                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto border rounded-lg p-3 bg-white dark:bg-gray-900">
+                  {filteredSkills.slice(0, 15).map((s) => (
+                    <button
+                      key={s._id}
+                      onClick={() => {
+                        setForm((prev) => ({
+                          ...prev,
+                          skills: [...prev.skills, s],
+                        }));
+                      }}
+                      className="px-3 py-1 text-xs rounded-full border border-dashed border-primary text-primary hover:bg-primary/10 transition cursor-pointer"
+                    >
+                      + {s.name}
+                    </button>
+                  ))}
+
+                  {/* Empty State */}
+                  {filteredSkills.length === 0 && (
+                    <span className="text-xs text-gray-400">No skills found</span>
+                  )}
+                </div>
               </div>
 
               <Select
@@ -679,7 +686,15 @@ function Select({
                     onChange(c._id);
                     setOpen(false);
                   }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition ${value === c._id ? "bg-[#2b4bee] text-white" : "text-gray-700 dark:text-gray-200"} cursor-pointer`}
+                  className={`w-full text-left px-4 py-2 text-sm 
+                    hover:bg-blue-50 hover:text-blue-700 
+                    dark:hover:bg-gray-700 dark:hover:text-white
+                    transition 
+                    ${value === c._id
+                      ? "bg-[#2b4bee] text-white"
+                      : "text-gray-700 dark:text-gray-200"}
+                    cursor-pointer
+                  `}
                 >
                   {c.name}
                 </button>
