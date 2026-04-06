@@ -15,7 +15,7 @@ export const startSessionWatcher = (expiresIn: number) => {
 
   logoutTimer = setTimeout(() => {
     Cookies.remove("refreshToken");
-    Cookies.remove("accessToken");
+    Cookies.remove("token");
     window.location.replace("/login");
   }, expiresIn * 1000);
 };

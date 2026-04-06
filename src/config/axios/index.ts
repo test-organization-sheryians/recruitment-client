@@ -3,9 +3,10 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+const baseURL = rawBaseURL.replace(/\/$/, "").replace(/\/api$/, "");
 
-const publicRoutes = ["/login", "/register", "/"] as const;
+const publicRoutes = ["/login", "/register"] as const;
 
 
 // Updated: Check if path starts with these instead of exact match
@@ -13,8 +14,7 @@ const isPublicRoute = (path: string) => {
   if (!path) return false;
 
   return (
-    publicRoutes.includes(path as typeof publicRoutes[number]) ||
-    path.includes("/user-verification/") ||
+    publicRoutes.some(route => path.startsWith(route)) ||
     path.includes("/user-verification")
   );
 };
@@ -29,12 +29,21 @@ const api = axios.create({
 });
 
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response) => {
+    console.log("✅ Response success:", response.config.url);
+    return response;
+  },
+  async (error) => {
     const status = error.response?.status;
     const responseData = error.response?.data;
+    const originalRequest = error.config;
+
     const currentPath =
       typeof window !== "undefined" ? window.location.pathname : "";
+
+    console.log("❌ Error intercepted");
+    console.log("➡️ URL:", originalRequest?.url);
+    console.log("➡️ Status:", status);
 
     let message = "Something went wrong";
 
@@ -48,10 +57,35 @@ api.interceptors.response.use(
       }
     }
 
-    // ✅ Keep the GOOD version
     const publicRoute = isPublicRoute(currentPath);
-    console.log(publicRoute, currentPath);
 
+    console.log("➡️ Public Route:", publicRoute);
+
+    // 🔥 STEP 1: TRY REFRESH
+    if (
+      !publicRoute &&
+      status === 401 &&
+      !originalRequest._retry
+    ) {
+      console.log("🔄 401 detected → trying refresh...");
+      originalRequest._retry = true;
+
+      try {
+        console.log("📡 Calling /api/refresh...");
+
+        const refreshResponse = await api.post("/api/auth/refresh");
+
+        console.log("✅ Refresh success:", refreshResponse.data);
+
+        console.log("🔁 Retrying original request:", originalRequest.url);
+
+        return api(originalRequest);
+      } catch (refreshError) {
+        console.log("❌ Refresh failed:", refreshError);
+      }
+    }
+
+    // 🔥 STEP 2: LOGOUT
     if (
       !publicRoute &&
       (status === 401 ||
@@ -62,12 +96,10 @@ api.interceptors.response.use(
             message.toLowerCase().includes("unauthenticated") ||
             message.toLowerCase().includes("invalid token"))))
     ) {
-      Cookies.remove("refreshToken");
-      Cookies.remove("accessToken");
+      console.log("🚪 Logging out user");
 
-      if (typeof window !== "undefined") {
-        // window.location.href = "/login";
-      }
+      Cookies.remove("refreshToken");
+      Cookies.remove("token");
 
       return Promise.reject(
         new Error("Session expired. Redirecting to login...")
@@ -80,7 +112,6 @@ api.interceptors.response.use(
 
     return Promise.reject(error);
   }
-
 );
 
 export default api;
