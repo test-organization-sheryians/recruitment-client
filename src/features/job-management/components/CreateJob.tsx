@@ -138,9 +138,17 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
     },
 
     onError: (error: any) => {
-      toast.dismiss(); // ✅ remove loading if any
-      const message = error?.response?.data?.message || "Failed to create job";
-      toast.error(message);
+      toast.dismiss();
+    
+      const errors = error?.response?.data?.errors;
+    
+      if (Array.isArray(errors)) {
+        errors.forEach((msg: string) => toast.error(msg));
+      } else {
+        const message =
+          error?.response?.data?.message || "Failed to create job";
+        toast.error(message);
+      }
     },
   });
 
@@ -149,27 +157,13 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
     t.setHours(0, 0, 0, 0);
 
     if (!form.expiry) {
-      toast.error("Please select an application deadline");
+      toast.error("Expiry date is required");
       return;
     }
 
     const selectedDate = new Date(form.expiry);
     if (selectedDate < t) {
       toast.error("Application deadline cannot be in the past");
-      return;
-    }
-
-    if (
-      !form.title ||
-      !form.description ||
-      !form.education ||
-      form.requiredExperience === null ||
-      form.requiredExperience === undefined ||
-      !form.expiry ||
-      !form.category ||
-      form.skills.length === 0
-    ) {
-      toast.error("Please fill all required fields");
       return;
     }
 
