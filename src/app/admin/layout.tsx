@@ -12,7 +12,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
-  const refreshToken =cookies().get("refreshToken");
+  const refreshToken = (await cookies()).get("refreshToken");
 
   if (!user && !refreshToken) {
     redirect("/login");
