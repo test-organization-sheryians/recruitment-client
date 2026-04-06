@@ -5,10 +5,12 @@ import {
   Menu,
   X,
   UserIcon,
-  Settings,
   User,
   ChevronRight,
   Bookmark,
+  BookCheck,
+  Briefcase,
+  UsersRound,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -16,9 +18,12 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/config/store";
 import React, { useState } from "react";
 import Logout from "@/features/auth/components/Logout";
+import { useRouter } from "next/navigation";
 
 const Navbar = () => {
   const user = useSelector((state: RootState) => state.auth.user);
+
+  const router = useRouter();
 
   const [openMenu, setOpenMenu] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
@@ -27,7 +32,14 @@ const Navbar = () => {
   if (!user) return null;
 
   return (
-    <nav className="w-full border-b bg-white px-6 py-4 flex items-center justify-between relative z-50">
+<nav className="fixed top-0 left-0 w-full z-50
+                bg-white/60 backdrop-blur-md
+                border-b border-gray-400/20
+                px-35 py-2
+                flex items-center justify-between">
+
+
+
       {/* ---------- BACKDROPS ---------- */}
       {(openMenu || openProfile) && (
         <div
@@ -49,20 +61,13 @@ const Navbar = () => {
       {/* ---------- LOGO ---------- */}
       <Link href="/">
         <h1 className="text-2xl font-bold tracking-wide cursor-pointer text-blue-950">
-          HRECT.
+          Sheryians<span className="text-blue-600">.</span>
         </h1>
       </Link>
 
       {/* ---------- DESKTOP NAV ---------- */}
       <div className="hidden md:flex items-center gap-6">
-        {/* Notifications */}
-        <button
-          className="relative p-2 hover:bg-gray-100 rounded-full"
-          onClick={() => setOpenNotif(!openNotif)}
-        >
-          <BellDot size={22} className="text-gray-600" />
-          <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full border border-white" />
-        </button>
+    
 
         {/* Profile */}
         <div className="relative">
@@ -105,6 +110,14 @@ const Navbar = () => {
                 </Link>
 
                 <Link
+                  href="/appliedjobs"
+                  onClick={() => setOpenProfile(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
+                >
+                  <Briefcase size={18} /> Applied Jobs
+                </Link>
+
+                <Link
                   href="/jobs/saved-job"
                   onClick={() => setOpenProfile(false)}
                   className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
@@ -112,9 +125,13 @@ const Navbar = () => {
                   <Bookmark size={18} /> Saved Jobs
                 </Link>
 
-                <button type="button" className="flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg">
-                  <Settings size={18} /> Settings
-                </button>
+                <Link
+                  href="/tests"
+                  onClick={() => setOpenProfile(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
+                >
+                  <BookCheck size={18} /> Test
+                </Link>
               </div>
 
               {/* Logout */}
@@ -168,7 +185,18 @@ const Navbar = () => {
             </Link>
 
             <Link
-              href="/jobs-savedjob"
+              href="/appliedjobs"
+              onClick={() => setOpenMenu(false)}
+              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
+            >
+              <div className="flex gap-3">
+                <Briefcase size={20} /> Applied Jobs
+              </div>
+              <ChevronRight size={16} />
+            </Link>
+
+            <Link
+              href="/jobs/saved-job"
               onClick={() => setOpenMenu(false)}
               className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
             >
@@ -178,32 +206,22 @@ const Navbar = () => {
               <ChevronRight size={16} />
             </Link>
 
-            <button className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50 w-full">
+            <Link
+              href="/tests"
+              onClick={() => setOpenMenu(false)}
+              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
+            >
               <div className="flex gap-3">
-                <Settings size={20} /> Settings
+                <BookCheck size={20} /> Test
               </div>
               <ChevronRight size={16} />
-            </button>
+            </Link>
           </div>
 
           {/* Logout */}
           <div className="pt-2 border-t">
             <Logout />
           </div>
-        </div>
-      </div>
-
-      {/* ---------- NOTIFICATIONS ---------- */}
-      <div
-        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl border-l z-[999] transition-transform ${
-          openNotif ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        <div className="p-5 border-b flex justify-between">
-          <h2 className="font-semibold">Notifications</h2>
-          <button onClick={() => setOpenNotif(false)}>
-            <X size={22} />
-          </button>
         </div>
       </div>
     </nav>

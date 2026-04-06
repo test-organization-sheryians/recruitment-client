@@ -1,0 +1,111 @@
+[33mcfe291d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32manshu-questions_jobApplication[m[33m, [m[1;31morigin/anshu-questions_jobApplication[m[33m)[m selectboxfix
+[33meb54df7[m fix ui
+[33m60c3b0a[m job application questions
+[33m27f7ec3[m job questions
+[33m5b40a16[m Merge pull request #94 from test-organization-sheryians/ayush/feature/test-result/email
+[33m49d0bb5[m button remove
+[33m57a96e6[m fixed middleware
+[33m627ef25[m Merge branch 'dev' of github-anshu:test-organization-sheryians/recruitment-client into dev
+[33m3a249b4[m update in the rout settings of the verification-page
+[33m01a68ac[m[33m ([m[1;31morigin/ayush/feature/test-result/email[m[33m)[m fix build errors
+[33m4708045[m feature/test-result email
+[33mc1083f8[m Merge branch 'dev' of https://github.com/test-organization-sheryians/recruitment-client into dev
+[33m45aadfe[m Merge pull request #91 from test-organization-sheryians/nishant/feature/fixfallbackerror
+[33m6853795[m[33m ([m[1;31morigin/nishant/feature/fixfallbackerror[m[33m)[m Merge branch 'dev' of https://github.com/test-organization-sheryians/recruitment-client into nishant/feature/fixfallbackerror
+[33me96f438[m Merge pull request #89 from test-organization-sheryians/niha/countAPI
+[33m446ea53[m[33m ([m[1;31morigin/niha/countAPI[m[33m, [m[1;32mniha/countAPI[m[33m)[m cout short
+[33m98cec5b[m Merge pull request #84 from test-organization-sheryians/SuYash/TestRes
+[33m5167c9a[m Merge pull request #58 from test-organization-sheryians/anjali/feature/searchquery
+[33m346709c[m[33m ([m[1;31morigin/SuYash/TestRes[m[33m, [m[1;32mSuYash/TestRes[m[33m)[m AntiCheat,TestDashBoard & Loader
+[33m48aba87[m Merge branch 'dev' of https://github.com/test-organization-sheryians/recruitment-client into SuYash/TestRes
+[33m63d1a78[m AntiCheat,TestDashBoard & Filters
+[33mb9f7941[m AntiCheat and Loader
+[33m68b0491[m AntiCheat Algo
+[33m9825bff[m[33m ([m[1;31morigin/anjali/feature/searchquery[m[33m)[m searchquery final changes
+[33m146ff52[m nishant/feature/fixfallbackerror
+[33m3f9ed49[m Merge branch 'dev' of https://github.com/test-organization-sheryians/recruitment-client into anjali/feature/searchquery
+[33m0f6ee6b[m final changes....
+[33m34114b0[m shortlisted application count api
+[33m0f758c2[m Merge pull request #75 from test-organization-sheryians/satyam/testClient
+[33m8e755d9[m Merge pull request #86 from test-organization-sheryians/revert-78-nishant/feature/fixsessionerror
+[33m0418735[m[33m ([m[1;31morigin/revert-78-nishant/feature/fixsessionerror[m[33m)[m Revert "Nishant/feature/fixsessionerror"
+[33me0e7e07[m Merge branch 'dev' of https://github.com/test-organization-sheryians/recruitment-client into anjali/feature/searchquery
+[33m8a4c89e[m Merge pull request #78 from test-organization-sheryians/nishant/feature/fixsessionerror
+[33mc0adcca[m AntiCheat
+[33m8ccce3d[m Merge branch 'dev' of https://github.com/test-organization-sheryians/recruitment-client into suYash/TestRes
+[33m9cc4182[m AntiCheat
+[33mcb1cb8e[m Merge pull request #82 from test-organization-sheryians/ankit/profilenum
+[33m9c799c5[m Search query
+[33m88f60af[m Merge pull request #81 from test-organization-sheryians/amitpatel/feature/Aitest
+[33m39d0e7c[m[33m ([m[1;31morigin/ankit/profilenum[m[33m)[m profile number fixed
+[33mb36b712[m final changes....
+[33m36933d6[m[33m ([m[1;31morigin/amitpatel/feature/Aitest[m[33m)[m fixed conflicts
+[33mec350b6[m[33m ([m[1;31morigin/nishant/feature/fixsessionerror[m[33m)[m fix: export searchJob api
+[33m7bffb8c[m Merge branch 'dev' of https://github.com/test-organization-sheryians/recruitment-client into anjali/feature/searchquery
+[33m22d7d9f[m Merge pull request #80 from test-organization-sheryians/amitpatel/feature/Aitest
+[33mdbbfbf4[m fixed build error
+[33m86fa55e[m[33m ([m[1;32mAnkit/resumCount[m[33m)[m Merge pull request #67 from test-organization-sheryians/sabhimanu/feature/apply-job/button
+[33m8aa5c85[m Merge pull request #70 from test-organization-sheryians/annu
+[33m30b33fd[m[33m ([m[1;31morigin/annu[m[33m)[m fix responsive auth layout and password icon alignment
+[33me27d161[m[33m ([m[1;32mannu[m[33m)[m fix responsive auth layout
+[33mc77cda3[m fix responsive auth layout and password icon alignment
+[33m523dda9[m fix auth layout responsiveness done
+[33m26f2c85[m Merged dev into fixsessionerror (client)
+[33mbf2097a[m fix auth layout responsiveness
+[33mbbf58f5[m Fix signin form responsive UI for all devices
+[33mcf3e232[m fixed in ui so that we can see assigned popup according to assigned user
+[33mc70d347[m Fix signup & login flow with proper typings and responsive layout
+[33m3b49fc3[m Merge branch 'dev' of https://github.com/test-organization-sheryians/recruitment-client into annu
+[33mdbbffff[m fix(auth): make auth pages responsive
+[33mf47033e[m fix: auto logout on token expiry
+[33m5ba7a19[m[33m ([m[1;31morigin/sabhimanu/feature/apply-job/button[m[33m)[m apply job fixed
+[33m3c4bf5a[m Merge pull request #77 from test-organization-sheryians/ishita/logoutfix
+[33m4907744[m[33m ([m[1;31morigin/ishita/logoutfix[m[33m)[m ishita fixed sidebar logout
+[33m457bb21[m ishita fixed sidebar logout button
+[33mb881435[m Merge pull request #76 from test-organization-sheryians/anu/feature/filterStatus
+[33mbdd398f[m query
+[33m5a5c540[m[33m ([m[1;31morigin/anu/feature/filterStatus[m[33m)[m fixed status filter
+[33m9722e93[m[33m ([m[1;31morigin/satyam/testClient[m[33m)[m Navbar1
+[33m05edd03[m Merge branch 'dev' of https://github.com/test-organization-sheryians/recruitment-client into satyam/testClient
+[33m64dd718[m ishita again fixed sidebar this time logout
+[33mfeaf948[m Merge pull request #74 from test-organization-sheryians/anu/feature/applicationList
+[33ma1f543b[m[33m ([m[1;31morigin/anu/feature/applicationList[m[33m)[m fixed ui
+[33mdf30c45[m Navbar-TestAdd
+[33m0d0cdb3[m Merge pull request #72 from test-organization-sheryians/Ankit/jobApplication
+[33m89a0fa6[m[33m ([m[1;31morigin/ishita/include/sidebar[m[33m)[m ishita include Fix
+[33m37da449[m job apply button updated
+[33m545248f[m ishita include Fix
+[33m5efd936[m[33m ([m[1;31morigin/ankit/jobApplication[m[33m, [m[1;32mAnkit/jobApplication[m[33m)[m fixed forwarded btn
+[33ma7e8d80[m register and login reponsive
+[33m31193d7[m Merge pull request #71 from test-organization-sheryians/sideprofile
+[33m0db9a3d[m[33m ([m[1;31morigin/sideprofile[m[33m)[m fix conflict and
+[33md8e09e5[m Merge pull request #69 from test-organization-sheryians/ankit/nav
+[33mfa48209[m SideBar FIX
+[33m692f3d5[m[33m ([m[1;31morigin/ankit/nav[m[33m)[m updated navbar and added applied job
+[33m2d3d75b[m updated navbar
+[33m052aaa9[m Merge pull request #68 from test-organization-sheryians/satyam/testClient
+[33m726ec41[m fixed staus if no testt enrolled
+[33m42957b5[m Fixed error
+[33m24e3167[m job apply button
+[33mfbd528c[m fixed filter buttons
+[33m95be882[m updated  view detail bug
+[33md93ac18[m updated and solved
+[33m7200d29[m test result
+[33m81be3ea[m Added popup on submit
+[33m06976c0[m Added modal feature on submit
+[33m3887b99[m test page ui fix
+[33ma9ff9f1[m[33m ([m[1;31morigin/feature/applicationStatusMail[m[33m)[m Merge pull request #66 from test-organization-sheryians/feature/admin/jobApplication/bulkUpdate
+[33mbad374f[m merge with the dev
+[33m4377325[m apply-job button
+[33m462a206[m register and login pages reponsive
+[33m3620858[m fixed
+[33mc764963[m final changes
+[33m706b6e3[m fixes of the vacancy
+[33mefd2e20[m Fixed
+[33m425b0f9[m Merge pull request #64 from test-organization-sheryians/ankit/feature/appliedjobs
+[33md34ae86[m[33m ([m[1;31morigin/ankit/feature/appliedjobs[m[33m)[m final appliedjob
+[33m3f6e55c[m remove nav from admin
+[33m62e05bb[m Merge branch 'dev' of github-anshu:test-organization-sheryians/recruitment-client into payal/new
+[33mfb83ef4[m Merge pull request #59 from test-organization-sheryians/SuYash/addedLocation
+[33mc8b727f[m changes
+[33m3c2a3a8[m changesInpag
