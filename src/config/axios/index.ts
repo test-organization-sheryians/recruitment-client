@@ -3,7 +3,8 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+const baseURL = rawBaseURL.replace(/\/$/, "").replace(/\/api$/, "");
 
 const publicRoutes = ["/login", "/register"] as const;
 
