@@ -25,7 +25,7 @@ export interface CandidateProfile {
   linkedinUrl?: string;
   githubUrl?: string;
   portfolioUrl?: string;
-
+  leetcodeUrl: string;
   availability:
     | "immediate"
     | "1_week"

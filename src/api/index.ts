@@ -7,7 +7,8 @@ export * from "./auth/refreshToken";
 
 /* ================= PROFILE ================= */
 export * from "./profile";
-
+export * from "./profile/getGithub"
+export * from "./profile/getLeetcode"
 /* ================= AI TEST ================= */
 export * from "./AITest/postResumeAndGenerateQuestions";
 export * from "./AITest/evaluteAns";

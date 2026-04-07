@@ -12,6 +12,7 @@ interface Props {
   linkedin?: string;
   github?: string;
   portfolioUrl?: string;
+  leetcode?: string; 
   onUpdate?: () => void;
 }
 
@@ -19,6 +20,7 @@ export default function SocialLinksSection({
   linkedin = "",
   github = "",
   portfolioUrl = "",
+  leetcode = "", 
   onUpdate,
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,9 +28,10 @@ export default function SocialLinksSection({
   const [linkedinValue, setLinkedinValue] = useState(linkedin);
   const [githubValue, setGithubValue] = useState(github);
   const [portfolioValue, setPortfolioValue] = useState(portfolioUrl);
+  const [leetcodeValue, setLeetcodeValue] = useState(leetcode); 
 
   const user = useSelector((state: RootState) => state.auth.user);
-  const userId = user?.id
+  const userId = user?.id;
 
   const { mutate: updateProfile, isPending } = useUpdateProfile1();
 
@@ -43,6 +46,7 @@ export default function SocialLinksSection({
         linkedinUrl: linkedinValue.trim() || "",
         githubUrl: githubValue.trim() || "",
         portfolioUrl: portfolioValue.trim() || "",
+        leetcodeUrl: leetcodeValue.trim() || "", 
       },
       {
         onSuccess: () => {
@@ -56,7 +60,8 @@ export default function SocialLinksSection({
     );
   };
 
-  const hasAnyLink = linkedin || github || portfolioUrl;
+  const hasAnyLink =
+    linkedin || github || portfolioUrl || leetcode; 
 
   return (
     <div className="space-y-6 border border-gray-200 rounded-xl p-6 bg-white shadow-md">
@@ -85,6 +90,7 @@ export default function SocialLinksSection({
               LinkedIn → {linkedin}
             </a>
           )}
+
           {github && (
             <a
               href={github}
@@ -95,6 +101,7 @@ export default function SocialLinksSection({
               GitHub → {github}
             </a>
           )}
+
           {portfolioUrl && (
             <a
               href={portfolioUrl}
@@ -103,6 +110,17 @@ export default function SocialLinksSection({
               className="flex items-center gap-3 text-blue-600 hover:underline font-medium"
             >
               Portfolio → {portfolioUrl}
+            </a>
+          )}
+
+          {leetcode && ( 
+            <a
+              href={leetcode}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 text-blue-600 hover:underline font-medium"
+            >
+              LeetCode → {leetcode}
             </a>
           )}
         </div>
@@ -115,6 +133,7 @@ export default function SocialLinksSection({
       {/* Edit Modal */}
       <Modal isOpen={isOpen} onClose={toggleModal} title="Edit Social Links">
         <div className="space-y-5">
+          {/* LinkedIn */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               LinkedIn Profile
@@ -128,6 +147,7 @@ export default function SocialLinksSection({
             />
           </div>
 
+          {/* GitHub */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               GitHub Profile
@@ -141,6 +161,7 @@ export default function SocialLinksSection({
             />
           </div>
 
+          {/* Portfolio */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Portfolio Website
@@ -154,6 +175,21 @@ export default function SocialLinksSection({
             />
           </div>
 
+          {/* LeetCode  */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              LeetCode Profile
+            </label>
+            <input
+              type="url"
+              value={leetcodeValue}
+              onChange={(e) => setLeetcodeValue(e.target.value)}
+              placeholder="https://leetcode.com/yourname"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+          </div>
+
+          {/* Buttons */}
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={toggleModal}
@@ -161,6 +197,7 @@ export default function SocialLinksSection({
             >
               Cancel
             </button>
+
             <button
               onClick={handleSave}
               disabled={isPending}
