@@ -5,10 +5,10 @@ import { usePincodeLookup } from "../hooks/usePincodeLookup";
 import {
   useGetJobById,
   useUpdateJob,
-  useGetCategories,
-  useGetSkills,
-} from "@/features/job-management/hooks/useJobApi";
+} from "../hooks/useJobApi";
+import { useGetCategories, useGetSkills } from "../hooks/useJobApi";
 import { useToast } from "@/components/ui/Toast";
+import { JobSelect } from "../ui/JobSelect";
 import JobDescriptionEditor from "@/features/job-management/components/JobDescriptionEditor";
 import { X } from "lucide-react";
 import { Job } from "@/types/Job";
@@ -316,7 +316,7 @@ export default function EditJob({
 
               {/* Department & Employment Type */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <CustomSelect
+                <JobSelect
                   label={
                     <>
                       <span>Department</span>
@@ -334,7 +334,7 @@ export default function EditJob({
                   isLoadingMore={!!isFetchingMoreCategories}
                 />
 
-                <CustomSelect
+                <JobSelect
                   label={
                     <>
                       <span>Employment Type</span>
@@ -358,7 +358,7 @@ export default function EditJob({
                   Experience Level <span className="text-red-600 ml-1">*</span>
                 </label>
                 <input
-                  type="Number"
+                  type="number"
                   name="requiredExperience"
                   value={formData.requiredExperience}
                   onChange={handleInputChange}
@@ -382,7 +382,6 @@ export default function EditJob({
                 />
               </div>
 
-              {/* Job Description */}
               {/* Job Description */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-[#111218] dark:text-gray-300">
@@ -545,7 +544,7 @@ export default function EditJob({
                     <label className="text-xs font-medium text-[#616889] dark:text-gray-400">
                       Currency
                     </label>
-                    <CustomSelect
+                    <JobSelect
                       label=""
                       value={formData.salary?.currency || "INR"}
                       options={[
@@ -564,7 +563,6 @@ export default function EditJob({
                           },
                         }))
                       }
-                      isCompact
                     />
                   </div>
                 </div>
@@ -611,11 +609,10 @@ export default function EditJob({
                   />
                   {pincodeStatus.message && (
                     <p
-                      className={`text-xs mt-1 ${
-                        pincodeStatus.type === "error"
-                          ? "text-red-600"
-                          : "text-blue-600"
-                      }`}
+                      className={`text-xs mt-1 ${pincodeStatus.type === "error"
+                        ? "text-red-600"
+                        : "text-blue-600"
+                        }`}
                     >
                       {pincodeStatus.loading && (
                         <span className="inline-block w-3 h-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin align-middle" />
@@ -665,130 +662,3 @@ export default function EditJob({
   );
 }
 
-/* ================= CUSTOM SELECT COMPONENT ================= */
-function CustomSelect({
-  label,
-  value,
-  options,
-  onChange,
-  isCompact = false,
-  onLoadMore,
-  hasMore,
-  isLoadingMore,
-}: {
-  label: React.ReactNode;
-  value: string;
-  options: Category[] | { _id: string; name: string }[];
-  onChange: (v: string) => void;
-  isCompact?: boolean;
-  onLoadMore?: () => void;
-  hasMore?: boolean;
-  isLoadingMore?: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (!ref.current) return;
-      if (!ref.current.contains(e.target as Node)) setOpen(false);
-    }
-
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  const selected = options.find((o) => o._id === value);
-
-  return (
-    <div className="flex flex-col gap-1.5" ref={ref}>
-      {label && (
-        <label className="text-sm font-semibold text-[#111218] dark:text-gray-300">
-          {label}
-        </label>
-      )}
-
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setOpen((s) => !s)}
-          aria-haspopup="listbox"
-          aria-expanded={open}
-          className="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-[#dbdde6] dark:border-gray-700 bg-white dark:bg-gray-800/50 text-[#111218] dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-all shadow-sm hover:shadow-md cursor-pointer"
-        >
-          <span className={`${selected ? "" : "text-gray-400"}`}>
-            {selected ? selected.name : "Select"}
-          </span>
-
-          <svg
-            className={`w-4 h-4 ml-2 transform transition ${open ? "rotate-180" : "rotate-0"}`}
-            viewBox="0 0 20 20"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M6 8l4 4 4-4"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-
-        {open && (
-          <ul
-            role="listbox"
-            tabIndex={-1}
-            onScroll={(e) => {
-              const target = e.currentTarget;
-              if (!onLoadMore || !hasMore) return;
-              if (
-                target.scrollTop + target.clientHeight >=
-                target.scrollHeight - 8
-              ) {
-                if (!isLoadingMore) onLoadMore();
-              }
-            }}
-            className="absolute z-40 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg border border-[#dbdde6] dark:border-gray-700 shadow-lg max-h-48 overflow-auto"
-          >
-            <li>
-              <button
-                type="button"
-                onClick={() => {
-                  onChange("");
-                  setOpen(false);
-                }}
-                className={`w-full text-left px-4 py-2 text-sm ${
-                  !value
-                    ? "font-semibold text-[#111218] dark:text-white"
-                    : "text-gray-600 dark:text-gray-200"
-                } cursor-pointer`}
-              >
-                Select
-              </button>
-            </li>
-            {options.map((c) => (
-              <li key={c._id}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange(c._id);
-                    setOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition ${
-                    value === c._id
-                      ? "bg-[#2b4bee] text-white"
-                      : "text-gray-700 dark:text-gray-200"
-                  } cursor-pointer`}
-                >
-                  {c.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
-  );
-}

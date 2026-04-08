@@ -5,7 +5,7 @@ import VacancyCard, { JobData } from "./VacancyCard";
 import type { Job } from "@/types/Job";
 
 type ExtendedJob = Job & { applicantsCount?: number; salary?: number | string | null };
-import { useInfiniteJobsAdmin } from "../jobs/hooks/useJobApi";
+import { useInfiniteJobsAdmin } from "@/features/job-management/hooks/useJobApi";
 import { Briefcase, Loader2, AlertCircle } from "lucide-react";
 
 /* ===================== TYPES ===================== */

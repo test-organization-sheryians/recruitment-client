@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { deleteJob } from '@/api/index';
+import { useDeleteJob } from '../hooks/useJobApi';
 import ConfirmDeleteDialog from '../ui/ConfirmDeleteDialog';
 
 export default function DeleteJob({
@@ -15,6 +15,14 @@ export default function DeleteJob({
 }) {
   const router = useRouter();
 
+  const { mutateAsync: deleteJobAsync, isPending, error } = useDeleteJob();
+
+  const handleDelete = async (): Promise<boolean> => {
+    await deleteJobAsync(jobId);
+    onJobDeleted?.();
+    return true;
+  };
+
   return (
     <ConfirmDeleteDialog
       title={`Delete ${jobTitle || 'Job'}?`}
@@ -22,10 +30,7 @@ export default function DeleteJob({
         'All applicant records',
         'All screening questions',
       ]}
-      onDelete={async () => {
-        const res = await deleteJob(jobId);
-        return !!res; // ✅ MUST RETURN BOOLEAN
-      }}
+      onDelete={handleDelete}
       onDeleted={onJobDeleted}
       redirectAfterDelete={() => {
         router.push('/admin/jobs');

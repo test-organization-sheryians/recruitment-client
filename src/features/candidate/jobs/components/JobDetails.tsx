@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useGetJobById } from "@/features/admin/jobs/hooks/useJobApi";
+import { useGetJobById } from "@/features/job-management/hooks/useJobApi";
 import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
 import {
   useSaveJob,

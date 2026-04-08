@@ -1,17 +1,21 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import AddQuestion from "./AddQuestion"
 import AddIcon from "@mui/icons-material/Add"
 import EditIcon from "@mui/icons-material/Edit"
-import toast from "react-hot-toast"
-import { useParams, useRouter } from "next/navigation"
+import { useToast } from "@/components/ui/Toast"
+
+import AddQuestion from "./AddQuestion"
+import EditQuestionForm from "../ui/EditQuestionForm"
+import ScreeningQuestionDeleteButton from "../ui/ScreeningQuestionDeleteButton"
+import { InputType } from "@/types/inputTypes"
 
 import {
   useGetJobApplicationQuestions,
@@ -19,9 +23,6 @@ import {
   useUpdateJobApplicationQuestion,
   useDeleteJobApplicationQuestion,
 } from "../hooks/useJobApplicationQuestions"
-import EditQuestionForm from "../ui/EditQuestionForm"
-import { InputType } from "@/types/inputTypes"
-import ScreeningQuestionDeleteButton from "../ui/ScreeningQuestionDeleteButton"
 
 /* ================= TYPES ================= */
 
@@ -34,7 +35,6 @@ export interface ScreeningQuestion {
   isRequired: boolean
   isKnockout: boolean
   order?: number
-
   ratingValue?: number
   fileValue?: {
     name: string
@@ -43,7 +43,7 @@ export interface ScreeningQuestion {
   }
 }
 
-type useGetJobApplicationQuestions = {
+type CreateQuestionPayload = {
   title: string
   description?: string
   inputType: InputType
@@ -63,39 +63,29 @@ type useGetJobApplicationQuestions = {
 const ScreeningQuestions: React.FC = () => {
   const params = useParams()
   const router = useRouter()
+  const { success, error: showError }  = useToast();
 
   const jobId = typeof params?.jobId === "string" ? params.jobId : undefined
-  if (!jobId) return <div className="p-10">Job ID not found</div>
 
   const [questions, setQuestions] = useState<ScreeningQuestion[]>([])
-  const [editingQuestion, setEditingQuestion] =
-    useState<ScreeningQuestion | null>(null)
-
+  const [editingQuestion, setEditingQuestion] = useState<ScreeningQuestion | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
   const { data, isLoading, refetch } = useGetJobApplicationQuestions(jobId)
 
-  const createMutation = useCreateJobApplicationQuestions()
-  const updateMutation = useUpdateJobApplicationQuestion()
-  const deleteMutation = useDeleteJobApplicationQuestion()
-
-  // ✅ logic same: refetch + toast + redirect
-  const handleSaveChanges = async () => {
-    try {
-      await refetch()
-      toast.success("All changes saved successfully")
-      router.push(`/admin`)
-    } catch (error) {
-      toast.error("Failed to save changes")
-    }
-  }
+  const { mutate: createQuestionFn, isPending: isCreating, error: createError } = useCreateJobApplicationQuestions()
+  const { mutate: updateQuestionFn, isPending: isUpdating, error: updateError } = useUpdateJobApplicationQuestion()
+  const { mutate: deleteQuestionFn, isPending: isDeleting, error: deleteError } = useDeleteJobApplicationQuestion()
 
   useEffect(() => {
-    if (data?.data) {
+    // Check if data is the array itself, or if it's nested inside data.data
+    const questionsArray = Array.isArray(data) ? data : data?.data;
+
+    if (Array.isArray(questionsArray)) {
       setQuestions(
-        [...data.data].sort(
+        [...questionsArray].sort(
           (a: ScreeningQuestion, b: ScreeningQuestion) =>
             (a.order ?? 0) - (b.order ?? 0)
         )
@@ -103,10 +93,24 @@ const ScreeningQuestions: React.FC = () => {
     }
   }, [data])
 
-  /* ================= ACTIONS (NO CHANGE) ================= */
+  // ================= EARLY RETURNS (Must be after ALL hooks) =================
+  if (!jobId) return <div className="p-10 text-red-500 font-bold">Error: Job ID not found</div>
+  if (isLoading) return <div className="p-10 font-medium">Loading questions...</div>
 
-  const handleAddQuestion = (q: useGetJobApplicationQuestions) => {
-    createMutation.mutate(
+  /* ================= HANDLERS ================= */
+
+  const handleSaveChanges = async () => {
+    try {
+      await refetch()
+      success("All changes saved successfully")
+      router.push(`/admin`)
+    } catch (error) {
+      showError("Failed to save changes")
+    }
+  }
+
+  const handleAddQuestion = (q: CreateQuestionPayload) => {
+    createQuestionFn(
       {
         jobId,
         questions: [
@@ -118,19 +122,20 @@ const ScreeningQuestions: React.FC = () => {
             isRequired: q.isRequired,
             isKnockout: q.isKnockout,
             order: questions.length + 1,
-            ratingValue:
-              q.inputType === "rating" ? (q.ratingValue ?? 0) : undefined,
+            ratingValue: q.inputType === "rating" ? (q.ratingValue ?? 0) : undefined,
             fileValue: q.inputType === "file" ? q.fileValue : undefined,
           },
         ],
       },
       {
         onSuccess: async () => {
-          toast.success("Question added")
+          success("Question added")
           setIsDrawerOpen(false)
           await refetch()
         },
-        onError: () => toast.error("Failed to add question"),
+        onError: () => {
+          showError(createError?.message || "Failed to add question")
+        }
       }
     )
   }
@@ -138,7 +143,7 @@ const ScreeningQuestions: React.FC = () => {
   const handleSaveEdit = () => {
     if (!editingQuestion) return
 
-    updateMutation.mutate(
+    updateQuestionFn(
       {
         jobId,
         payload: {
@@ -162,34 +167,35 @@ const ScreeningQuestions: React.FC = () => {
       },
       {
         onSuccess: async () => {
-          toast.success("Question updated")
+          success("Question updated")
           setIsEditDialogOpen(false)
           await refetch()
         },
-        onError: (err: unknown) => {
-          console.error(err)
-          toast.error("Update failed")
+        onError: () => {
+          const errorMsg = updateError?.message || "Failed to update question"
+          showError(errorMsg)
         },
       }
     )
   }
 
-  const deleteQuestion = (questionId: string) => {
-    deleteMutation.mutate(
-      { jobId, questionId },
+const deleteQuestion = (questionId: string) => {
+    deleteQuestionFn(
+      { jobId, questionId },  
       {
         onSuccess: async () => {
-          toast.success("Question deleted")
+          success("Question deleted")
           await refetch()
         },
-        onError: () => toast.error("Failed to delete question"),
+        onError: () => {
+          const errorMsg = deleteError?.message || "Failed to delete question"
+          showError(errorMsg)
+        },
       }
     )
   }
 
-  if (isLoading) return <div className="p-10">Loading...</div>
-
-  /* ================= UI (IMPROVED ONLY) ================= */
+  /* ================= UI ================= */
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark transition-colors">
@@ -201,7 +207,6 @@ const ScreeningQuestions: React.FC = () => {
               AdminPanel
             </h2>
             <div className="flex flex-wrap items-center text-xs md:text-sm text-[#616889] mt-0.5 gap-1">
-              {/* Jobs */}
               <button
                 type="button"
                 onClick={() => router.push("/admin")}
@@ -209,21 +214,18 @@ const ScreeningQuestions: React.FC = () => {
               >
                 Jobs
               </button>
-
               <span>/</span>
-                   <span className="font-bold text-gray-900 dark:text-white">
-                     Screening Questions </span>
+              <span className="font-bold text-gray-900 dark:text-white">
+                Screening Questions
+              </span>
               <span>/</span>
-
-              {/* Current Job */}
               <span
                 className="font-bold text-gray-900 dark:text-white max-w-[220px] truncate"
-                title={data?.data.jobTitle}
+                title={data?.jobTitle}
               >
-                {data?.data.jobTitle}
+                {data?.jobTitle}
               </span>
             </div>
-
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">
@@ -239,6 +241,7 @@ const ScreeningQuestions: React.FC = () => {
               onClick={handleSaveChanges}
               className="h-10 px-5 rounded-xl bg-primary text-white font-extrabold text-sm hover:opacity-95 transition shadow-sm cursor-pointer"
               type="button"
+              disabled={isUpdating || isCreating || isDeleting}
             >
               Save Changes
             </button>
@@ -345,19 +348,16 @@ const ScreeningQuestions: React.FC = () => {
                         questionId={q._id}
                         questionTitle={q.title}
                         onDeleted={async () => {
-                          toast.success("Question deleted")
+                          success("Question deleted")
                           await refetch()
                         }}
-
                       />
-
                     </div>
                   </div>
 
                   <div className="mt-4 flex items-center justify-between text-xs text-[#616889]">
                     <span className="opacity-80">
-                      Order:{" "}
-                      <span className="font-bold">{index + 1}</span>
+                      Order: <span className="font-bold">{index + 1}</span>
                     </span>
 
                     <span className="opacity-0 group-hover:opacity-100 transition">
@@ -410,10 +410,11 @@ const ScreeningQuestions: React.FC = () => {
 
             <button
               onClick={handleSaveEdit}
-              className="mt-6 bg-primary text-white px-4 py-2 rounded-xl w-full font-bold hover:opacity-95 transition cursor-pointer"
+              disabled={isUpdating}
+              className="mt-6 bg-primary text-white px-4 py-2 rounded-xl w-full font-bold hover:opacity-95 transition cursor-pointer disabled:opacity-50"
               type="button"
             >
-              Save Changes
+              {isUpdating ? "Saving..." : "Save Changes"}
             </button>
           </DialogContent>
         </Dialog>

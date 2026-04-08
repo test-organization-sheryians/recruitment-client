@@ -20,13 +20,13 @@ export * from "./category/deleteCategory";
 export * from "./category/updateCategory";
 
 /* ================= JOBS ================= */
-export * from "./jobs/getjobs";
+export * from "./jobs/getJobs";
 export * from "./jobs/createJob";
 export * from "./jobs/updateJob";
 export * from "./jobs/deleteJob";
 export * from "./jobs/jobCategory";
 export * from "./jobs/getJobId";
-// export * from "./jobs/searchJob"
+export * from "./jobs/jobApplicationQuestion";
 /* ================= SKILLS ================= */
 export * from "./skills/createSkill";
 export * from "./skills/deleteSkill";

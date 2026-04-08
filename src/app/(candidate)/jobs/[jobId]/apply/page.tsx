@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import JobQuestionList from "@/features/candidate/jobApplicationQuestions/components/jobQuestionList";
-import { useGetJobById } from "@/features/admin/jobs/hooks/useJobApi";
+import { useGetJobById } from "@/features/job-management/hooks/useJobApi";
 
 export default function ApplyPage() {
   const params = useParams();

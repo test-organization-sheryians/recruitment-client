@@ -1,16 +1,17 @@
 "use client";
 
-import React from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import apiClient from "@/lib/api-client";
-import { createJob } from "../hooks/jobs.api";
-import { useGetCategories } from "../hooks/useJobApi";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {useToast } from "@/components/ui/Toast";
+import { Briefcase } from "lucide-react";
+
+// Clean imports pointing to your dedicated hook files
+import { useCreateJob } from "../hooks/useJobApi";
+import { useGetCategories, useGetSkills } from "../hooks/useJobApi";
+import { usePincodeLookup } from "../hooks/usePincodeLookup";
+import { JobSelect } from "../ui/JobSelect";
 
 import JobDescriptionEditor from "./JobDescriptionEditor";
-import { Briefcase } from "lucide-react";
-import { usePincodeLookup } from "../hooks/usePincodeLookup";
-import { useRouter } from "next/navigation";
-import toast from "react-hot-toast"; // ✅ ADDED
 
 /* ================= TYPES ================= */
 
@@ -46,19 +47,14 @@ type CreateJobFormValues = {
     currency?: string;
   };
   location: LocationForm;
-  clientId: string; // ✅ ADD
+  clientId: string;
 };
 
 type CreateJobPayload = Omit<CreateJobFormValues, "skills"> & {
   skills: string[];
 };
 
-/* ================= API ================= */
-
-const fetchSkills = async (): Promise<Skill[]> => {
-  const res = await apiClient.get("/skills");
-  return res.data.data;
-};
+/* ================= CONSTANTS ================= */
 
 const today = new Date().toISOString().split("T")[0];
 
@@ -67,12 +63,9 @@ const today = new Date().toISOString().split("T")[0];
 export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
   const router = useRouter();
 
-  const [skillQuery, setSkillQuery] = React.useState("");
-
-  const { data: skills = [] } = useQuery({
-    queryKey: ["skills"],
-    queryFn: fetchSkills,
-  });
+  const [skillQuery, setSkillQuery] = useState("");
+  const { data: skills = [] } = useGetSkills();
+  const { success, error: showError } = useToast();
 
   const {
     data: categories = [],
@@ -104,7 +97,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
     clientId: "6915b90df6594de75060410b",
   };
 
-  const [form, setForm] = React.useState<CreateJobFormValues>(initialForm);
+  const [form, setForm] = useState<CreateJobFormValues>(initialForm);
 
   const pincodeStatus = usePincodeLookup(form.location.pincode, (location) => {
     setForm((prev) => ({
@@ -116,46 +109,28 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
     }));
   });
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: createJob,
+  // Using your custom mutation hook instead of raw useMutation
+  const { mutate: createNewJob, isPending, error } = useCreateJob();
 
-    onSuccess: (res) => {
-      toast.dismiss(); // ✅ remove loading if any
-
-      const jobId = res?.data?.data?._id;
-
-      if (!jobId) {
-        toast.error("Job created but Job ID not found");
-        return;
-      }
-
-      toast.success("Job created successfully 🚀");
-
-      // ✅ small delay so toast is visible
-      setTimeout(() => {
-        router.push(`/admin/screen/${jobId}`);
-      }, 800);
-    },
-
-    onError: (error: any) => {
-      toast.dismiss(); // ✅ remove loading if any
-      const message = error?.response?.data?.message || "Failed to create job";
-      toast.error(message);
-    },
-  });
+  useEffect(() => {
+    if (error) {
+      const message = (error as any)?.response?.data?.message || "Failed to create job";
+      showError(message);
+    }
+  }, [error, showError]);
 
   const submitJob = () => {
     const t = new Date();
     t.setHours(0, 0, 0, 0);
 
     if (!form.expiry) {
-      toast.error("Please select an application deadline");
+      showError("Please select an application deadline");
       return;
     }
 
     const selectedDate = new Date(form.expiry);
     if (selectedDate < t) {
-      toast.error("Application deadline cannot be in the past");
+      showError("Application deadline cannot be in the past");
       return;
     }
 
@@ -169,40 +144,53 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
       !form.category ||
       form.skills.length === 0
     ) {
-      toast.error("Please fill all required fields");
+      showError("Please fill all required fields");
       return;
     }
 
-    // ✅ show loading toast
-    toast.loading("Creating job...");
+    createNewJob(
+      {
+        title: form.title,
+        description: form.description,
+        education: form.education,
+        requiredExperience: form.requiredExperience,
+        expiry: form.expiry,
+        category: form.category,
+        skills: form.skills.map((s) => s._id),
+        jobType: form.jobType || "Full-Time",
+        salary: {
+          min: form.salary.min,
+          max: form.salary.max,
+          currency: form.salary.currency || "INR",
+        },
+        location: {
+          city: form.location.city,
+          state: form.location.state,
+          pincode: form.location.pincode,
+          country: form.location.country || "India",
+        },
+        clientId: form.clientId,
+      } as CreateJobPayload,
+      {
+        // Handle success logic here
+        onSuccess: (res: any) => {
+          // if jobId is not present in response then return
+          // const jobId = res?.data?.data?._id; 
+          const jobId = res?.data?._id;
 
-    mutate({
-      title: form.title,
-      description: form.description,
-      education: form.education,
-      requiredExperience: form.requiredExperience,
-      expiry: form.expiry,
-      category: form.category,
+          if (!jobId) {
+            showError("Job created but Job ID not found");
+            return;
+          }
 
-      skills: form.skills.map((s) => s._id),
+          success("Job created successfully 🚀");
 
-      jobType: form.jobType || "Full-Time",
-
-      salary: {
-        min: form.salary.min,
-        max: form.salary.max,
-        currency: form.salary.currency || "INR",
-      },
-
-      location: {
-        city: form.location.city,
-        state: form.location.state,
-        pincode: form.location.pincode,
-        country: form.location.country || "India",
-      },
-
-      clientId: form.clientId,
-    } as CreateJobPayload);
+          setTimeout(() => {
+            router.push(`/admin/screen/${jobId}`);
+          }, 800);
+        },
+      }
+    );
   };
 
   return (
@@ -247,7 +235,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
               />
 
               <TwoCol>
-                <Select
+                <JobSelect
                   label="Job Type"
                   value={form.jobType}
                   options={[
@@ -256,7 +244,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
                     { _id: "Part-Time", name: "Part-Time" },
                     { _id: "Hybrid", name: "Hybrid" },
                   ]}
-                  onChange={(v) => setForm({ ...form, jobType: v })}
+                  onChange={(v: string) => setForm({ ...form, jobType: v })}
                 />
 
                 <Input
@@ -310,11 +298,10 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
 
                   {pincodeStatus.message && (
                     <p
-                      className={`text-xs mt-1 ${
-                        pincodeStatus.type === "error"
-                          ? "text-red-600"
-                          : "text-blue-600"
-                      }`}
+                      className={`text-xs mt-1 ${pincodeStatus.type === "error"
+                        ? "text-red-600"
+                        : "text-blue-600"
+                        }`}
                     >
                       {pincodeStatus.loading && (
                         <span className="inline-block w-3 h-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin align-middle" />
@@ -437,14 +424,14 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
                   <div className="flex flex-wrap gap-2">
                     {skills
                       .filter(
-                        (s) =>
+                        (s: Skill) =>
                           s.name
                             .toLowerCase()
                             .includes(skillQuery.toLowerCase()) &&
                           !form.skills.some((x) => x._id === s._id),
                       )
                       .slice(0, 8)
-                      .map((s) => (
+                      .map((s: Skill) => (
                         <button
                           key={s._id}
                           onClick={() => {
@@ -460,7 +447,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
                 )}
               </div>
 
-              <Select
+              <JobSelect
                 label={
                   <>
                     <span>Job Category</span>
@@ -486,7 +473,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
 
                 <JobDescriptionEditor
                   value={form.description}
-                  onChange={(html) =>
+                  onChange={(html: string) =>
                     setForm({
                       ...form,
                       description: html,
@@ -498,17 +485,7 @@ export default function CreateJob({ onClose }: { onClose?: () => void } = {}) {
           </section>
 
           <div className="flex items-center justify-between mt-10">
-            {/* <button
-              type="button"
-              className="text-sm font-semibold text-gray-500 hover:text-gray-700 transition"
-              onClick={() => {
-                toast("Draft save coming soon 🙂");
-              }}
-            >
-              Save Draft
-            </button> */}
-
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 ml-auto">
               <button
                 type="button"
                 className="px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-gray-50 transition cursor-pointer"
@@ -561,133 +538,6 @@ function Input({
         {...props}
         className="px-4 py-3 rounded-lg border bg-gray-50 dark:bg-gray-800"
       />
-    </div>
-  );
-}
-
-type SelectProps = {
-  label: React.ReactNode;
-  value: string;
-  options: Category[];
-  onChange: (v: string) => void;
-
-  // infinite scroll props
-  onLoadMore?: () => void;
-  hasMore?: boolean;
-  isLoadingMore?: boolean;
-};
-
-function Select({
-  label,
-  value,
-  options,
-  onChange,
-  onLoadMore,
-  hasMore = false,
-  isLoadingMore = false,
-}: {
-  label: React.ReactNode;
-  value: string;
-  options: Category[];
-  onChange: (v: string) => void;
-  onLoadMore?: () => void;
-  hasMore?: boolean;
-  isLoadingMore?: boolean;
-}) {
-  // allow optional infinite-loading props when provided
-  // @ts-ignore
-  const [open, setOpen] = React.useState(false);
-  const ref = React.useRef<HTMLDivElement | null>(null);
-
-  React.useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (!ref.current) return;
-      if (!ref.current.contains(e.target as Node)) setOpen(false);
-    }
-
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  const selected = options.find((o) => o._id === value);
-
-  return (
-    <div className="flex flex-col gap-1.5" ref={ref}>
-      <label className="text-sm font-bold">{label}</label>
-
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setOpen((s) => !s)}
-          aria-haspopup="listbox"
-          aria-expanded={open}
-          className="w-full flex items-center justify-between px-4 py-3 rounded-lg border bg-white dark:bg-gray-800 text-left shadow-sm hover:shadow-md transition cursor-pointer"
-        >
-          <span className={`${selected ? "" : "text-gray-400"}`}>
-            {selected ? selected.name : "Select"}
-          </span>
-
-          <svg
-            className={`w-4 h-4 ml-2 transform transition ${open ? "rotate-180" : "rotate-0"}`}
-            viewBox="0 0 20 20"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M6 8l4 4 4-4"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-
-        {open && (
-          <ul
-            role="listbox"
-            tabIndex={-1}
-            onScroll={(e) => {
-              const target = e.currentTarget;
-              if (!onLoadMore || !hasMore) return;
-              if (
-                target.scrollTop + target.clientHeight >=
-                target.scrollHeight - 8
-              ) {
-                if (!isLoadingMore) onLoadMore();
-              }
-            }}
-            className="absolute z-40 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg border shadow-lg max-h-48 overflow-auto"
-          >
-            <li>
-              <button
-                type="button"
-                onClick={() => {
-                  onChange("");
-                  setOpen(false);
-                }}
-                className={`w-full text-left px-4 py-2 text-sm ${!value ? "font-semibold" : "text-gray-600 dark:text-gray-200"} cursor-pointer`}
-              >
-                Select
-              </button>
-            </li>
-            {options.map((c) => (
-              <li key={c._id}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange(c._id);
-                    setOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition ${value === c._id ? "bg-[#2b4bee] text-white" : "text-gray-700 dark:text-gray-200"} cursor-pointer`}
-                >
-                  {c.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
     </div>
   );
 }

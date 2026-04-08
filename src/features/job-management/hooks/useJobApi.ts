@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import * as api from "@/api";
+import {getCategoriesPaginated} from '@/api/category/getCategoriesPaginated'
 import { Job } from "@/types/Job";
 
 export type JobUpdatePayload = Record<string, unknown>;
@@ -8,33 +9,13 @@ import {
   getJobsPaginated,
   type BackendPaginatedResponse,
 } from "@/api/jobs/getJobsPaginated";
-import {getCategoriesPaginated} from '@/api/category/getCategoriesPaginated'
-// import { getJobById } from "@/api";
+
 
 export const useGetJobs = () => {
   return useQuery({
     queryKey: ["jobs"],
     queryFn: () => api.getJobs(),
-    retry: 0,
-  });
-};
-
-const DEFAULT_LIMIT = 10;
-
-export const useInfiniteJobsAdmin = (limit: number = DEFAULT_LIMIT) => {
-  return useInfiniteQuery<BackendPaginatedResponse<Job>>({
-    queryKey: ["admin-jobs", { limit }],
-    initialPageParam: 1,
-    queryFn: async ({ pageParam }) => {
-      const res = await getJobsPaginated(pageParam as number, limit);
-      return res;
-    },
-    getNextPageParam: (lastPage) => {
-      const { pagination } = lastPage;
-      if (!pagination) return undefined;
-      const next = (pagination.currentPage ?? 1) + 1;
-      return next <= (pagination.totalPages ?? 0) ? next : undefined;
-    },
+    retry: 1,
   });
 };
 
@@ -71,6 +52,7 @@ export const useDeleteJob = () => {
     retry: 0,
   });
 };
+
 // Fetch jobs by category
 export const useGetJobsByCategory = (categoryId: string | null) => {
   return useQuery({
@@ -82,6 +64,26 @@ export const useGetJobsByCategory = (categoryId: string | null) => {
     retry: 0,
   });
 };
+
+const DEFAULT_LIMIT = 10;
+
+export const useInfiniteJobsAdmin = (limit: number = DEFAULT_LIMIT) => {
+  return useInfiniteQuery<BackendPaginatedResponse<Job>>({
+    queryKey: ["admin-jobs", { limit }],
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) => {
+      const res = await getJobsPaginated(pageParam as number, limit);
+      return res;
+    },
+    getNextPageParam: (lastPage) => {
+      const { pagination } = lastPage;
+      if (!pagination) return undefined;
+      const next = (pagination.currentPage ?? 1) + 1;
+      return next <= (pagination.totalPages ?? 0) ? next : undefined;
+    },
+  });
+};
+
 
 // Fetch categories with pagination (infinite)
 export const useGetCategories = (limit: number = DEFAULT_LIMIT) => {
@@ -111,7 +113,7 @@ export const useGetCategories = (limit: number = DEFAULT_LIMIT) => {
 
 // Fetch all skills
 export const useGetSkills = () => {
-  return useQuery({
+  return useQuery({ 
     queryKey: ["skills"],
     queryFn: () => api.getAllSkills(),
     retry: 0,
