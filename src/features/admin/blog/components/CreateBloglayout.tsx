@@ -13,6 +13,7 @@ import { useDeleteBlog } from "@/features/admin/blog/hooks/useDeleteBlog";
 import { useBlog } from "@/features/admin/blog/hooks/useBlog";
 import Link from "next/link";
 import { ChevronRight, FileText, Plus } from "lucide-react";
+import DeleteModal from "./DeleteModal";
 
 const BlogEditor = dynamic(
   () => import("@/features/admin/blog/components/BlogEditor"),
@@ -39,6 +40,7 @@ export default function CreateBlogLayout() {
     content: [],
     status: "draft",
   });
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     if (isEdit && blog) {
@@ -124,11 +126,24 @@ export default function CreateBlogLayout() {
     console.log("📌 Technologies to save:", postToSave.technologies);
 
     if (!postToSave.title?.trim()) {
-      return toast.error("Title is required");
+      return toast.error("Title is required", {
+        duration: 3000,
+        position: "top-right",
+      });
     }
 
     if (!postToSave.category) {
-      return toast.error("Category is required");
+      return toast.error("Please select a category of the blog", {
+        duration: 3000,
+        position: "top-right",
+      });
+    }
+
+    if (!postToSave.hero?.imageUrl) {
+      return toast.error(" Please upload the featured image ", {
+        duration: 3000,
+        position: "top-right",
+      });
     }
 
     try {
@@ -139,37 +154,61 @@ export default function CreateBlogLayout() {
       console.log("📤 Final Payload:", payload);
       console.log("📤 Payload technologies:", payload.technologies);
 
+      const successMsg =
+        status === "published"
+          ? "Blog published successfully! 🎉"
+          : status === "archived"
+            ? "Blog archived successfully 📦"
+            : "Draft saved!";
+
       if (isEdit && blogId) {
         await updateBlog(blogId, payload);
-        toast.success(
-          status === "published"
-            ? "Blog published successfully!"
-            : status === "archived"
-              ? "Blog archived!"
-              : "Draft saved!",
-        );
+        toast.success(successMsg, { duration: 3000, position: "top-right" });
       } else {
         await createBlog(payload);
-        toast.success(
-          status === "published"
-            ? "Blog published successfully!"
-            : status === "archived"
-              ? "Blog archived!"
-              : "Draft saved!",
-        );
+        toast.success(successMsg, { duration: 3000, position: "top-right" });
       }
 
       router.push("/admin/blog");
       router.refresh();
     } catch (err: any) {
-      const msg =
+      let msg =
         err?.response?.data?.message || err?.message || "Operation failed";
+
+      // Convert API error messages to user-friendly messages
+      if (msg.includes("hero.imageUrl")) {
+        msg = "Please upload the featured image";
+      } else if (msg.includes("category")) {
+        msg = "Please select a category";
+      } else if (msg.includes("title")) {
+        msg = "Title is required";
+      } else if (msg.includes("content")) {
+        msg = "Please add some content to your blog";
+      }
+
       console.error("❌ Save error:", err);
-      toast.error(msg);
+      toast.error(msg, { duration: 3000, position: "top-right" });
+    }
+  };
+
+  const handleDeleteBlog = async () => {
+    try {
+      await deleteAPI(blogId!);
+      toast.success("Blog deleted successfully! 🗑️", {
+        duration: 3000,
+        position: "top-right",
+      });
+      router.push("/admin/blog");
+      router.refresh();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || "Failed to delete blog";
+      toast.error(msg, { duration: 3000, position: "top-right" });
     }
   };
 
   const handleSaveDraft = () => savePost("draft");
+  const handleOpenDeleteModal = () => setIsDeleteModalOpen(true);
+  const handleCloseDeleteModal = () => setIsDeleteModalOpen(false);
 
   const handlePublish = () => savePost("published");
 
@@ -325,18 +364,18 @@ export default function CreateBlogLayout() {
               onUpdate={handleBlogDataChange}
               initialTitle={blogPost.title}
               isEdit={isEdit}
-              onDeleteBlog={() => {
-                if (confirm("Delete permanently?")) {
-                  deleteAPI(blogId!).then(() => {
-                    router.push("/admin/blog");
-                    router.refresh();
-                  });
-                }
-              }}
+              onDeleteBlog={handleOpenDeleteModal}
             />
           </div>
         </aside>
       </main>
+
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        title={blogPost.title}
+        onConfirm={handleDeleteBlog}
+        onClose={handleCloseDeleteModal}
+      />
     </div>
   );
 }

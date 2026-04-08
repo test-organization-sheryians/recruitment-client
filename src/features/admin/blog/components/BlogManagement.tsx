@@ -8,6 +8,8 @@ import { useDeleteBlog } from "@/features/admin/blog/hooks/useDeleteBlog";
 import { useRef, useEffect, useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
 import { useSearchBlogBySlug } from "../hooks/useSearchBlogBySlug";
+import DeleteModal from "./DeleteModal";
+import toast from "react-hot-toast";
 
 export default function BlogManagement() {
   const router = useRouter();
@@ -25,6 +27,9 @@ export default function BlogManagement() {
   // const { hasMore, lastBlogRef } = useInfiniteBlogs();
   const [searchedBlog, setSearchedBlog] = useState<any[] | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedBlogId, setSelectedBlogId] = useState<string | null>(null);
+  const [selectedBlogTitle, setSelectedBlogTitle] = useState("");
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -85,21 +90,40 @@ export default function BlogManagement() {
 
   const totalBlogs = blogList.length;
 
-  const handleDelete = async (blogId: string, title: string) => {
-    if (
-      confirm(
-        `Are you sure you want to delete "${title}"? This action cannot be undone.`,
-      )
-    ) {
-      try {
-        await deleteBlog(blogId);
-        await refetch();
-        alert("Blog deleted successfully!");
-      } catch (err) {
-        console.error("Failed to delete blog:", err);
-        alert("Failed to delete blog");
-      }
+  const handleDelete = (blogId: string, title: string) => {
+    setSelectedBlogId(blogId);
+    setSelectedBlogTitle(title);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedBlogId) return;
+
+    try {
+      await deleteBlog(selectedBlogId);
+      await refetch();
+      setIsDeleteModalOpen(false);
+      setSelectedBlogId(null);
+      setSelectedBlogTitle("");
+      toast.success("Blog deleted successfully!", {
+        duration: 3000,
+        position: "top-right",
+        icon: "🗑️",
+      });
+    } catch (err: any) {
+      console.error("Failed to delete blog:", err);
+      const message = err?.response?.data?.message || "Failed to delete blog";
+      toast.error(message, {
+        duration: 3000,
+        position: "top-right",
+      });
     }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setSelectedBlogId(null);
+    setSelectedBlogTitle("");
   };
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -318,7 +342,7 @@ export default function BlogManagement() {
                   </Link>
 
                   <button
-                    className="p-2 hover:bg-red-50 rounded-lg text-red-600 transition-colors"
+                    className="p-2 hover:bg-red-50 rounded-lg text-red-600 transition-colors cursor-pointer"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -354,6 +378,13 @@ export default function BlogManagement() {
           {!hasMore && <p className="text-slate-400">No more blogs to load</p>}
         </div>
       </div>
+
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        title={selectedBlogTitle}
+        onConfirm={handleConfirmDelete}
+        onClose={handleCancelDelete}
+      />
     </div>
   );
 }
