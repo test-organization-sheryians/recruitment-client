@@ -40,7 +40,7 @@ export default function Modal({
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       <div
-        className={`relative bg-white rounded-2xl shadow-2xl ] ${maxWidthClasses[maxWidth]} ${className}`}
+        className={`relative w-full max-h-[90vh] overflow-hidden bg-white rounded-2xl shadow-2xl ${maxWidthClasses[maxWidth]} ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
