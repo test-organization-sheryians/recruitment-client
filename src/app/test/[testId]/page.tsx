@@ -50,12 +50,7 @@ export default function StartTestPage() {
   }, [])
 
   const handleStart = () => {
-    const token = Cookies.get("access");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
+    // backend-authenticated requests only; remove client-side token check
     mutate(
       { testId },
       {

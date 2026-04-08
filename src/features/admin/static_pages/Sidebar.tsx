@@ -13,13 +13,14 @@ type User = {
 
 const NAV_ITEMS = [
   { name: "Dashboard", href: "/admin" },
-  { name: "Jobs", href: "/admin/jobs" },
-  { name: "Clients", href: "/admin/clients" },
+  // { name: "Jobs", href: "/admin/jobs" },
+  // { name: "Clients", href: "/admin/clients" },
   { name: "Skills", href: "/admin/skills" },
   { name: "Categories", href: "/admin/categories" },
   { name: "Users", href: "/admin/users" },
   { name: "Tests", href: "/admin/tests" },
   { name: "Blog", href: "/admin/blog" },
+  { name: "View Groups", href: "/admin/groups" },
 ];
 
 const AVATAR_COLORS = [

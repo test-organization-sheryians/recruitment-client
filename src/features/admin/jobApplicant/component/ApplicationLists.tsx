@@ -8,13 +8,16 @@ import {
 } from "../hooks/useJobApplicant";
 import { useParams } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
-import PopupForm from "./PopupForm"; 
-import { 
-  ApplicantStatus, 
-  ApplicantRow, 
-  ApplicantsApiResponse 
+import PopupForm from "./PopupForm";
+import {
+  ApplicantStatus,
+  ApplicantRow,
+  ApplicantsApiResponse
 } from "@/types/applicant";
 import { updateInterviewStatus } from "@/api/jobApplication/scheduleInterview";
+
+import AnswerPopup, { QuestionAnswer } from "./AnswerPopup";
+import { Eye } from "lucide-react";
 
 
 /* ================= TYPES ================= */
@@ -29,15 +32,16 @@ type ApplicantsListProps = {
 
 // Extended row for applicants
 interface ExtendedApplicantRow extends Omit<ApplicantRow, 'id'> {
-  id: string;             
-  candidateUserId: string; 
+  id: string;
+  candidateUserId: string;
   name: string;
   email: string;
   role: string;
   date: string;
-  experience: string; 
+  experience: string;
   status: ApplicantStatus;
   resume: string;
+  answers: QuestionAnswer[]; //<-- Add answers to the applicant row -->
 }
 
 // Flat Type for Interview Table Display
@@ -48,7 +52,7 @@ interface InterviewRow {
   interviewer: string;
   jobTitle: string;
   meetingLink: string;
-  Timing: string; 
+  Timing: string;
   status: string;
 }
 
@@ -75,7 +79,7 @@ const statusColors: Record<string, string> = {
   forwareded: "bg-purple-100 text-purple-700",
   interview: "bg-orange-100 text-orange-700",
   hired: "bg-green-100 text-green-700",
-  Scheduled: "bg-indigo-100 text-indigo-700", 
+  Scheduled: "bg-indigo-100 text-indigo-700",
   Rescheduled: "bg-orange-100 text-orange-700",
   Cancelled: "bg-red-100 text-red-700",
 };
@@ -88,7 +92,7 @@ const tabs: Array<"all" | ApplicantStatus> = [
   "forwarded",
   "interview",
   "hired",
-  
+
 ];
 
 const ThreeDotsIcon = () => (
@@ -113,21 +117,21 @@ export default function ApplicantsList({
 
   // 1. Fetch Applicants
   const {
-  data,
-  refetch: refetchApplicants,
-} = useJobApplicant(jobId) as {
-  data?: ApplicantsApiResponse;
-  refetch: () => void;
-};
+    data,
+    refetch: refetchApplicants,
+  } = useJobApplicant(jobId) as {
+    data?: ApplicantsApiResponse;
+    refetch: () => void;
+  };
 
 
   // 2. Fetch Interviews (Only when tab is 'interview')
   const [activeTab, setActiveTab] = useState<"all" | ApplicantStatus>("all");
-const {
-  data: interviewResponse,
-  isLoading: isInterviewsLoading,
-  refetch: refetchInterviews,
-} = useInterviewsByJob(jobId);
+  const {
+    data: interviewResponse,
+    isLoading: isInterviewsLoading,
+    refetch: refetchInterviews,
+  } = useInterviewsByJob(jobId);
 
 
   const [selectedApplicants, setSelectedApplicants] = useState<string[]>([]);
@@ -138,6 +142,12 @@ const {
   const [interviewMode, setInterviewMode] = useState<"schedule" | "reschedule">("schedule");
   const [selectedInterviewId, setSelectedInterviewId] = useState<string | null>(null);
 
+  const [isAnswerPopupOpen, setIsAnswerPopupOpen] = useState(false);
+  const [selectedApplicantData, setSelectedApplicantData] = useState<{
+    name: string;
+    answers: QuestionAnswer[]
+  }
+  >({ name: "", answers: [] });
   const { mutate, isPending } = useBulkUpdateApplicants();
   const { success, error } = useToast();
 
@@ -148,8 +158,8 @@ const {
     );
   };
 
-  const handleScheduleInterview = (candidateUserId: string,   applicationId: string, mode: "schedule" | "reschedule",
-  interviewId?: string) => {
+  const handleScheduleInterview = (candidateUserId: string, applicationId: string, mode: "schedule" | "reschedule",
+    interviewId?: string) => {
     setScheduleCandidateId(candidateUserId);
     setSelectedApplicants([applicationId]);
     setInterviewMode(mode);
@@ -164,66 +174,67 @@ const {
       return;
     }
     mutate({ applicationIds: selectedApplicants, status: bulkStatus }, {
-        onSuccess: () => {
-          success("Applicants status updated successfully");
-          setSelectedApplicants([]);
-        },
-        onError: () => error("Failed to update applicant status"),
-      }
+      onSuccess: () => {
+        success("Applicants status updated successfully");
+        setSelectedApplicants([]);
+      },
+      onError: () => error("Failed to update applicant status"),
+    }
     );
   };
 
   const handleCancelInterview = async (interviewId: string) => {
-  try {
-    await updateInterviewStatus(interviewId, "Cancelled");
-    success("Interview cancelled successfully");
-    refetchInterviews();
-  } catch (err) {
-  if (err instanceof Error) {
-    error(err.message);
-  } else {
-    error("Failed to cancel interview");
-  }
-}
-};
+    try {
+      await updateInterviewStatus(interviewId, "Cancelled");
+      success("Interview cancelled successfully");
+      refetchInterviews();
+    } catch (err) {
+      if (err instanceof Error) {
+        error(err.message);
+      } else {
+        error("Failed to cancel interview");
+      }
+    }
+  };
 
 
   // ==================== DATA MAPPING ====================
 
   // 1. Map Applicants
   const applicants: ExtendedApplicantRow[] = data?.applicants?.map((a) => ({
-      id: a._id,
-      candidateUserId: a.candidateDetails?._id || a.candidateId || "", 
-      name: a.candidateDetails ? `${a.candidateDetails.firstName} ${a.candidateDetails.lastName}` : "Unknown",
-      email: a.candidateDetails?.email || "No Email", 
-      role: a.jobDetails?.title || "Unknown",
-      date: new Date(a.appliedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
-      experience: a.jobDetails ? `${a.totalExperienceYears}-${a.jobDetails.requiredExperience} yrs` : `${a.totalExperienceYears} yrs`,
-      status: a.status,
-      resume: a.resumeUrl,
-    })) ?? [];
+    id: a._id,
+    candidateUserId: a.candidateDetails?._id || a.candidateId || "",
+    name: a.candidateDetails ? `${a.candidateDetails.firstName} ${a.candidateDetails.lastName}` : "Unknown",
+    email: a.candidateDetails?.email || "No Email",
+    role: a.jobDetails?.title || "Unknown",
+    date: new Date(a.appliedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+    experience: a.jobDetails ? `${a.totalExperienceYears}-${a.jobDetails.requiredExperience} yrs` : `${a.totalExperienceYears} yrs`,
+    status: a.status,
+    resume: a.resumeUrl,
+    answers: a.answers || [],
+  })) ?? [];
 
   const filteredApplicants = activeTab === "all" ? applicants : applicants.filter((a) => a.status === activeTab);
-  
+
   // 2. Map Interviews
   const rawInterviews = interviewResponse?.data || [];
-  
-  const interviews: InterviewRow[] = Array.isArray(rawInterviews) 
+
+  const interviews: InterviewRow[] = Array.isArray(rawInterviews)
     ? rawInterviews.map((int: InterviewApiData) => ({
-        _id: int._id,
-        candidateName: int.candidateId ? `${int.candidateId.firstName} ${int.candidateId.lastName}` : "Unknown",
-        candidateEmail: int.candidateId?.email || "Unknown",
-        interviewer: int.interviewerEmail || "Unknown",
-        jobTitle: "Job Role", 
-        meetingLink: int.meetingLink,
-        Timing: int.timing,
-        status: int.status || "Scheduled"
-      }))
+      _id: int._id,
+      candidateName: int.candidateId ? `${int.candidateId.firstName} ${int.candidateId.lastName}` : "Unknown",
+      candidateEmail: int.candidateId?.email || "Unknown",
+      interviewer: int.interviewerEmail || "Unknown",
+      jobTitle: "Job Role",
+      meetingLink: int.meetingLink,
+      Timing: int.timing,
+      status: int.status || "Scheduled"
+    }))
     : [];
-  
+
   const getInterviewForApplicant = (email: string) => {
-  return interviews.find((i) => i.candidateEmail === email);
-};
+    return interviews.find((i) => i.candidateEmail === email);
+  };
 
 
   // ==================== RENDER ====================
@@ -235,7 +246,7 @@ const {
     <div
       className={`bg-white rounded-2xl shadow-lg border border-gray-100 p-5 flex flex-col overflow-hidden ${className}`}
       style={style} // Apply dynamic height explicitly
-      onClick={() => setActiveActionId(null)} 
+      onClick={() => setActiveActionId(null)}
     >
       {/* Header */}
       <div className="flex items-center justify-between gap-3 mb-4">
@@ -270,9 +281,8 @@ const {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
-              activeTab === tab ? "bg-blue-600 text-white shadow" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${activeTab === tab ? "bg-blue-600 text-white shadow" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
@@ -296,15 +306,15 @@ const {
               </tr>
             ) : (
               // --- APPLICANT HEADERS ---
-              <tr className={`${applicantGrid} px-4 py-3 text-xs font-semibold text-gray-500`}>
+              <tr className={`${applicantGrid} px-10 py-3 text-xs gap-2font-semibold text-gray-500 `}>
                 <th className="text-center">Select</th>
                 <th>Name</th>
                 <th>Role</th>
                 <th>Date</th>
                 <th>Experience</th>
                 <th>Resume</th>
-                <th>Status</th>
-                <th className="text-center">Action</th>
+                <th >Status</th>
+                <th >Action</th>
               </tr>
             )}
           </thead>
@@ -312,7 +322,7 @@ const {
           <tbody className="divide-y">
             {/* --- LOADING STATE --- */}
             {activeTab === 'interview' && isInterviewsLoading && (
-               <tr><td colSpan={6} className="text-center py-8">Loading Interviews...</td></tr>
+              <tr><td colSpan={6} className="text-center py-8">Loading Interviews...</td></tr>
             )}
 
             {/* --- INTERVIEW ROWS --- */}
@@ -325,48 +335,48 @@ const {
                 <td className="truncate" title={int.interviewer}>{int.interviewer}</td>
                 <td>
                   {int.status !== "Cancelled" ? (
-                     <a
-                     href={int.meetingLink}
-                     target="_blank"
-                     className="text-blue-600 hover:underline truncate block w-32"
-                     >
-                     Join Meeting
-                     </a>
-                     ) : (
-                      <span className="text-gray-400 text-sm">Cancelled</span>
-                     )}
-                    </td>
+                    <a
+                      href={int.meetingLink}
+                      target="_blank"
+                      className="text-blue-600 hover:underline truncate block w-32"
+                    >
+                      Join Meeting
+                    </a>
+                  ) : (
+                    <span className="text-gray-400 text-sm">Cancelled</span>
+                  )}
+                </td>
 
                 <td>
-                  {new Date(int.Timing).toLocaleString("en-US", { 
-                    month: "short", day: "numeric", hour: "numeric", minute: "2-digit" 
+                  {new Date(int.Timing).toLocaleString("en-US", {
+                    month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
                   })}
                 </td>
                 <td>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusColors[int.status] || "bg-gray-100 text-gray-700"}`}>
+                  <span className={`rounded-full px-7 py-1 text-xs font-semibold ${statusColors[int.status] || "bg-gray-100 text-gray-700"}`}>
                     {int.status}
                   </span>
                 </td>
                 <td className="text-center">
-                 {int.status !== "Cancelled" && (
-                  <button
-                    onClick={(e) => {
-                    e.stopPropagation();
-                    handleCancelInterview(int._id);
-                    }}
-                    className="text-red-500 hover:text-red-700 text-xs font-medium"
-                     >
-                     Cancel
-                     </button>
-                     )}
-                    </td>
+                  {int.status !== "Cancelled" && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCancelInterview(int._id);
+                      }}
+                      className="text-red-500 hover:text-red-700 text-xs font-medium"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </td>
 
               </tr>
             ))}
 
             {/* --- APPLICANT ROWS --- */}
             {activeTab !== 'interview' && filteredApplicants.map((a) => (
-              <tr key={a.id} className={`${applicantGrid} px-4 py-3 items-center hover:bg-gray-50 transition`}>
+              <tr key={a.id} className={`${applicantGrid} px-10 py-3 items-center gap-2 hover:bg-gray-5 transition`}>
                 <td className="flex justify-center">
                   <input
                     type="checkbox"
@@ -377,72 +387,102 @@ const {
                   />
                 </td>
                 <td>
-                  <p className="font-semibold">{a.name}</p>
-                  <p className="text-xs text-gray-500">{a.email}</p>
+                  <p className="font-semibold gap-500 ">{a.name}</p>
+                  <p className="text-xs text-gray-500 ">{a.email}</p>
                 </td>
-                <td>{a.role}</td>
+                {/* <td>{a.role}</td>
                 <td>{a.date}</td>
-                <td>{a.experience}</td>
-                <td>
-                  <a href={a.resume} target="_blank" className="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-100" onClick={(e) => e.stopPropagation()}>
-                    📄 Resume
+                <td>{a.experience}</td> */}
+                <td className="px-2 py-5 text-right">{a.role}</td>
+                <td className="px-2 py-5 text-right">{a.date}</td>
+                <td className="px-5 py-5 text-right">{a.experience}</td>
+                <td className="text-right">
+                  <a href={a.resume} target="_blank" className="rounded-lg border px-4 py-1.5 text-sm hover:bg-gray-100 gap-10" onClick={(e) => e.stopPropagation()}>
+                    📄Resume
                   </a>
                 </td>
                 <td>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusColors[a.status]}`}>
+                  <span className={`rounded-full px-10 py-1 text-xs gap-11 font-semibold capitalize ${statusColors[a.status]}`}>
                     {a.status}
                   </span>
                 </td>
-                <td className="relative flex justify-center">
+
+               <td className="text-right ">
+
+                  <button
+
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedApplicantData({
+                        name: a.name,
+
+                        answers: a.answers || [],
+                      });
+                      setIsAnswerPopupOpen(true);
+                    }
+
+                    }
+                    className="flex items-center gap-2 px-4 py-1.5 text-xs  font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors "
+                    title="view screening answers"
+                  >
+                    <Eye size={14} />
+                    Answers
+
+
+                  </button>
+
+
+
+
                   {(a.status === "shortlisted" || a.status === "interview") && (
                     <>
-                      <button
+                      {/* <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setActiveActionId(activeActionId === a.id ? null : a.id);
-                          
+
                         }}
                         className="p-1 rounded-full hover:bg-gray-200 transition"
                       >
                         <ThreeDotsIcon />
-                      </button>
+                      </button> */}
                       {activeActionId === a.id && (
                         <div className="absolute right-8 top-1/2 -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
                           <button
                             onClick={(e) => {
-    e.stopPropagation();
+                              e.stopPropagation();
 
-    if (a.status === "shortlisted") {
-      handleScheduleInterview(
-        a.candidateUserId,
-        a.id,
-        "schedule"
-      );
-      return;
-    }
+                              if (a.status === "shortlisted") {
+                                handleScheduleInterview(
+                                  a.candidateUserId,
+                                  a.id,
+                                  "schedule"
+                                );
+                                return;
+                              }
 
-    if (a.status === "interview") {
-      const interview = getInterviewForApplicant(a.email);
+                              if (a.status === "interview") {
+                                const interview = getInterviewForApplicant(a.email);
 
-      if (!interview) {
-        error("Interview not found");
-        return;
-      }
+                                if (!interview) {
+                                  error("Interview not found");
+                                  return;
+                                }
 
-      handleScheduleInterview(
-        a.candidateUserId,
-        a.id,
-        "reschedule",
-        interview._id
-      );
-    }
-  }}
-  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition"
->
-  {a.status === "shortlisted"
-    ? "Schedule Interview"
-    : "Reschedule Interview"}
-                            
+                                handleScheduleInterview(
+                                  a.candidateUserId,
+                                  a.id,
+                                  "reschedule",
+                                  interview._id
+                                );
+                              }
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition"
+                          >
+                            {a.status === "shortlisted"
+                              ? "Schedule Interview"
+                              : "Reschedule Interview"}
+
                           </button>
                         </div>
                       )}
@@ -456,29 +496,40 @@ const {
 
         {/* Empty States */}
         {activeTab === 'interview' && !isInterviewsLoading && interviews.length === 0 && (
-           <div className="py-12 text-center text-sm text-gray-500">No interviews scheduled yet.</div>
+          <div className="py-12 text-center text-sm text-gray-500">No interviews scheduled yet.</div>
         )}
         {activeTab !== 'interview' && filteredApplicants.length === 0 && (
           <div className="py-12 text-center text-sm text-gray-500">No applicants found.</div>
         )}
       </div>
-      
-      <PopupForm
-  isOpen={isPopupOpen}
-  onClose={() => {
-    setIsPopupOpen(false);
-    setActiveActionId(null);
-    setSelectedApplicants([]);
-    refetchApplicants();
-    refetchInterviews();
-  }}
-  candidateId={scheduleCandidateId}
-  jobId={jobId}
-  applicationId={selectedApplicants[0] || ""}
-  mode={interviewMode}
-  interviewId={selectedInterviewId}
-/>
 
+      <PopupForm
+        isOpen={isPopupOpen}
+        onClose={() => {
+          setIsPopupOpen(false);
+          setActiveActionId(null);
+          setSelectedApplicants([]);
+          refetchApplicants();
+          refetchInterviews();
+        }}
+        candidateId={scheduleCandidateId}
+        jobId={jobId}
+        applicationId={selectedApplicants[0] || ""}
+        mode={interviewMode}
+        interviewId={selectedInterviewId}
+      />
+      {
+/* 
+
+   // render answer popup */}
+
+      <AnswerPopup
+
+        isOpen={isAnswerPopupOpen}
+        onClose={() => setIsAnswerPopupOpen(false)}
+        applicantName={selectedApplicantData.name}
+        answers={selectedApplicantData?.answers}
+      />
 
     </div>
   );
