@@ -37,7 +37,7 @@ export default function HeroSection({
       >
         {/* Heading */}
         <h1 className="text-5xl md:text-6xl font-bold tracking-[-0.02em] leading-[1.1]">
-          Find your next
+          Find your next  
           <br />
           <span className="bg-linear-to-r from-blue-300 via-cyan-300 to-teal-300 bg-clip-text text-transparent">
             career-defining

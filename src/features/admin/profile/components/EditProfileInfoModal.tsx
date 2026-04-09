@@ -5,13 +5,13 @@ import { KeyRound, LoaderCircleIcon } from "lucide-react";
 
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
-import { CandidateProfile } from "@/types/profile";
+import { AdminProfile } from "@/types/profile";
 
-import { useUpdateMe } from "../hooks/useProfileApi";
+import { useUpdateProfile } from "../hooks/useUpdateProfile";
 import ChangePasswordModal from "./ChangePasswordModal";
 
 interface EditProfileInfoModalProps {
-  profile?: CandidateProfile;
+  profile?: AdminProfile;
   isOpen: boolean;
   onClose: () => void;
   onUpdated?: () => void | Promise<void>;
@@ -23,29 +23,24 @@ export default function EditProfileInfoModal({
   onClose,
   onUpdated,
 }: EditProfileInfoModalProps) {
-  const [firstName, setFirstName] = useState(profile?.user?.firstName ?? "");
-  const [lastName, setLastName] = useState(profile?.user?.lastName ?? "");
-  const [phone, setPhone] = useState(profile?.user?.phoneNumber ?? "");
+  const [firstName, setFirstName] = useState(profile?.firstName ?? "");
+  const [lastName, setLastName] = useState(profile?.lastName ?? "");
+  const [phone, setPhone] = useState(profile?.phoneNumber ?? "");
   const [showChangePassword, setShowChangePassword] = useState(false);
 
-  const { error: showError } = useToast();
-  const { mutate: updateMe, isPending } = useUpdateMe();
+  const { error: showError, success: showSuccess } = useToast();
+  const { mutate: updateProfile, isPending } = useUpdateProfile();
 
   useEffect(() => {
     if (isOpen) {
-      setFirstName(profile?.user?.firstName ?? "");
-      setLastName(profile?.user?.lastName ?? "");
-      setPhone(profile?.user?.phoneNumber ?? "");
+      setFirstName(profile?.firstName ?? "");
+      setLastName(profile?.lastName ?? "");
+      setPhone(profile?.phoneNumber ?? "");
     }
-  }, [
-    isOpen,
-    profile?.user?.firstName,
-    profile?.user?.lastName,
-    profile?.user?.phoneNumber,
-  ]);
+  }, [isOpen, profile?.firstName, profile?.lastName, profile?.phoneNumber]);
 
   const handleSave = () => {
-    updateMe(
+    updateProfile(
       {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -53,6 +48,7 @@ export default function EditProfileInfoModal({
       },
       {
         onSuccess: () => {
+          showSuccess("Profile updated successfully");
           onClose();
           onUpdated?.();
         },
@@ -99,7 +95,7 @@ export default function EditProfileInfoModal({
               Email (readonly)
             </label>
             <input
-              value={profile?.user?.email ?? ""}
+              value={profile?.email ?? ""}
               readOnly
               className="w-full px-4 py-2 border border-gray-200 bg-gray-100 rounded-lg"
             />

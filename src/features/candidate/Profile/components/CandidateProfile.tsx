@@ -14,11 +14,14 @@ import SocialLinksSection from "./SocialLinksSection";
 import AvailabilitySection from "./AvailabilitySection";
 import ProfileCompletion from "./ProfileCompletion";
 import EditProfileInfoModal from "./EditProfileInfoModal";
+import GitHubStatsSection from "./GithubStats";
+import LeetCodeStatsSection from "./LeetcodeStats";
 
 export default function CandidateProfile() {
   const authUser = useSelector((state: RootState) => state.auth.user);
 
   const { data: profile, isLoading, isError, refetch } = useGetProfile();
+  
   const createProfileMutation = useCreateProfile();
 
   const completion = profile?.completion ?? 0;
@@ -56,7 +59,7 @@ export default function CandidateProfile() {
             <h2 className="text-lg font-medium text-gray-800">Personal Information</h2>
             <button
               onClick={toggleEdit}
-              className="px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              className="px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
             >
               Edit
             </button>
@@ -123,6 +126,7 @@ export default function CandidateProfile() {
               linkedin={profile?.linkedinUrl}
               github={profile?.githubUrl}
               portfolioUrl={profile?.portfolioUrl}
+              leetcode={profile?.leetcodeUrl}
               onUpdate={refetch}
             />
           </div>
@@ -133,6 +137,15 @@ export default function CandidateProfile() {
               onUpdate={refetch}
             />
           </div>
+
+        </div>
+
+        <div>
+         { profile?.githubUrl?<GitHubStatsSection githubUrl={profile?.githubUrl} />:""}
+        </div>
+
+        <div>
+          {profile?.leetcodeUrl?<LeetCodeStatsSection leetcodeUrl={profile.leetcodeUrl} />:""}
         </div>
       </div>
     </div>

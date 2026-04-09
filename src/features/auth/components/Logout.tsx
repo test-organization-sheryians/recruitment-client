@@ -17,10 +17,9 @@ const Logout = () => {
   const handleLogout = () => {
     logoutUser(undefined, {
       onSuccess: () => {
-        Cookies.remove("accessToken", { path: '/' });
+        Cookies.remove("token", { path: '/' });
         Cookies.remove("refreshToken", { path: '/' });
         Cookies.remove("role", { path: '/' });
-        Cookies.remove("access", { path: '/' });
         try {
           localStorage.clear();
           sessionStorage.clear();
@@ -42,10 +41,9 @@ const Logout = () => {
       },
       onError: (error) => {
         console.error("Logout failed:", error);
-        Cookies.remove("accessToken", { path: '/' });
+        Cookies.remove("token", { path: '/' });
         Cookies.remove("refreshToken", { path: '/' });
         Cookies.remove("role", { path: '/' });
-        Cookies.remove("access", { path: '/' });
         try {
           localStorage.clear();
           sessionStorage.clear();

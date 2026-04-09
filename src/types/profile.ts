@@ -10,6 +10,13 @@ export interface ProfileUser {
   phoneNumber: string;
 }
 
+export interface AdminProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+}
+
 
 export interface CandidateProfile {
   _id: string;
@@ -25,7 +32,7 @@ export interface CandidateProfile {
   linkedinUrl?: string;
   githubUrl?: string;
   portfolioUrl?: string;
-
+  leetcodeUrl: string;
   availability:
     | "immediate"
     | "1_week"
