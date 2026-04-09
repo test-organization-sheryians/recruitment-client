@@ -67,7 +67,6 @@ const SignupForm = () => {
           };
         };
       }) => {
-        Cookies.set("access", res.data.token);
         dispatch(
           setUser({
             id: res.data.user._id,

@@ -169,7 +169,7 @@ export default function Jobs() {
         onClose={() => setShareJob(null)}
         jobTitle={shareJob?.title ?? ""}
         jobRef={shareJob?._id ?? ""}
-        applicationUrl={shareJob ? `${process.env.NEXT_PUBLIC_APP_URL}/jobs/${shareJob._id}` : ""}
+        applicationUrl={shareJob ? `${process.env.NEXT_PUBLIC_URL}/jobs/${shareJob._id}` : ""}
         onSave={(settings) => console.log("Saved:", settings)}
       />
 
