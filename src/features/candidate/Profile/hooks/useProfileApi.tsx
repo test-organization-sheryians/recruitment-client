@@ -81,3 +81,19 @@ export const useUpdateMe = () => {
     },
   });
 };
+
+export const useGithub = (user:string) => {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ["github",user],
+    queryFn:()=>api.getGithub({user})
+  })
+}
+
+export const useleetcode = (user:string) => {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ["leetcode",user],
+    queryFn:()=>api.getLeetcode({user})
+  })
+}
