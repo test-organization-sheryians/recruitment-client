@@ -6,7 +6,7 @@ interface User {
   lastName?: string;
   email?: string;
   role: string;
-  isVerified:boolean
+  isVerified: boolean;
 }
 
 interface AuthState {
@@ -43,5 +43,8 @@ const authSlice = createSlice({
   },
 });
 
+
+
 export const { setUser, setAuthLoading, setToken, logout } = authSlice.actions;
 export default authSlice.reducer;
+

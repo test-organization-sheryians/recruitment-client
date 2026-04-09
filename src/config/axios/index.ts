@@ -1,20 +1,23 @@
-// config/axios.ts
 import axios from "axios";
 import Cookies from "js-cookie";
 
 
-const rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-const baseURL = rawBaseURL.replace(/\/$/, "").replace(/\/api$/, "");
+const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+// const rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+// const baseURL = rawBaseURL.replace(/\/$/, "").replace(/\/api$/, "");
+
 
 const publicRoutes = ["/login", "/register"] as const;
 
-
-// Updated: Check if path starts with these instead of exact match
 const isPublicRoute = (path: string) => {
   if (!path) return false;
-
   return (
-    publicRoutes.some(route => path.startsWith(route)) ||
+
+    publicRoutes.includes(path as (typeof publicRoutes)[number]) ||
+    path.includes("/user-verification/") ||
+
+
     path.includes("/user-verification")
   );
 };
@@ -25,8 +28,19 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials: true,
-  // validateStatus: (status) => status >= 200 && status < 300,
 });
+
+// ✅ ADD THIS — attach token from cookie to every request
+api.interceptors.request.use(
+  (config) => {
+    const token = Cookies.get("access");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 api.interceptors.response.use(
   (response) => {
