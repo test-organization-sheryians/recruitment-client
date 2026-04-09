@@ -129,6 +129,12 @@ export default function BlogManagement() {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   useEffect(() => {
     if (observerRef.current) observerRef.current.disconnect();
 
@@ -155,9 +161,9 @@ export default function BlogManagement() {
   }, [hasMore, searchedBlog, searchLoading, loadMore]);
 
   return (
-    <div className="space-y-6 m-6">
+    <div className="space-y-6 px-4 sm:px-6 lg:px-8 py-6 w-full">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Blog Management</h1>
           <p className="text-slate-600 mt-2">Create and manage blog posts</p>
@@ -173,7 +179,7 @@ export default function BlogManagement() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Total Blogs" value={totalBlogs} />
         <StatCard title="Published" value={publishedCount} color="green" />
         <StatCard title="Drafts" value={draftCount} color="yellow" />
@@ -181,7 +187,7 @@ export default function BlogManagement() {
       </div>
 
       {/* Search + Filter */}
-      <div className=" rounded-2xl p-3 max-w-3xl">
+      <div className="rounded-2xl p-3 w-full">
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           {/* Search Box */}
           <div className="relative flex-1">
@@ -277,10 +283,10 @@ export default function BlogManagement() {
               <div
                 key={blog._id}
                 onClick={() => router.push(`/admin/blog/edit/${blog._id}`)}
-                className="flex items-center justify-between p-4 border border-slate-100 rounded-lg hover:border-slate-300 hover:bg-slate-50 transition-all group cursor-pointer"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-slate-100 rounded-lg hover:border-slate-300 hover:bg-slate-50 transition-all group cursor-pointer"
               >
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-slate-900 truncate">
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <h3 className="font-semibold text-slate-900 truncate w-full">
                     {blog.title}
                   </h3>
                   <p className="text-sm text-slate-600 truncate mt-1">
@@ -314,10 +320,9 @@ export default function BlogManagement() {
                       </span>
                     )}
 
-                    {blog.updatedAt && (
+                    {isClient && blog.updatedAt && (
                       <span className="text-xs text-green-600 flex items-center gap-1">
-                        <span>✓</span>{" "}
-                        {new Date(blog.updatedAt).toLocaleDateString()}{" "}
+                        ✓ {new Date(blog.updatedAt).toLocaleDateString()}{" "}
                         {new Date(blog.updatedAt).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -328,7 +333,7 @@ export default function BlogManagement() {
                 </div>
 
                 <div
-                  className="flex items-center gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="flex items-center gap-2 ml-4 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Link
@@ -433,7 +438,7 @@ function StatCard({
   color?: "blue" | "green" | "yellow" | "slate";
 }) {
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
+    <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 sm:p-6">
       <p className="text-slate-600 text-sm font-medium">{title}</p>
       <p className="text-3xl font-bold mt-2">{value}</p>
     </div>
