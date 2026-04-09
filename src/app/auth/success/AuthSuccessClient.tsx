@@ -36,7 +36,6 @@ const AuthSuccessClient = () => {
       Cookies.set("access", token, { expires: 7, path: "/" });
       Cookies.set("role", decoded.role || "candidate", {
         expires: 7,
-        
         path: "/",
       });
 
