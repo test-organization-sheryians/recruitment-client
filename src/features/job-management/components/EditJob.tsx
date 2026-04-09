@@ -503,7 +503,7 @@ export default function EditJob({
                     </label>
                     <input
                       type="number"
-                      value={formData.salary?.min ?? ""}
+                      value={formData.salary?.min === 0 ? "" : formData.salary?.min}
                       onChange={(e) =>
                         setFormData((prev: JobFormData) => ({
                           ...prev,
@@ -525,7 +525,7 @@ export default function EditJob({
                     </label>
                     <input
                       type="number"
-                      value={formData.salary?.max ?? ""}
+                      value={formData.salary?.max === 0 ? "" : formData.salary?.max}
                       onChange={(e) =>
                         setFormData((prev: JobFormData) => ({
                           ...prev,
