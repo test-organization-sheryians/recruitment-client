@@ -8,7 +8,6 @@ import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 
 interface DecodedToken {
-  
   id: string;
   email: string;
   firstName: string;
@@ -18,7 +17,7 @@ interface DecodedToken {
   exp: number;
 }
 
-const AuthSuccessPage = () => {
+const AuthSuccessClient = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useDispatch();
@@ -34,13 +33,12 @@ const AuthSuccessPage = () => {
     try {
       const decoded = jwtDecode<DecodedToken>(token);
 
-      // Same as email login
       Cookies.set("access", token, { expires: 7, path: "/" });
       Cookies.set("role", decoded.role || "candidate", {
         expires: 7,
+        
         path: "/",
       });
-
 
       dispatch(
         setUser({
@@ -58,7 +56,7 @@ const AuthSuccessPage = () => {
       } else {
         router.replace("/");
       }
-    } catch(err) {
+    } catch {
       router.replace("/login");
     }
   }, [searchParams, dispatch, router]);
@@ -75,4 +73,4 @@ const AuthSuccessPage = () => {
   );
 };
 
-export default AuthSuccessPage;
+export default AuthSuccessClient;
