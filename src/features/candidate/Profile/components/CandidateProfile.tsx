@@ -59,7 +59,7 @@ export default function CandidateProfile() {
             <h2 className="text-lg font-medium text-gray-800">Personal Information</h2>
             <button
               onClick={toggleEdit}
-              className="px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              className="px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
             >
               Edit
             </button>
