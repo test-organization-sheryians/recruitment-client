@@ -23,38 +23,149 @@ export default function SocialLinksSection({
   leetcode = "", 
   onUpdate,
 }: Props) {
+  type FieldName = "linkedin" | "github" | "portfolio" | "leetcode";
+
   const [isOpen, setIsOpen] = useState(false);
 
   const [linkedinValue, setLinkedinValue] = useState(linkedin);
   const [githubValue, setGithubValue] = useState(github);
   const [portfolioValue, setPortfolioValue] = useState(portfolioUrl);
   const [leetcodeValue, setLeetcodeValue] = useState(leetcode); 
+  const [fieldErrors, setFieldErrors] = useState<Record<FieldName, string>>({
+    linkedin: "",
+    github: "",
+    portfolio: "",
+    leetcode: "",
+  });
 
   const user = useSelector((state: RootState) => state.auth.user);
   const userId = user?.id;
 
   const { mutate: updateProfile, isPending } = useUpdateProfile1();
 
+  const normalizeUrl = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed}`;
+  };
+
+  const isValidHttpUrl = (value: string) => {
+    try {
+      const parsed = new URL(value);
+      return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
+
+  const isAllowedHost = (value: string, allowedHosts: string[]) => {
+    try {
+      const parsed = new URL(value);
+      const host = parsed.hostname.toLowerCase();
+      return allowedHosts.some(
+        (allowed) => host === allowed || host.endsWith(`.${allowed}`)
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  const validateField = (name: FieldName, value: string) => {
+    if (!value) return "";
+    if (value.includes(" ")) return "URL cannot contain spaces";
+    if (!isValidHttpUrl(value)) return "Please enter a valid URL";
+
+    if (name === "linkedin" && !isAllowedHost(value, ["linkedin.com", "lnkd.in"])) {
+      return "Please enter a valid LinkedIn URL";
+    }
+
+    if (name === "github" && !isAllowedHost(value, ["github.com"])) {
+      return "Please enter a valid GitHub URL";
+    }
+
+    if (name === "leetcode" && !isAllowedHost(value, ["leetcode.com"])) {
+      return "Please enter a valid LeetCode URL";
+    }
+
+    return "";
+  };
+
+  const mapBackendErrorsToFields = (message: string) => {
+    const errors: Record<FieldName, string> = {
+      linkedin: "",
+      github: "",
+      portfolio: "",
+      leetcode: "",
+    };
+
+    if (/LinkedIn URL/i.test(message)) errors.linkedin = "LinkedIn URL must be a valid URL";
+    if (/GitHub URL/i.test(message)) errors.github = "GitHub URL must be a valid URL";
+    if (/Portfolio URL/i.test(message)) errors.portfolio = "Portfolio URL must be a valid URL";
+    if (/LeetCode URL|leetcode Url|leetcode URL|LeetcodeUrl URL/i.test(message)) {
+      errors.leetcode = "LeetCode URL must be a valid URL";
+    }
+
+    return errors;
+  };
+
   const toggleModal = () => setIsOpen((prev) => !prev);
+
+  const handleChange = (field: FieldName, value: string) => {
+    if (field === "linkedin") setLinkedinValue(value);
+    if (field === "github") setGithubValue(value);
+    if (field === "portfolio") setPortfolioValue(value);
+    if (field === "leetcode") setLeetcodeValue(value);
+
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
 
   const handleSave = () => {
     if (!userId) return;
 
+    const normalized = {
+      linkedin: normalizeUrl(linkedinValue),
+      github: normalizeUrl(githubValue),
+      portfolio: normalizeUrl(portfolioValue),
+      leetcode: normalizeUrl(leetcodeValue),
+    };
+
+    const nextErrors: Record<FieldName, string> = {
+      linkedin: validateField("linkedin", normalized.linkedin),
+      github: validateField("github", normalized.github),
+      portfolio: validateField("portfolio", normalized.portfolio),
+      leetcode: validateField("leetcode", normalized.leetcode),
+    };
+
+    setFieldErrors(nextErrors);
+
+    if (Object.values(nextErrors).some(Boolean)) return;
+
     updateProfile(
       {
         id: userId,
-        linkedinUrl: linkedinValue.trim() || "",
-        githubUrl: githubValue.trim() || "",
-        portfolioUrl: portfolioValue.trim() || "",
-        leetcodeUrl: leetcodeValue.trim() || "", 
+        linkedinUrl: normalized.linkedin,
+        githubUrl: normalized.github,
+        portfolioUrl: normalized.portfolio,
+        leetcodeUrl: normalized.leetcode,
       },
       {
         onSuccess: () => {
           toggleModal();
           onUpdate?.();
         },
-        onError: () => {
-          alert("Failed to update links. Try again.");
+        onError: (error: unknown) => {
+          const message =
+            (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+            (error as { message?: string })?.message ||
+            "";
+
+          const mappedErrors = mapBackendErrorsToFields(message);
+          if (Object.values(mappedErrors).some(Boolean)) {
+            setFieldErrors(mappedErrors);
+          }
         },
       }
     );
@@ -141,10 +252,15 @@ export default function SocialLinksSection({
             <input
               type="url"
               value={linkedinValue}
-              onChange={(e) => setLinkedinValue(e.target.value)}
+              onChange={(e) => handleChange("linkedin", e.target.value)}
               placeholder="https://linkedin.com/in/yourname"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                fieldErrors.linkedin ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {fieldErrors.linkedin && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.linkedin}</p>
+            )}
           </div>
 
           {/* GitHub */}
@@ -155,10 +271,15 @@ export default function SocialLinksSection({
             <input
               type="url"
               value={githubValue}
-              onChange={(e) => setGithubValue(e.target.value)}
+              onChange={(e) => handleChange("github", e.target.value)}
               placeholder="https://github.com/yourname"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                fieldErrors.github ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {fieldErrors.github && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.github}</p>
+            )}
           </div>
 
           {/* Portfolio */}
@@ -169,10 +290,15 @@ export default function SocialLinksSection({
             <input
               type="url"
               value={portfolioValue}
-              onChange={(e) => setPortfolioValue(e.target.value)}
+              onChange={(e) => handleChange("portfolio", e.target.value)}
               placeholder="https://yourportfolio.com"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                fieldErrors.portfolio ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {fieldErrors.portfolio && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.portfolio}</p>
+            )}
           </div>
 
           {/* LeetCode  */}
@@ -183,10 +309,15 @@ export default function SocialLinksSection({
             <input
               type="url"
               value={leetcodeValue}
-              onChange={(e) => setLeetcodeValue(e.target.value)}
+              onChange={(e) => handleChange("leetcode", e.target.value)}
               placeholder="https://leetcode.com/yourname"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                fieldErrors.leetcode ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {fieldErrors.leetcode && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.leetcode}</p>
+            )}
           </div>
 
           {/* Buttons */}
