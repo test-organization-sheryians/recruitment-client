@@ -23,17 +23,17 @@ interface Category {
   _id: string;
   name: string;
 }
-interface Job {
-  _id: string;
-  title: string;
-  description: string;
-  education: string;
-  requiredExperience?: string;
-  skills?: Skill[];
-  expiry?: string;
-  category?: Category | Category[];
-  client?: { _id: string; email?: string };
-}
+// interface Job {
+//   _id: string;
+//   title: string;
+//   description: string;
+//   education: string;
+//   requiredExperience?: string;
+//   skills?: Skill[];
+//   expiry?: string;
+//   category?: Category | Category[];
+//   client?: { _id: string; email?: string };
+// }
 
 export default function Jobs() {
   const router = useRouter();
@@ -137,9 +137,10 @@ export default function Jobs() {
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
                       {job.title}
                     </h3>
-                    <p className="text-gray-600 text-sm line-clamp-2 mb-4">
-                      {job.description}
-                    </p>
+                    <div 
+                      className="text-gray-600 text-sm line-clamp-2 mb-4 job-description-content"
+                      dangerouslySetInnerHTML={{ __html: job.description || "No description provided" }}
+                    />
                   </div>
                   <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Dialog
