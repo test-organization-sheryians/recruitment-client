@@ -28,7 +28,7 @@ export default function PopupForm({
   interviewId,
 }: PopupFormProps) {
   const today = new Date().toISOString().split('T')[0];
-  
+
   const [formData, setFormData] = useState({
     interviewDate: "",
     interviewTime: "",
@@ -85,17 +85,19 @@ export default function PopupForm({
         success("Interview rescheduled successfully");
         onClose();
       } catch (err) {
-  if (err instanceof Error) {
-    error(err.message);
-  } else {
-    error("Failed to reschedule interview");
-  }
-}
+        if (err instanceof Error) {
+          error(err.message);
+        } else {
+          error("Failed to reschedule interview");
+        }
+      }
 
 
       return;
     }
 
+    // Schedule interview only creates an interview record.
+    // Status change (selecting for interview) is a separate action handled elsewhere.
     scheduleInterview(
       {
         candidateId,
@@ -107,21 +109,8 @@ export default function PopupForm({
       },
       {
         onSuccess: () => {
-          updateApplicantStatus(
-            {
-              applicationIds: [applicationId],
-              status: "interview",
-            },
-            {
-              onSuccess: () => {
-                success("Interview scheduled successfully");
-                onClose();
-              },
-              onError: () => {
-                error("Interview scheduled but status update failed");
-              },
-            }
-          );
+          success("Interview scheduled successfully");
+          onClose();
         },
         onError: (err: Error) => {
           error(err.message || "Failed to schedule interview");
@@ -139,7 +128,7 @@ export default function PopupForm({
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4">
-          <Input type="date" name="interviewDate" value={formData.interviewDate} onChange={handleChange}   min={today} required />
+          <Input type="date" name="interviewDate" value={formData.interviewDate} onChange={handleChange} min={today} required />
           <Input type="time" name="interviewTime" value={formData.interviewTime} onChange={handleChange} required />
         </div>
 
@@ -169,8 +158,8 @@ export default function PopupForm({
             {mode === "reschedule"
               ? "Reschedule Interview"
               : isPending
-              ? "Scheduling..."
-              : "Schedule Interview"}
+                ? "Scheduling..."
+                : "Schedule Interview"}
           </Button>
         </div>
       </form>
