@@ -44,32 +44,38 @@ const SigninForm = () => {
 
     loginUser(sendData, {
       onSuccess: (res: {
-        data: {
-          token: string;
-          user: {
-            _id: string;
-            email?: string;
-            firstName: string;
-            lastName?: string;
-            role?: { name: string };
-            isVerified: boolean;
-          };
+        token?: string;
+        refreshToken?: string;
+        user?: {
+          _id: string;
+          email?: string;
+          firstName: string;
+          lastName?: string;
+          role?: { name: string };
+          isVerified: boolean;
         };
       }) => {
-        Cookies.set("role", res.data.user?.role?.name || "user");
+        const payload = res.user ?? (res as any).data?.user;
+
+        if (!payload) {
+          setErrorMsg("Login succeeded but user data was missing. Please try again.");
+          return;
+        }
+
+        Cookies.set("role", payload.role?.name || "user");
 
         dispatch(
           setUser({
-            id: res.data.user._id,
-            email: res.data.user.email,
-            firstName: res.data.user.firstName,
-            lastName: res.data.user.lastName,
-            role: res.data.user?.role?.name || "user",
-            isVerified: res.data.user.isVerified,
+            id: payload._id,
+            email: payload.email,
+            firstName: payload.firstName,
+            lastName: payload.lastName,
+            role: payload.role?.name || "user",
+            isVerified: payload.isVerified,
           })
         );
 
-        if (res.data.user?.role?.name === "admin") {
+        if (payload.role?.name === "admin") {
           router.push(safeRedirect || "/admin");
         } else {
           router.push(safeRedirect || "/");
