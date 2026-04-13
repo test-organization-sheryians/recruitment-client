@@ -171,6 +171,10 @@ export default function SocialLinksSection({
     );
   };
 
+  const hasAnyInput = [linkedinValue, githubValue, portfolioValue, leetcodeValue].some(
+    (value) => value.trim() !== ""
+  );
+
   const hasAnyLink =
     linkedin || github || portfolioUrl || leetcode; 
 
@@ -331,7 +335,7 @@ export default function SocialLinksSection({
 
             <button
               onClick={handleSave}
-              disabled={isPending}
+              disabled={isPending || !hasAnyInput}
               className="px-6 py-2 bg-blue-600 text-white cursor-pointer rounded-lg hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-2"
             >
               {isPending ? (
