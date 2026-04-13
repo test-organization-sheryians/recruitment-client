@@ -9,6 +9,7 @@ export * from "./auth/refreshToken";
 export * from "./profile";
 export * from "./profile/getGithub"
 export * from "./profile/getLeetcode"
+export * from "./candidateShare/shareCandidate"
 /* ================= AI TEST ================= */
 export * from "./AITest/postResumeAndGenerateQuestions";
 export * from "./AITest/evaluteAns";

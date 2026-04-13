@@ -1,8 +1,9 @@
 import {
   createShareCandidate,
   getShareCandidate,
+  getUserProfileDetail,
 } from "@/api/candidateShare/shareCandidate";
-
+import * as api from "@/api"; 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -11,6 +12,7 @@ import {
   ShareResponse,
   ShareCandidatePayload,
 } from "@/types/shareInterfaceCandidate";
+
 
 /* =====================================================
    CREATE SHARE CANDIDATE / CREATE GROUP
@@ -54,6 +56,17 @@ export const useShareCandidates = (shareId: string) => {
   return useQuery({
     queryKey: ['shareCandidates', shareId],
     queryFn: () => getShareCandidate(shareId), // Ensure this calls the service
+    enabled: !!shareId,
+    retry: 1,
+  });
+};
+
+export const useProfileDetails = (shareId: string) => {
+  console.log(shareId);
+  
+  return useQuery({
+    queryKey: ['UserProfile', shareId],
+    queryFn: () => api.getUserProfileDetail(shareId), // Ensure this calls the service
     enabled: !!shareId,
     retry: 1,
   });
