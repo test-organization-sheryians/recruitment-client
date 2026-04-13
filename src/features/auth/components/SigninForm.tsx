@@ -14,6 +14,8 @@ import { useLogin } from "../hooks/useAuthApi";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
 import useGoogleAuth from "../hooks/useGoogleAuth";
+import { FaGithub } from "react-icons/fa";
+import useGithubAuth from "../hooks/useGithubAuth";
 
 type SigninFormData = {
   email: string;
@@ -38,6 +40,7 @@ const SigninForm = () => {
   const { mutate: loginUser, isPending: isLoggingIn, error } = useLogin();
 
   const { handleGoogleLogin } = useGoogleAuth();
+  const { handleGithubLogin } = useGithubAuth();
 
   const onSubmit = (formData: SigninFormData) => {
     setErrorMsg("");
@@ -99,7 +102,7 @@ const SigninForm = () => {
         w-full min-h-screen bg-white font-[satoshi] flex items-center justify-center px-4 sm:px-6 overflow-hidden
       "
     >
-      <div className="w-full max-w-[480px] sm:max-w-[520px] bg-white rounded-2xl py-1 sm:py-3 md:py-5 px-4 sm:px-6 md:px-7">
+      <div className="w-full max-w-120 sm:max-w-130 bg-white rounded-2xl py-1 sm:py-3 md:py-5 px-4 sm:px-6 md:px-7">
         <h1
           className="
             text-2xl sm:text-3xl
@@ -113,7 +116,7 @@ const SigninForm = () => {
         {(errorMsg || error) && (
           <div className="flex items-start gap-3 bg-red-50 text-red-700 px-3 py-2 rounded-lg border border-red-200 mb-2">
             <AlertCircle size={20} className="mt-0.5 shrink-0" />
-            <p className="text-[10px] font-medium leading-relaxed break-words mt-1">
+            <p className="text-[10px] font-medium leading-relaxed wrap-break-word mt-1">
               {errorMsg || "Something went wrong. Please try again."}
             </p>
           </div>
@@ -177,7 +180,7 @@ const SigninForm = () => {
             py-2 xs:py-3 sm:py-3 md:py-3
             flex items-center justify-center gap-1.5 xs:gap-2 md:gap-3
             px-2 sm:px-4 md:px-6
-            min-h-[42px] xs:min-h-[46px] sm:min-h-[48px] md:min-h-[52px]
+            min-h-10.5 xs:min-h-[46px] sm:min-h-12 md:min-h-13
             max-w-full
             shadow-sm md:shadow
             disabled:bg-gray-400 disabled:cursor-not-allowed
@@ -232,6 +235,15 @@ const SigninForm = () => {
           >
             <FcGoogle className="text-xl" />
             Continue with Google
+          </button>
+
+          <button
+            type="button"
+            onClick={handleGithubLogin}
+            className="w-full bg-[#24292e] hover:bg-black transition-colors text-white font-medium rounded-base py-3 flex items-center justify-center gap-2"
+          >
+            <FaGithub className="text-xl" />
+            Continue with GitHub
           </button>
         </form>
 
