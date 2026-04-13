@@ -4,7 +4,10 @@ import type { NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-
+  if (pathname.startsWith("/unauthorized")) {
+    return NextResponse.next();
+  }
+  
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/images") ||
@@ -51,7 +54,7 @@ export function middleware(req: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    if (role?.value !== "admin") {
+    if (role && role.value !== "admin") {
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
 
