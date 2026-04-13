@@ -5,9 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function UnauthorizedPage() {
   const user = await getCurrentUser();
-  if (user?.role === "admin") {
-    redirect("/admin");
-  }
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-800 to-purple-900 flex items-center justify-center p-4">
       <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-8 max-w-sm w-full text-center border border-white/20">
