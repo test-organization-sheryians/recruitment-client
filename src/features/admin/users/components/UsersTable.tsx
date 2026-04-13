@@ -37,6 +37,7 @@ import {
 } from "@/types/shareInterfaceCandidate";
 
 import { FiEye } from "react-icons/fi";
+import { Router } from "next/router";
 
 export default function UsersTable() {
   const nameColors = [
@@ -361,7 +362,9 @@ export default function UsersTable() {
     return (
       <p className="py-10 text-center text-red-500">Failed to load users</p>
     );
-
+const handleUserClick = (user:any) => {
+  router.push(`/admin/users/${user._id}`)
+};
   return (
     <>
       {/* HEADER */}
@@ -491,6 +494,9 @@ export default function UsersTable() {
               <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
                 Role
               </th>
+              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
+                Profile
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -558,6 +564,14 @@ export default function UsersTable() {
                     <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">
                       {user.role?.name || "no-role"}
                     </span>
+                  </td>
+                  <td className="px-4 py-5">
+                    <button
+                      onClick={() => handleUserClick(user)}
+                      className="text-[11px] font-mono text-white bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded"
+                    >
+                      View Details
+                    </button>
                   </td>
                 </tr>
               );

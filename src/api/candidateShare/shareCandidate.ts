@@ -79,6 +79,22 @@ export const getShareCandidate = async (shareId: string): Promise<any> => {
 };
 
 /* =====================================================
+   GET SINGLE USER PROFILE DETAIL / 
+===================================================== */
+
+
+
+export const getUserProfileDetail = async (shareId: string): Promise<any> => {
+  if (!shareId) return null;
+
+  
+  const res = await api.get(`/api/candidate-profile/get-profile/${shareId}`);
+  
+ 
+  return res.data; 
+};
+
+/* =====================================================
    GET SINGLE GROUP DETAILS (Admin/Edit View)
 ===================================================== */
 export const getSingleGroupDetails = async (groupId: string): Promise<any> => {
