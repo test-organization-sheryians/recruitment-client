@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   useBulkUpdateApplicants,
   useJobApplicant,
@@ -12,26 +12,21 @@ import PopupForm from "./PopupForm";
 import {
   ApplicantStatus,
   ApplicantRow,
-  ApplicantsApiResponse
+  ApplicantsApiResponse,
 } from "@/types/applicant";
 import { updateInterviewStatus } from "@/api/jobApplication/scheduleInterview";
-
 import AnswerPopup, { QuestionAnswer } from "./AnswerPopup";
-import { Eye } from "lucide-react";
-
+import { Eye, Calendar, RefreshCw } from "lucide-react";
 
 /* ================= TYPES ================= */
-
 type Size = number | string;
-
 type ApplicantsListProps = {
   height?: Size;
   width?: Size;
   className?: string;
 };
 
-// Extended row for applicants
-interface ExtendedApplicantRow extends Omit<ApplicantRow, 'id'> {
+interface ExtendedApplicantRow extends Omit<ApplicantRow, "id"> {
   id: string;
   candidateUserId: string;
   name: string;
@@ -41,10 +36,9 @@ interface ExtendedApplicantRow extends Omit<ApplicantRow, 'id'> {
   experience: string;
   status: ApplicantStatus;
   resume: string;
-  answers: QuestionAnswer[]; //<-- Add answers to the applicant row -->
+  answers: QuestionAnswer[];
 }
 
-// Flat Type for Interview Table Display
 interface InterviewRow {
   _id: string;
   candidateName: string;
@@ -54,9 +48,9 @@ interface InterviewRow {
   meetingLink: string;
   Timing: string;
   status: string;
+  applicationId?: string;
 }
 
-// RAW API Data coming from backend
 interface InterviewApiData {
   _id: string;
   candidateId?: {
@@ -71,42 +65,36 @@ interface InterviewApiData {
 }
 
 /* ================= CONSTANTS ================= */
-
 const statusColors: Record<string, string> = {
   applied: "bg-blue-100 text-blue-700",
   shortlisted: "bg-yellow-100 text-yellow-700",
   rejected: "bg-red-100 text-red-700",
-  forwareded: "bg-purple-100 text-purple-700",
+  forwarded: "bg-purple-100 text-purple-700",
   interview: "bg-orange-100 text-orange-700",
   hired: "bg-green-100 text-green-700",
-  Scheduled: "bg-indigo-100 text-indigo-700",
-  Rescheduled: "bg-orange-100 text-orange-700",
-  Cancelled: "bg-red-100 text-red-700",
+  scheduled: "bg-indigo-100 text-indigo-700",
+  rescheduled: "bg-orange-100 text-orange-700",
+  cancelled: "bg-red-100 text-red-700",
 };
 
-const tabs: Array<"all" | ApplicantStatus> = [
+// Add a dedicated 'scheduled' tab which shows scheduled interviews (from interviews collection)
+const tabs: Array<"all" | ApplicantStatus | "scheduled"> = [
   "all",
   "applied",
   "shortlisted",
-  "rejected",
+
   "forwarded",
   "interview",
+  "scheduled",
   "hired",
-
+    "rejected",
 ];
 
-const ThreeDotsIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-gray-500 hover:text-gray-800">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM17.25 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-  </svg>
-);
-
 export default function ApplicantsList({
-  height = "100%", // Default to full height
+  height = "100%",
   width = "100%",
   className = "",
 }: ApplicantsListProps) {
-  // Use explicit style object for height/width
   const style = {
     height: typeof height === "number" ? `${height}px` : height,
     width: typeof width === "number" ? `${width}px` : width,
@@ -115,57 +103,63 @@ export default function ApplicantsList({
   const { id } = useParams();
   const jobId = id as string;
 
-  // 1. Fetch Applicants
-  const {
-    data,
-    refetch: refetchApplicants,
-  } = useJobApplicant(jobId) as {
+  const { data, refetch: refetchApplicants } = useJobApplicant(jobId) as {
     data?: ApplicantsApiResponse;
     refetch: () => void;
   };
 
-
-  // 2. Fetch Interviews (Only when tab is 'interview')
   const [activeTab, setActiveTab] = useState<"all" | ApplicantStatus>("all");
+
   const {
     data: interviewResponse,
     isLoading: isInterviewsLoading,
     refetch: refetchInterviews,
   } = useInterviewsByJob(jobId);
 
-
   const [selectedApplicants, setSelectedApplicants] = useState<string[]>([]);
   const [bulkStatus, setBulkStatus] = useState<ApplicantStatus>("applied");
-  const [activeActionId, setActiveActionId] = useState<string | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [scheduleCandidateId, setScheduleCandidateId] = useState<string | null>(null);
   const [interviewMode, setInterviewMode] = useState<"schedule" | "reschedule">("schedule");
   const [selectedInterviewId, setSelectedInterviewId] = useState<string | null>(null);
-
   const [isAnswerPopupOpen, setIsAnswerPopupOpen] = useState(false);
   const [selectedApplicantData, setSelectedApplicantData] = useState<{
     name: string;
-    answers: QuestionAnswer[]
-  }
-  >({ name: "", answers: [] });
+    answers: QuestionAnswer[];
+  }>({ name: "", answers: [] });
+
   const { mutate, isPending } = useBulkUpdateApplicants();
   const { success, error } = useToast();
 
-  // --- Handlers ---
+  /* ================= HANDLERS ================= */
   const toggleSelect = (appId: string) => {
     setSelectedApplicants((prev) =>
       prev.includes(appId) ? prev.filter((x) => x !== appId) : [...prev, appId]
     );
   };
 
-  const handleScheduleInterview = (candidateUserId: string, applicationId: string, mode: "schedule" | "reschedule",
-    interviewId?: string) => {
+  const toggleSelectAll = (visibleAppIds: string[]) => {
+    const ids = visibleAppIds.filter(Boolean) as string[];
+    if (ids.length === 0) return;
+    const allSelected = ids.every((id) => selectedApplicants.includes(id));
+    if (allSelected) {
+      setSelectedApplicants((prev) => prev.filter((id) => !ids.includes(id)));
+    } else {
+      setSelectedApplicants((prev) => Array.from(new Set([...prev, ...ids])));
+    }
+  };
+
+  const handleScheduleInterview = (
+    candidateUserId: string,
+    applicationId: string,
+    mode: "schedule" | "reschedule",
+    interviewId?: string
+  ) => {
     setScheduleCandidateId(candidateUserId);
     setSelectedApplicants([applicationId]);
     setInterviewMode(mode);
     setSelectedInterviewId(interviewId || null);
     setIsPopupOpen(true);
-    setActiveActionId(null);
   };
 
   const handleSubmit = () => {
@@ -173,13 +167,19 @@ export default function ApplicantsList({
       error("Please select at least one applicant");
       return;
     }
-    mutate({ applicationIds: selectedApplicants, status: bulkStatus }, {
-      onSuccess: () => {
-        success("Applicants status updated successfully");
-        setSelectedApplicants([]);
-      },
-      onError: () => error("Failed to update applicant status"),
-    }
+    console.log("applicationIds:", selectedApplicants);
+    mutate(
+      { applicationIds: selectedApplicants, status: bulkStatus },
+      {
+        onSuccess: () => {
+          success("Applicants status updated successfully");
+          setSelectedApplicants([]);
+          // refresh lists so candidate moves tabs accordingly
+          refetchApplicants();
+          setTimeout(() => refetchInterviews(), 500);
+        },
+        onError: () => error("Failed to update applicant status"),
+      }
     );
   };
 
@@ -189,85 +189,122 @@ export default function ApplicantsList({
       success("Interview cancelled successfully");
       refetchInterviews();
     } catch (err) {
-      if (err instanceof Error) {
-        error(err.message);
-      } else {
-        error("Failed to cancel interview");
-      }
+      error(err instanceof Error ? err.message : "Failed to cancel interview");
     }
   };
 
+  /* ================= DATA MAPPING ================= */
+  const applicants: ExtendedApplicantRow[] =
+    data?.applicants?.map((a) => ({
+      id: a._id ?? a.candidateId,
+      candidateUserId: a.candidateDetails?._id || a.candidateId || "",
+      name: a.candidateDetails
+        ? `${a.candidateDetails.firstName} ${a.candidateDetails.lastName}`
+        : "Unknown",
+      email: a.candidateDetails?.email || "No Email",
+      role: a.jobDetails?.title || "Unknown",
+      date: new Date(a.appliedAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }),
+      experience: a.jobDetails
+        ? `${a.totalExperienceYears}-${a.jobDetails.requiredExperience} yrs`
+        : `${a.totalExperienceYears} yrs`,
+      status: (a.status || "").toString().toLowerCase(),
+      resume: a.resumeUrl,
+      answers: a.answers || [],
+    })) ?? [];
 
-  // ==================== DATA MAPPING ====================
+  const filteredApplicants =
+    activeTab === "all"
+      ? applicants
+      : applicants.filter((a) => a.status === activeTab);
 
-  // 1. Map Applicants
-  const applicants: ExtendedApplicantRow[] = data?.applicants?.map((a) => ({
-    id: a._id,
-    candidateUserId: a.candidateDetails?._id || a.candidateId || "",
-    name: a.candidateDetails ? `${a.candidateDetails.firstName} ${a.candidateDetails.lastName}` : "Unknown",
-    email: a.candidateDetails?.email || "No Email",
-    role: a.jobDetails?.title || "Unknown",
-    date: new Date(a.appliedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
-    experience: a.jobDetails ? `${a.totalExperienceYears}-${a.jobDetails.requiredExperience} yrs` : `${a.totalExperienceYears} yrs`,
-    status: a.status,
-    resume: a.resumeUrl,
-    answers: a.answers || [],
-  })) ?? [];
+  // ✅ FIX: Handle all possible API response shapes
+  const rawInterviews = Array.isArray(interviewResponse)
+    ? interviewResponse
+    : Array.isArray(interviewResponse?.data)
+      ? interviewResponse.data
+      : Array.isArray(interviewResponse?.interviews)
+        ? interviewResponse.interviews
+        : [];
 
-  const filteredApplicants = activeTab === "all" ? applicants : applicants.filter((a) => a.status === activeTab);
+  const interviews: InterviewRow[] = rawInterviews.map((int: any) => {
+    const candidateName = int.candidateId
+      ? `${int.candidateId.firstName || ""} ${int.candidateId.lastName || ""}`.trim() || "Unknown"
+      : (int as any).candidateName || "Unknown";
 
-  // 2. Map Interviews
-  const rawInterviews = interviewResponse?.data || [];
+    const candidateEmail = int.candidateId?.email || (int as any).candidateEmail || "Unknown";
 
-  const interviews: InterviewRow[] = Array.isArray(rawInterviews)
-    ? rawInterviews.map((int: InterviewApiData) => ({
+    const interviewer = int.interviewerEmail || (int as any).interviewer || (int as any).recruiterEmail || "Unknown";
+
+    const meetingLink = int.meetingLink || (int as any).meetingUrl || (int as any).meeting || "";
+
+    const timing = int.timing || (int as any).Timing || (int as any).createdAt || "";
+
+    return {
       _id: int._id,
-      candidateName: int.candidateId ? `${int.candidateId.firstName} ${int.candidateId.lastName}` : "Unknown",
-      candidateEmail: int.candidateId?.email || "Unknown",
-      interviewer: int.interviewerEmail || "Unknown",
-      jobTitle: "Job Role",
-      meetingLink: int.meetingLink,
-      Timing: int.timing,
-      status: int.status || "Scheduled"
-    }))
-    : [];
+      candidateName,
+      candidateEmail,
+      interviewer,
+      jobTitle: (int as any).jobTitle || "Job Role",
+      meetingLink,
+      Timing: timing,
+      status: (int.status || "scheduled").toString().toLowerCase(),
+      // map any applicationId that may be present in different shapes
+      applicationId:
+        int.applicationId && typeof int.applicationId === "string"
+          ? int.applicationId
+          : int.applicationId && int.applicationId._id
+          ? int.applicationId._id
+          : int.applicationIdString || int.application || int.application_id || undefined,
+    } as InterviewRow;
+  });
 
-  const getInterviewForApplicant = (email: string) => {
-    return interviews.find((i) => i.candidateEmail === email);
-  };
+  const getInterviewForApplicant = (email: string) =>
+    interviews.find((i) => (i.candidateEmail || '').toLowerCase() === (email || '').toLowerCase());
 
+  /* ================= GRID STYLES ================= */
+  const applicantGrid =
+    "grid grid-cols-[0.4fr_1.6fr_1.1fr_1fr_1fr_1fr_1fr_0.8fr]";
+  // add a small first column for checkbox selection (match applicant rows)
+  const interviewGrid = "grid grid-cols-[0.4fr_1.5fr_1.5fr_1.5fr_1.5fr_1fr_1fr]";
 
-  // ==================== RENDER ====================
-
-  const applicantGrid = "grid grid-cols-[0.4fr_1.6fr_1.1fr_1fr_1fr_1fr_1fr_0.5fr]";
-  const interviewGrid = "grid grid-cols-[1.5fr_1.5fr_1.5fr_1.5fr_1fr_1fr]";
+  /* ================= RENDER ================= */
+  const visibleInterviewAppIds = interviews.map((i) => i.applicationId).filter(Boolean) as string[];
 
   return (
     <div
       className={`bg-white rounded-2xl shadow-lg border border-gray-100 p-5 flex flex-col overflow-hidden ${className}`}
-      style={style} // Apply dynamic height explicitly
-      onClick={() => setActiveActionId(null)}
+      style={style}
     >
       {/* Header */}
       <div className="flex items-center justify-between gap-3 mb-4">
         <span className="text-lg font-semibold text-gray-900">
-          {activeTab === 'interview' ? 'Scheduled Interviews' : 'Applicants Lists'}
+          {activeTab === "scheduled" ? "Scheduled Interviews" : "Applicants Lists"}
         </span>
 
-        {activeTab !== 'interview' && selectedApplicants.length > 0 && (
+        {activeTab !== "interview" && selectedApplicants.length > 0 && (
           <div className="flex items-center gap-3">
             <select
               value={bulkStatus}
               onChange={(e) => setBulkStatus(e.target.value as ApplicantStatus)}
               className="border rounded-xl px-2 py-1"
-              onClick={(e) => e.stopPropagation()}
             >
-              {tabs.filter((t) => t !== "all").map((t) => <option key={t} value={t}>{t}</option>)}
+              {tabs
+                .filter((t) => t !== "all")
+                .map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
             </select>
             <button
-              onClick={(e) => { e.stopPropagation(); handleSubmit(); }}
+              onClick={handleSubmit}
               disabled={isPending}
-              className={`rounded-xl px-3 py-2 text-sm font-semibold text-white ${isPending ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"}`}
+              className={`rounded-xl px-3 py-2 text-sm font-semibold text-white ${isPending ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
+                }`}
             >
               {isPending ? "Updating..." : `Submit (${selectedApplicants.length})`}
             </button>
@@ -281,7 +318,9 @@ export default function ApplicantsList({
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${activeTab === tab ? "bg-blue-600 text-white shadow" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${activeTab === tab
+                ? "bg-blue-600 text-white shadow"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -289,217 +328,265 @@ export default function ApplicantsList({
         ))}
       </div>
 
-      {/* Table Content */}
-      {/* FIXED: Removed 'pb-20' and used 'pb-0' */}
-      <div className="flex-1 overflow-y-auto rounded-xl border border-gray-200 pb-0">
+      {/* Table */}
+      <div className="flex-1 overflow-y-auto rounded-xl border border-gray-200">
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-gray-50 border-b z-10">
-            {activeTab === 'interview' ? (
-              // --- INTERVIEW HEADERS ---
+            {activeTab === "scheduled" ? (
               <tr className={`${interviewGrid} px-4 py-3 text-xs font-semibold text-gray-500`}>
-                <th>Candidate</th>
-                <th>Interviewer</th>
-                <th>Meeting Link</th>
-                <th>Time</th>
-                <th>Status</th>
-                <th className="text-center">Action</th>
+                <th className="text-left px-3 py-3">Candidate</th>
+                <th className="text-left px-3 py-3">Interviewer</th>
+                <th className="text-left px-3 py-3">Meeting Link</th>
+                <th className="text-left px-3 py-3">Time</th>
+                <th className="text-left px-3 py-3">Status</th>
+                <th className="text-center px-3 py-3">Action</th>
               </tr>
             ) : (
-              // --- APPLICANT HEADERS ---
-              <tr className={`${applicantGrid} px-10 py-3 text-xs gap-2font-semibold text-gray-500 `}>
+              <tr className={`${applicantGrid} px-4 py-3 text-xs font-semibold text-gray-500`}>
                 <th className="text-center">Select</th>
-                <th>Name</th>
-                <th>Role</th>
-                <th>Date</th>
-                <th>Experience</th>
-                <th>Resume</th>
-                <th >Status</th>
-                <th >Action</th>
+                <th className="text-left">Name</th>
+                <th className="text-left">Role</th>
+                <th className="text-left">Date</th>
+                <th className="text-left">Experience</th>
+                <th className="text-left">Resume</th>
+                <th className="text-left">Status</th>
+                <th className="text-left">Action</th>
               </tr>
             )}
           </thead>
 
           <tbody className="divide-y">
-            {/* --- LOADING STATE --- */}
-            {activeTab === 'interview' && isInterviewsLoading && (
-              <tr><td colSpan={6} className="text-center py-8">Loading Interviews...</td></tr>
+            {/* --- INTERVIEW TAB --- */}
+            {activeTab === "scheduled" && isInterviewsLoading && (
+              <tr>
+                <td colSpan={6} className="text-center py-8 text-gray-500">
+                  Loading Interviews...
+                </td>
+              </tr>
             )}
 
-            {/* --- INTERVIEW ROWS --- */}
-            {activeTab === 'interview' && !isInterviewsLoading && interviews.map((int) => (
-              <tr key={int._id} className={`${interviewGrid} px-4 py-3 items-center hover:bg-gray-50 transition`}>
-                <td>
-                  <p className="font-semibold">{int.candidateName}</p>
-                  <p className="text-xs text-gray-500">{int.candidateEmail}</p>
-                </td>
-                <td className="truncate" title={int.interviewer}>{int.interviewer}</td>
-                <td>
-                  {int.status !== "Cancelled" ? (
-                    <a
-                      href={int.meetingLink}
-                      target="_blank"
-                      className="text-blue-600 hover:underline truncate block w-32"
-                    >
-                      Join Meeting
-                    </a>
-                  ) : (
-                    <span className="text-gray-400 text-sm">Cancelled</span>
-                  )}
-                </td>
+            {activeTab === "scheduled" &&
+              !isInterviewsLoading &&
+              (() => {
+                const visibleInterviewAppIds = interviews
+                  .map((i) => i.applicationId)
+                  .filter(Boolean) as string[];
 
-                <td>
-                  {new Date(int.Timing).toLocaleString("en-US", {
-                    month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
-                  })}
-                </td>
-                <td>
-                  <span className={`rounded-full px-7 py-1 text-xs font-semibold ${statusColors[int.status] || "bg-gray-100 text-gray-700"}`}>
-                    {int.status}
-                  </span>
-                </td>
-                <td className="text-center">
-                  {int.status !== "Cancelled" && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCancelInterview(int._id);
-                      }}
-                      className="text-red-500 hover:text-red-700 text-xs font-medium"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </td>
+                return interviews.map((int) => {
+                  const mappedAppId =
+                    int.applicationId ||
+                    applicants.find(
+                      (a) => (a.email || "").toLowerCase() === (int.candidateEmail || "").toLowerCase()
+                    )?.id;
 
-              </tr>
-            ))}
+                  const isChecked = mappedAppId ? selectedApplicants.includes(mappedAppId) : false;
+
+                  return (
+                    <tr
+                      key={int._id}
+                      className={`${interviewGrid} px-4 py-3 items-center hover:bg-gray-50 transition`}
+                    >
+                      <td className="flex justify-center">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => mappedAppId && toggleSelect(mappedAppId)}
+                          disabled={!mappedAppId}
+                          className="h-4 w-4 accent-blue-600"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </td>
+
+                      <td className="px-3 py-3">
+                        <p className="font-semibold text-gray-800">{int.candidateName}</p>
+                        <p className="text-xs text-gray-500">{int.candidateEmail}</p>
+                      </td>
+                      <td className="px-3 py-3 truncate text-gray-700" title={int.interviewer}>
+                        {int.interviewer}
+                      </td>
+                      <td className="px-3 py-3">
+                        {int.status?.toLowerCase() !== "cancelled" && int.meetingLink ? (
+                          <a
+                            href={int.meetingLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-blue-600 hover:underline truncate block max-w-[140px]"
+                          >
+                            Join Meeting
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 text-sm">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 text-gray-700">
+                        {int.Timing
+                          ? new Date(int.Timing).toLocaleString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })
+                          : "—"}
+                      </td>
+                      <td className="px-3 py-3">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusColors[int.status?.toLowerCase()] ||
+                            "bg-gray-100 text-gray-700"
+                            }`}
+                        >
+                          {int.status}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        {int.status?.toLowerCase() !== "cancelled" && (
+                          <button
+                            onClick={() => handleCancelInterview(int._id)}
+                            className="text-red-500 hover:text-red-700 text-xs font-medium"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                });
+              })()}
 
             {/* --- APPLICANT ROWS --- */}
-            {activeTab !== 'interview' && filteredApplicants.map((a) => (
-              <tr key={a.id} className={`${applicantGrid} px-10 py-3 items-center gap-2 hover:bg-gray-5 transition`}>
-                <td className="flex justify-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedApplicants.includes(a.id)}
-                    onChange={() => toggleSelect(a.id)}
-                    className="h-4 w-4 accent-blue-600"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </td>
-                <td>
-                  <p className="font-semibold gap-500 ">{a.name}</p>
-                  <p className="text-xs text-gray-500 ">{a.email}</p>
-                </td>
-                {/* <td>{a.role}</td>
-                <td>{a.date}</td>
-                <td>{a.experience}</td> */}
-                <td className="px-2 py-5 text-right">{a.role}</td>
-                <td className="px-2 py-5 text-right">{a.date}</td>
-                <td className="px-5 py-5 text-right">{a.experience}</td>
-                <td className="text-right">
-                  <a href={a.resume} target="_blank" className="rounded-lg border px-4 py-1.5 text-sm hover:bg-gray-100 gap-10" onClick={(e) => e.stopPropagation()}>
-                    📄Resume
-                  </a>
-                </td>
-                <td>
-                  <span className={`rounded-full px-10 py-1 text-xs gap-11 font-semibold capitalize ${statusColors[a.status]}`}>
-                    {a.status}
-                  </span>
-                </td>
+            {activeTab !== "scheduled" &&
+              /* when not in scheduled tab, show applicants. This includes the new 'interview' tab which shows applicants with status 'interview' */
+              filteredApplicants.map((a) => (
+                <tr
+                  key={a.id}
+                  className={`${applicantGrid} px-4 py-3 items-center hover:bg-gray-50 transition`}
+                >
+                  <td className="flex justify-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedApplicants.includes(a.id)}
+                      onChange={() => toggleSelect(a.id)}
+                      className="h-4 w-4 accent-blue-600"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </td>
+                  <td>
+                    <p className="font-semibold">{a.name}</p>
+                    <p className="text-xs text-gray-500">{a.email}</p>
+                  </td>
+                  <td className="px-2">{a.role}</td>
+                  <td className="px-2">{a.date}</td>
+                  <td className="px-2">{a.experience}</td>
+                  <td>
+                    <a
+                      href={a.resume}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-100"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      📄 Resume
+                    </a>
+                  </td>
+                  <td>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusColors[a.status] || "bg-gray-100 text-gray-700"
+                        }`}
+                    >
+                      {a.status}
+                    </span>
+                  </td>
 
-               <td className="text-right ">
-
-                  <button
-
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedApplicantData({
-                        name: a.name,
-
-                        answers: a.answers || [],
-                      });
-                      setIsAnswerPopupOpen(true);
-                    }
-
-                    }
-                    className="flex items-center gap-2 px-4 py-1.5 text-xs  font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors "
-                    title="view screening answers"
-                  >
-                    <Eye size={14} />
-                    Answers
-
-
-                  </button>
-
-
-
-
-                  {(a.status === "shortlisted" || a.status === "interview") && (
-                    <>
-                      {/* <button
+                  {/* ✅ FIX: Action column — both Answers + Schedule/Reschedule buttons visible */}
+                  <td>
+                    <div className="flex flex-col gap-1.5">
+                      {/* Answers button — always visible */}
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setActiveActionId(activeActionId === a.id ? null : a.id);
-
+                          setSelectedApplicantData({
+                            name: a.name,
+                            answers: a.answers || [],
+                          });
+                          setIsAnswerPopupOpen(true);
                         }}
-                        className="p-1 rounded-full hover:bg-gray-200 transition"
+                        className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
                       >
-                        <ThreeDotsIcon />
-                      </button> */}
-                      {activeActionId === a.id && (
-                        <div className="absolute right-8 top-1/2 -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+                        <Eye size={13} />
+                        Answers
+                      </button>
+
+                      {/* Select for Interview button: immediately set status to 'interview' */}
+                    
+                      {/* Schedule/Reschedule button (unchanged behavior) */}
+                      {/* {a.status === "shortlisted" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleScheduleInterview(
+                              a.candidateUserId,
+                              a.id,
+                              "schedule"
+                            );
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-md hover:bg-green-100 transition-colors"
+                        >
+                          <Calendar size={13} />
+                          Schedule
+                        </button>
+                      )} */}
+
+                      {a.status === "interview" && (() => {
+                        const interview = getInterviewForApplicant(a.email);
+                        return interview ? (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-
-                              if (a.status === "shortlisted") {
-                                handleScheduleInterview(
-                                  a.candidateUserId,
-                                  a.id,
-                                  "schedule"
-                                );
-                                return;
-                              }
-
-                              if (a.status === "interview") {
-                                const interview = getInterviewForApplicant(a.email);
-
-                                if (!interview) {
-                                  error("Interview not found");
-                                  return;
-                                }
-
-                                handleScheduleInterview(
-                                  a.candidateUserId,
-                                  a.id,
-                                  "reschedule",
-                                  interview._id
-                                );
-                              }
+                              handleScheduleInterview(
+                                a.candidateUserId,
+                                a.id,
+                                "reschedule",
+                                interview._id
+                              );
                             }}
-                            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition"
+                            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-orange-600 bg-orange-50 border border-orange-200 rounded-md hover:bg-orange-100 transition-colors"
                           >
-                            {a.status === "shortlisted"
-                              ? "Schedule Interview"
-                              : "Reschedule Interview"}
-
+                            <RefreshCw size={13} />
+                            Reschedule
                           </button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleScheduleInterview(
+                                a.candidateUserId,
+                                a.id,
+                                "schedule"
+                              );
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-md hover:bg-green-100 transition-colors"
+                          >
+                            <Calendar size={13} />
+                            Schedule
+                          </button>
+                        );
+                      })()}
+                    </div>
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
 
         {/* Empty States */}
-        {activeTab === 'interview' && !isInterviewsLoading && interviews.length === 0 && (
-          <div className="py-12 text-center text-sm text-gray-500">No interviews scheduled yet.</div>
+        {activeTab === "interview" && !isInterviewsLoading && interviews.length === 0 && (
+          <div className="py-12 text-center text-sm text-gray-500">
+            No interviews scheduled yet.
+          </div>
         )}
-        {activeTab !== 'interview' && filteredApplicants.length === 0 && (
-          <div className="py-12 text-center text-sm text-gray-500">No applicants found.</div>
+        {activeTab !== "interview" && filteredApplicants.length === 0 && (
+          <div className="py-12 text-center text-sm text-gray-500">
+            No applicants found.
+          </div>
         )}
       </div>
 
@@ -507,10 +594,9 @@ export default function ApplicantsList({
         isOpen={isPopupOpen}
         onClose={() => {
           setIsPopupOpen(false);
-          setActiveActionId(null);
           setSelectedApplicants([]);
           refetchApplicants();
-          refetchInterviews();
+          setTimeout(() => refetchInterviews(), 500);
         }}
         candidateId={scheduleCandidateId}
         jobId={jobId}
@@ -518,19 +604,13 @@ export default function ApplicantsList({
         mode={interviewMode}
         interviewId={selectedInterviewId}
       />
-      {
-/* 
-
-   // render answer popup */}
 
       <AnswerPopup
-
         isOpen={isAnswerPopupOpen}
         onClose={() => setIsAnswerPopupOpen(false)}
         applicantName={selectedApplicantData.name}
-        answers={selectedApplicantData?.answers}
+        answers={selectedApplicantData.answers}
       />
-
     </div>
   );
 }
