@@ -4,7 +4,7 @@ import { useShareCandidates } from "@/features/admin/users/hooks/useShareuser";
 import { FileText, Home, Loader2, Mail, User, Linkedin, Github, Globe, Twitter, Phone, Download } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
-import { Experience } from "../../types/shareInterfaceCandidate";
+import { Experience } from "../../../../types/shareInterfaceCandidate";
 
 /* ================= TYPES ================= */
 
