@@ -158,43 +158,32 @@ const Sidebar: React.FC = () => {
       </Link>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 space-y-1">
-        {NAV_ITEMS.map((item) => {
-          const active = isActive(item.href);
-          return (
-            // <Link
-            //   key={item.name}
-            //   href={item.href}
-            //   className={clsx(
-            //     "group relative flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-            //     active && pathname === item.href
-            //       ? "bg-linear-to-r from-blue-50 to-white text-blue-700 shadow-sm"
-            //       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-            //   )}
-            // >
-            //   {active && (
-            //     <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-blue-600" />
-            //   )}
-            //   <span>{item.name}</span>
-            // </Link>
-            <Link
-              key={item.name}
-              href={item.href}
-              className={clsx(
-                "group relative flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-                pathname === item.href
-                  ? "bg-linear-to-r from-blue-50 to-white text-blue-700 shadow-sm"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-              )}
-            >
-              {pathname === item.href && (
-                <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-blue-600" />
-              )}
-              <span>{item.name}</span>
-            </Link>
-          );
-        })}
-      </nav>
+{/* Navigation */}
+<nav className="flex-1 px-3 space-y-1">
+  {NAV_ITEMS.map((item) => {
+    // USE the isActive function you already defined above!
+    const active = isActive(item.href); 
+    
+    return (
+      <Link
+        key={item.name}
+        href={item.href}
+        className={clsx(
+          "group relative flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+          active // Changed from pathname === item.href
+            ? "bg-linear-to-r from-blue-50 to-white text-blue-700 shadow-sm"
+            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+        )}
+      >
+        {/* ✅ BLUE LINE stays visible for sub-routes now */}
+        {active && ( 
+          <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-blue-600" />
+        )}
+        <span>{item.name}</span>
+      </Link>
+    );
+  })}
+</nav>
 
       {/* Logout */}
       <div className="p-4 border-t border-slate-200">

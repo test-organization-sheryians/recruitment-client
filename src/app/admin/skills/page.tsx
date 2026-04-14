@@ -80,9 +80,9 @@ export default function SkillPage() {
 
   return (
     <>
-      <div className="min-h-screen flex bg-gray-100">
-        <div className="flex-grow flex flex-col p-4 space-y-4">
-          <div className="flex-grow p-4 bg-gray-50 rounded-xl">
+      <div className="min-h-screen flex bg-slate-50 rounded-xl">
+        <div className="flex-grow flex flex-col space-y-4">
+          <div className="flex-grow p-4 bg-white-50 rounded-xl">
             <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-md relative">
               <div className="flex justify-between items-center mb-5 border-b pb-3 border-[#DDE6F5]">
                 <h2 className="text-2xl font-bold text-[#18253B]">
