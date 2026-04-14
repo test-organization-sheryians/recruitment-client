@@ -109,7 +109,7 @@ export default function TestList() {
   };
 
   return (
-    <div className="min-h-screen bg-white relative">
+    <div className="min-h-screen rounded-xl bg-white relative">
       {openMenu && (
         <div className="fixed inset-0 z-10" onClick={() => setOpenMenu(null)} />
       )}

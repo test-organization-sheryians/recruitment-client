@@ -108,7 +108,7 @@ export default function Jobs() {
   }
 
   return (
-    <div className="bg-[#f7f8fb] min-h-screen px-4 py-8">
+    <div className="bg-[#f7f8fb] rounded-xl min-h-screen px-4 py-8">
       <div className="max-w-6xl mx-auto flex flex-col h-[calc(100vh-80px)]">
         
         {/* HEADER - Remains Static */}

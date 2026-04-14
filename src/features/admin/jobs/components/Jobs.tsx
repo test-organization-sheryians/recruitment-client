@@ -97,7 +97,7 @@ export default function Jobs() {
   }
 
   return (
-    <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+    <div className="bg-white rounded-md border shadow-sm overflow-hidden">
       <div className="p-6 border-b flex justify-between items-center">
         <div>
           <h2 className="text-xl font-semibold text-gray-800">Job Listings</h2>
