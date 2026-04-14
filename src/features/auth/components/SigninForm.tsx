@@ -1,7 +1,6 @@
 "use client";
 
 import { CiMail } from "react-icons/ci";
-import { FcGoogle } from "react-icons/fc";
 import LabelInput from "./LabelInput";
 import { useForm } from "react-hook-form";
 import Cookies from "js-cookie";
@@ -13,11 +12,6 @@ import { useState } from "react";
 import { useLogin } from "../hooks/useAuthApi";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
-type SigninFormData = {
-  email: string;
-  password: string;
-};
-
 const SigninForm = () => {
   const dispatch = useDispatch();
   const router = useRouter();
@@ -26,103 +20,95 @@ const SigninForm = () => {
   const redirect = searchParams.get("redirect");
   const safeRedirect = redirect && redirect.startsWith("/") ? redirect : null;
 
-  const [errorMsg, setErrorMsg] = useState<string>("");
-  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  const { register, handleSubmit, watch } = useForm<SigninFormData>();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<any>();
 
   const passwordValue = watch("password");
 
-  const { mutate: loginUser, isPending: isLoggingIn, error } = useLogin();
+  const { mutate: loginUser, isPending } = useLogin();
 
-  const onSubmit = (formData: SigninFormData) => {
+  const onSubmit = (data: any) => {
     setErrorMsg("");
 
-    const sendData = new FormData();
-    sendData.append("email", formData.email);
-    sendData.append("password", formData.password);
+    // 🔴 FRONTEND VALIDATION
+    if (!data.email && !data.password) {
+      return setErrorMsg("Email and Password are required");
+    }
+    if (!data.email) {
+      return setErrorMsg("Email is required");
+    }
+    if (!data.password) {
+      return setErrorMsg("Password is required");
+    }
 
-    loginUser(sendData, {
-      onSuccess: (res: {
-        data: {
-          token: string;
-          user: {
-            _id: string;
-            email?: string;
-            firstName: string;
-            lastName?: string;
-            role?: { name: string };
-            isVerified: boolean;
-          };
-        };
-      }) => {
+    loginUser(data, {
+      onSuccess: (res: any) => {
+        dispatch(setUser(res.data.user));
         Cookies.set("role", res.data.user?.role?.name || "user");
 
-        dispatch(
-          setUser({
-            id: res.data.user._id,
-            email: res.data.user.email,
-            firstName: res.data.user.firstName,
-            lastName: res.data.user.lastName,
-            role: res.data.user?.role?.name || "user",
-            isVerified: res.data.user.isVerified,
-          })
+        router.push(
+          res.data.user?.role?.name === "admin"
+            ? safeRedirect || "/admin"
+            : safeRedirect || "/"
         );
-
-        if (res.data.user?.role?.name === "admin") {
-          router.push(safeRedirect || "/admin");
-        } else {
-          router.push(safeRedirect || "/");
-        }
       },
-      onError: (err: {
-        response?: { data?: { message: string } };
-        message?: string;
-      }) => {
-        setErrorMsg(
-          err?.response?.data?.message ||
-            err?.message ||
-            "Invalid email or password. Please try again."
-        );
+
+      onError: (err: any) => {
+        const msg = err?.response?.data?.message?.toLowerCase();
+
+        if (msg?.includes("not found") || msg?.includes("register")) {
+          setErrorMsg("User not registered. Please register first.");
+        } else if (msg?.includes("password")) {
+          setErrorMsg("Incorrect password");
+        } else if (msg?.includes("email")) {
+          setErrorMsg("Invalid email");
+        } else {
+          setErrorMsg("Invalid email or password");
+        }
       },
     });
   };
 
   return (
-    <div
-      className="
-        w-full min-h-screen bg-white font-[satoshi] flex items-center justify-center px-4 sm:px-6 overflow-hidden
-      "
-    >
-      <div className="w-full max-w-[480px] sm:max-w-[520px] bg-white rounded-2xl py-1 sm:py-3 md:py-5 px-4 sm:px-6 md:px-7">
-        <h1
-          className="
-            text-2xl sm:text-3xl
-            font-semibold text-center text-gray-800
-            mb-4 sm:mb-3 md:mb-5
-          "
-        >
+    <div className="w-full min-h-screen bg-gray-100 flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl p-6">
+
+        <h1 className="text-2xl font-semibold text-center mb-4">
           Sign in to Your Account
         </h1>
 
-        {(errorMsg || error) && (
+        {(errorMsg || errors.email || errors.password) && (
           <div className="flex items-start gap-3 bg-red-50 text-red-700 px-3 py-2 rounded-lg border border-red-200 mb-2">
-            <AlertCircle size={20} className="mt-0.5 shrink-0" />
-            <p className="text-[10px] font-medium leading-relaxed break-words mt-1">
-              {errorMsg || "Something went wrong. Please try again."}
+            <AlertCircle size={20} />
+            <p className="text-[10px]">
+              {errorMsg ||
+                errors.email?.message?.toString() ||
+                errors.password?.message?.toString()}
             </p>
           </div>
         )}
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-3 w-full mt-4"
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+
           <LabelInput
             label="Email"
             placeholder="your email"
             type="email"
-            {...register("email", { required: true })}
+            error={errors.email?.message?.toString()}
+            {...register("email", {
+              required: "Email is required",
+              pattern: {
+                value: /^\S+@\S+\.\S+$/,
+                message: "Enter valid email",
+              },
+            })}
           />
 
           <div className="relative">
@@ -130,127 +116,44 @@ const SigninForm = () => {
               label="Password"
               placeholder="8+ characters"
               type={showPassword && passwordValue ? "text" : "password"}
-              {...register("password", { required: true })}
+              error={errors.password?.message?.toString()}
+              {...register("password", {
+                required: "Password is required",
+              })}
             />
 
             <button
               type="button"
               disabled={!passwordValue}
               onClick={() => setShowPassword((prev) => !prev)}
-              className={`
-                absolute top-[58%] right-3
-              
-                transition-colors
-                ${
-                  passwordValue
-                    ? "text-gray-500 hover:text-gray-700"
-                    : "text-gray-300 cursor-not-allowed"
-                }
-              `}
+              className={`absolute top-[58%] right-3 ${
+                passwordValue
+                  ? "text-gray-500"
+                  : "text-gray-300 cursor-not-allowed"
+              }`}
             >
               {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
             </button>
           </div>
 
           <p className="text-right text-sm">
-            <a
-              href="/forgot-password"
-              className="text-[#4C62ED] hover:underline font-medium"
-            >
+            <a href="/forgot-password" className="text-[#4C62ED] underline">
               Forgot Password?
             </a>
           </p>
 
           <button
             type="submit"
-            disabled={isLoggingIn}
-            className={`
-              w-full bg-[#4C62ED] mt-3 hover:bg-[#3A4CD1]
-            transition-all text-white
-            text-sm xs:text-base sm:text-base md:text-[17px] lg:text-lg
-            font-medium rounded-base
-            py-2 xs:py-3 sm:py-3 md:py-3
-            flex items-center justify-center gap-1.5 xs:gap-2 md:gap-3
-            px-2 sm:px-4 md:px-6
-            min-h-[42px] xs:min-h-[46px] sm:min-h-[48px] md:min-h-[52px]
-            max-w-full
-            shadow-sm md:shadow
-            disabled:bg-gray-400 disabled:cursor-not-allowed
-            focus:outline-none focus:ring-2 focus:ring-[#4C62ED] focus:ring-offset-2
-            `}
+            disabled={isPending}
+            className="w-full bg-[#4C62ED] text-white py-2"
           >
-            {isLoggingIn ? (
-              <span className="w-full text-center text-xs xs:text-sm sm:text-base">
-                Signing in...
-              </span>
-            ) : (
-              <>
-                <CiMail className="text-base xs:text-lg md:text-xl" />
-                <span className="truncate text-sm xs:text-base md:text-[16px]">
-                  Continue with Email
-                </span>
-              </>
-            )}
+            {isPending ? "Signing in..." : "Continue with Email"}
           </button>
-
-          <div className="flex items-center justify-center my-3">
-            <span className="flex-1 border-t border-gray-300" />
-            <span className="mx-4 text-gray-400 text-xs font-medium">OR</span>
-            <span className="flex-1 border-t border-gray-300" />
-          </div>
-
-          {/* <button
-            type="button"
-            className={`
-              w-full
-              bg-[#3B3A3A] hover:bg-black
-              transition-colors text-white
-              text-sm sm:text-base md:text-[17px] lg:text-lg
-              font-medium rounded-base
-              py-3 sm:py-3.5 md:py-4
-              flex items-center justify-center gap-2 md:gap-3
-              px-2 sm:px-4 md:px-6
-              min-h-[44px] sm:min-h-[48px] md:min-h-[52px]
-              max-w-full
-              shadow-sm md:shadow
-              focus:outline-none focus:ring-2 focus:ring-[#4C62ED] focus:ring-offset-2
-            `}
-          >
-            <FcGoogle className="text-xl md:text-2xl lg:text-3xl" />
-            <span className="truncate">Continue with Google</span>
-          </button> */}
         </form>
 
-        <p
-          className="
-            text-center 
-            text-gray-600 
-            text-xs 
-            xs:text-sm 
-            sm:text-base 
-            md:text-[15px] 
-            lg:text-[16px] 
-            mt-3 tracking-tight leading-4 
-            xs:mt-5 
-            px-2
-          "
-        >
+        <p className="text-center text-gray-600 text-sm mt-3">
           Don’t have an account?{" "}
-          <a
-            href="/register"
-            className="
-              text-[#4C62ED] 
-              underline 
-              font-medium 
-              hover:text-[#3a4cd1]
-              text-xs 
-              xs:text-sm 
-              sm:text-base 
-              md:text-[15px] 
-              lg:text-[16px]
-              transition-colors
-            "
-          >
+          <a href="/register" className="text-[#4C62ED] underline">
             Register
           </a>
         </p>
