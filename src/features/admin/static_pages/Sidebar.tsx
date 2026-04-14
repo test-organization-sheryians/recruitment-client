@@ -108,70 +108,65 @@ const Sidebar: React.FC<{
     <TooltipProvider delayDuration={80}>
       <aside
         className={clsx(
-          "relative w-full h-[calc(100vh-32px)] rounded-3xl bg-linear-to-b from-white to-slate-50 shadow-[0_20px_50px_rgba(15,23,42,0.08)] flex flex-col border border-slate-200",
-          "transition-[padding] duration-300 ease-in-out",
+          // Remove fixed widths here, use w-full
+          "relative w-full h-full rounded-3xl bg-linear-to-b from-white to-slate-50 shadow-[0_20px_50px_rgba(15,23,42,0.08)] flex flex-col border border-slate-200",
+          "transition-all duration-300 ease-in-out",
         )}
       >
-      {/* Brand */}
-      <div className={clsx("pt-6 pb-4", collapsed ? "px-3" : "px-6")}>
-        <div
-          className={clsx(
-            "flex items-start gap-3",
-            collapsed ? "justify-center" : "justify-between",
-          )}
-        >
-          <div className={clsx("min-w-0", collapsed && "hidden")}>
-            <div className="text-xl font-extrabold tracking-tight text-slate-900">
-              Sheryians<span className="text-blue-600">.</span>
+        {/* Brand */}
+        <div className={clsx("pt-6 pb-4", collapsed ? "px-3" : "px-6")}>
+          <div
+            className={clsx(
+              "flex items-start gap-3",
+              collapsed ? "justify-center" : "justify-between",
+            )}
+          >
+            <div className={clsx("min-w-0", collapsed && "hidden")}>
+              <div className="text-xl font-extrabold tracking-tight text-slate-900">
+                Sheryians<span className="text-blue-600">.</span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Admin Control Panel
+              </p>
             </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Admin Control Panel
-            </p>
-          </div>
 
-          <div className={clsx(!collapsed && "hidden")}>
-            <div className="mx-auto h-9 w-9 rounded-2xl bg-white/70 border border-slate-200 shadow-sm flex items-center justify-center">
-              <span className="text-base font-extrabold tracking-tight text-slate-900">
-                S<span className="text-blue-600">.</span>
-              </span>
+            <div className={clsx(!collapsed && "hidden")}>
+              <div className="mx-auto h-9 w-9 rounded-2xl bg-white/70 border border-slate-200 shadow-sm flex items-center justify-center">
+                <span className="text-base font-extrabold tracking-tight text-slate-900">
+                  S<span className="text-blue-600">.</span>
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Right-edge open/close handle (matches the screenshot style) */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={() => onCollapsedChange?.(!collapsed)}
-            className={clsx(
-              "absolute z-20",
-              "top-7 -right-3",
-              "h-9 w-6",
-              "rounded-r-2xl rounded-l-lg",
-              "border border-slate-200 bg-white/80 backdrop-blur",
-              "shadow-[0_10px_20px_rgba(15,23,42,0.10)]",
-              "flex items-center justify-center",
-              "text-slate-700 hover:text-slate-900 hover:bg-white transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40",
-            )}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {collapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="right" sideOffset={10}>
-          {collapsed ? "Expand" : "Collapse"}
-        </TooltipContent>
-      </Tooltip>
+        {/* Right-edge open/close handle (matches the screenshot style) */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {/* Right-edge open/close handle */}
+            <button
+              type="button"
+              onClick={() => onCollapsedChange?.(!collapsed)}
+              className={clsx(
+                "absolute z-20",
+                "top-7 right-0", // Keeps it overlapping the gap slightly for better UX
+                "h-9 w-6 rounded-r-2xl rounded-l-lg border border-slate-200 bg-white shadow-sm flex items-center justify-center",
+              )}
+            >
+              {collapsed ? (
+                <ChevronRight className="h-3 w-4" />
+              ) : (
+                <ChevronLeft className="h-3 w-4" />
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right" sideOffset={10}>
+            {collapsed ? "Expand" : "Collapse"}
+          </TooltipContent>
+        </Tooltip>
 
-      {/* Identity */}
-      {/* <Link
+        {/* Identity */}
+        {/* <Link
         href={"/admin/profile"}
         
       >
@@ -201,125 +196,135 @@ const Sidebar: React.FC<{
           </div>
         </div>
       </Link> */}
-      <div className={clsx(collapsed ? "px-2" : "px-0")}>
-        {collapsed ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                href={"/admin/profile"}
+        <div className={clsx(collapsed ? "px-2" : "px-0")}>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={"/admin/profile"}
+                  className={clsx(
+                    "mx-auto mb-5 rounded-2xl bg-white/70 backdrop-blur shadow-sm border border-slate-200 cursor-pointer hover:bg-slate-100",
+                    "flex items-center justify-center h-12 w-12 transition-colors",
+                    pathname === "/admin/profile"
+                      ? "bg-linear-to-r from-blue-50 to-white text-blue-700"
+                      : "text-slate-700",
+                  )}
+                  aria-label="Profile"
+                >
+                  <div
+                    className="h-9 w-9 rounded-xl flex items-center justify-center text-sm font-bold text-white shadow-inner"
+                    style={{ backgroundColor: avatarColor }}
+                  >
+                    {(user?.email?.[0] || user?.name?.[0] || "U").toUpperCase()}
+                  </div>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={10}>
+                Profile
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Link href={"/admin/profile"}>
+              <div
                 className={clsx(
-                  "mx-auto mb-5 rounded-2xl bg-white/70 backdrop-blur shadow-sm border border-slate-200 cursor-pointer hover:bg-slate-100",
-                  "flex items-center justify-center h-12 w-12 transition-colors",
+                  "relative mx-4 mb-5 rounded-2xl bg-white/70 backdrop-blur p-3 flex items-center gap-3 shadow-sm border border-slate-200 cursor-pointer hover:bg-slate-100",
                   pathname === "/admin/profile"
-                    ? "bg-linear-to-r from-blue-50 to-white text-blue-700"
-                    : "text-slate-700",
+                    ? "bg-linear-to-r from-blue-50 to-white text-blue-700 shadow-sm"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
                 )}
-                aria-label="Profile"
               >
+                {pathname === "/admin/profile" && (
+                  <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-blue-600" />
+                )}
+
                 <div
-                  className="h-9 w-9 rounded-xl flex items-center justify-center text-sm font-bold text-white shadow-inner"
+                  className="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shadow-inner"
                   style={{ backgroundColor: avatarColor }}
                 >
                   {(user?.email?.[0] || user?.name?.[0] || "U").toUpperCase()}
                 </div>
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={10}>
-              Profile
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          <Link href={"/admin/profile"}>
-            <div
-              className={clsx(
-                "relative mx-4 mb-5 rounded-2xl bg-white/70 backdrop-blur p-3 flex items-center gap-3 shadow-sm border border-slate-200 cursor-pointer hover:bg-slate-100",
-                pathname === "/admin/profile"
-                  ? "bg-linear-to-r from-blue-50 to-white text-blue-700 shadow-sm"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-              )}
-            >
-              {pathname === "/admin/profile" && (
-                <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-blue-600" />
-              )}
 
-              <div
-                className="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shadow-inner"
-                style={{ backgroundColor: avatarColor }}
-              >
-                {(user?.email?.[0] || user?.name?.[0] || "U").toUpperCase()}
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-slate-800 truncate">
-                  {user?.email || "admin@example.com"}
-                </p>
-                <span className="inline-flex items-center gap-1 mt-0.5 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
-                  ● Administrator
-                </span>
-              </div>
-            </div>
-          </Link>
-        )}
-      </div>
-
-      {/* Navigation */}
-      <nav className={clsx("flex-1 space-y-1", collapsed ? "px-2" : "px-3")}>
-        {NAV_ITEMS.map((item) => {
-          const active = isActive(item.href);
-          const Icon = item.icon;
-          return (
-            <Tooltip key={item.name}>
-              <TooltipTrigger asChild>
-                <Link
-                  href={item.href}
-                  className={clsx(
-                    "group relative flex items-center rounded-xl font-medium transition-all duration-200",
-                    collapsed
-                      ? "justify-center px-0 py-2.5 text-sm"
-                      : "gap-3 px-4 py-2.5 text-sm",
-                    active
-                      ? "bg-linear-to-r from-blue-50 to-white text-blue-700 shadow-sm"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-                  )}
-                  aria-label={item.name}
-                >
-                  {active && (
-                    <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-blue-600" />
-                  )}
-                  <Icon className={clsx("shrink-0", collapsed ? "h-5 w-5" : "h-4 w-4")} />
-                  <span className={clsx("truncate", collapsed && "hidden")}>
-                    {item.name}
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-slate-800 truncate">
+                    {user?.email || "admin@example.com"}
+                  </p>
+                  <span className="inline-flex items-center gap-1 mt-0.5 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                    ● Administrator
                   </span>
-                </Link>
-              </TooltipTrigger>
-              {collapsed && (
-                <TooltipContent side="right" sideOffset={10}>
-                  {item.name}
-                </TooltipContent>
-              )}
-            </Tooltip>
-          );
-        })}
-      </nav>
-
-      {/* Logout */}
-      <div className={clsx("border-t border-slate-200", collapsed ? "p-3" : "p-4")}>
-        {collapsed ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex justify-center">
-                <LogoutButton collapsed />
+                </div>
               </div>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={10}>
-              Logout
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          <LogoutButton />
-        )}
-      </div>
-    </aside>
+            </Link>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <nav className={clsx("flex-1 space-y-1", collapsed ? "px-2" : "px-3")}>
+          {NAV_ITEMS.map((item) => {
+            const active = isActive(item.href);
+            const Icon = item.icon;
+            return (
+              <Tooltip key={item.name}>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={item.href}
+                    className={clsx(
+                      "group relative flex items-center rounded-xl font-medium transition-all duration-200",
+                      collapsed
+                        ? "justify-center px-0 py-2.5 text-sm"
+                        : "gap-3 px-4 py-2.5 text-sm",
+                      active
+                        ? "bg-linear-to-r from-blue-50 to-white text-blue-700 shadow-sm"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                    )}
+                    aria-label={item.name}
+                  >
+                    {active && (
+                      <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-blue-600" />
+                    )}
+                    <Icon
+                      className={clsx(
+                        "shrink-0",
+                        collapsed ? "h-5 w-5" : "h-4 w-4",
+                      )}
+                    />
+                    <span className={clsx("truncate", collapsed && "hidden")}>
+                      {item.name}
+                    </span>
+                  </Link>
+                </TooltipTrigger>
+                {collapsed && (
+                  <TooltipContent side="right" sideOffset={10}>
+                    {item.name}
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            );
+          })}
+        </nav>
+
+        {/* Logout */}
+        <div
+          className={clsx(
+            "border-t border-slate-200",
+            collapsed ? "p-3" : "p-4",
+          )}
+        >
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex justify-center">
+                  <LogoutButton collapsed />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={10}>
+                Logout
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <LogoutButton />
+          )}
+        </div>
+      </aside>
     </TooltipProvider>
   );
 };
