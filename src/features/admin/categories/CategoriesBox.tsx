@@ -77,8 +77,8 @@ const CategoriesBox = () => {
   };
 
   return (
-    <div className="h-auto w-full p-4 bg-white border border-gray300 rounded-md shadow-sm">
-      <div className="border rounded-md p-4">
+    <div className="h-auto w-full p-4 bg-white border border-gray300 rounded-xl shadow-sm">
+      <div className="rounded-md p-4">
         <div className="flex items-center justify-between border-b pb-4 mb-4">
           <h1 className="font-bold text-2xl">Job Category</h1>
           <button
