@@ -1,5 +1,5 @@
 // app/admin/layout.tsx
-import  Sidebar  from "@/features/admin/static_pages/Sidebar";
+import AdminShell from "@/features/admin/static_pages/AdminShell";
 import { getCurrentUser } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -27,22 +27,5 @@ export default async function AdminLayout({
     redirect("/unauthorized");
   }
 
-
-  return (
-    <div className="min-h-screen w-full bg-[#F0F2F5] font-[satoshi]">
-      <div className="flex">
-        <aside className="hidden md:block w-72 fixed inset-y-0 left-0 z-50">
-          <div className="h-full p-4">
-            <Sidebar /> 
-          </div>
-        </aside>
-
-        <div className="flex-1 md:ml-72">
-          <div className="p-4 md:p-6 max-w-350 mx-auto">
-            <main>{children}</main>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <AdminShell>{children}</AdminShell>;
 }
