@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useBulkUpdateApplicants,
   useJobApplicant,
   useInterviewsByJob,
 } from "../hooks/useJobApplicant";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import PopupForm from "./PopupForm";
 import {
@@ -37,6 +37,7 @@ interface ExtendedApplicantRow extends Omit<ApplicantRow, "id"> {
   status: ApplicantStatus;
   resume: string;
   answers: QuestionAnswer[];
+  interviewCompleted?: boolean;
 }
 
 interface InterviewRow {
@@ -87,8 +88,20 @@ const tabs: Array<"all" | ApplicantStatus | "scheduled"> = [
   "interview",
   "scheduled",
   "hired",
-    "rejected",
+  "rejected",
 ];
+
+// Build a destination URL for a given status by setting the `tab` query param
+function buildDestForStatus(status: string, pathname: string, searchParams: URLSearchParams | null) {
+  try {
+    const params = new URLSearchParams(searchParams?.toString() ?? "");
+    params.set("tab", status);
+    const qs = params.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  } catch (e) {
+    return `${pathname}?tab=${status}`;
+  }
+}
 
 export default function ApplicantsList({
   height = "100%",
@@ -102,13 +115,59 @@ export default function ApplicantsList({
 
   const { id } = useParams();
   const jobId = id as string;
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
+  // When the page loads without a `tab` param, set default to 'applied'
+  // Use replace so we don't add an extra history entry.
+  useEffect(() => {
+    try {
+      const currentTab = searchParams?.get("tab");
+      if (!currentTab) {
+        const dest = buildDestForStatus("applied", pathname || "", (searchParams as any) ?? null);
+        // Replace to avoid polluting history with the default-setting navigation
+        router.replace(dest);
+      }
+    } catch (e) {
+      console.error("Failed to set default tab", e);
+    }
+    // run on mount or when searchParams/pathname change
+  }, [searchParams, pathname, router]);
+
+  // Called when PopupForm reports scheduling/rescheduling success
+  const handlePopupSuccess = async () => {
+    try {
+      // close popup first
+      setIsPopupOpen(false);
+
+      // clear selection and refresh lists so UI stays consistent
+      setSelectedApplicants([]);
+      refetchApplicants();
+      setTimeout(() => refetchInterviews(), 500);
+
+      // wait a microtask so modal unmount completes
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // then navigate to scheduled tab using replace to avoid extra history entry
+      const params = new URLSearchParams(searchParams?.toString() ?? "");
+      params.set("tab", "scheduled");
+      const qs = params.toString();
+      const dest = qs ? `${pathname}?${qs}` : pathname || "/";
+      await router.replace(dest);
+    } catch (e) {
+      console.error("Failed to navigate to scheduled tab", e);
+    }
+  };
   const { data, refetch: refetchApplicants } = useJobApplicant(jobId) as {
     data?: ApplicantsApiResponse;
     refetch: () => void;
   };
 
-  const [activeTab, setActiveTab] = useState<"all" | ApplicantStatus>("all");
+  // derive active tab from URL query `tab`; default to 'applied'
+  const activeTab = (
+    (searchParams?.get("tab") as "all" | ApplicantStatus | "scheduled") || "applied"
+  );
 
   const {
     data: interviewResponse,
@@ -177,6 +236,16 @@ export default function ApplicantsList({
           // refresh lists so candidate moves tabs accordingly
           refetchApplicants();
           setTimeout(() => refetchInterviews(), 500);
+
+          // navigate to the tab for the new status (preserve other query params)
+          try {
+            const dest = buildDestForStatus(bulkStatus, pathname || "", (searchParams as any) ?? null);
+            // small delay so toast is visible before navigation
+            setTimeout(() => router.push(dest), 600);
+          } catch (e) {
+            // swallow navigation errors but keep UX intact
+            console.error("Navigation after status update failed", e);
+          }
         },
         onError: () => error("Failed to update applicant status"),
       }
@@ -212,6 +281,7 @@ export default function ApplicantsList({
         ? `${a.totalExperienceYears}-${a.jobDetails.requiredExperience} yrs`
         : `${a.totalExperienceYears} yrs`,
       status: (a.status || "").toString().toLowerCase(),
+      interviewCompleted: Boolean(a.interviewCompleted),
       resume: a.resumeUrl,
       answers: a.answers || [],
     })) ?? [];
@@ -251,16 +321,25 @@ export default function ApplicantsList({
       jobTitle: (int as any).jobTitle || "Job Role",
       meetingLink,
       Timing: timing,
-      status: (int.status || "scheduled").toString().toLowerCase(),
+      // Normalize server statuses: treat legacy 'Rescheduled' as 'Scheduled'
+      status: ((): string => {
+        const raw = (int.status || "").toString();
+        if (!raw) return int.isRescheduled ? "scheduled" : "scheduled";
+        if (raw.toLowerCase() === "rescheduled") return "scheduled";
+        return raw.toLowerCase();
+      })(),
       // map any applicationId that may be present in different shapes
       applicationId:
         int.applicationId && typeof int.applicationId === "string"
           ? int.applicationId
           : int.applicationId && int.applicationId._id
-          ? int.applicationId._id
-          : int.applicationIdString || int.application || int.application_id || undefined,
+            ? int.applicationId._id
+            : int.applicationIdString || int.application || int.application_id || undefined,
     } as InterviewRow;
   });
+
+  // only scheduled interviews should be shown in the Scheduled tab
+  const scheduledInterviews = interviews.filter((i) => i.status === "scheduled");
 
   const getInterviewForApplicant = (email: string) =>
     interviews.find((i) => (i.candidateEmail || '').toLowerCase() === (email || '').toLowerCase());
@@ -317,13 +396,20 @@ export default function ApplicantsList({
         {tabs.map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              try {
+                const dest = buildDestForStatus(String(tab), pathname || "", (searchParams as any) ?? null);
+                router.push(dest);
+              } catch (e) {
+                console.error("Failed to change tab", e);
+              }
+            }}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${activeTab === tab
-                ? "bg-blue-600 text-white shadow"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              ? "bg-blue-600 text-white shadow"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {String(tab).charAt(0).toUpperCase() + String(tab).slice(1)}
           </button>
         ))}
       </div>
@@ -368,11 +454,11 @@ export default function ApplicantsList({
             {activeTab === "scheduled" &&
               !isInterviewsLoading &&
               (() => {
-                const visibleInterviewAppIds = interviews
+                const visibleInterviewAppIds = scheduledInterviews
                   .map((i) => i.applicationId)
                   .filter(Boolean) as string[];
 
-                return interviews.map((int) => {
+                return scheduledInterviews.map((int) => {
                   const mappedAppId =
                     int.applicationId ||
                     applicants.find(
@@ -429,13 +515,21 @@ export default function ApplicantsList({
                           : "—"}
                       </td>
                       <td className="px-3 py-3">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusColors[int.status?.toLowerCase()] ||
-                            "bg-gray-100 text-gray-700"
-                            }`}
-                        >
-                          {int.status}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusColors[int.status?.toLowerCase()] ||
+                              "bg-gray-100 text-gray-700"
+                              }`}
+                          >
+                            {int.status}
+                          </span>
+                          {/** Show Rescheduled badge if server set isRescheduled */}
+                          {((rawInterviews.find((r: any) => r._id === int._id) as any)?.isRescheduled) && (
+                            <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-yellow-100 text-yellow-700">
+                              Rescheduled
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-3 py-3 text-center">
                         {int.status?.toLowerCase() !== "cancelled" && (
@@ -494,6 +588,9 @@ export default function ApplicantsList({
                     >
                       {a.status}
                     </span>
+                    {((a.status === "hired" || a.status === "rejected") && a.interviewCompleted) && (
+                      <div className="text-xs text-green-600 font-medium mt-1">Interview Completed</div>
+                    )}
                   </td>
 
                   {/* ✅ FIX: Action column — both Answers + Schedule/Reschedule buttons visible */}
@@ -516,7 +613,7 @@ export default function ApplicantsList({
                       </button>
 
                       {/* Select for Interview button: immediately set status to 'interview' */}
-                    
+
                       {/* Schedule/Reschedule button (unchanged behavior) */}
                       {/* {a.status === "shortlisted" && (
                         <button
@@ -598,6 +695,7 @@ export default function ApplicantsList({
           refetchApplicants();
           setTimeout(() => refetchInterviews(), 500);
         }}
+        onSuccess={handlePopupSuccess}
         candidateId={scheduleCandidateId}
         jobId={jobId}
         applicationId={selectedApplicants[0] || ""}

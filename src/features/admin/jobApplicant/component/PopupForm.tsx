@@ -11,6 +11,9 @@ import api from "@/config/axios";
 interface PopupFormProps {
   isOpen: boolean;
   onClose: () => void;
+  // optional callback invoked after successful schedule/reschedule
+  // may return a Promise if parent performs async navigation
+  onSuccess?: () => Promise<void> | void;
   candidateId: string | null;
   jobId: string;
   applicationId: string;
@@ -21,6 +24,7 @@ interface PopupFormProps {
 export default function PopupForm({
   isOpen,
   onClose,
+  onSuccess,
   candidateId,
   jobId,
   applicationId,
@@ -68,7 +72,7 @@ export default function PopupForm({
       `${formData.interviewDate}T${formData.interviewTime}`
     ).toISOString();
 
-    if (mode === "reschedule") {
+      if (mode === "reschedule") {
       if (!interviewId) {
         error("Interview ID missing");
         return;
@@ -79,11 +83,24 @@ export default function PopupForm({
           interviewerEmail: formData.interviewerEmail,
           meetingLink: formData.meetingLink,
           timing,
-          status: "Rescheduled",
+          // keep status as Scheduled on backend; add isRescheduled for UI
+          status: "Scheduled",
+          isRescheduled: true,
         });
 
         success("Interview rescheduled successfully");
-        onClose();
+        // notify parent that scheduling succeeded (parent will close modal then navigate)
+        if (typeof onSuccess === "function") {
+          try {
+            const res = onSuccess();
+            if (res && typeof (res as any).catch === "function") {
+              // avoid unhandled promise rejection
+              (res as Promise<void>).catch((e) => console.error("onSuccess callback failed", e));
+            }
+          } catch (e) {
+            console.error("onSuccess callback failed", e);
+          }
+        }
       } catch (err) {
         if (err instanceof Error) {
           error(err.message);
@@ -110,7 +127,16 @@ export default function PopupForm({
       {
         onSuccess: () => {
           success("Interview scheduled successfully");
-          onClose();
+          if (typeof onSuccess === "function") {
+            try {
+              const res = onSuccess();
+              if (res && typeof (res as any).catch === "function") {
+                (res as Promise<void>).catch((e) => console.error("onSuccess callback failed", e));
+              }
+            } catch (e) {
+              console.error("onSuccess callback failed", e);
+            }
+          }
         },
         onError: (err: Error) => {
           error(err.message || "Failed to schedule interview");

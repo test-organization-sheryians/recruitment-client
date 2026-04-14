@@ -54,7 +54,7 @@ export interface ApplicantRow {
 
 export type InterviewStatus =
   | "Scheduled"
-  | "Rescheduled"
+  // keep Rescheduled as a display-only enum removed from server-driven status checks
   | "Cancelled";
 
 export type CreateInterviewPayload = {
