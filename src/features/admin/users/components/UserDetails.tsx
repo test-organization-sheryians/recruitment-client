@@ -32,7 +32,7 @@ const UserDetails = ({ id }: { id: string }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-6 px-3 sm:px-6">
+    <div className="min-h-screen bg-white rounded-xl py-6 px-3 sm:px-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* 🔥 PROFILE CARD */}
         <div className="bg-white rounded-2xl shadow p-5 sm:p-6">

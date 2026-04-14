@@ -148,7 +148,7 @@ export default function GroupsTable() {
   );
 
   return (
-    <div className="space-y-4 p-6 bg-slate-50 min-h-screen">
+    <div className="space-y-4 p-6 bg-slate-50 rounded-xl min-h-screen">
       {groups.map((group: Group) => {
         const members = membersCache[group._id] ?? [];
         return (
@@ -166,7 +166,7 @@ export default function GroupsTable() {
                 </div>
               </div>
               <div className="flex gap-3 items-center">
-                <Share size={18} className="hover:text-blue-600" onClick={(e) => { e.stopPropagation(); router.push(`/selected-candidates?shareId=${group._id}`); }} />
+                <Share size={18} className="hover:text-blue-600" onClick={(e) => { e.stopPropagation(); router.push(`/admin/groups/selected-candidates?shareId=${group._id}`); }} />
                 <Pencil size={18} className="hover:text-blue-600" onClick={(e) => { e.stopPropagation(); setEditingGroup({ id: group._id, name: group.groupName }); setIsEditModalOpen(true); }} />
                 <Trash2 size={16} className="hover:text-red-600" onClick={(e) => { e.stopPropagation(); setDeletingGroupId(group._id); }} />
                 {expandedGroupId === group._id ? <ChevronUp /> : <ChevronDown />}
