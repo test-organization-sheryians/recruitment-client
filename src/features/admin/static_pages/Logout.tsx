@@ -8,7 +8,7 @@ import Cookies from 'js-cookie';
 import { useDispatch } from 'react-redux';
 import { logout as logoutAction } from '@/features/auth/slice';
 
-export default function LogoutButton() {
+export default function LogoutButton({ collapsed = false }: { collapsed?: boolean }) {
   const router = useRouter();
   const dispatch = useDispatch();
 
@@ -52,13 +52,16 @@ export default function LogoutButton() {
     <button
       onClick={handleLogout}
       className={clsx(
-        'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium',
+        collapsed
+          ? 'inline-flex items-center justify-center h-11 w-11 rounded-2xl border border-red-200 text-red-600 hover:bg-red-50 transition-colors'
+          : 'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium border border-red-200',
         'text-red-600 hover:bg-red-50 transition-all duration-200',
-        'border border-red-200 cursor-pointer'
+        'cursor-pointer'
       )}
+      aria-label="Logout"
     >
       <LogOut className="w-5 h-5" />
-      <span>Logout</span>
+      {!collapsed && <span>Logout</span>}
     </button>
   );
 }
