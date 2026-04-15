@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaLinkedin, FaGithub, FaGlobe } from "react-icons/fa";
+import { SiLeetcode } from "react-icons/si";
 import Modal from "@/components/ui/Modal";
 import { LoaderCircleIcon } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -194,15 +195,16 @@ export default function SocialLinksSection({
 
       {/* Display Links */}
       {hasAnyLink ? (
-        <div className="space-y-3">
+        <div className="flex flex-wrap gap-4">
           {linkedin && (
             <a
               href={linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 text-blue-600 hover:underline font-medium"
+              className="flex items-center gap-3 rounded-2xl border border-gray-300 px-6 py-3 text-gray-900 font-medium hover:bg-gray-50"
             >
-              LinkedIn → {linkedin}
+              <FaLinkedin className="h-5 w-5 text-[#0A66C2]" />
+              <span>LinkedIn</span>
             </a>
           )}
 
@@ -211,9 +213,10 @@ export default function SocialLinksSection({
               href={github}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 text-blue-600 hover:underline font-medium"
+              className="flex items-center gap-3 rounded-2xl border border-gray-300 px-6 py-3 text-gray-900 font-medium hover:bg-gray-50"
             >
-              GitHub → {github}
+              <FaGithub className="h-5 w-5 text-black" />
+              <span>Github</span>
             </a>
           )}
 
@@ -222,9 +225,10 @@ export default function SocialLinksSection({
               href={portfolioUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 text-blue-600 hover:underline font-medium"
+              className="flex items-center gap-3 rounded-2xl border border-gray-300 px-6 py-3 text-gray-900 font-medium hover:bg-gray-50"
             >
-              Portfolio → {portfolioUrl}
+              <FaGlobe className="h-5 w-5 text-[#4B5563]" />
+              <span>Portfolio</span>
             </a>
           )}
 
@@ -233,9 +237,10 @@ export default function SocialLinksSection({
               href={leetcode}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 text-blue-600 hover:underline font-medium"
+              className="flex items-center gap-3 rounded-2xl border border-gray-300 px-6 py-3 text-gray-900 font-medium hover:bg-gray-50"
             >
-              LeetCode → {leetcode}
+              <SiLeetcode className="h-5 w-5 text-[#F97316]" />
+              <span>LeetCode</span>
             </a>
           )}
         </div>
