@@ -112,7 +112,7 @@ const Sidebar: React.FC<{
           "realtive w-full h-full rounded-3xl bg-linear-to-b from-white to-slate-50 shadow-[0_20px_50px_rgba(15,23,42,0.08)] flex flex-col border border-slate-200",
           "transition-all duration-300 ease-in-out",
 
-          collapsed ?"px-2" :"px-0"
+          collapsed ? "px-2" : "px-0",
         )}
       >
         {/* Brand */}
@@ -150,13 +150,17 @@ const Sidebar: React.FC<{
               type="button"
               onClick={() => onCollapsedChange?.(!collapsed)}
               className={clsx(
-                "absolute z-20",
-                "top-7 right-0", // Keeps it overlapping the gap slightly for better UX
-                "h-8 w-6 rounded-r-2xl rounded-l-lg border border-slate-200 bg-white shadow-sm flex items-center justify-center",
+                "absolute z-20 top-7 right-0", // Positioning
+                "rounded-r-2xl rounded-l-lg border border-slate-200 bg-white shadow-sm", // Styling
+                "flex items-center justify-center transition-all duration-200", // Layout & Animation
+
+                // THE FIX: Dynamic sizing for the button
+                collapsed ? "h-6 w-6" : "h-8 w-8",
               )}
             >
               {collapsed ? (
-                <ChevronRight className="h-3 w-4" />
+                // Slightly smaller icon for the smaller h-5 button
+                <ChevronRight className={collapsed ? "h-3 w-3" : "h-3 w-4"} />
               ) : (
                 <ChevronLeft className="h-3 w-4" />
               )}
@@ -262,8 +266,15 @@ const Sidebar: React.FC<{
         {/* Navigation */}
         <nav className={clsx("flex-1 space-y-1", collapsed ? "px-2" : "px-3")}>
           {NAV_ITEMS.map((item) => {
-            const active = isActive(item.href);
+            // FIXED: Exact match for Dashboard, prefix match for everything else
+            const isCurrentlyActive =
+              item.href === "/admin"
+                ? pathname === "/admin"
+                : pathname === item.href ||
+                  pathname.startsWith(item.href + "/");
+
             const Icon = item.icon;
+
             return (
               <Tooltip key={item.name}>
                 <TooltipTrigger asChild>
@@ -274,21 +285,24 @@ const Sidebar: React.FC<{
                       collapsed
                         ? "justify-center px-0 py-2.5 text-sm"
                         : "gap-3 px-4 py-2.5 text-sm",
-                      active
+                      isCurrentlyActive
                         ? "bg-linear-to-r from-blue-50 to-white text-blue-700 shadow-sm"
                         : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
                     )}
                     aria-label={item.name}
                   >
-                    {active && (
+                    {/* Blue Indicator Bar */}
+                    {isCurrentlyActive && (
                       <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-blue-600" />
                     )}
+
                     <Icon
                       className={clsx(
                         "shrink-0",
                         collapsed ? "h-5 w-5" : "h-4 w-4",
                       )}
                     />
+
                     <span className={clsx("truncate", collapsed && "hidden")}>
                       {item.name}
                     </span>
