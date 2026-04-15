@@ -1,7 +1,7 @@
 // app/admin/layout.tsx
-import Navbar from "@/components/Navbar";
-import Sidebar from "@/features/admin/static_pages/Sidebar";
+import  Sidebar  from "@/features/admin/static_pages/Sidebar";
 import { getCurrentUser } from "@/lib/auth";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
@@ -12,16 +12,21 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
+  const refreshToken = (await cookies()).get("refreshToken");
 
-if (!user) {
+  if (!user && !refreshToken) {
     redirect("/login");
-  } else {
-    if (!user?.isVerified) {
-      console.log("user is" ,user)
-      redirect("/un-verified");
-    }
   }
-    if (user.role !== "admin") redirect("/unauthorized");
+
+  if (user && !user.isVerified) {
+    console.log("user is", user);
+    redirect("/un-verified");
+  }
+
+  if (user && user.role !== "admin") {
+    redirect("/unauthorized");
+  }
+
 
   return (
     <div className="min-h-screen w-full bg-[#F0F2F5] font-[satoshi]">
@@ -33,10 +38,7 @@ if (!user) {
         </aside>
 
         <div className="flex-1 md:ml-72">
-          <div className="p-4 md:p-6 max-w-[1400px] mx-auto">
-            <div className="mb-6">
-               <Navbar />
-            </div>
+          <div className="p-4 md:p-6 max-w-350 mx-auto">
             <main>{children}</main>
           </div>
         </div>

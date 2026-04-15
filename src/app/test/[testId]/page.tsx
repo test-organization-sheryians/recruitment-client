@@ -1,13 +1,15 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 
 import { useStartTest } from "@/features/test/hooks/useStartsTest";
 import { useTestInfo } from "@/features/test/hooks/testInfo";
+import { useStartingTimer } from "@/features/test/hooks/testTimer";
+import { enableDevToolsGuard, enforceFullScreen } from '@/lib/devtoolsAndScreenGuard'
+
 
 import {
   Clock,
@@ -25,9 +27,12 @@ export default function StartTestPage() {
   const router = useRouter();
   const params = useParams();
   const testId = params?.testId as string;
+  const { timeLeft, started } = useStartingTimer(5);
 
   const queryClient = useQueryClient();
   const { mutate, isPending } = useStartTest();
+
+
 
   /* ---------- FETCH TEST INFO ---------- */
 
@@ -35,13 +40,17 @@ export default function StartTestPage() {
 
   /* ---------- START TEST ---------- */
 
-  const handleStart = () => {
-    const token = Cookies.get("access");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+  useEffect(() => {
+    const cleanup = enableDevToolsGuard();
+    const fullScreen = enforceFullScreen()
+    return () => {
+      cleanup?.();
+      fullScreen?.();
+    };
+  }, [])
 
+  const handleStart = () => {
+    // backend-authenticated requests only; remove client-side token check
     mutate(
       { testId },
       {
@@ -50,6 +59,22 @@ export default function StartTestPage() {
           const questions = Array.isArray(response?.questions)
             ? response.questions
             : [];
+
+          // BLOCK navigation if questions are not ready
+          if (questions.length === 0) {
+            console.error("Questions not generated yet");
+            return;
+          }
+          
+          if(!test) return ;
+          //STORE TEST DURATION (minutes)
+          const duration = test.duration;
+          localStorage.setItem("duration", String(duration));
+
+          //STORE DEADLINE TIMESTAMP
+          const deadline = Date.now() + duration * 60 * 1000;
+          localStorage.setItem("test_deadline_timestamp", String(deadline));
+
 
           // store questions for questioning page
           queryClient.setQueryData(
@@ -77,6 +102,7 @@ export default function StartTestPage() {
     );
   }
 
+
   if (isError || !test) {
     return (
       <p className="p-10 text-center text-red-500">
@@ -88,7 +114,7 @@ export default function StartTestPage() {
   /* ---------- HELPERS ---------- */
 
   const formatDuration = (m: number) =>
-    m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`;
+    m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}M`;
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("en-US", {
@@ -114,7 +140,6 @@ export default function StartTestPage() {
           </div>
 
           <h1 className="text-3xl font-bold mb-3">{test.title}</h1>
-          <p className="text-gray-700 mb-6">{test.summary}</p>
 
           <div className="grid grid-cols-3 gap-4 mb-8">
             <Stat
@@ -148,7 +173,6 @@ export default function StartTestPage() {
               <h2 className="text-xl font-bold mb-2">
                 Before You Begin
               </h2>
-              <p className="text-gray-700">{test.prompt}</p>
             </div>
           </div>
 
@@ -164,19 +188,29 @@ export default function StartTestPage() {
             </div>
           </div>
 
-          <div className="text-center">
+          <div className="text-center space-y-3">
+            {!started && (
+              <p className="text-sm text-gray-600">
+                Test starts in <span className="font-bold">{timeLeft}</span>s
+              </p>
+            )}
+
             <button
               onClick={handleStart}
-              disabled={isPending}
-              className={`px-10 py-4 text-white font-bold text-lg rounded-xl transition ${
-                isPending
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-indigo-600 hover:bg-indigo-700"
-              }`}
+              disabled={!started || isPending}
+              className={`px-10 py-4 text-white font-bold text-lg rounded-xl transition ${!started || isPending
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-indigo-600 hover:bg-indigo-700"
+                }`}
             >
-              {isPending ? "Starting..." : "Start Assessment →"}
+              {isPending
+                ? "Starting..."
+                : started
+                  ? "Start Assessment →"
+                  : "Please wait…"}
             </button>
           </div>
+
         </div>
       </div>
     </div>
