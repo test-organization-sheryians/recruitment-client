@@ -6,8 +6,10 @@ interface JobActionsProps {
   isApplied: boolean;
   onBookmarkClick: () => void;
   onApplyClick: () => void;
+  onWithdrawClick?: () => void;
   isLoadingBookmark?: boolean;
   isLoadingApply?: boolean;
+  isLoadingWithdraw?: boolean;
 }
 
 export default function JobActions({
@@ -16,8 +18,10 @@ export default function JobActions({
   isApplied,
   onBookmarkClick,
   onApplyClick,
+  onWithdrawClick,
   isLoadingBookmark = false,
   isLoadingApply = false,
+  isLoadingWithdraw = false,
 }: JobActionsProps) {
   return (
     <div className="flex items-center gap-3">
@@ -34,15 +38,32 @@ export default function JobActions({
       </button>
 
       <button
-        onClick={onApplyClick}
-        disabled={isExpired || isApplied || isLoadingApply}
+        onClick={() => {
+          if (isApplied && onWithdrawClick) {
+            onWithdrawClick();
+          } else if (!isApplied) {
+            onApplyClick();
+          }
+        }}
+        disabled={isExpired || (isApplied ? isLoadingWithdraw : isLoadingApply)}
         className={`flex-1 rounded-lg px-8 py-3 font-semibold transition-all ${
-          isExpired || isApplied
+          isExpired
             ? "cursor-not-allowed bg-gray-400 text-white"
+            : isApplied
+            ? "bg-red-600 text-white cursor-pointer hover:bg-red-700"
             : "bg-blue-600 text-white cursor-pointer hover:bg-blue-700"
         }`}
       >
-        {isApplied ? "Applied" : isLoadingApply ? "Applying..." : isExpired ? "Expired" : "Apply Now"}
+        {isExpired 
+          ? "Expired" 
+          : isApplied 
+            ? isLoadingWithdraw 
+              ? "Withdrawing..." 
+              : "Withdraw Application"
+            : isLoadingApply 
+              ? "Applying..." 
+              : "Apply Now"
+        }
       </button>
     </div>
   );

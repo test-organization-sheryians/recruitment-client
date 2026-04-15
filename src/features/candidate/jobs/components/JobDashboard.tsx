@@ -14,6 +14,7 @@ import CategoryCard from "./CategoryCard";
 import { useGetProfile } from "@/features/candidate/Profile/hooks/useProfileApi";
 import { useRouter } from "next/navigation";
 import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
+import { useWithdrawJob } from "@/features/applyJobs/hooks/useWithdrawJob";
 import { useToast } from "@/components/ui/Toast";
 
 import { useDebounce } from "@/features/admin/users/hooks/useDebounce";
@@ -42,6 +43,7 @@ export default function JobDashboardPage() {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const queryClient = useQueryClient();
   const applyJobMutation = useApplyJob();
+  const withdrawJobMutation = useWithdrawJob();
   const toast = useToast();
 
   const handleApplyJob = async (jobId: string) => {
@@ -59,19 +61,25 @@ export default function JobDashboardPage() {
       const questions = await getJobQuestions(jobId);
 
       if (!questions || questions.length === 0) {
-        // ✅ no screening → apply now
+        // no screening → apply now
         applyJobMutation.mutate({
           jobId,
           message: "Excited to apply!",
           resumeUrl: profile.resumeFile,
         });
       } else {
-        // ✅ screening exists → open form
+        // screening exists → open form
         router.push(`/jobs/${jobId}/apply`);
       }
     } catch (err) {
       toast.error("Failed to check job requirements.");
     }
+  };
+
+  const handleWithdrawJob = async (jobId: string) => {
+    withdrawJobMutation.mutate({
+      jobId,
+    });
   };
 
   const {
@@ -356,7 +364,7 @@ export default function JobDashboardPage() {
                           ? {
                               min: Number(job.salary),
                               max: Number(job.salary),
-                              currency: "₹",
+                              currency: "?",
                             }
                           : undefined
                     }
@@ -375,6 +383,7 @@ export default function JobDashboardPage() {
                     applied={job.applied}
                     onDetails={handleJobDetails}
                     onApply={handleApplyJob}
+                    onWithdraw={handleWithdrawJob}
                   />
                 ))}
 

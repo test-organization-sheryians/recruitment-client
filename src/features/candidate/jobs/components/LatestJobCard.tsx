@@ -19,6 +19,7 @@ interface LatestJobCardProps {
   applied?: boolean;
   onDetails: (jobId: string) => void;
   onApply: (jobId: string) => void;
+  onWithdraw?: (jobId: string) => void;
 }
 
 export default function LatestJobCard({
@@ -32,6 +33,7 @@ export default function LatestJobCard({
   applied = false,
   onDetails,
   onApply,
+  onWithdraw,
 }: LatestJobCardProps) {
   const formattedPostedAt = postedAt;
 
@@ -112,18 +114,21 @@ export default function LatestJobCard({
         </button>
 
         <button
-          disabled={applied}
           onClick={(e) => {
             e.stopPropagation();
-            onApply(jobId);
+            if (applied && onWithdraw) {
+              onWithdraw(jobId);
+            } else if (!applied) {
+              onApply(jobId);
+            }
           }}
           className={`px-8 py-3 rounded-lg text-[16px] font-bold ${
             applied
-              ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+              ? "bg-red-600 text-white hover:bg-red-700 cursor-pointer"
               : "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
           }`}
         >
-          {applied ? "Applied" : "Apply"}
+          {applied ? "Withdraw" : "Apply"}
         </button>
       </div>
     </div>
