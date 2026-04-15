@@ -55,7 +55,7 @@ export default function AdminShell({
           )}
         >
           {/* Padding right creates the gap between Sidebar and Content */}
-          <div className="h-full py-4 pl-4 pr-0">
+          <div className="h-full py-4 pl-4">
             <Sidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
           </div>
         </aside>

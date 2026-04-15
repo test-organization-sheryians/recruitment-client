@@ -109,8 +109,10 @@ const Sidebar: React.FC<{
       <aside
         className={clsx(
           // Remove fixed widths here, use w-full
-          "relative w-full h-full rounded-3xl bg-linear-to-b from-white to-slate-50 shadow-[0_20px_50px_rgba(15,23,42,0.08)] flex flex-col border border-slate-200",
+          "realtive w-full h-full rounded-3xl bg-linear-to-b from-white to-slate-50 shadow-[0_20px_50px_rgba(15,23,42,0.08)] flex flex-col border border-slate-200",
           "transition-all duration-300 ease-in-out",
+
+          collapsed ?"px-2" :"px-0"
         )}
       >
         {/* Brand */}
@@ -150,7 +152,7 @@ const Sidebar: React.FC<{
               className={clsx(
                 "absolute z-20",
                 "top-7 right-0", // Keeps it overlapping the gap slightly for better UX
-                "h-9 w-6 rounded-r-2xl rounded-l-lg border border-slate-200 bg-white shadow-sm flex items-center justify-center",
+                "h-8 w-6 rounded-r-2xl rounded-l-lg border border-slate-200 bg-white shadow-sm flex items-center justify-center",
               )}
             >
               {collapsed ? (
