@@ -150,12 +150,12 @@ const Sidebar: React.FC<{
               type="button"
               onClick={() => onCollapsedChange?.(!collapsed)}
               className={clsx(
-                "absolute z-20 top-7 right-0", // Positioning
-                "rounded-r-2xl rounded-l-lg border border-slate-200 bg-white shadow-sm", // Styling
+                "absolute z-20 top-5 right-0", // Positioning
+                "rounded-tr-3xl border border-slate-200 bg-gray-100 shadow-sm", // Styling
                 "flex items-center justify-center transition-all duration-200", // Layout & Animation
 
                 // THE FIX: Dynamic sizing for the button
-                collapsed ? "h-6 w-6" : "h-8 w-8",
+                collapsed ? "h-15 w-3" : "h-15 w-3",
               )}
             >
               {collapsed ? (
