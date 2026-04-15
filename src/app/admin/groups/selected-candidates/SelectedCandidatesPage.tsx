@@ -4,7 +4,7 @@ import { useShareCandidates } from "@/features/admin/users/hooks/useShareuser";
 import { FileText, Home, Loader2, Mail, User, Linkedin, Github, Globe, Twitter, Phone, Download } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
-import { Experience } from "../../types/shareInterfaceCandidate";
+import { Experience } from "../../../../types/shareInterfaceCandidate";
 
 /* ================= TYPES ================= */
 
@@ -192,7 +192,7 @@ const uiCandidates: UIShareCandidate[] = useMemo(() => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 px-4 rounded-xl py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">

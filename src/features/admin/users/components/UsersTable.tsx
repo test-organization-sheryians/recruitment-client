@@ -362,9 +362,9 @@ export default function UsersTable() {
     return (
       <p className="py-10 text-center text-red-500">Failed to load users</p>
     );
-const handleUserClick = (user:any) => {
-  router.push(`/admin/users/${user._id}`)
-};
+  const handleUserClick = (user: any) => {
+    router.push(`/admin/users/${user._id}`);
+  };
   return (
     <>
       {/* HEADER */}
@@ -454,15 +454,18 @@ const handleUserClick = (user:any) => {
           )}
         </div>
 
-        <div className="relative w-full max-w-md ml-auto">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search by email…"
-            className="w-full rounded-lg bg-white border border-slate-200 px-4 py-3 pl-12 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        <div className="con w-full flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-[#18253B]">Users</h2>
+          <div className="relative w-full max-w-md ml-auto">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by email…"
+              className="w-full rounded-lg bg-white border border-slate-200 px-4 py-3 pl-12 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
