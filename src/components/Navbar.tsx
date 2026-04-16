@@ -16,37 +16,54 @@ import {
 import Link from "next/link";
 import { useSelector } from "react-redux";
 import { RootState } from "@/config/store";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react"; // Added useRef, useEffect
 import Logout from "@/features/auth/components/Logout";
 import { useRouter } from "next/navigation";
 
 const Navbar = () => {
   const user = useSelector((state: RootState) => state.auth.user);
-
   const router = useRouter();
 
   const [openMenu, setOpenMenu] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
   const [openNotif, setOpenNotif] = useState(false);
 
+  // Ref for the profile dropdown container
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  // Effect to handle clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setOpenProfile(false);
+      }
+    };
+
+    if (openProfile) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openProfile]);
+
   if (!user) return null;
 
   return (
-<nav className="fixed top-0 left-0 w-full z-50
+    <nav className="fixed top-0 left-0 w-full z-50
                 bg-white/60 backdrop-blur-md
                 border-b border-gray-400/20
                 px-35 py-2
                 flex items-center justify-between">
 
-
-
       {/* ---------- BACKDROPS ---------- */}
-      {(openMenu || openProfile) && (
+      {/* Removed openProfile from here as ref handles it now */}
+      {openMenu && (
         <div
           className="fixed inset-0 z-30 bg-black/5"
           onClick={() => {
             setOpenMenu(false);
-            setOpenProfile(false);
           }}
         />
       )}
@@ -67,10 +84,9 @@ const Navbar = () => {
 
       {/* ---------- DESKTOP NAV ---------- */}
       <div className="hidden md:flex items-center gap-6">
-    
 
         {/* Profile */}
-        <div className="relative">
+        <div className="relative" ref={profileRef}> {/* Added ref here */}
           <button
             onClick={() => setOpenProfile(!openProfile)}
             className="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-gray-50 border hover:border-gray-200 transition"

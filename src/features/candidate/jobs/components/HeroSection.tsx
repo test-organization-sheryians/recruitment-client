@@ -80,6 +80,11 @@ export default function HeroSection({
                 "
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    onSearch?.();
+                  }
+                }}
               />
             </div>
 
@@ -103,6 +108,11 @@ export default function HeroSection({
                 "
                 value={searchLocation}
                 onChange={(e) => setSearchLocation(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    onSearch?.();
+                  }
+                }}
               />
             </div>
 

@@ -199,6 +199,8 @@ export default function JobDashboardPage() {
       location: searchLocation.trim(),
     });
     setSelectedCategory(null);
+    const jobSection = document.getElementById('jobSection');
+    jobSection?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -235,17 +237,19 @@ export default function JobDashboardPage() {
         />
       )}
 
-      <div className="md:hidden sticky top-0 z-30 bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="p-1.5 rounded bg-white border border-gray-300 shadow-sm cursor-pointer"
-        >
-          <Menu size={18} className="text-gray-700" />
-        </button>
-        <span className="text-sm font-medium text-gray-800">
-          {selectedCategory ? "Filtered" : "All Jobs"} • {jobsCount} found
-        </span>
-      </div>
+      {!showAllCategories && (
+        <div className="md:hidden sticky top-0 z-30 bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-1.5 rounded bg-white border border-gray-300 shadow-sm cursor-pointer"
+          >
+            <Menu size={18} className="text-gray-700" />
+          </button>
+          <span className="text-sm font-medium text-gray-800">
+            {selectedCategory ? "Filtered" : "All Jobs"} • {jobsCount} found
+          </span>
+        </div>
+      )}
 
       {/* MOBILE SIDEBAR */}
       {isSidebarOpen && (
@@ -284,21 +288,23 @@ export default function JobDashboardPage() {
       )}
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8  py-6 grid grid-cols-1 md:grid-cols-12 gap-3">
-        <div className="hidden md:block md:col-span-3">
-          <FiltersSidebar
-            jobType={jobType}
-            setJobType={setJobType}
-            experience={experience}
-            setExperience={setExperience}
-            salaryRange={salaryRange}
-            setSalaryRange={setSalaryRange}
-            setSelectedCategory={setSelectedCategory}
-          />
-        </div>
+        {!showAllCategories && (
+          <div className="hidden md:block md:col-span-3">
+            <FiltersSidebar
+              jobType={jobType}
+              setJobType={setJobType}
+              experience={experience}
+              setExperience={setExperience}
+              salaryRange={salaryRange}
+              setSalaryRange={setSalaryRange}
+              setSelectedCategory={setSelectedCategory}
+            />
+          </div>
+        )}
         {/* Jobs */}
         {showAllCategories ? (
           /* ================= ALL CATEGORIES VIEW ================= */
-          <div className="md:col-span-9">
+          <div className="md:col-span-12">
             <div className="bg-gray-50 rounded-2xl p-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 All Categories
@@ -320,7 +326,7 @@ export default function JobDashboardPage() {
           </div>
         ) : (
           /* ================= JOB LIST (UNCHANGED) ================= */
-          <div className="md:col-span-9">
+          <div className="md:col-span-9" id='jobSection'>
             <div className="bg-white rounded-xl overflow-hidden w-full">
               {/* Header */}
               <div className="px-4 py-1 bg-gray-50 flex items-center gap-3">
@@ -377,6 +383,13 @@ export default function JobDashboardPage() {
                     onApply={handleApplyJob}
                   />
                 ))}
+
+                {jobs.length === 0 && isSearchActive && !activeJobsQuery.isLoading && (
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Jobs Found</h3>
+                    <p className="text-gray-500">Try adjusting your search criteria or filters to find more jobs.</p>
+                  </div>
+                )}
 
                 <div ref={jobsLoadMoreRef} className="h-1" />
               </div>
