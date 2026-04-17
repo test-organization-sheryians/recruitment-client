@@ -384,10 +384,15 @@ export default function JobDashboardPage() {
                   />
                 ))}
 
-                {jobs.length === 0 && isSearchActive && !activeJobsQuery.isLoading && (
+                {jobs.length === 0 && !activeJobsQuery.isLoading && (
                   <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No Jobs Found</h3>
-                    <p className="text-gray-500">Try adjusting your search criteria or filters to find more jobs.</p>
+                    <p className="text-gray-500">
+                      {isSearchActive
+                        ? "Try adjusting your search criteria or filters to find more jobs."
+                        : "No jobs available at the moment. Check back later."
+                      }
+                    </p>
                   </div>
                 )}
 
