@@ -473,7 +473,7 @@ export default function ApplicantsList({
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 min-w-[150px]">
                   Time
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 min-w-[120px]">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 min-w-[120px]">
                   Status
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 min-w-[80px]">
@@ -569,7 +569,7 @@ export default function ApplicantsList({
                       </td>
 
                       {/* Time */}
-                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
+                      <td className="px-2 py-2 text-gray-700 whitespace-nowrap">
                         {int.Timing
                           ? new Date(int.Timing).toLocaleString("en-US", {
                               month: "short",
@@ -581,8 +581,8 @@ export default function ApplicantsList({
                       </td>
 
                       {/* Status */}
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2 flex-wrap">
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2 flex-wrap">
                           <span
                             className={`rounded-full px-3 py-1 text-xs font-semibold capitalize whitespace-nowrap ${
                               statusColors[int.status?.toLowerCase()] ||
@@ -653,7 +653,7 @@ export default function ApplicantsList({
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 min-w-[90px]">
                   Resume
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 min-w-[110px]">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 min-w-[110px]">
                   Status
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 min-w-[130px]">
@@ -722,7 +722,7 @@ export default function ApplicantsList({
                     </td>
 
                     {/* Status */}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-center">
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold capitalize whitespace-nowrap ${
                           statusColors[a.status] || "bg-gray-100 text-gray-700"

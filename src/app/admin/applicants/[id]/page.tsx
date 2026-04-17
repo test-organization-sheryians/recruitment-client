@@ -7,7 +7,7 @@ export default function ApplicantsPage() {
     const params = useParams();
 
     return (
-        <div style={{ padding: 20 }}>
+        <div style={{ }}>
             {/* <h1>Applicants Page</h1> */}
             {/* <p>Job ID: {id}</p> */}
             <ApplicantsList />
