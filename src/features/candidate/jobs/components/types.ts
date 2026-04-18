@@ -36,3 +36,5 @@ export const CATEGORIES = [
   "Marketing",
   "Sales",
 ];
+
+export type ButtonState = 'apply' | 'applying' | 'withdraw' | 'withdrawing';

@@ -55,7 +55,7 @@ export function useApplyJob() {
 
           return {
             ...oldData,
-            pages: oldData.pages.map((page) => ({
+            pages: oldData.pages.map((page) =>({
               ...page,
               data: page.data.map((job) =>
                 job._id === jobId
@@ -66,6 +66,13 @@ export function useApplyJob() {
           }
         }
       )
+
+      // Reset button state after successful apply
+      setTimeout(() => {
+        queryClient.setQueryData<{ buttonState: ButtonState }>(["buttonState", jobId], () => ({
+          buttonState: 'withdraw'
+        }));
+      }, 100);
     },
 
     onError: (error) => {
