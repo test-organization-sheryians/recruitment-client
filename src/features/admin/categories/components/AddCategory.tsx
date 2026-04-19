@@ -1,9 +1,11 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAddJobCategory } from "../hooks/useJobCategoryApi";
 import { CategoryError } from "../../../../types/JobCategeory";
 import { useToast } from "../../../../components/ui/Toast";
+import { X } from "lucide-react";
 
 type AddCategoryProps = {
   close: () => void;
@@ -16,10 +18,12 @@ const AddCategory: React.FC<AddCategoryProps> = ({ close }) => {
 
   const { mutate: addCategory, isPending, error } = useAddJobCategory();
 
-  // Show error toast when mutation fails
   useEffect(() => {
     if (error) {
-      showError((error as CategoryError)?.response?.data?.message || "Failed to add category");
+      showError(
+        (error as CategoryError)?.response?.data?.message ||
+          "Failed to add category",
+      );
     }
   }, [error, showError]);
 
@@ -35,50 +39,71 @@ const AddCategory: React.FC<AddCategoryProps> = ({ close }) => {
           setName("");
           close();
         },
-      }
+      },
     );
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-md w-[36vw]">
-        <h2 className="text-xl font-bold mb-4">Add Category</h2>
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-gray-100 overflow-hidden">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+            Add Category
+          </h2>
+          <button
+            type="button"
+            onClick={close}
+            disabled={isPending}
+            className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            aria-label="Close modal"
+          >
+            <X size={18} />
+          </button>
+        </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
-            {(error as CategoryError)?.response?.data?.message || "Error adding category"}
-          </div>
-        )}
+        <div className="px-4 sm:px-6 py-4 sm:py-5">
+          {error && (
+            <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {(error as CategoryError)?.response?.data?.message ||
+                "Error adding category"}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            className="border p-2 w-full mb-4 rounded-md"
-            placeholder="Category Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Category Name
+              </label>
+              <input
+                type="text"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                placeholder="Enter category name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
 
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={close}
-              className="px-4 py-2 border rounded-md hover:bg-gray-50"
-              disabled={isPending}
-            >
-              Cancel
-            </button>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={close}
+                className="w-full sm:w-auto px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                disabled={isPending}
+              >
+                Cancel
+              </button>
 
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              disabled={isPending}
-            >
-              {isPending ? "Saving..." : "Save"}
-            </button>
-          </div>
-        </form>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                disabled={isPending}
+              >
+                {isPending ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

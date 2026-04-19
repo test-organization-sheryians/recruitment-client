@@ -10,13 +10,13 @@ import {
   useDeleteSkill,
   useUpdateSkill,
 } from "@/features/admin/skills/hooks/useSkillApi";
-
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 
 export default function SkillPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { success, error } = useToast();
+
   const {
     data: skills = [],
     isLoading: isFetchingSkills,
@@ -62,7 +62,6 @@ export default function SkillPage() {
   const handleDelete = (id: string) => {
     deleteSkill(id, {
       onSuccess: () => success("Skill deleted"),
-
       onError: (e) => {
         console.log(e);
       },
@@ -80,52 +79,58 @@ export default function SkillPage() {
 
   return (
     <>
-      <div className="min-h-screen flex bg-gray-100">
-        <div className="flex-grow flex flex-col p-4 space-y-4">
-          <div className="flex-grow p-4 bg-gray-50 rounded-xl">
-            <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-md relative">
-              <div className="flex justify-between items-center mb-5 border-b pb-3 border-[#DDE6F5]">
-                <h2 className="text-2xl font-bold text-[#18253B]">
-                  Manage Skills
-                  <span className="ml-3 px-3 py-1 text-sm font-semibold bg-[#EBF1FF] text-[#3668FF] rounded-full">
+      <div className="w-full p-4">
+        <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="border rounded-md p-4">
+            <div className="mb-4 flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-2xl font-bold text-[#18253B]">
+                    Manage Skills
+                  </h1>
+                  <span className="inline-flex items-center rounded-full bg-[#EBF1FF] px-3 py-1 text-sm font-semibold text-[#3668FF]">
                     {isFetchingSkills ? "..." : skillCount}
                   </span>
-                </h2>
+                </div>
 
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  disabled={isFetchingSkills || isAnyLoading}
-                  className="py-2 px-4 bg-[#3668FF] text-white font-semibold rounded-lg shadow-md hover:bg-[#254BAA] transition duration-200 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <FiPlus size={20} />
-                  Add New Skill
-                </button>
+                <p className="mt-1 text-sm text-gray-500">
+                  Add, edit, and manage all listed skills.
+                </p>
               </div>
 
-              {fetchError && !isFetchingSkills && (
-                <div className="text-center py-12">
-                  <p className="text-red-600 font-medium mb-4">
-                    Failed to load skills. Please try again.
-                  </p>
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                  >
-                    Retry
-                  </button>
-                </div>
-              )}
-
-              {!fetchError && (
-                <SkillList
-                  skills={skills}
-                  loading={isFetchingSkills}
-                  onDelete={handleDelete}
-                  onUpdate={handleUpdate}
-                  isDeleting={isDeleting}
-                />
-              )}
+              <button
+                onClick={() => setIsModalOpen(true)}
+                disabled={isFetchingSkills || isAnyLoading}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#3668FF] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#254BAA] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              >
+                <FiPlus size={18} />
+                Add New Skill
+              </button>
             </div>
+
+            {fetchError && !isFetchingSkills && (
+              <div className="py-10 text-center">
+                <p className="mb-4 text-sm font-medium text-red-600">
+                  Failed to load skills. Please try again.
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {!fetchError && (
+              <SkillList
+                skills={skills}
+                loading={isFetchingSkills}
+                onDelete={handleDelete}
+                onUpdate={handleUpdate}
+                isDeleting={isDeleting}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -142,10 +147,10 @@ export default function SkillPage() {
       )}
 
       {isAnyLoading && (
-        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-white px-8 py-5 rounded-xl shadow-2xl flex items-center gap-3">
-            <div className="w-8 h-8 border-4 border-[#3668FF] border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-lg font-medium text-gray-700">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 p-4 backdrop-blur-sm">
+          <div className="flex w-full max-w-xs items-center gap-3 rounded-xl bg-white px-5 py-4 shadow-2xl sm:max-w-sm sm:px-6 sm:py-5">
+            <div className="h-7 w-7 animate-spin rounded-full border-4 border-[#3668FF] border-t-transparent sm:h-8 sm:w-8"></div>
+            <span className="text-sm font-medium text-gray-700 sm:text-base">
               Please wait...
             </span>
           </div>

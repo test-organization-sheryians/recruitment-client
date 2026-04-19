@@ -1,7 +1,12 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useSelector } from "react-redux";
+import { usePathname } from "next/navigation";
+import type { RootState } from "@/config/store";
+import Logout from "@/features/auth/components/Logout";
 import {
-  BellDot,
   Menu,
   X,
   UserIcon,
@@ -10,221 +15,223 @@ import {
   Bookmark,
   BookCheck,
   Briefcase,
-  UsersRound,
 } from "lucide-react";
-
-import Link from "next/link";
-import { useSelector } from "react-redux";
-import { RootState } from "@/config/store";
-import React, { useState } from "react";
-import Logout from "@/features/auth/components/Logout";
-import { useRouter } from "next/navigation";
 
 const Navbar = () => {
   const user = useSelector((state: RootState) => state.auth.user);
-
-  const router = useRouter();
+  const pathname = usePathname();
 
   const [openMenu, setOpenMenu] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
-  const [openNotif, setOpenNotif] = useState(false);
 
-  if (!user) return null;
+  useEffect(() => {
+    setOpenMenu(false);
+    setOpenProfile(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpenMenu(false);
+        setOpenProfile(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, []);
+
+  const closeAll = () => {
+    setOpenMenu(false);
+    setOpenProfile(false);
+  };
+
+  const toggleMenu = () => {
+    setOpenMenu((prev) => !prev);
+    setOpenProfile(false);
+  };
+
+  const toggleProfile = () => {
+    setOpenProfile((prev) => !prev);
+    setOpenMenu(false);
+  };
+
+  const navLinks = [
+    {
+      href: "/profile",
+      label: "My Profile",
+      icon: <User size={18} />,
+    },
+    {
+      href: "/appliedjobs",
+      label: "Applied Jobs",
+      icon: <Briefcase size={18} />,
+    },
+    {
+      href: "/jobs/saved-job",
+      label: "Saved Jobs",
+      icon: <Bookmark size={18} />,
+    },
+    {
+      href: "/tests",
+      label: "Test",
+      icon: <BookCheck size={18} />,
+    },
+  ];
 
   return (
-<nav className="fixed top-0 left-0 w-full z-50
-                bg-white/60 backdrop-blur-md
-                border-b border-gray-400/20
-                px-35 py-2
-                flex items-center justify-between">
+    <>
+      <nav className="fixed inset-x-0 top-0 z-50 border-b border-gray-200/70 bg-white/90 backdrop-blur-md">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link href="/" className="shrink-0">
+            <h1 className="text-xl font-bold tracking-wide text-blue-950 sm:text-2xl">
+              Sheryians<span className="text-blue-600">.</span>
+            </h1>
+          </Link>
 
+          <div className="hidden md:flex items-center gap-3 lg:gap-4">
+            {user ? (
+              <>
+                <button
+                  type="button"
+                  onClick={toggleProfile}
+                  className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-2 py-1 pr-3 transition hover:bg-gray-50"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white">
+                    <UserIcon size={18} />
+                  </div>
+                  <p className="max-w-[120px] truncate text-sm font-semibold text-gray-700 lg:max-w-[160px]">
+                    {user.firstName || "User"}
+                  </p>
+                </button>
 
+                {openProfile && (
+                  <div className="absolute right-4 top-[72px] w-[280px] rounded-2xl border border-gray-200 bg-white p-2 shadow-xl sm:right-6 lg:right-8">
+                    <div className="mb-2 flex gap-3 rounded-xl bg-gray-50 p-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                        <UserIcon size={20} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-gray-900">
+                          {user.firstName || "User"} {user.lastName || ""}
+                        </p>
+                        <p className="truncate text-xs text-gray-500">
+                          {user.email || "No email available"}
+                        </p>
+                      </div>
+                    </div>
 
-      {/* ---------- BACKDROPS ---------- */}
+                    <div className="space-y-1">
+                      {navLinks.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setOpenProfile(false)}
+                          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                        >
+                          {item.icon}
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+
+                    <div className="mt-2 border-t pt-2">
+                      <Logout />
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                Login
+              </Link>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-lg p-2 text-gray-700 transition hover:bg-gray-100 md:hidden"
+            onClick={toggleMenu}
+            aria-label={openMenu ? "Close menu" : "Open menu"}
+            aria-expanded={openMenu}
+          >
+            {openMenu ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </nav>
+
       {(openMenu || openProfile) && (
         <div
-          className="fixed inset-0 z-30 bg-black/5"
-          onClick={() => {
-            setOpenMenu(false);
-            setOpenProfile(false);
-          }}
+          className="fixed inset-0 z-40 bg-black/20 md:bg-black/10"
+          onClick={closeAll}
         />
       )}
 
-      {openNotif && (
-        <div
-          className="fixed inset-0 z-[900] bg-black/20 backdrop-blur-sm"
-          onClick={() => setOpenNotif(false)}
-        />
-      )}
+      <div
+        className={`fixed left-0 top-16 z-50 h-[calc(100vh-4rem)] w-full overflow-y-auto bg-white shadow-xl transition-transform duration-300 md:hidden ${
+          openMenu ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="space-y-5 p-4">
+          {user ? (
+            <div className="flex items-center gap-4 rounded-2xl bg-gray-50 p-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-base font-bold text-white">
+                {user.firstName?.charAt(0) || "U"}
+              </div>
 
-      {/* ---------- LOGO ---------- */}
-      <Link href="/">
-        <h1 className="text-2xl font-bold tracking-wide cursor-pointer text-blue-950">
-          Sheryians<span className="text-blue-600">.</span>
-        </h1>
-      </Link>
-
-      {/* ---------- DESKTOP NAV ---------- */}
-      <div className="hidden md:flex items-center gap-6">
-    
-
-        {/* Profile */}
-        <div className="relative">
-          <button
-            onClick={() => setOpenProfile(!openProfile)}
-            className="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-gray-50 border hover:border-gray-200 transition"
-          >
-            <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center">
-              <UserIcon size={18} />
+              <div className="min-w-0">
+                <p className="truncate font-bold text-gray-900">
+                  {user.firstName || "User"} {user.lastName || ""}
+                </p>
+                <p className="truncate text-sm text-gray-500">
+                  {user.email || "No email available"}
+                </p>
+              </div>
             </div>
-            <p className="text-sm font-semibold text-gray-700">
-              {user.firstName}
-            </p>
-          </button>
+          ) : (
+            <div className="rounded-2xl bg-gray-50 p-4">
+              <p className="font-semibold text-gray-900">Welcome</p>
+              <p className="mt-1 text-sm text-gray-500">
+                Please login to access your profile and activity.
+              </p>
+              <Link
+                href="/login"
+                onClick={() => setOpenMenu(false)}
+                className="mt-3 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                Go to Login
+              </Link>
+            </div>
+          )}
 
-          {/* ---------- DESKTOP DROPDOWN ---------- */}
-          {openProfile && (
-            <div className="absolute right-0 top-14 w-72 bg-white shadow-xl rounded-2xl border p-2 z-50">
-              {/* User Info */}
-              <div className="p-3 bg-gray-50 rounded-xl mb-2 flex gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                  <UserIcon size={20} />
+          <div className="space-y-1">
+            {navLinks.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpenMenu(false)}
+                className="flex items-center justify-between rounded-xl p-3 text-gray-800 transition hover:bg-blue-50"
+              >
+                <div className="flex items-center gap-3 text-sm font-medium">
+                  {item.icon}
+                  <span>{item.label}</span>
                 </div>
-                <div>
-                  <p className="font-semibold text-gray-900">
-                    {user.firstName} {user.lastName}
-                  </p>
-                  <p className="text-xs text-gray-500">{user.email}</p>
-                </div>
-              </div>
+                <ChevronRight size={16} />
+              </Link>
+            ))}
+          </div>
 
-              {/* Menu */}
-              <div className="space-y-1">
-                <Link
-                  href="/profile"
-                  onClick={() => setOpenProfile(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
-                >
-                  <User size={18} /> My Profile
-                </Link>
-
-                <Link
-                  href="/appliedjobs"
-                  onClick={() => setOpenProfile(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
-                >
-                  <Briefcase size={18} /> Applied Jobs
-                </Link>
-
-                <Link
-                  href="/jobs/saved-job"
-                  onClick={() => setOpenProfile(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
-                >
-                  <Bookmark size={18} /> Saved Jobs
-                </Link>
-
-                <Link
-                  href="/tests"
-                  onClick={() => setOpenProfile(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
-                >
-                  <BookCheck size={18} /> Test
-                </Link>
-              </div>
-
-              {/* Logout */}
-              <div className="mt-2 pt-2 border-t">
-                <Logout />
-              </div>
+          {user && (
+            <div className="border-t pt-3">
+              <Logout />
             </div>
           )}
         </div>
       </div>
-
-      {/* ---------- MOBILE TOGGLE ---------- */}
-      <button
-        className="md:hidden p-2"
-        onClick={() => setOpenMenu(!openMenu)}
-      >
-        {openMenu ? <X size={28} /> : <Menu size={28} />}
-      </button>
-
-      {/* ---------- MOBILE MENU ---------- */}
-      <div
-        className={`absolute top-[73px] left-0 w-full bg-white border-t shadow md:hidden z-40 transition-all ${
-          openMenu ? "max-h-screen" : "max-h-0 overflow-hidden"
-        }`}
-      >
-        <div className="p-4 space-y-4">
-          {/* User Card */}
-          <div className="bg-gray-50 p-4 rounded-xl flex gap-4">
-            <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center">
-              {user.firstName.charAt(0)}
-            </div>
-            <div>
-              <p className="font-bold">
-                {user.firstName} {user.lastName}
-              </p>
-              <p className="text-sm text-gray-500">{user.email}</p>
-            </div>
-          </div>
-
-          {/* Links */}
-          <div className="space-y-1">
-            <Link
-              href="/profile"
-              onClick={() => setOpenMenu(false)}
-              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
-            >
-              <div className="flex gap-3">
-                <User size={20} /> My Profile
-              </div>
-              <ChevronRight size={16} />
-            </Link>
-
-            <Link
-              href="/appliedjobs"
-              onClick={() => setOpenMenu(false)}
-              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
-            >
-              <div className="flex gap-3">
-                <Briefcase size={20} /> Applied Jobs
-              </div>
-              <ChevronRight size={16} />
-            </Link>
-
-            <Link
-              href="/jobs/saved-job"
-              onClick={() => setOpenMenu(false)}
-              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
-            >
-              <div className="flex gap-3">
-                <Bookmark size={20} /> Saved Jobs
-              </div>
-              <ChevronRight size={16} />
-            </Link>
-
-            <Link
-              href="/tests"
-              onClick={() => setOpenMenu(false)}
-              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
-            >
-              <div className="flex gap-3">
-                <BookCheck size={20} /> Test
-              </div>
-              <ChevronRight size={16} />
-            </Link>
-          </div>
-
-          {/* Logout */}
-          <div className="pt-2 border-t">
-            <Logout />
-          </div>
-        </div>
-      </div>
-    </nav>
+    </>
   );
 };
 
