@@ -4,7 +4,6 @@ import type { NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/images") ||
@@ -13,9 +12,12 @@ export function middleware(req: NextRequest) {
     pathname.endsWith(".woff2") ||
     pathname.endsWith(".ttf") ||
     pathname.endsWith(".otf") ||
-    pathname.startsWith("/_next") ||
     pathname.startsWith("/images") ||
-    pathname.startsWith("/favicon.ico")
+    pathname.startsWith("/favicon.ico") ||
+    pathname.startsWith("/manifest.json") ||
+    pathname.startsWith("/sw.js") ||
+    pathname.startsWith("/icons") ||
+    pathname.startsWith("/api")
   ) {
     return NextResponse.next();
   }
@@ -25,19 +27,19 @@ export function middleware(req: NextRequest) {
   const refreshToken = req.cookies.get("refreshToken");
 
   const publicRoutes = [
-    '/',
-    '/login',
-    '/register',
-    '/forgot-password',
-    '/un-verified',
-    '/unauthorized',
-    '/reset-password',
-    '/user-verification',
-    '/selected-candidates',
+    "/",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/un-verified",
+    "/unauthorized",
+    "/reset-password",
+    "/user-verification",
+    "/selected-candidates",
   ];
 
   const isPublic = publicRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 
   // ADMIN ROUTES

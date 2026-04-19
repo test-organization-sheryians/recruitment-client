@@ -11,6 +11,7 @@ import {
   BookCheck,
   Briefcase,
   UsersRound,
+  UserStar,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -19,9 +20,28 @@ import { RootState } from "@/config/store";
 import React, { useState } from "react";
 import Logout from "@/features/auth/components/Logout";
 import { useRouter } from "next/navigation";
+import { useNotification } from "@/hooks/useNotification";
+import { useToast } from "./ui/Toast";
+
+export interface UserRole {
+  _id: string;
+  name: string;
+  description: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  role: UserRole | null;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+}
 
 const Navbar = () => {
-  const user = useSelector((state: RootState) => state.auth.user);
+  const user = useSelector(
+    (state: RootState) => state.auth.user as User | null,
+  );
 
   const router = useRouter();
 
@@ -29,17 +49,44 @@ const Navbar = () => {
   const [openProfile, setOpenProfile] = useState(false);
   const [openNotif, setOpenNotif] = useState(false);
 
+  const { subscribe, unsubscribe, isSubscribed, setIsSubscribed, isLoading } =
+    useNotification();
+  const toast = useToast();
+
   if (!user) return null;
 
+  const handleToggle = async () => {
+    const prevState = isSubscribed;
+
+    setIsSubscribed(!prevState);
+
+    try {
+      if (prevState) {
+        await unsubscribe();
+        toast.success("Notifications turned OFF ");
+      } else {
+        await subscribe();
+        toast.success("Notifications turned ON ");
+      }
+    } catch (err) {
+      setIsSubscribed(prevState);
+
+      toast.error(
+        prevState
+          ? "Failed to turn OFF notifications"
+          : "Permission denied or failed to turn ON",
+      );
+    }
+  };
+
   return (
-<nav className="fixed top-0 left-0 w-full z-50
+    <nav
+      className="fixed top-0 left-0 w-full z-50
                 bg-white/60 backdrop-blur-md
                 border-b border-gray-400/20
                 px-35 py-2
-                flex items-center justify-between">
-
-
-
+                flex items-center justify-between"
+    >
       {/* ---------- BACKDROPS ---------- */}
       {(openMenu || openProfile) && (
         <div
@@ -67,8 +114,6 @@ const Navbar = () => {
 
       {/* ---------- DESKTOP NAV ---------- */}
       <div className="hidden md:flex items-center gap-6">
-    
-
         {/* Profile */}
         <div className="relative">
           <button
@@ -132,6 +177,36 @@ const Navbar = () => {
                 >
                   <BookCheck size={18} /> Test
                 </Link>
+
+                {user?.role?.name === "admin" && (
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
+                  >
+                    <UserStar size={18} /> Admin Panel
+                  </Link>
+                )}
+
+                <div className="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg">
+                  <div className="flex gap-3 items-center">
+                    <BellDot size={18} />
+                    Notifications
+                  </div>
+
+                  <button
+                    onClick={handleToggle}
+                    disabled={isLoading}
+                    className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
+                      isSubscribed ? "bg-green-500" : "bg-gray-300"
+                    }`}
+                  >
+                    <div
+                      className={`w-4 h-4 bg-white rounded-full shadow-md transform transition ${
+                        isSubscribed ? "translate-x-6" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
 
               {/* Logout */}
@@ -144,10 +219,7 @@ const Navbar = () => {
       </div>
 
       {/* ---------- MOBILE TOGGLE ---------- */}
-      <button
-        className="md:hidden p-2"
-        onClick={() => setOpenMenu(!openMenu)}
-      >
+      <button className="md:hidden p-2" onClick={() => setOpenMenu(!openMenu)}>
         {openMenu ? <X size={28} /> : <Menu size={28} />}
       </button>
 
@@ -216,6 +288,40 @@ const Navbar = () => {
               </div>
               <ChevronRight size={16} />
             </Link>
+
+            {user?.role?.name === "admin" && (
+              <Link
+                href="/admin"
+                // onClick={() => setOpenProfile(false)}
+                className="flex items-center justify-between px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
+              >
+                <div className="flex gap-3">
+                  <UserStar size={18} /> Admin Panel
+                </div>
+                <ChevronRight size={16} />
+              </Link>
+            )}
+
+            <div className="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg">
+              <div className="flex gap-3 items-center">
+                <BellDot size={18} />
+                Notifications
+              </div>
+
+              <button
+                onClick={handleToggle}
+                disabled={isLoading}
+                className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
+                  isSubscribed ? "bg-green-500" : "bg-gray-300"
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 bg-white rounded-full shadow-md transform transition ${
+                    isSubscribed ? "translate-x-6" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
           </div>
 
           {/* Logout */}
