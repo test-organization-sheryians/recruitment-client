@@ -23,7 +23,7 @@ const CandidateLayout = async ({ children }: { children: React.ReactNode }) => {
     <Navbar />
 
     {/* Content wrapper to offset fixed navbar */}
-    <main className="pt-[60px]">
+    <main className="pt-10">
       {children}
     </main>
   </div>
