@@ -1,7 +1,6 @@
 "use client";
 
 import { CiMail } from "react-icons/ci";
-import { FcGoogle } from "react-icons/fc";
 import LabelInput from "./LabelInput";
 import { useForm } from "react-hook-form";
 import Cookies from "js-cookie";
@@ -56,7 +55,8 @@ const SigninForm = () => {
           };
         };
       }) => {
-        Cookies.set("role", res.data.user?.role?.name || "user");
+        const role = res.data.user?.role?.name?.toLowerCase() || "user";
+        const cookieOptions = { path: "/" };
 
         dispatch(
           setUser({
@@ -64,17 +64,19 @@ const SigninForm = () => {
             email: res.data.user.email,
             firstName: res.data.user.firstName,
             lastName: res.data.user.lastName,
-            role: res.data.user?.role?.name || "user",
+            role,
             isVerified: res.data.user.isVerified,
-          })
+          }),
         );
 
-        if (res.data.user?.role?.name === "admin") {
-          router.push(safeRedirect || "/admin");
-        } else {
-          router.push(safeRedirect || "/");
-        }
+        Cookies.set("token", res.data.token, cookieOptions);
+
+        setTimeout(() => {
+          window.location.href =
+            safeRedirect || (role === "admin" ? "/admin" : "/");
+        }, 100);
       },
+
       onError: (err: {
         response?: { data?: { message: string } };
         message?: string;
@@ -82,7 +84,7 @@ const SigninForm = () => {
         setErrorMsg(
           err?.response?.data?.message ||
             err?.message ||
-            "Invalid email or password. Please try again."
+            "Invalid email or password. Please try again.",
         );
       },
     });
@@ -124,7 +126,6 @@ const SigninForm = () => {
             type="email"
             {...register("email", { required: true })}
           />
-
           <div className="relative">
             <LabelInput
               label="Password"
@@ -151,7 +152,6 @@ const SigninForm = () => {
               {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
             </button>
           </div>
-
           <p className="text-right text-sm">
             <a
               href="/forgot-password"
@@ -160,7 +160,6 @@ const SigninForm = () => {
               Forgot Password?
             </a>
           </p>
-
           <button
             type="submit"
             disabled={isLoggingIn}
@@ -192,33 +191,12 @@ const SigninForm = () => {
               </>
             )}
           </button>
-
           <div className="flex items-center justify-center my-3">
             <span className="flex-1 border-t border-gray-300" />
             <span className="mx-4 text-gray-400 text-xs font-medium">OR</span>
             <span className="flex-1 border-t border-gray-300" />
           </div>
-
-          {/* <button
-            type="button"
-            className={`
-              w-full
-              bg-[#3B3A3A] hover:bg-black
-              transition-colors text-white
-              text-sm sm:text-base md:text-[17px] lg:text-lg
-              font-medium rounded-base
-              py-3 sm:py-3.5 md:py-4
-              flex items-center justify-center gap-2 md:gap-3
-              px-2 sm:px-4 md:px-6
-              min-h-[44px] sm:min-h-[48px] md:min-h-[52px]
-              max-w-full
-              shadow-sm md:shadow
-              focus:outline-none focus:ring-2 focus:ring-[#4C62ED] focus:ring-offset-2
-            `}
-          >
-            <FcGoogle className="text-xl md:text-2xl lg:text-3xl" />
-            <span className="truncate">Continue with Google</span>
-          </button> */}
+          
         </form>
 
         <p
