@@ -1,7 +1,7 @@
 import { Search, MapPin, X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { searchJobTitles } from "@/api/jobs/searchJobTitles";
-import { searchLocations } from "@/api/jobs/searchLocations"; // ✅ ADD
+import { searchLocations } from "@/api/jobs/searchLocations"; 
 
 interface HeroSectionProps {
   searchTerm: string;
@@ -51,7 +51,7 @@ export default function HeroSection({
 
   const locationRef = useRef<HTMLInputElement>(null);
 
-  // ================= DB LOCATION SUGGESTIONS =================  // ✅ ADD
+  // ================= DB LOCATION SUGGESTIONS =================  // 
   const [dbLocationSuggestions, setDbLocationSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -186,7 +186,7 @@ export default function HeroSection({
           )
         : recentSearches;
 
-  // ✅ ADD: DB location results take priority over localStorage
+  // ADD: DB location results take priority over localStorage
   const filteredLocations =
     dbLocationSuggestions.length > 0
       ? dbLocationSuggestions
@@ -316,7 +316,7 @@ export default function HeroSection({
                         <span>{highlightText(item, searchLocation)}</span>
                       </div>
 
-                      {/* ✅ ADD: Delete only for localStorage items, not DB suggestions */}
+                      {/* ADD: Delete only for localStorage items, not DB suggestions */}
                       {dbLocationSuggestions.length === 0 && (
                         <button
                           onMouseDown={(e) => {
