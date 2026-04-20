@@ -59,14 +59,12 @@ export default function JobDashboardPage() {
       const questions = await getJobQuestions(jobId);
 
       if (!questions || questions.length === 0) {
-        // ✅ no screening → apply now
         applyJobMutation.mutate({
           jobId,
           message: "Excited to apply!",
           resumeUrl: profile.resumeFile,
         });
       } else {
-        // ✅ screening exists → open form
         router.push(`/jobs/${jobId}/apply`);
       }
     } catch (err) {
@@ -85,11 +83,10 @@ export default function JobDashboardPage() {
   const categories: CategoryItem[] = (categoryPages?.pages ?? []).flatMap(
     (p) => p.data ?? [],
   );
+
   const handleJobDetails = (jobId: string) => {
     router.push(`/jobs/${jobId}`);
   };
-
-  // optional: refetch jobs so applied=true updates
 
   /* ================= FILTER STATES ================= */
   const [jobType, setJobType] = useState<string[]>([]);
@@ -106,11 +103,9 @@ export default function JobDashboardPage() {
   const allJobsQuery = useInfiniteJobs();
   const jobsByCategoryQuery = useInfiniteJobsByCategory(selectedCategory);
 
-  // Normalize filter values
   const normalizedJobType = jobType.filter((j) => j && j.trim() !== "");
   const normalizedExperience = experience.filter((e) => e && e.trim() !== "");
 
-  /* ✅ ONLY REAL CHANGE IS HERE */
   const searchJobsQuery = useInfiniteSearchJobs({
     q: query.q,
     location: query.location,
@@ -121,7 +116,6 @@ export default function JobDashboardPage() {
     category: selectedCategory ?? undefined,
   });
 
-  // ✅ PUT IT HERE ⬇️
   const isSearchActive = Boolean(
     query.q ||
     query.location ||
@@ -130,18 +124,6 @@ export default function JobDashboardPage() {
     !(salaryRange[0] === 0 && salaryRange[1] === 10000000),
   );
 
-  // useEffect(() => {
-  //   if (isSearchActive) {
-  //     setSelectedCategory(null);
-  //   }
-  // }, [isSearchActive]);
-
-  // // ✅ AND THIS RIGHT AFTER
-  // const activeJobsQuery = isSearchActive
-  //   ? searchJobsQuery
-  //   : selectedCategory
-  //     ? jobsByCategoryQuery
-  //     : allJobsQuery;
   const activeJobsQuery = isSearchActive
     ? searchJobsQuery
     : selectedCategory
@@ -193,10 +175,11 @@ export default function JobDashboardPage() {
     return () => observer.disconnect();
   }, [hasMoreJobs, isFetchingMoreJobs, fetchNextJobs]);
 
-  const searchHandler = () => {
+  // ✅ FIX: term aur location directly params se lo — state se nahi
+  const searchHandler = (term: string, location: string) => {
     setQuery({
-      q: searchTerm.trim(),
-      location: searchLocation.trim(),
+      q: term,
+      location: location,
     });
     setSelectedCategory(null);
   };
@@ -283,7 +266,7 @@ export default function JobDashboardPage() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8  py-6 grid grid-cols-1 md:grid-cols-12 gap-3">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 grid grid-cols-1 md:grid-cols-12 gap-3">
         <div className="hidden md:block md:col-span-3">
           <FiltersSidebar
             jobType={jobType}
@@ -295,6 +278,7 @@ export default function JobDashboardPage() {
             setSelectedCategory={setSelectedCategory}
           />
         </div>
+
         {/* Jobs */}
         {showAllCategories ? (
           /* ================= ALL CATEGORIES VIEW ================= */
@@ -319,7 +303,7 @@ export default function JobDashboardPage() {
             </div>
           </div>
         ) : (
-          /* ================= JOB LIST (UNCHANGED) ================= */
+          /* ================= JOB LIST ================= */
           <div className="md:col-span-9">
             <div className="bg-white rounded-xl overflow-hidden w-full">
               {/* Header */}
@@ -333,7 +317,6 @@ export default function JobDashboardPage() {
               </div>
 
               {/* Job list */}
-
               <div className="p-4 space-y-4 bg-gray-50">
                 {jobs.map((job) => (
                   <LatestJobCard
@@ -351,7 +334,7 @@ export default function JobDashboardPage() {
                     }
                     salary={
                       job.salary && typeof job.salary === "object"
-                        ? job.salary // already correct shape
+                        ? job.salary
                         : job.salary != null
                           ? {
                               min: Number(job.salary),
