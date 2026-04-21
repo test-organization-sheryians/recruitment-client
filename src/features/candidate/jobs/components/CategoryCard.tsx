@@ -8,7 +8,10 @@ interface CategoryCardProps {
   onClick: () => void;
 }
 
-export default function CategoryCard({ category, onClick }: CategoryCardProps) {
+export default function CategoryCard({
+  category,
+  onClick,
+}: CategoryCardProps) {
   return (
     <div
       onClick={onClick}
@@ -16,7 +19,8 @@ export default function CategoryCard({ category, onClick }: CategoryCardProps) {
         bg-white
         rounded-2xl
         border border-gray-200
-        px-6 py-6
+        p-4 sm:p-5 md:p-6
+        h-full
         cursor-pointer
         transition-all duration-200
         group
@@ -25,28 +29,39 @@ export default function CategoryCard({ category, onClick }: CategoryCardProps) {
         hover:-translate-y-1
       "
     >
-      <div className="flex flex-col items-center text-center">
+      <div className="flex flex-col items-center text-center h-full">
+        {/* Icon */}
         <div
           className="
-            w-16 h-16
+            w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16
             rounded-xl
             bg-blue-50
             flex items-center justify-center
-            mb-4
+            mb-3 sm:mb-4
             text-blue-600
             transition-colors
             group-hover:bg-blue-600
             group-hover:text-white
           "
         >
-          <JobIcon name={category.name} className="w-8 h-8" />
+          <JobIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" name={category.name} />
         </div>
-        <h3 className="font-bold text-gray-900 text-lg mb-2">
+
+        {/* Title */}
+        <h3 className="
+          font-semibold sm:font-bold
+          text-gray-900
+          text-sm sm:text-base md:text-lg
+          mb-1 sm:mb-2
+          leading-snug
+          line-clamp-2
+        ">
           {category.name}
         </h3>
-        <p className="text-sm text-gray-500">
-          {category.jobCount ?? 0}
-          jobs available
+
+        {/* Count */}
+        <p className="text-xs sm:text-sm text-gray-500 mt-auto">
+          {category.jobCount ?? 0} jobs available
         </p>
       </div>
     </div>

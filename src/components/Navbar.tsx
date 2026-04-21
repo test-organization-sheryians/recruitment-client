@@ -5,28 +5,20 @@ import {
   Menu,
   X,
   UserIcon,
-  User,
-  ChevronRight,
-  Bookmark,
-  BookCheck,
-  Briefcase,
-  UsersRound,
-  UserStar,
 } from "lucide-react";
 
 import Link from "next/link";
 import { useSelector } from "react-redux";
 import { RootState } from "@/config/store";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Logout from "@/features/auth/components/Logout";
-import { useRouter } from "next/navigation";
 import { useNotification } from "@/hooks/useNotification";
 import { useToast } from "./ui/Toast";
+import { usePathname } from "next/navigation";
 
 export interface UserRole {
   _id: string;
   name: string;
-  description: string;
 }
 
 export interface User {
@@ -35,303 +27,232 @@ export interface User {
   role: UserRole | null;
   firstName: string;
   lastName: string;
-  phoneNumber: string;
 }
 
 const Navbar = () => {
   const user = useSelector(
-    (state: RootState) => state.auth.user as User | null,
+    (state: RootState) => state.auth.user as User | null
   );
 
-  const router = useRouter();
+  const pathname = usePathname();
 
   const [openMenu, setOpenMenu] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
-  const [openNotif, setOpenNotif] = useState(false);
 
-  const { subscribe, unsubscribe, isSubscribed, setIsSubscribed, isLoading } =
-    useNotification();
+  const {
+    subscribe,
+    unsubscribe,
+    isSubscribed,
+    setIsSubscribed,
+    isLoading,
+  } = useNotification();
+
   const toast = useToast();
+
+  useEffect(() => {
+    setOpenMenu(false);
+    setOpenProfile(false);
+  }, [pathname]);
 
   if (!user) return null;
 
   const handleToggle = async () => {
-    const prevState = isSubscribed;
-
-    setIsSubscribed(!prevState);
+    const prev = isSubscribed;
+    setIsSubscribed(!prev);
 
     try {
-      if (prevState) {
+      if (prev) {
         await unsubscribe();
-        toast.success("Notifications turned OFF ");
+        toast.success("Notifications OFF");
       } else {
         await subscribe();
-        toast.success("Notifications turned ON ");
+        toast.success("Notifications ON");
       }
-    } catch (err) {
-      setIsSubscribed(prevState);
-
-      toast.error(
-        prevState
-          ? "Failed to turn OFF notifications"
-          : "Permission denied or failed to turn ON",
-      );
+    } catch {
+      setIsSubscribed(prev);
+      toast.error("Failed to update notifications");
     }
   };
 
+  const closeAll = () => {
+    setOpenMenu(false);
+    setOpenProfile(false);
+  };
+
   return (
-    <nav
-      className="fixed top-0 left-0 w-full z-50
-                bg-white/60 backdrop-blur-md
-                border-b border-gray-400/20
-                px-35 py-2
-                flex items-center justify-between"
-    >
-      {/* ---------- BACKDROPS ---------- */}
-      {(openMenu || openProfile) && (
-        <div
-          className="fixed inset-0 z-30 bg-black/5"
-          onClick={() => {
-            setOpenMenu(false);
-            setOpenProfile(false);
-          }}
-        />
-      )}
+    <nav className="fixed top-0 left-0 w-full z-50 bg-white/70 backdrop-blur border-b">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
 
-      {openNotif && (
-        <div
-          className="fixed inset-0 z-[900] bg-black/20 backdrop-blur-sm"
-          onClick={() => setOpenNotif(false)}
-        />
-      )}
+        {/* LOGO */}
+        <Link href="/" onClick={closeAll}>
+          <h1 className="text-lg sm:text-xl font-bold text-blue-900">
+            Sheryians<span className="text-blue-600">.</span>
+          </h1>
+        </Link>
 
-      {/* ---------- LOGO ---------- */}
-      <Link href="/">
-        <h1 className="text-2xl font-bold tracking-wide cursor-pointer text-blue-950">
-          Sheryians<span className="text-blue-600">.</span>
-        </h1>
-      </Link>
+        {/* DESKTOP */}
+        <div className="hidden md:flex items-center gap-5">
+          <div className="relative">
+            <button
+              onClick={() => setOpenProfile(!openProfile)}
+              className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-gray-100"
+            >
+              <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                <UserIcon size={16} />
+              </div>
+              <span className="text-sm font-medium">{user.firstName}</span>
+            </button>
 
-      {/* ---------- DESKTOP NAV ---------- */}
-      <div className="hidden md:flex items-center gap-6">
-        {/* Profile */}
-        <div className="relative">
-          <button
-            onClick={() => setOpenProfile(!openProfile)}
-            className="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-gray-50 border hover:border-gray-200 transition"
-          >
-            <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center">
-              <UserIcon size={18} />
-            </div>
-            <p className="text-sm font-semibold text-gray-700">
-              {user.firstName}
-            </p>
-          </button>
+            {openProfile && (
+              <div className="absolute right-0 mt-3 w-64 bg-white border rounded-xl shadow-lg p-2 z-50">
 
-          {/* ---------- DESKTOP DROPDOWN ---------- */}
-          {openProfile && (
-            <div className="absolute right-0 top-14 w-72 bg-white shadow-xl rounded-2xl border p-2 z-50">
-              {/* User Info */}
-              <div className="p-3 bg-gray-50 rounded-xl mb-2 flex gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                  <UserIcon size={20} />
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">
+                <div className="p-3 bg-gray-50 rounded-lg mb-2">
+                  <p className="font-semibold text-sm">
                     {user.firstName} {user.lastName}
                   </p>
                   <p className="text-xs text-gray-500">{user.email}</p>
                 </div>
-              </div>
 
-              {/* Menu */}
-              <div className="space-y-1">
-                <Link
-                  href="/profile"
-                  onClick={() => setOpenProfile(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
-                >
-                  <User size={18} /> My Profile
-                </Link>
+                <div className="space-y-1">
+                  <NavItem href="/profile" label="Profile" closeAll={closeAll} />
+                  <NavItem href="/appliedjobs" label="Applied Jobs" closeAll={closeAll} />
+                  <NavItem href="/jobs/saved-job" label="Saved Jobs" closeAll={closeAll} />
+                  <NavItem href="/tests" label="Test" closeAll={closeAll} />
 
-                <Link
-                  href="/appliedjobs"
-                  onClick={() => setOpenProfile(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
-                >
-                  <Briefcase size={18} /> Applied Jobs
-                </Link>
+                  {user?.role?.name === "admin" && (
+                    <NavItem href="/admin" label="Admin Panel" closeAll={closeAll} />
+                  )}
 
-                <Link
-                  href="/jobs/saved-job"
-                  onClick={() => setOpenProfile(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
-                >
-                  <Bookmark size={18} /> Saved Jobs
-                </Link>
+                  {/* 🔔 NOTIFICATION TOGGLE (DESKTOP) */}
+                  <div className="flex items-center justify-between px-3 py-2 text-sm">
 
-                <Link
-                  href="/tests"
-                  onClick={() => setOpenProfile(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
-                >
-                  <BookCheck size={18} /> Test
-                </Link>
+                    <div className="flex items-center gap-2">
+                      <BellDot size={16} className="text-gray-600" />
+                      <span className="font-medium">Notifications</span>
+                    </div>
 
-                {user?.role?.name === "admin" && (
-                  <Link
-                    href="/admin"
-                    className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
-                  >
-                    <UserStar size={18} /> Admin Panel
-                  </Link>
-                )}
+                    <button
+                      onClick={handleToggle}
+                      disabled={isLoading}
+                      className={`
+                        relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300
+                        ${isSubscribed ? "bg-green-500" : "bg-gray-300"}
+                        ${isLoading ? "opacity-60 cursor-not-allowed" : ""}
+                      `}
+                    >
+                      <span
+                        className={`
+                          inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition duration-300
+                          ${isSubscribed ? "translate-x-6" : "translate-x-1"}
+                        `}
+                      />
 
-                <div className="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg">
-                  <div className="flex gap-3 items-center">
-                    <BellDot size={18} />
-                    Notifications
+                      {isLoading && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                        </span>
+                      )}
+                    </button>
                   </div>
+                </div>
 
-                  <button
-                    onClick={handleToggle}
-                    disabled={isLoading}
-                    className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
-                      isSubscribed ? "bg-green-500" : "bg-gray-300"
-                    }`}
-                  >
-                    <div
-                      className={`w-4 h-4 bg-white rounded-full shadow-md transform transition ${
-                        isSubscribed ? "translate-x-6" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
+                <div className="border-t mt-2 pt-2">
+                  <Logout />
                 </div>
               </div>
+            )}
+          </div>
+        </div>
 
-              {/* Logout */}
-              <div className="mt-2 pt-2 border-t">
-                <Logout />
-              </div>
-            </div>
-          )}
+        {/* ✅ MOBILE ACTIONS */}
+        <div className="md:hidden flex items-center gap-2">
+
+          {/* 🔔 Notification Icon */}
+          <button
+            onClick={handleToggle}
+            disabled={isLoading}
+            className={`relative p-2 rounded-full transition ${isSubscribed ? "bg-green-100" : "bg-gray-100"
+              }`}
+          >
+            <BellDot
+              size={20}
+              className={isSubscribed ? "text-green-600" : "text-gray-600"}
+            />
+
+            {isSubscribed && (
+              <span className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full" />
+            )}
+          </button>
+
+          {/* ☰ Menu */}
+          <button
+            className="p-2"
+            onClick={() => setOpenMenu(!openMenu)}
+          >
+            {openMenu ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
       </div>
 
-      {/* ---------- MOBILE TOGGLE ---------- */}
-      <button className="md:hidden p-2" onClick={() => setOpenMenu(!openMenu)}>
-        {openMenu ? <X size={28} /> : <Menu size={28} />}
-      </button>
-
-      {/* ---------- MOBILE MENU ---------- */}
+      {/* MOBILE MENU */}
       <div
-        className={`absolute top-[73px] left-0 w-full bg-white border-t shadow md:hidden z-40 transition-all ${
-          openMenu ? "max-h-screen" : "max-h-0 overflow-hidden"
-        }`}
+        className={`md:hidden transition-all duration-300 overflow-hidden ${openMenu ? "max-h-[500px]" : "max-h-0"
+          }`}
       >
-        <div className="p-4 space-y-4">
-          {/* User Card */}
-          <div className="bg-gray-50 p-4 rounded-xl flex gap-4">
-            <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center">
-              {user.firstName.charAt(0)}
-            </div>
-            <div>
-              <p className="font-bold">
-                {user.firstName} {user.lastName}
-              </p>
-              <p className="text-sm text-gray-500">{user.email}</p>
-            </div>
-          </div>
+        <div className="px-4 pb-4 space-y-2">
 
-          {/* Links */}
-          <div className="space-y-1">
-            <Link
-              href="/profile"
-              onClick={() => setOpenMenu(false)}
-              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
-            >
-              <div className="flex gap-3">
-                <User size={20} /> My Profile
-              </div>
-              <ChevronRight size={16} />
-            </Link>
+          <MobileItem href="/profile" label="Profile" closeAll={closeAll} />
+          <MobileItem href="/appliedjobs" label="Applied Jobs" closeAll={closeAll} />
+          <MobileItem href="/jobs/saved-job" label="Saved Jobs" closeAll={closeAll} />
+          <MobileItem href="/tests" label="Test" closeAll={closeAll} />
 
-            <Link
-              href="/appliedjobs"
-              onClick={() => setOpenMenu(false)}
-              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
-            >
-              <div className="flex gap-3">
-                <Briefcase size={20} /> Applied Jobs
-              </div>
-              <ChevronRight size={16} />
-            </Link>
+          {user?.role?.name === "admin" && (
+            <MobileItem href="/admin" label="Admin Panel" closeAll={closeAll} />
+          )}
 
-            <Link
-              href="/jobs/saved-job"
-              onClick={() => setOpenMenu(false)}
-              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
-            >
-              <div className="flex gap-3">
-                <Bookmark size={20} /> Saved Jobs
-              </div>
-              <ChevronRight size={16} />
-            </Link>
-
-            <Link
-              href="/tests"
-              onClick={() => setOpenMenu(false)}
-              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
-            >
-              <div className="flex gap-3">
-                <BookCheck size={20} /> Test
-              </div>
-              <ChevronRight size={16} />
-            </Link>
-
-            {user?.role?.name === "admin" && (
-              <Link
-                href="/admin"
-                // onClick={() => setOpenProfile(false)}
-                className="flex items-center justify-between px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
-              >
-                <div className="flex gap-3">
-                  <UserStar size={18} /> Admin Panel
-                </div>
-                <ChevronRight size={16} />
-              </Link>
-            )}
-
-            <div className="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg">
-              <div className="flex gap-3 items-center">
-                <BellDot size={18} />
-                Notifications
-              </div>
-
-              <button
-                onClick={handleToggle}
-                disabled={isLoading}
-                className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
-                  isSubscribed ? "bg-green-500" : "bg-gray-300"
-                }`}
-              >
-                <div
-                  className={`w-4 h-4 bg-white rounded-full shadow-md transform transition ${
-                    isSubscribed ? "translate-x-6" : "translate-x-0"
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
-
-          {/* Logout */}
-          <div className="pt-2 border-t">
-            <Logout />
-          </div>
+          <Logout />
         </div>
       </div>
     </nav>
   );
 };
+
+/* NAV ITEM */
+const NavItem = ({
+  href,
+  label,
+  closeAll,
+}: {
+  href: string;
+  label: string;
+  closeAll: () => void;
+}) => (
+  <Link
+    href={href}
+    onClick={closeAll}
+    className="block px-3 py-2 text-sm hover:bg-gray-100 rounded-lg"
+  >
+    {label}
+  </Link>
+);
+
+/* MOBILE ITEM */
+const MobileItem = ({
+  href,
+  label,
+  closeAll,
+}: {
+  href: string;
+  label: string;
+  closeAll: () => void;
+}) => (
+  <Link
+    href={href}
+    onClick={closeAll}
+    className="block py-2 text-sm border-b"
+  >
+    {label}
+  </Link>
+);
 
 export default Navbar;
