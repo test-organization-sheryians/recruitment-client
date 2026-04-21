@@ -9,6 +9,7 @@ interface FiltersSidebarProps {
 
   salaryRange: [number, number];
   setSalaryRange: (v: [number, number]) => void;
+
   setSelectedCategory: (v: string | null) => void;
 }
 
@@ -19,7 +20,7 @@ export default function FiltersSidebar({
   setExperience,
   salaryRange,
   setSalaryRange,
-   setSelectedCategory,
+  setSelectedCategory,
 }: FiltersSidebarProps) {
   const toggle = (
     list: string[],
@@ -36,89 +37,111 @@ export default function FiltersSidebar({
   const clearAll = () => {
     setJobType([]);
     setExperience([]);
-    setSalaryRange([0, 10000000]); // ₹0 – ₹1 Cr
-    setSelectedCategory(null); 
+    setSalaryRange([0, 10000000]);
+    setSelectedCategory(null);
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 sticky top-4">
+    <div
+      className="
+        bg-white
+        rounded-xl
+        border border-gray-200
+        shadow-sm
+        p-4 sm:p-5
+        md:sticky md:top-4
+        max-h-[calc(100vh-80px)]
+        overflow-y-auto
+      "
+    >
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-lg font-bold text-gray-900">Filters</h3>
+      <div className="flex items-center justify-between mb-4 sm:mb-5">
+        <h3 className="text-base sm:text-lg font-bold text-gray-900">
+          Filters
+        </h3>
+
         <button
           onClick={clearAll}
-          className="text-xs font-bold text-blue-600 hover:underline font-sans cursor-pointer  "
+          className="text-xs sm:text-sm font-semibold text-blue-600 hover:underline"
         >
           Clear all
         </button>
       </div>
 
       {/* Job Type */}
-{/* Job Type */}
-<div className="mb-6 text-lg font-semibold" >
-  <h4 className="text-sm font-semibold text-gray-500 mb-3 tracking-wider">
-    JOB TYPE
-  </h4>
+      <div className="mb-5 sm:mb-6">
+        <h4 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 tracking-wider">
+          JOB TYPE
+        </h4>
 
-  {["Remote", "Full-Time", "Part-Time", "Hybrid"].map((type) => (
-    <label
-      key={type}
-      className="flex items-center justify-between text-sm mb-2 cursor-pointer "
-    >
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={jobType.includes(type)}
-          onChange={() => toggle(jobType, type, setJobType)}
-          className="accent-blue-600 h-4 w-4 border border-gray-100 cursor-pointer rounded-sm"
-        />
-        <span>{type}</span>
+        <div className="space-y-2">
+          {["Remote", "Full-Time", "Part-Time", "Hybrid"].map((type) => (
+            <label
+              key={type}
+              className="flex items-center justify-between text-sm cursor-pointer p-2 rounded-lg hover:bg-gray-50"
+            >
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={jobType.includes(type)}
+                  onChange={() => toggle(jobType, type, setJobType)}
+                  className="accent-blue-600 h-4 w-4 sm:h-5 sm:w-5 cursor-pointer"
+                />
+                <span className="text-sm sm:text-base text-gray-700">
+                  {type}
+                </span>
+              </div>
+            </label>
+          ))}
+        </div>
       </div>
-    </label>
-  ))}
-</div>
 
       {/* Experience */}
-      <div className="mb-6 text-lg font-semibold">
-        <h4 className="text-sm font-semibold text-gray-500 mb-3 tracking-wider">
+      <div className="mb-5 sm:mb-6">
+        <h4 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 tracking-wider">
           EXPERIENCE LEVEL
         </h4>
 
-        {["Entry", "Mid", "Senior"].map((level) => (
-          <label
-            key={level}
-            className="flex items-center gap-2 text-sm mb-2 cursor-pointer"
-          >
-            <input
-              type="checkbox"
-              checked={experience.includes(level)}
-              onChange={() => toggle(experience, level, setExperience)}
-              className="accent-blue-600 h-4 w-4 border border-gray-100 cursor-pointer rounded-sm"
-            />
-            <span>{level} Level</span>
-          </label>
-        ))}
+        <div className="space-y-2">
+          {["Entry", "Mid", "Senior"].map((level) => (
+            <label
+              key={level}
+              className="flex items-center gap-3 text-sm cursor-pointer p-2 rounded-lg hover:bg-gray-50"
+            >
+              <input
+                type="checkbox"
+                checked={experience.includes(level)}
+                onChange={() => toggle(experience, level, setExperience)}
+                className="accent-blue-600 h-4 w-4 sm:h-5 sm:w-5 cursor-pointer"
+              />
+              <span className="text-sm sm:text-base text-gray-700">
+                {level} Level
+              </span>
+            </label>
+          ))}
+        </div>
       </div>
 
-      {/* Salary */}
-      {/* <div>
-        <h4 className="text-sm font-semibold text-gray-500 mb-4 tracking-wider">
+      {/* Salary (Optional - Uncomment when needed) */}
+      {/*
+      <div>
+        <h4 className="text-xs sm:text-sm font-semibold text-gray-500 mb-3 tracking-wider">
           SALARY RANGE (₹)
         </h4>
 
         <input
           type="range"
           min={0}
-          max={10000000} // 1 Cr
+          max={10000000}
           step={50000}
           value={salaryRange[1]}
           onChange={(e) =>
             setSalaryRange([salaryRange[0], Number(e.target.value)])
           }
           className="w-full accent-blue-600"
-        /> */}
+        />
 
-        {/* <div className="flex justify-between text-sm text-gray-700 mt-3">
+        <div className="flex justify-between text-xs sm:text-sm text-gray-700 mt-2">
           <span>₹{(salaryRange[0] / 100000).toFixed(0)} L</span>
           <span>
             ₹
@@ -126,8 +149,9 @@ export default function FiltersSidebar({
               ? "1 Cr+"
               : `${(salaryRange[1] / 100000).toFixed(0)} L`}
           </span>
-        </div> */}
-      {/* </div> */}
+        </div>
+      </div>
+      */}
     </div>
   );
 }

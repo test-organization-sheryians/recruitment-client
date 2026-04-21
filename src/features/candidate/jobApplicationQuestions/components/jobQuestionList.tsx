@@ -138,41 +138,41 @@ export default function JobQuestionsForm({
     });
   };
 
-  
- 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (submitting) return;
 
-  for (const q of questions) {
-    const value = answers.find((a) => a.question === q.title)?.answer;
-    if (q.isRequired && (!value || value.length === 0)) {
-      setError(`${q.title} is required`);
-      toast.error(`${q.title} is required`);
-      return;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (submitting) return;
+
+    for (const q of questions) {
+      const value = answers.find((a) => a.question === q.title)?.answer;
+      if (q.isRequired && (!value || value.length === 0)) {
+        setError(`${q.title} is required`);
+        toast.error(`${q.title} is required`);
+        return;
+      }
     }
-  }
 
-  try {
-    setSubmitting(true);
+    try {
+      setSubmitting(true);
 
-    await applyJob({
-      jobId,
-      resumeUrl: profile?.resumeFile,
-      answers,
-    });
+      await applyJob({
+        jobId,
+        resumeUrl: profile?.resumeFile,
+        answers,
+      });
 
-    toast.success("Application submitted successfully!");
+      toast.success("Application submitted successfully!");
 
-    onSuccess?.();
-  } catch (error: any) {
-    toast.error(
-      error?.response?.data?.message || "Failed to submit application ❌"
-    );
-  } finally {
-    setSubmitting(false);
-  }
-};
+      onSuccess?.();
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || "Failed to submit application ❌"
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (isLoading) return null;
   if (isError)
