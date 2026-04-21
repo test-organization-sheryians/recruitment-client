@@ -176,10 +176,10 @@ export default function JobDetails() {
       label: "Expiry Date",
       value: job.expiry
         ? new Date(job.expiry).toLocaleDateString("en-IN", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          })
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
         : undefined,
     },
   ];
@@ -205,24 +205,27 @@ export default function JobDetails() {
 
   /* -------------------- UI -------------------- */
   return (
-    <div className="min-h-screen bg-[#F6F6F8] py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F6F6F8] py-6 sm:py-8 px-3 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
-        {/* Header with integrated action buttons */}
+
+        {/* Header */}
         <JobHeader
           jobId={job._id}
           title={job.title}
           company={
-            typeof job.category === "string" ? job.category : job.category?.name
+            typeof job.category === "string"
+              ? job.category
+              : job.category?.name
           }
           location={getLocationString()}
           salary={formatSalary()}
           postedTime={
             job.createdAt
               ? new Date(job.createdAt).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })
               : undefined
           }
           isSaved={isSaved}
@@ -237,19 +240,21 @@ export default function JobDetails() {
           isLoadingApply={isMutationWorking(applyJobMutation)}
         />
 
-        {/* Main Content + Sidebar */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+        {/* MAIN GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6">
+
+          {/* LEFT CONTENT */}
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+
             {/* Description */}
             {job.description && (
-              <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="bg-white rounded-lg p-4 sm:p-5 md:p-6 shadow-sm">
                 <JobSection title="About the Role">
                   <ShowDescription
                     html={job.description}
                     clamp={6}
                     maxHeight="12rem"
-                    className="border-none p-0 text-gray-700 text-base"
+                    className="border-none p-0 text-gray-700 text-sm sm:text-base"
                   />
                 </JobSection>
               </div>
@@ -257,94 +262,31 @@ export default function JobDetails() {
 
             {/* Skills */}
             {(job.skills ?? []).length > 0 && (
-              <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="bg-white rounded-lg p-4 sm:p-5 md:p-6 shadow-sm">
                 <SkillBadge skills={job.skills || []} />
               </div>
             )}
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-4">
-            {/* Job Overview Card */}
-            <JobMeta items={metaItems} />
+          {/* RIGHT SIDEBAR */}
+          <div className="lg:col-span-1 space-y-4 sm:space-y-5">
 
-            {/* About the Company Card */}
-            {/* <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100"> */}
-              {/* Header with Icon */}
-              {/* <div className="flex items-center gap-3 mb-6">
-                <svg
-                  className="w-7 h-7 text-blue-600"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75-3.54-4.04 5.07-1.42-1.42 5.46-6.82 2.75 3.54 5.73-7.25 1.41 1.41-6.74 8.57z" />
-                </svg>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  About Company
-                </h2>
-              </div> */}
+            {/* Job Meta */}
+            <div className="bg-white rounded-lg p-4 sm:p-5 shadow-sm">
+              <JobMeta items={metaItems} />
+            </div>
 
-              {/* Company Info */}
-              {/* <div className="flex items-start gap-4 mb-6"> */}
-                {/* Company Logo */}
-                {/* <div className="w-16 h-16 rounded-lg bg-gray-800 flex items-center justify-center shrink-0">
-                  <svg
-                    className="w-8 h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                </div> */}
+            {/* Talent Card */}
+            <div className="bg-blue-600 rounded-lg p-4 sm:p-5 md:p-6 shadow-sm text-white">
+              <h3 className="font-semibold sm:font-bold text-base sm:text-lg mb-2">
+                Not sure yet?
+              </h3>
 
-                {/* Company Details */}
-                {/* <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900">
-                    {typeof job.category === "string"
-                      ? job.category
-                      : job.category?.name || "Company Name"}
-                  </h3>
-                  <p className="text-gray-500 text-sm mt-1">
-                    500-1000 employees
-                  </p>
-                </div> */}
-              {/* </div> */}
-
-              {/* Company Description */}
-              {/* <ShowDescription
-                html={
-                  job.description ||
-                  `<p>${
-                    typeof job.category === "string"
-                      ? job.category
-                      : job.category?.name
-                  } is a leading enterprise software company building tools that streamline workflow automation for creative teams globally. We're on a mission to empower designers through better technology.</p>`
-                }
-                scrollable
-                maxHeight="14rem"
-                className="mb-8 border-none p-0 bg-transparent"
-              /> */}
-
-              {/* View Company Profile Button */}
-              {/* <button className="w-full text-center text-gray-900 font-bold bg-gray-100 hover:bg-gray-200 py-4 px-4 rounded-lg text-base transition-colors">
-                View Company Profile
-              </button> */}
-            {/* </div> */}
-
-            {/* Talent Community Card */}
-            <div className="bg-blue-600 rounded-lg p-6 shadow-sm text-white">
-              <h3 className="font-bold text-lg mb-2">Not sure yet?</h3>
-              <p className="text-sm mb-4 text-blue-100">
-                Join our talent community to get notified about similar roles in
-                the future.
+              <p className="text-xs sm:text-sm mb-3 sm:mb-4 text-blue-100">
+                Join our talent community to get notified about similar roles.
               </p>
-              <button className="w-full bg-white text-blue-600 font-bold py-2.5 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
+
+              <button className="w-full bg-white text-blue-600 font-semibold sm:font-bold py-2 sm:py-2.5 rounded-lg hover:bg-blue-50 transition">
                 Join Now
               </button>
             </div>
