@@ -56,8 +56,7 @@ export default function EditProfileInfoModal({
           onClose();
           onUpdated?.();
         },
-        onError: (err) => {
-          console.error("Update error:", err);
+        onError: () => {
           showError("Failed to update profile");
         },
       },
@@ -71,74 +70,105 @@ export default function EditProfileInfoModal({
         onClose={onClose}
         title="Edit Personal Information"
       >
-        <div className="space-y-4">
+        <div className="space-y-4 sm:space-y-5 max-h-[80vh] overflow-y-auto pr-1">
+
+          {/* First Name */}
           <div>
-            <label className="block text-sm text-gray-700 mb-1">
+            <label className="block text-xs sm:text-sm text-gray-600 mb-1">
               First Name
             </label>
             <input
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
+          {/* Last Name */}
           <div>
-            <label className="block text-sm text-gray-700 mb-1">
+            <label className="block text-xs sm:text-sm text-gray-600 mb-1">
               Last Name
             </label>
             <input
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
+          {/* Email */}
           <div>
-            <label className="block text-sm text-gray-700 mb-1">
-              Email (readonly)
+            <label className="block text-xs sm:text-sm text-gray-600 mb-1">
+              Email
             </label>
             <input
               value={profile?.user?.email ?? ""}
               readOnly
-              className="w-full px-4 py-2 border border-gray-200 bg-gray-100 rounded-lg"
+              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-200 bg-gray-100 rounded-lg"
             />
           </div>
 
+          {/* Phone */}
           <div>
-            <label className="block text-sm text-gray-700 mb-1">Phone</label>
+            <label className="block text-xs sm:text-sm text-gray-600 mb-1">
+              Phone
+            </label>
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          <div className="pt-1">
+          {/* Change Password */}
+          <div>
             <button
               onClick={() => setShowChangePassword(true)}
-              className="flex items-center cursor-pointer gap-2 text-sm text-blue-600 hover:text-blue-700 hover:underline"
+              className="flex items-center gap-2 text-xs sm:text-sm text-blue-600 hover:underline"
             >
-              <KeyRound size={15} />
+              <KeyRound size={16} />
               Change Password
             </button>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
+
             <button
               onClick={onClose}
-              className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer"
+              className="
+                w-full sm:w-auto
+                px-4 sm:px-5
+                py-2
+                border border-gray-300
+                rounded-lg
+                text-sm
+                hover:bg-gray-50
+              "
             >
               Cancel
             </button>
+
             <button
               onClick={handleSave}
               disabled={isPending}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+              className="
+                w-full sm:w-auto
+                px-5 sm:px-6
+                py-2
+                bg-blue-600
+                text-white
+                rounded-lg
+                text-sm
+                font-medium
+                hover:bg-blue-700
+                disabled:opacity-50
+                flex items-center justify-center gap-2
+              "
             >
               {isPending ? (
                 <>
-                  <LoaderCircleIcon className="animate-spin w-5 h-5" />
+                  <LoaderCircleIcon className="animate-spin w-4 h-4" />
                   Saving...
                 </>
               ) : (

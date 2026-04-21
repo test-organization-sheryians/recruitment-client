@@ -1,73 +1,101 @@
 "use client";
+
 import { useState } from "react";
 import { FileUp } from "lucide-react";
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 
-// Dynamically import the ResumeChat component with SSR disabled
-const ResumeChat = dynamic(
-  () => import('../components/ResumeChat'),
-  { ssr: false }
-);
+const ResumeChat = dynamic(() => import("../components/ResumeChat"), {
+  ssr: false,
+});
 
 const ResumeUpload = () => {
   const [resume, setResume] = useState<File | null>(null);
-  const [fileUploaded, setFileUploaded] = useState(0);
-  const [resumeUploaded, setResumeUploaded] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [uploaded, setUploaded] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setResume(file);
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 5;
-        setFileUploaded(progress);
-        if (progress >= 100) {
-          clearInterval(interval);
-          setTimeout(() => setResumeUploaded(true), 500);
-        }
-      }, 100);
-    }
+    if (!file) return;
+
+    setResume(file);
+
+    let val = 0;
+    const interval = setInterval(() => {
+      val += 5;
+      setProgress(val);
+
+      if (val >= 100) {
+        clearInterval(interval);
+        setTimeout(() => setUploaded(true), 400);
+      }
+    }, 80);
   };
 
-  if (!resumeUploaded) {
+  /* ---------------- UPLOAD SCREEN ---------------- */
+  if (!uploaded) {
     return (
-      <div className="w-full h-full flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full">
-          <h2 className="text-4xl font-medium text-center mb-8">Resume Upload</h2>
-          
-          <div className="w-full">
-            <label htmlFor="resume" className="w-full">
-              <div className="bg-[#E9EFF7] border-dashed border-3 border-[#1270B0] w-full aspect-5/2 rounded-lg flex flex-col gap-2 items-center justify-center cursor-pointer hover:bg-[#E0E8F0] transition-colors">
-                <div>
-                  <FileUp size={80} className="text-zinc-500" />
-                </div>
-                <p className="text-zinc-600">
-                  Drag and drop or <span className="text-[#1270B0] font-medium">browse</span> your files
-                </p>
-                <p className="text-sm text-zinc-500 mt-2">PDF, DOCX, or TXT (max 5MB)</p>
-              </div>
-            </label>
-            <input
-              type="file"
-              id="resume"
-              className="hidden"
-              onChange={handleFileChange}
-              accept=".pdf,.docx,.txt"
-            />
-          </div>
+      <div className="w-full min-h-screen flex items-center justify-center px-4 py-6">
+        <div className="w-full max-w-xl space-y-6">
 
+          {/* Title */}
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-center text-gray-900">
+            Upload Your Resume
+          </h2>
+
+          {/* Upload Box */}
+          <label htmlFor="resume" className="block w-full cursor-pointer">
+            <div
+              className="
+                w-full
+                rounded-xl
+                border-2 border-dashed border-blue-500
+                bg-blue-50
+                hover:bg-blue-100
+                transition
+                flex flex-col items-center justify-center
+                gap-3
+                py-10 sm:py-14
+              "
+            >
+              <FileUp className="w-10 h-10 sm:w-14 sm:h-14 text-gray-500" />
+
+              <p className="text-sm sm:text-base text-gray-600 text-center">
+                Drag & drop or{" "}
+                <span className="text-blue-600 font-medium">
+                  browse files
+                </span>
+              </p>
+
+              <p className="text-xs text-gray-400">
+                PDF, DOCX, TXT (max 5MB)
+              </p>
+            </div>
+          </label>
+
+          <input
+            id="resume"
+            type="file"
+            className="hidden"
+            onChange={handleFileChange}
+            accept=".pdf,.docx,.txt"
+          />
+
+          {/* Progress */}
           {resume && (
-            <div className="mt-6 border-2 border-[#1270B0] p-4 rounded-lg bg-white shadow-sm">
-              <div className="flex justify-between items-center mb-2">
-                <p className="font-medium">{resume.name}</p>
-                <span className="text-sm text-gray-500">{fileUploaded}%</span>
+            <div className="bg-white border rounded-xl p-4 shadow-sm space-y-2">
+
+              <div className="flex justify-between text-sm">
+                <p className="font-medium truncate max-w-[70%]">
+                  {resume.name}
+                </p>
+                <span className="text-gray-500">{progress}%</span>
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-2.5">
+
+              <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="bg-[#4C62ED] h-2.5 rounded-full transition-all duration-300"
-                  style={{ width: `${fileUploaded}%` }}
-                ></div>
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
             </div>
           )}
@@ -76,11 +104,18 @@ const ResumeUpload = () => {
     );
   }
 
+  /* ---------------- CHAT SCREEN ---------------- */
   return (
-    <div className="w-full h-full flex flex-col">
-      <div className="sticky top-0 z-10 bg-white border-b p-6">
-        <h2 className="text-2xl font-semibold">AI Assistant</h2>
+    <div className="w-full h-screen flex flex-col">
+
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-white border-b px-4 sm:px-6 py-3 sm:py-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+          AI Resume Assistant
+        </h2>
       </div>
+
+      {/* Chat */}
       <div className="flex-1 overflow-hidden">
         <ResumeChat />
       </div>
