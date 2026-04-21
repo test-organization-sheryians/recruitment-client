@@ -1,32 +1,46 @@
+type Props = {
+  completion: number;
+};
 
-type props={
-  completion:number
-}
-function ProfileCompletion({completion}:props) {
-  
+function ProfileCompletion({ completion }: Props) {
+  const getColor =
+    completion < 40
+      ? "bg-red-500"
+      : completion < 70
+        ? "bg-yellow-500"
+        : "bg-green-500";
 
-  return <div>
-    <div className="mb-4">
-      <p className="text-sm font-medium">
-        Profile Completion: {completion}%
-      </p>
+  return (
+    <div className="w-full">
+      <div className="mb-4">
 
-      <div className="w-full bg-gray-200 rounded-full h-3 mt-1">
-        <div
-          className={`h-3 rounded-full transition-all ${
-            completion < 60 ? "bg-red-500" : "bg-green-500"
-          }`}
-          style={{ width: `${completion}%` }}
-        />
+        {/* Label */}
+        <div className="flex items-center justify-between">
+          <p className="text-sm sm:text-base font-medium text-gray-800">
+            Profile Completion
+          </p>
+          <span className="text-xs sm:text-sm font-semibold text-gray-600">
+            {completion}%
+          </span>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3 mt-2 overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ease-in-out ${getColor}`}
+            style={{ width: `${completion}%` }}
+          />
+        </div>
+
+        {/* Warning */}
+        {completion < 60 && (
+          <p className="text-xs sm:text-sm text-red-500 mt-2">
+            Complete your profile to unlock more opportunities.
+          </p>
+        )}
       </div>
-
-      {completion < 60 && (
-        <p className="text-xs text-red-500 mt-1">
-          Complete the profile for more oppurtunities.
-        </p>
-      )}
     </div>
-  </div>;
+  );
 }
 
 export default ProfileCompletion;

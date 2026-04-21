@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FaPlus, FaLinkedin, FaGithub, FaGlobe } from "react-icons/fa";
-import { SiLeetcode } from "react-icons/si";
+import { FaPlus } from "react-icons/fa";
 import Modal from "@/components/ui/Modal";
 import { LoaderCircleIcon } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -13,7 +12,6 @@ interface Props {
   linkedin?: string;
   github?: string;
   portfolioUrl?: string;
-  leetcode?: string; 
   onUpdate?: () => void;
 }
 
@@ -21,190 +19,74 @@ export default function SocialLinksSection({
   linkedin = "",
   github = "",
   portfolioUrl = "",
-  leetcode = "", 
   onUpdate,
 }: Props) {
-  type FieldName = "linkedin" | "github" | "portfolio" | "leetcode";
-
   const [isOpen, setIsOpen] = useState(false);
 
   const [linkedinValue, setLinkedinValue] = useState(linkedin);
   const [githubValue, setGithubValue] = useState(github);
   const [portfolioValue, setPortfolioValue] = useState(portfolioUrl);
-  const [leetcodeValue, setLeetcodeValue] = useState(leetcode); 
-  const [fieldErrors, setFieldErrors] = useState<Record<FieldName, string>>({
-    linkedin: "",
-    github: "",
-    portfolio: "",
-    leetcode: "",
-  });
 
   const user = useSelector((state: RootState) => state.auth.user);
   const userId = user?.id;
 
   const { mutate: updateProfile, isPending } = useUpdateProfile1();
 
-  const normalizeUrl = (value: string) => {
-    const trimmed = value.trim();
-    if (!trimmed) return "";
-    if (/^https?:\/\//i.test(trimmed)) return trimmed;
-    return `https://${trimmed}`;
-  };
-
-  const isValidHttpUrl = (value: string) => {
-    try {
-      const parsed = new URL(value);
-      return parsed.protocol === "http:" || parsed.protocol === "https:";
-    } catch {
-      return false;
-    }
-  };
-
-  const isAllowedHost = (value: string, allowedHosts: string[]) => {
-    try {
-      const parsed = new URL(value);
-      const host = parsed.hostname.toLowerCase();
-      return allowedHosts.some(
-        (allowed) => host === allowed || host.endsWith(`.${allowed}`)
-      );
-    } catch {
-      return false;
-    }
-  };
-
-  const validateField = (name: FieldName, value: string) => {
-    if (!value) return "";
-    if (value.includes(" ")) return "URL cannot contain spaces";
-    if (!isValidHttpUrl(value)) return "Please enter a valid URL";
-
-    if (name === "linkedin" && !isAllowedHost(value, ["linkedin.com", "lnkd.in"])) {
-      return "Please enter a valid LinkedIn URL";
-    }
-
-    if (name === "github" && !isAllowedHost(value, ["github.com"])) {
-      return "Please enter a valid GitHub URL";
-    }
-
-    if (name === "leetcode" && !isAllowedHost(value, ["leetcode.com"])) {
-      return "Please enter a valid LeetCode URL";
-    }
-
-    return "";
-  };
-
-  const mapBackendErrorsToFields = (message: string) => {
-    const errors: Record<FieldName, string> = {
-      linkedin: "",
-      github: "",
-      portfolio: "",
-      leetcode: "",
-    };
-
-    if (/LinkedIn URL/i.test(message)) errors.linkedin = "LinkedIn URL must be a valid URL";
-    if (/GitHub URL/i.test(message)) errors.github = "GitHub URL must be a valid URL";
-    if (/Portfolio URL/i.test(message)) errors.portfolio = "Portfolio URL must be a valid URL";
-    if (/LeetCode URL|leetcode Url|leetcode URL|LeetcodeUrl URL/i.test(message)) {
-      errors.leetcode = "LeetCode URL must be a valid URL";
-    }
-
-    return errors;
-  };
-
   const toggleModal = () => setIsOpen((prev) => !prev);
-
-  const handleChange = (field: FieldName, value: string) => {
-    if (field === "linkedin") setLinkedinValue(value);
-    if (field === "github") setGithubValue(value);
-    if (field === "portfolio") setPortfolioValue(value);
-    if (field === "leetcode") setLeetcodeValue(value);
-
-    if (fieldErrors[field]) {
-      setFieldErrors((prev) => ({ ...prev, [field]: "" }));
-    }
-  };
 
   const handleSave = () => {
     if (!userId) return;
 
-    const normalized = {
-      linkedin: normalizeUrl(linkedinValue),
-      github: normalizeUrl(githubValue),
-      portfolio: normalizeUrl(portfolioValue),
-      leetcode: normalizeUrl(leetcodeValue),
-    };
-
-    const nextErrors: Record<FieldName, string> = {
-      linkedin: validateField("linkedin", normalized.linkedin),
-      github: validateField("github", normalized.github),
-      portfolio: validateField("portfolio", normalized.portfolio),
-      leetcode: validateField("leetcode", normalized.leetcode),
-    };
-
-    setFieldErrors(nextErrors);
-
-    if (Object.values(nextErrors).some(Boolean)) return;
-
     updateProfile(
       {
         id: userId,
-        linkedinUrl: normalized.linkedin,
-        githubUrl: normalized.github,
-        portfolioUrl: normalized.portfolio,
-        leetcodeUrl: normalized.leetcode,
+        linkedinUrl: linkedinValue.trim() || "",
+        githubUrl: githubValue.trim() || "",
+        portfolioUrl: portfolioValue.trim() || "",
       },
       {
         onSuccess: () => {
           toggleModal();
           onUpdate?.();
         },
-        onError: (error: unknown) => {
-          const message =
-            (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-            (error as { message?: string })?.message ||
-            "";
-
-          const mappedErrors = mapBackendErrorsToFields(message);
-          if (Object.values(mappedErrors).some(Boolean)) {
-            setFieldErrors(mappedErrors);
-          }
+        onError: () => {
+          alert("Failed to update links. Try again.");
         },
       }
     );
   };
 
-  const hasAnyInput = [linkedinValue, githubValue, portfolioValue, leetcodeValue].some(
-    (value) => value.trim() !== ""
-  );
-
-  const hasAnyLink =
-    linkedin || github || portfolioUrl || leetcode; 
+  const hasAnyLink = linkedin || github || portfolioUrl;
 
   return (
-    <div className="space-y-6 border border-gray-200 rounded-xl p-6 bg-white shadow-md">
+    <div className="w-full max-w-3xl mx-auto space-y-5 border border-gray-200 rounded-xl p-4 md:p-6 bg-white shadow-sm md:shadow-md">
+
       {/* Header */}
       <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-        <h2 className="text-xl font-bold text-gray-800">Social Links</h2>
+        <h2 className="text-lg md:text-xl font-bold text-gray-800">
+          Social Links
+        </h2>
+
         <button
           onClick={toggleModal}
-          className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition shadow-lg cursor-pointer"
+          className="p-2 md:p-2.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition shadow-md active:scale-95"
           disabled={isPending}
         >
-          <FaPlus className="w-5 h-5" />
+          <FaPlus className="w-4 h-4 md:w-5 md:h-5" />
         </button>
       </div>
 
       {/* Display Links */}
       {hasAnyLink ? (
-        <div className="flex flex-wrap gap-4">
+        <div className="space-y-3 text-sm md:text-base">
           {linkedin && (
             <a
               href={linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-2xl border border-gray-300 px-6 py-3 text-gray-900 font-medium hover:bg-gray-50"
+              className="block text-blue-600 hover:underline font-medium break-all"
             >
-              <FaLinkedin className="h-5 w-5 text-[#0A66C2]" />
-              <span>LinkedIn</span>
+              LinkedIn → {linkedin}
             </a>
           )}
 
@@ -213,10 +95,9 @@ export default function SocialLinksSection({
               href={github}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-2xl border border-gray-300 px-6 py-3 text-gray-900 font-medium hover:bg-gray-50"
+              className="block text-blue-600 hover:underline font-medium break-all"
             >
-              <FaGithub className="h-5 w-5 text-black" />
-              <span>Github</span>
+              GitHub → {github}
             </a>
           )}
 
@@ -225,34 +106,22 @@ export default function SocialLinksSection({
               href={portfolioUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-2xl border border-gray-300 px-6 py-3 text-gray-900 font-medium hover:bg-gray-50"
+              className="block text-blue-600 hover:underline font-medium break-all"
             >
-              <FaGlobe className="h-5 w-5 text-[#4B5563]" />
-              <span>Portfolio</span>
-            </a>
-          )}
-
-          {leetcode && ( 
-            <a
-              href={leetcode}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-2xl border border-gray-300 px-6 py-3 text-gray-900 font-medium hover:bg-gray-50"
-            >
-              <SiLeetcode className="h-5 w-5 text-[#F97316]" />
-              <span>LeetCode</span>
+              Portfolio → {portfolioUrl}
             </a>
           )}
         </div>
       ) : (
-        <p className="text-gray-500 italic py-4 bg-gray-50 rounded-lg">
-          No social links added yet. Click the + button to add them!
+        <p className="text-gray-500 text-sm md:text-base italic py-4 px-3 bg-gray-50 rounded-lg text-center">
+          No social links added yet. Tap + to add them.
         </p>
       )}
 
-      {/* Edit Modal */}
+      {/* Modal */}
       <Modal isOpen={isOpen} onClose={toggleModal} title="Edit Social Links">
-        <div className="space-y-5">
+        <div className="space-y-4 md:space-y-5">
+
           {/* LinkedIn */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -261,15 +130,10 @@ export default function SocialLinksSection({
             <input
               type="url"
               value={linkedinValue}
-              onChange={(e) => handleChange("linkedin", e.target.value)}
+              onChange={(e) => setLinkedinValue(e.target.value)}
               placeholder="https://linkedin.com/in/yourname"
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                fieldErrors.linkedin ? "border-red-500" : "border-gray-300"
-              }`}
+              className="w-full px-3 md:px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
-            {fieldErrors.linkedin && (
-              <p className="mt-1 text-sm text-red-600">{fieldErrors.linkedin}</p>
-            )}
           </div>
 
           {/* GitHub */}
@@ -280,15 +144,10 @@ export default function SocialLinksSection({
             <input
               type="url"
               value={githubValue}
-              onChange={(e) => handleChange("github", e.target.value)}
+              onChange={(e) => setGithubValue(e.target.value)}
               placeholder="https://github.com/yourname"
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                fieldErrors.github ? "border-red-500" : "border-gray-300"
-              }`}
+              className="w-full px-3 md:px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
-            {fieldErrors.github && (
-              <p className="mt-1 text-sm text-red-600">{fieldErrors.github}</p>
-            )}
           </div>
 
           {/* Portfolio */}
@@ -299,49 +158,25 @@ export default function SocialLinksSection({
             <input
               type="url"
               value={portfolioValue}
-              onChange={(e) => handleChange("portfolio", e.target.value)}
+              onChange={(e) => setPortfolioValue(e.target.value)}
               placeholder="https://yourportfolio.com"
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                fieldErrors.portfolio ? "border-red-500" : "border-gray-300"
-              }`}
+              className="w-full px-3 md:px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
-            {fieldErrors.portfolio && (
-              <p className="mt-1 text-sm text-red-600">{fieldErrors.portfolio}</p>
-            )}
-          </div>
-
-          {/* LeetCode  */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              LeetCode Profile
-            </label>
-            <input
-              type="url"
-              value={leetcodeValue}
-              onChange={(e) => handleChange("leetcode", e.target.value)}
-              placeholder="https://leetcode.com/yourname"
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                fieldErrors.leetcode ? "border-red-500" : "border-gray-300"
-              }`}
-            />
-            {fieldErrors.leetcode && (
-              <p className="mt-1 text-sm text-red-600">{fieldErrors.leetcode}</p>
-            )}
           </div>
 
           {/* Buttons */}
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-3">
             <button
               onClick={toggleModal}
-              className="px-5 py-2 border border-gray-300 cursor-pointer rounded-lg hover:bg-gray-50 transition"
+              className="w-full sm:w-auto px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
             >
               Cancel
             </button>
 
             <button
               onClick={handleSave}
-              disabled={isPending || !hasAnyInput}
-              className="px-6 py-2 bg-blue-600 text-white cursor-pointer rounded-lg hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-2"
+              disabled={isPending}
+              className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
             >
               {isPending ? (
                 <>
@@ -353,6 +188,7 @@ export default function SocialLinksSection({
               )}
             </button>
           </div>
+
         </div>
       </Modal>
     </div>

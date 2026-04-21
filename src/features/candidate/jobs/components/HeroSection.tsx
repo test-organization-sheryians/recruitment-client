@@ -16,51 +16,53 @@ export default function HeroSection({
   setSearchLocation,
 }: HeroSectionProps) {
   return (
-    <div className="w-full px-6 mt-6">
+    <div className="w-full px-4 sm:px-6 mt-4 sm:mt-6">
       <div
         className="
-        max-w-325
+        max-w-7xl
         mx-auto
         rounded-2xl
-        py-20
-        px-6
+        py-12 sm:py-16 md:py-20
+        px-4 sm:px-6
         text-center
         text-white
         shadow-md
       "
         style={{
           background: `
-    radial-gradient(circle at 20% 20%, rgba(59,130,246,0.25), transparent 40%),
-    linear-gradient(130deg, #101a36 10%, #101a36 30%, #0f766e 100%)
-  `,
+            radial-gradient(circle at 20% 20%, rgba(59,130,246,0.25), transparent 40%),
+            linear-gradient(130deg, #101a36 10%, #101a36 30%, #0f766e 100%)
+          `,
         }}
       >
         {/* Heading */}
-        <h1 className="text-5xl md:text-6xl font-bold tracking-[-0.02em] leading-[1.1]">
-          Find your next  
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
+          Find your next
           <br />
-          <span className="bg-linear-to-r from-blue-300 via-cyan-300 to-teal-300 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-blue-300 via-cyan-300 to-teal-300 bg-clip-text text-transparent">
             career-defining
           </span>{" "}
           role
         </h1>
 
         {/* Subtitle */}
-        <p className="mt-6 text-xl text-blue-100/80 max-w-2xl mx-auto leading-relaxed font-normal">
+        <p className="mt-4 sm:mt-6 text-sm sm:text-base md:text-lg text-blue-100/80 max-w-xl md:max-w-2xl mx-auto leading-relaxed">
           Discover premium opportunities at world-class companies.
-          <br />
+          <br className="hidden sm:block" />
           Your professional journey starts here.
         </p>
 
         {/* Search */}
-        <div className="mt-12 max-w-4xl mx-auto">
+        <div className="mt-8 sm:mt-10 md:mt-12 max-w-4xl mx-auto">
           <div
             className="
-            flex flex-col md:flex-row items-center
+            flex flex-col md:flex-row
+            items-stretch md:items-center
             bg-white
             rounded-xl
             shadow-2xl
             p-2
+            gap-2 md:gap-0
           "
           >
             {/* Job */}
@@ -71,9 +73,9 @@ export default function HeroSection({
                 placeholder="Job title or keywords"
                 className="
                   w-full
-                  pl-12
-                  pr-4
-                  py-4
+                  pl-12 pr-4
+                  py-3 sm:py-4
+                  text-sm sm:text-base
                   text-gray-700
                   rounded-lg
                   focus:outline-none
@@ -94,9 +96,9 @@ export default function HeroSection({
                 placeholder="City or remote"
                 className="
                   w-full
-                  pl-12
-                  pr-4
-                  py-4
+                  pl-12 pr-4
+                  py-3 sm:py-4
+                  text-sm sm:text-base
                   text-gray-700
                   rounded-lg
                   focus:outline-none
@@ -111,14 +113,15 @@ export default function HeroSection({
               onClick={onSearch}
               className="
                 w-full md:w-auto
-                px-8
-                py-4
+                px-6 sm:px-8
+                py-3 sm:py-4
                 rounded-lg
                 bg-blue-600
                 hover:bg-blue-700
                 text-white
+                text-sm sm:text-base
                 font-semibold
-                transition cursor-pointer
+                transition
                 flex items-center justify-center gap-2
               "
             >
