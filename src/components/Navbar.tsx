@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  BellDot,
   Menu,
   X,
   UserIcon,
@@ -10,7 +9,6 @@ import {
   Bookmark,
   BookCheck,
   Briefcase,
-  UsersRound,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -18,29 +16,19 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/config/store";
 import React, { useState } from "react";
 import Logout from "@/features/auth/components/Logout";
-import { useRouter } from "next/navigation";
 
 const Navbar = () => {
   const user = useSelector((state: RootState) => state.auth.user);
 
-  const router = useRouter();
-
   const [openMenu, setOpenMenu] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
-  const [openNotif, setOpenNotif] = useState(false);
 
   if (!user) return null;
 
   return (
-<nav className="fixed top-0 left-0 w-full z-50
-                bg-white/60 backdrop-blur-md
-                border-b border-gray-400/20
-                px-35 py-2
-                flex items-center justify-between">
+    <nav className="fixed top-0 left-0 w-full z-50 bg-white border-b px-6 py-3 flex items-center justify-between">
 
-
-
-      {/* ---------- BACKDROPS ---------- */}
+      {/* BACKDROP */}
       {(openMenu || openProfile) && (
         <div
           className="fixed inset-0 z-30 bg-black/5"
@@ -51,23 +39,15 @@ const Navbar = () => {
         />
       )}
 
-      {openNotif && (
-        <div
-          className="fixed inset-0 z-[900] bg-black/20 backdrop-blur-sm"
-          onClick={() => setOpenNotif(false)}
-        />
-      )}
-
-      {/* ---------- LOGO ---------- */}
+      {/* LOGO */}
       <Link href="/">
         <h1 className="text-2xl font-bold tracking-wide cursor-pointer text-blue-950">
           Sheryians<span className="text-blue-600">.</span>
         </h1>
       </Link>
 
-      {/* ---------- DESKTOP NAV ---------- */}
+      {/* DESKTOP NAV */}
       <div className="hidden md:flex items-center gap-6">
-    
 
         {/* Profile */}
         <div className="relative">
@@ -83,9 +63,9 @@ const Navbar = () => {
             </p>
           </button>
 
-          {/* ---------- DESKTOP DROPDOWN ---------- */}
           {openProfile && (
             <div className="absolute right-0 top-14 w-72 bg-white shadow-xl rounded-2xl border p-2 z-50">
+
               {/* User Info */}
               <div className="p-3 bg-gray-50 rounded-xl mb-2 flex gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
@@ -101,35 +81,19 @@ const Navbar = () => {
 
               {/* Menu */}
               <div className="space-y-1">
-                <Link
-                  href="/profile"
-                  onClick={() => setOpenProfile(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
-                >
+                <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-gray-50 rounded-lg">
                   <User size={18} /> My Profile
                 </Link>
 
-                <Link
-                  href="/appliedjobs"
-                  onClick={() => setOpenProfile(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
-                >
+                <Link href="/appliedjobs" className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-gray-50 rounded-lg">
                   <Briefcase size={18} /> Applied Jobs
                 </Link>
 
-                <Link
-                  href="/jobs/saved-job"
-                  onClick={() => setOpenProfile(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
-                >
+                <Link href="/jobs/saved-job" className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-gray-50 rounded-lg">
                   <Bookmark size={18} /> Saved Jobs
                 </Link>
 
-                <Link
-                  href="/tests"
-                  onClick={() => setOpenProfile(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-gray-50 rounded-lg"
-                >
+                <Link href="/tests" className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-gray-50 rounded-lg">
                   <BookCheck size={18} /> Test
                 </Link>
               </div>
@@ -143,7 +107,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* ---------- MOBILE TOGGLE ---------- */}
+      {/* MOBILE TOGGLE */}
       <button
         className="md:hidden p-2"
         onClick={() => setOpenMenu(!openMenu)}
@@ -151,13 +115,13 @@ const Navbar = () => {
         {openMenu ? <X size={28} /> : <Menu size={28} />}
       </button>
 
-      {/* ---------- MOBILE MENU ---------- */}
+      {/* MOBILE MENU */}
       <div
-        className={`absolute top-[73px] left-0 w-full bg-white border-t shadow md:hidden z-40 transition-all ${
-          openMenu ? "max-h-screen" : "max-h-0 overflow-hidden"
-        }`}
+        className={`absolute top-[70px] left-0 w-full bg-white border-t shadow md:hidden z-40 transition-all ${openMenu ? "max-h-screen" : "max-h-0 overflow-hidden"
+          }`}
       >
         <div className="p-4 space-y-4">
+
           {/* User Card */}
           <div className="bg-gray-50 p-4 rounded-xl flex gap-4">
             <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center">
@@ -173,44 +137,28 @@ const Navbar = () => {
 
           {/* Links */}
           <div className="space-y-1">
-            <Link
-              href="/profile"
-              onClick={() => setOpenMenu(false)}
-              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
-            >
+            <Link href="/profile" onClick={() => setOpenMenu(false)} className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50">
               <div className="flex gap-3">
                 <User size={20} /> My Profile
               </div>
               <ChevronRight size={16} />
             </Link>
 
-            <Link
-              href="/appliedjobs"
-              onClick={() => setOpenMenu(false)}
-              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
-            >
+            <Link href="/appliedjobs" onClick={() => setOpenMenu(false)} className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50">
               <div className="flex gap-3">
                 <Briefcase size={20} /> Applied Jobs
               </div>
               <ChevronRight size={16} />
             </Link>
 
-            <Link
-              href="/jobs/saved-job"
-              onClick={() => setOpenMenu(false)}
-              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
-            >
+            <Link href="/jobs/saved-job" onClick={() => setOpenMenu(false)} className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50">
               <div className="flex gap-3">
                 <Bookmark size={20} /> Saved Jobs
               </div>
               <ChevronRight size={16} />
             </Link>
 
-            <Link
-              href="/tests"
-              onClick={() => setOpenMenu(false)}
-              className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50"
-            >
+            <Link href="/tests" onClick={() => setOpenMenu(false)} className="flex justify-between items-center p-3 rounded-lg hover:bg-blue-50">
               <div className="flex gap-3">
                 <BookCheck size={20} /> Test
               </div>
@@ -222,8 +170,10 @@ const Navbar = () => {
           <div className="pt-2 border-t">
             <Logout />
           </div>
+
         </div>
       </div>
+
     </nav>
   );
 };

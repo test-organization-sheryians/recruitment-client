@@ -4,7 +4,6 @@ import { useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import { LoaderCircleIcon } from "lucide-react";
 import Modal from "@/components/ui/Modal";
-import { useGetAllSkills } from "@/features/admin/skills/hooks/useSkillApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/config/store";
 import { useUpdateProfile1 } from "../hooks/useProfileApi";
@@ -21,99 +20,96 @@ interface Props {
   refetchProfile?: () => void;
 }
 
-export default function SkillsSection({ skills: profileSkills = [], refetchProfile }: Props) {
+export default function SkillsSection({
+  skills: profileSkills = [],
+  refetchProfile,
+}: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const debounceValue = useDebounce(searchTerm)
 
-
+  const debounceValue = useDebounce(searchTerm);
 
   const user = useSelector((state: RootState) => state.auth.user);
-  const userId = user?.id
+  const userId = user?.id;
 
-  const { isLoading: loadingSkills } = useGetAllSkills();
   const { mutate: updateProfile, isPending } = useUpdateProfile1();
+  const { data: skillsResult, isFetching } = useSearchSkills(debounceValue);
 
-  // Extract skill IDs that user already has
   const userSkillIds = profileSkills.map((s) => s._id);
-  const userSkillNames = profileSkills.map((s) => s.name);
 
-  const toggleModal = () => {
-    setIsOpen((prev) => !prev);
-  };
-
-  const toggleSkill = (skillId: string) => {
+  const toggleSkill = (id: string) => {
     setSelectedSkillIds((prev) =>
-      prev.includes(skillId) ? prev.filter((id) => id !== skillId) : [...prev, skillId]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
 
   const addSkills = () => {
     if (!userId || selectedSkillIds.length === 0) return;
 
-    const newSkillIds = selectedSkillIds.filter((id) => !userSkillIds.includes(id));
-    if (newSkillIds.length === 0) return;
-
-    const updatedSkillIds = [...userSkillIds, ...newSkillIds];
+    const newIds = selectedSkillIds.filter((id) => !userSkillIds.includes(id));
+    if (!newIds.length) return;
 
     updateProfile(
-      { id: userId, skills: updatedSkillIds }, // send IDs only
+      { id: userId, skills: [...userSkillIds, ...newIds] },
       {
         onSuccess: () => {
           refetchProfile?.();
-          toggleModal();
+          setIsOpen(false);
+          setSelectedSkillIds([]);
         },
-
       }
     );
   };
 
-  const removeSkill = (skillId: string) => {
+  const removeSkill = (id: string) => {
     if (!userId) return;
 
-    const updatedSkillIds = userSkillIds.filter((id) => id !== skillId);
-
     updateProfile(
-      { id: userId, skills: updatedSkillIds },
-      {
-        onSuccess: () => refetchProfile?.(),
-      }
+      { id: userId, skills: userSkillIds.filter((x) => x !== id) },
+      { onSuccess: () => refetchProfile?.() }
     );
   };
 
-  const { data: skillsResult, isFetching } = useSearchSkills(debounceValue);
-
   return (
-    <div className="space-y-6 border border-gray-200 rounded-xl p-6 shadow-md bg-white">
-      <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-        <h2 className="text-xl font-bold text-gray-800">Skills</h2>
+    <div className="space-y-5 sm:space-y-6 border border-gray-200 rounded-xl p-4 sm:p-5 md:p-6 shadow-sm bg-white">
+
+      {/* HEADER */}
+      <div className="flex justify-between items-center border-b pb-2">
+        <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800">
+          Skills
+        </h2>
+
         <button
-          onClick={toggleModal}
-          disabled={loadingSkills || isPending}
-          className="p-2 rounded-full bg-blue-600 cursor-pointer text-white hover:bg-blue-700 transition shadow-lg disabled:opacity-50"
+          onClick={() => setIsOpen(true)}
+          disabled={isPending}
+          className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
         >
           <FaPlus className="w-4 h-4" />
         </button>
       </div>
 
-      {userSkillNames.length === 0 ? (
-        <p className="text-gray-500 italic py-4">No skills added yet.</p>
+      {/* SKILLS */}
+      {profileSkills.length === 0 ? (
+        <p className="text-sm text-gray-500 italic">No skills added yet.</p>
       ) : (
-        <div className="flex flex-wrap gap-3 ">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           {profileSkills.map((skill) => (
             <div
               key={skill._id}
-              className="flex items-center gap-2 bg-blue-50 text-blue-800 border border-blue-200 px-4 py-1.5 rounded-full text-sm font-medium"
+              className="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm rounded-full bg-blue-50 text-blue-700 border border-blue-200"
             >
-              <span>{skill.name}</span>
+              <span className="truncate max-w-[120px] sm:max-w-none">
+                {skill.name}
+              </span>
+
               <button
                 onClick={() => removeSkill(skill._id)}
                 disabled={isPending}
-                className="text-blue-600 hover:text-red-600 transition cursor-pointer"
+                className="text-blue-600 hover:text-red-600"
               >
                 {isPending ? (
-                  <LoaderCircleIcon className="w-4 h-4 animate-spin" />
+                  <LoaderCircleIcon className="w-3 h-3 animate-spin" />
                 ) : (
                   "×"
                 )}
@@ -123,32 +119,33 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
         </div>
       )}
 
-      {/* Modal */}
-      <Modal isOpen={isOpen} onClose={toggleModal} title="Add Skills">
-        <div className="p-4 border-b">
+      {/* MODAL */}
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Add Skills">
+
+        {/* Search */}
+        <div className="p-3 sm:p-4 border-b">
           <input
             type="text"
-            className="w-full border px-3 py-2 rounded"
+            className="w-full px-3 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Search skills..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
           />
         </div>
 
-        <div className="max-h-[40vh] overflow-y-scroll p-4 space-y-2 scrollbar-hide">
+        {/* Skill List */}
+        <div className="max-h-[55vh] overflow-y-auto p-3 sm:p-4">
           {isFetching ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-6">
               <LoaderCircleIcon className="animate-spin mx-auto" />
             </div>
           ) : !searchTerm ? (
             <p className="text-center text-gray-500">Type to search...</p>
           ) : skillsResult?.length === 0 ? (
             <p className="text-center text-gray-500">No skills found.</p>
-          )
-            : skillsResult?.length === 0 ? (
-              <p className="text-center text-gray-500">No skills found</p>
-            ) : (
-              skillsResult?.map((skill: {_id:string, name:string}) => {
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {skillsResult?.map((skill: Skill) => {
                 const isAdded = userSkillIds.includes(skill._id);
                 const isSelected = selectedSkillIds.includes(skill._id);
 
@@ -158,30 +155,34 @@ export default function SkillsSection({ skills: profileSkills = [], refetchProfi
                     disabled={isAdded}
                     onClick={() => toggleSkill(skill._id)}
                     className={`
-            px-5 py-2 rounded-full border transition mr-2 mb-2
-            ${isAdded
-                        ? "bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed"
+                      px-3 sm:px-4 py-1.5 text-xs sm:text-sm rounded-full border transition
+                      ${isAdded
+                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                         : isSelected
                           ? "bg-blue-600 text-white border-blue-600"
                           : "bg-white border-gray-300 hover:border-blue-500"
                       }
-          `}
+                    `}
                   >
                     {skill.name}
                   </button>
                 );
-              })
-            )}
+              })}
+            </div>
+          )}
         </div>
 
-
-        <div className="p-4 border-t">
+        {/* ACTION */}
+        <div className="p-3 sm:p-4 border-t">
           <button
             onClick={addSkills}
             disabled={isPending || selectedSkillIds.length === 0}
-            className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+            className="w-full py-2.5 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
           >
-            {isPending ? "Adding..." : `Add ${selectedSkillIds.length} Skill${selectedSkillIds.length !== 1 ? "s" : ""}`}
+            {isPending
+              ? "Adding..."
+              : `Add ${selectedSkillIds.length} Skill${selectedSkillIds.length !== 1 ? "s" : ""
+              }`}
           </button>
         </div>
       </Modal>
