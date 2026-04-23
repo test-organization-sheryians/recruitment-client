@@ -1,187 +1,737 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
-import { Pencil, Trash2, Loader2 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import api from "@/config/axios";
 import {
-  useInfiniteUsers,
+  Check,
+  Copy,
+  LinkIcon,
+  Loader2,
+  Pencil,
+  Plus,
+  Trash2,
+  Upload,
+  ArrowRightLeft,
+  Mail,
+  Search,
+  UserPlus,
+  UsersRound,
+  Users,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import { useToast } from "@/components/ui/Toast";
+import { useDebounce } from "@/features/admin/users/hooks/useDebounce";
+import { useCreateShareCandidate } from "@/features/admin/users/hooks/useShareuser";
+import { useBlastUsers } from "@/features/admin/users/hooks/useUser";
+import {
   useDeleteUser,
+  useInfiniteUsers,
+  User,
   useUpdateUserRole,
 } from "@/features/admin/users/hooks/useUser";
-import { useToast } from "@/components/ui/Toast";
+import {
+  ShareMutationPayload,
+  ShareResponse,
+} from "@/types/shareInterfaceCandidate";
 
-interface Role {
-  name: string;
-}
-
-interface User {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber?: string;
-  role?: Role | null;
-}
+import { FiEye } from "react-icons/fi";
 
 export default function UsersTable() {
+  const nameColors = [
+    "from-pink-500/20 to-rose-500/20 text-rose-700 border-rose-200",
+    "from-purple-500/20 to-indigo-500/20 text-indigo-700 border-indigo-200",
+    "from-blue-500/20 to-cyan-500/20 text-cyan-700 border-cyan-200",
+    "from-green-500/20 to-emerald-500/20 text-emerald-700 border-emerald-200",
+    "from-yellow-500/20 to-orange-500/20 text-orange-700 border-orange-200",
+    "from-fuchsia-500/20 to-pink-500/20 text-pink-700 border-pink-200",
+  ];
+
+  const avatarColors = [
+    "bg-pink-100 text-pink-700",
+    "bg-purple-100 text-purple-700",
+    "bg-indigo-100 text-indigo-700",
+    "bg-blue-100 text-blue-700",
+    "bg-cyan-100 text-cyan-700",
+    "bg-emerald-100 text-emerald-700",
+    "bg-green-100 text-green-700",
+    "bg-yellow-100 text-yellow-700",
+    "bg-orange-100 text-orange-700",
+    "bg-rose-100 text-rose-700",
+    "bg-fuchsia-100 text-fuchsia-700",
+  ];
+
+  const getSafeIndex = (name = "A", length: number) => {
+    const safe = name || "A";
+    return safe.charCodeAt(0) % length;
+  };
+
+  const getNameColor = (name = "A") =>
+    nameColors[getSafeIndex(name, nameColors.length)];
+
+  const getAvatarColor = (name = "A") =>
+    avatarColors[getSafeIndex(name, avatarColors.length)];
+
+  /* ---------------- SEARCH ---------------- */
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 400);
+  const normalizedSearch = debouncedSearch.trim().replace(/\s+/g, " ");
+
+  /* ---------------- DATA ---------------- */
   const {
-    data: userPages,
+    data,
     isLoading,
     isError,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteUsers();
+  } = useInfiniteUsers(normalizedSearch);
 
-  const users = useMemo(
-    () => (userPages?.pages ?? []).flatMap((p) => p.data ?? []),
-    [userPages]
-  );
+  const users = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
 
+  /* ---------------- SELECTION ---------------- */
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const toggleUserSelection = (id: string) => {
+    setSelectedUserIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUserIds.length === users.length && users.length > 0) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(users.map((user) => user._id));
+    }
+  };
+
+  const isAllSelected =
+    users.length > 0 && selectedUserIds.length === users.length;
+  const isSomeSelected =
+    selectedUserIds.length > 0 && selectedUserIds.length < users.length;
+
+  /* ---------------- SHARE & GROUP MUTATION ---------------- */
+  const { mutate: shareCandidates, isPending: isSharing } =
+    useCreateShareCandidate();
+
+  // Modal State for Group Creation
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+
+  /* ---------------- ACTION STATE ---------------- */
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState("");
+  const [openDeleteMenu, setOpenDeleteMenu] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [link, setLink] = useState<string>("");
+  const [showLink, setShowLink] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const loadMoreRef = useRef<HTMLTableRowElement | null>(null);
+
+  const blastMutation = useBlastUsers();
   const deleteUser = useDeleteUser();
   const updateUserRole = useUpdateUserRole();
   const queryClient = useQueryClient();
   const { success, error } = useToast();
+  const router = useRouter();
+  const [visibleEmails, setVisibleEmails] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [visiblePhones, setVisiblePhones] = useState<Record<string, boolean>>(
+    {},
+  );
+  //BLAST
+  const [isBlastModalOpen, setIsBlastModalOpen] = useState(false);
+  const [blastSubject, setBlastSubject] = useState("");
+  const [blastMessage, setBlastMessage] = useState("");
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<string>("");
-  const [openDeleteMenu, setOpenDeleteMenu] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  /* ---------------- URL SYNC ---------------- */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    searchQuery ? params.set("search", searchQuery) : params.delete("search");
+    window.history.replaceState(null, "", `?${params.toString()}`);
+  }, [searchQuery]);
 
-  // Infinite scroll sentinel ref
-  const loadMoreRef = useRef<HTMLTableRowElement | null>(null);
-
-  // Filter users based on search query
-  const filteredUsers = useMemo(() => {
-    if (!searchQuery.trim()) return users;
-
-    const query = searchQuery.toLowerCase();
-    return users.filter((user) => {
-      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-      return fullName.includes(query);
-    });
-  }, [users, searchQuery]);
-
-  // Infinite scroll observer
+  /* ---------------- INFINITE SCROLL ---------------- */
   useEffect(() => {
     const el = loadMoreRef.current;
     if (!el) return;
 
     const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
+      ([entry]) => {
         if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     observer.observe(el);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  /* ---------------- EDIT ROLE ---------------- */
   const openModal = (user: User) => {
     setSelectedUserId(user._id);
-    setSelectedRole(user.role?.name || "");
+    setSelectedRole(user.role?._id || "");
     setIsModalOpen(true);
   };
 
   const handleSaveRole = () => {
-    if (!selectedUserId || !selectedRole) {
+    if (!selectedRole) {
       error("Please select a role");
       return;
     }
-
     setIsSaving(true);
+    if (!selectedUserId) {
+      Promise.all(
+        selectedUserIds.map((id) =>
+          updateUserRole.mutateAsync({ userId: id, role: selectedRole }),
+        ),
+      )
+        .then(() => {
+          success("Roles updated successfully");
+          setIsModalOpen(false);
+          setSelectedUserIds([]);
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+        })
+        .catch(() => error("Bulk role update failed"))
+        .finally(() => setIsSaving(false));
+      return;
+    }
 
     updateUserRole.mutate(
       { userId: selectedUserId, role: selectedRole },
       {
         onSuccess: () => {
-          setIsSaving(false);
+          success("Role updated successfully");
           setIsModalOpen(false);
-          success("Role updated successfully!");
           queryClient.invalidateQueries({ queryKey: ["users"] });
         },
-        onError: () => {
-          setIsSaving(false);
-          error("Failed to update role. Try again!");
-        },
-      }
+        onError: () => error("Failed to update role"),
+        onSettled: () => setIsSaving(false),
+      },
     );
   };
 
+  const toggleEmailVisibility = (userId: string) => {
+    setVisibleEmails((prev) => ({ ...prev, [userId]: !prev[userId] }));
+  };
+
+  const togglePhoneVisibility = (userId: string) => {
+    setVisiblePhones((prev) => ({ ...prev, [userId]: !prev[userId] }));
+  };
+
+  const openBulkRoleModal = () => {
+    if (!selectedUserIds.length) {
+      error("Select at least one user");
+      return;
+    }
+    setSelectedUserId(null);
+    setSelectedRole("");
+    setIsModalOpen(true);
+  };
+
+  /* ---------------- DELETE ---------------- */
   const handleDeleteUser = (userId: string) => {
+    if (!confirm("Are you sure you want to delete this user?")) return;
     deleteUser.mutate(
       { userId },
       {
         onSuccess: () => {
           setOpenDeleteMenu(null);
-          success("User deleted successfully!");
+          success("User deleted successfully");
           queryClient.invalidateQueries({ queryKey: ["users"] });
         },
-        onError: () => {
-          error("Failed to delete user!");
-        },
-      }
+        onError: () => error("Failed to delete user"),
+      },
     );
   };
 
-  if (isLoading) return <p className="text-center py-8">Loading users...</p>;
+  const handleBulkDelete = async () => {
+    if (!selectedUserIds.length) {
+      error("Select at least one user");
+      return;
+    }
+    if (!confirm(`Delete ${selectedUserIds.length} users permanently?`)) return;
+    try {
+      await Promise.all(
+        selectedUserIds.map((id) => deleteUser.mutateAsync({ userId: id })),
+      );
+      success("Users deleted successfully");
+      setSelectedUserIds([]);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    } catch {
+      error("Bulk delete failed");
+    }
+  };
+
+  // Blast feature
+
+  const handleSendBlast = () => {
+    if (!blastSubject.trim() || !blastMessage.trim()) {
+      error("Subject & message required");
+      return;
+    }
+
+    blastMutation.mutate(
+      {
+        userIds: selectedUserIds,
+        subject: blastSubject,
+        message: blastMessage,
+      },
+      {
+        onSuccess: (res) => {
+          success(res.data.message || "Blast queued");
+          setIsBlastModalOpen(false);
+          setBlastSubject("");
+          setBlastMessage("");
+          setSelectedUserIds([]);
+        },
+        onError: (err: any) => {
+          error(err?.response?.data?.message || "Blast failed");
+        },
+      },
+    );
+  };
+
+  /* ---------------- SHARE & CREATE GROUP LOGIC ---------------- */
+  const handleViewSelected = () => {
+    if (selectedUserIds.length === 0) {
+      error("Please select at least one user");
+      return;
+    }
+
+    const payload: ShareMutationPayload = selectedUserIds.map((id) => ({
+      candidateId: id,
+    }));
+
+    shareCandidates(payload, {
+      onSuccess: (res: ShareResponse) => {
+        setSelectedUserIds([]);
+        const shareId = res.shareLink.split("/").pop();
+        setLink(
+          `https://hire.sheryians.com/selected-candidates?shareId=${shareId}`,
+        );
+        setShowLink(true);
+      },
+      onError: () => error("Failed to share candidates"),
+    });
+  };
+
+  const handleCreateGroupSubmit = () => {
+    if (!newGroupName.trim()) {
+      error("Please enter a group name");
+      return;
+    }
+
+    const payload: ShareMutationPayload = {
+      groupName: newGroupName.trim(),
+      users: selectedUserIds.map((id) => ({
+        candidateId: id,
+      })),
+    };
+
+    shareCandidates(payload, {
+      onSuccess: () => {
+        success("Group created successfully");
+        setIsGroupModalOpen(false);
+        setNewGroupName("");
+        setSelectedUserIds([]);
+        router.push("/admin/groups");
+      },
+      onError: () => error("Failed to create group"),
+    });
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy", err);
+    }
+  };
+
+  if (isLoading) return <p className="py-10 text-center">Loading users…</p>;
   if (isError)
     return (
-      <p className="text-center py-8 text-red-500">Failed to load users.</p>
+      <p className="py-10 text-center text-red-500">Failed to load users</p>
     );
 
   return (
     <>
-      {/* Search Input */}
-      <div className="w-full flex justify-end mb-6">
-        <input
-          type="text"
-          placeholder="Search by name..."
-          className="px-4 py-2 border rounded-lg w-64 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      {/* HEADER */}
+      <div className="mb-6 flex items-center justify-between">
+        {isBlastModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="w-[420px] rounded-2xl bg-white p-6 shadow-2xl">
+              <h2 className="text-xl font-bold mb-4">Send Blast</h2>
+
+              <div className="space-y-4">
+                <input
+                  placeholder="Subject"
+                  value={blastSubject}
+                  onChange={(e) => setBlastSubject(e.target.value)}
+                  className="w-full border px-4 py-2 rounded-xl"
+                />
+
+                <textarea
+                  placeholder="Message..."
+                  value={blastMessage}
+                  onChange={(e) => setBlastMessage(e.target.value)}
+                  className="w-full border px-4 py-2 rounded-xl h-28"
+                />
+
+                <p className="text-xs text-gray-400">
+                  Sending to {selectedUserIds.length} users
+                </p>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => {
+                      setIsBlastModalOpen(false);
+                      setBlastSubject("");
+                      setBlastMessage("");
+                    }}
+                    className="px-4 py-2 text-gray-500"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    onClick={handleSendBlast}
+                    disabled={
+                      blastMutation.isPending ||
+                      !blastSubject.trim() ||
+                      !blastMessage.trim()
+                    }
+                    className="bg-blue-600 text-white px-5 py-2 rounded-xl disabled:opacity-50"
+                  >
+                    {blastMutation.isPending ? "Sending..." : "Send"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="space-y-3">
+          {showLink && (
+            <div className="relative flex max-w-xl items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm animate-in fade-in slide-in-from-top-2">
+              <div className="flex flex-1 items-center gap-2 overflow-hidden">
+                <LinkIcon className="h-4 w-4 text-gray-400" />
+                <p className="truncate text-sm font-medium text-gray-700">
+                  {link}
+                </p>
+              </div>
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-3 w-3" /> Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3 w-3" /> Copy
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setShowLink(false)}
+                className="ml-1 flex h-6 w-6 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 transition"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="relative w-full max-w-md ml-auto">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by email…"
+            className="w-full rounded-lg bg-white border border-slate-200 px-4 py-3 pl-12 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
 
-      {/* Role Update Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg w-80">
-            <h2 className="text-lg font-semibold mb-4">Update Role</h2>
+      {/* TABLE */}
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-slate-50 border-b">
+              <th className="pl-6 pr-4 py-5 w-12 text-left">
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = isSomeSelected;
+                  }}
+                  onChange={toggleSelectAll}
+                  className="h-4 w-4 accent-blue-600 cursor-pointer"
+                />
+              </th>
+              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
+                Name
+              </th>
+              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
+                Email
+              </th>
+              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
+                Phone
+              </th>
+              <th className="px-4 py-5 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
+                Role
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {users.map((user) => {
+              const isSelected = selectedUserIds.includes(user._id);
+              const initials =
+                `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase();
+              const fullName = `${user.firstName || ""}${user.lastName || ""}`;
+              return (
+                <tr
+                  key={user._id}
+                  className={`group transition-colors ${isSelected ? "bg-blue-50/60" : "hover:bg-slate-50"}`}
+                >
+                  <td className="pl-6 pr-4 py-5">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleUserSelection(user._id)}
+                      className="h-4 w-4 accent-blue-600 cursor-pointer"
+                    />
+                  </td>
+                  <td className="px-4 py-5">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm ${getAvatarColor(fullName)}`}
+                      >
+                        {initials}
+                      </div>
+                      <div className="inline-flex items-center rounded-xl border bg-gradient-to-r px-3 py-1 text-sm font-semibold">
+                        {user.firstName} {user.lastName}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-5">
+                    {visibleEmails[user._id] ? (
+                      <span className="text-sm text-slate-700">
+                        {user.email}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => toggleEmailVisibility(user._id)}
+                        className="text-blue-600 text-xs font-semibold uppercase flex items-center gap-2"
+                      >
+                        <FiEye />
+                        Click to view
+                      </button>
+                    )}
+                  </td>
+                  <td className="px-4 py-5">
+                    {visiblePhones[user._id] ? (
+                      <span className="text-sm text-slate-700">
+                        {user.phoneNumber}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => togglePhoneVisibility(user._id)}
+                        className="text-blue-600 text-xs uppercase font-semibold flex items-center gap-2"
+                      >
+                        <FiEye />
+                        Click to view
+                      </button>
+                    )}
+                  </td>
+                  <td className="px-4 py-5">
+                    <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                      {user.role?.name || "no-role"}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+            <tr ref={loadMoreRef}>
+              <td colSpan={5} />
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
+      {/* FLOATING ACTION BAR */}
+      {selectedUserIds.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+          <div className="bg-white border border-slate-200 shadow-2xl px-8 py-4 rounded-full flex items-center gap-10">
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                {selectedUserIds.length}
+              </div>
+              <span className="text-sm font-semibold text-slate-700">
+                Selected
+              </span>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-8">
+              {/* SHARE BUTTON */}
+
+              {/* CREATE GROUP BUTTON (Right Side of Share) */}
+              <button
+                onClick={() => setIsGroupModalOpen(true)}
+                className="flex flex-col items-center gap-1 text-slate-600 hover:text-blue-700 transition"
+              >
+                <UserPlus className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">
+                  Create Group
+                </span>
+              </button>
+
+              {/* <button onClick={() => router.push("/admin/groups")} className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition">
+                <UsersRound className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">View Groups</span>
+              </button> */}
+
+              <button
+                onClick={openBulkRoleModal}
+                className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
+                title="Edit role for selected"
+              >
+                <ArrowRightLeft className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">
+                  Edit Role
+                </span>
+              </button>
+
+              <button
+                onClick={() => {
+                  if (!selectedUserIds.length) {
+                    error("Select at least one user");
+                    return;
+                  }
+                  setIsBlastModalOpen(true);
+                }}
+                className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900 transition"
+                title="Blast email"
+              >
+                <Mail className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">
+                  Blast
+                </span>
+              </button>
+
+              <button
+                onClick={handleBulkDelete}
+                className="flex flex-col items-center gap-1 text-red-500 hover:text-red-600 transition"
+                title="Delete selected"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide cursor-pointer">
+                  Delete
+                </span>
+              </button>
+            </div>
+
+            <button
+              onClick={handleViewSelected}
+              className="ml-6 bg-blue-600 text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-full shadow-lg shadow-blue-600/30 hover:bg-blue-700 active:scale-95 transition-all whitespace-nowrap"
+            >
+              Apply Actions
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* CREATE GROUP MODAL */}
+      {isGroupModalOpen && (
+        <div className="fixed inset-0 z-[100]  cursor-pointer flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="w-[400px] rounded-2xl bg-white p-6 shadow-2xl animate-in zoom-in duration-200">
+            <div className="flex items-center gap-3 mb-6 border-b pb-4">
+              <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+                <Users size={20} />
+              </div>
+              <h2 className="text-xl font-bold text-slate-800">
+                Create New Group
+              </h2>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase">
+                  Group Name
+                </label>
+                <input
+                  autoFocus
+                  className="w-full rounded-xl border-2 border-slate-100 px-4 py-3 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
+                  placeholder="e.g. Frontend Team"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && handleCreateGroupSubmit()
+                  }
+                />
+              </div>
+              <p className="text-xs text-slate-400 italic font-medium">
+                Adding {selectedUserIds.length} selected candidates.
+              </p>
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  onClick={() => setIsGroupModalOpen(false)}
+                  className="px-4 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50 rounded-xl transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateGroupSubmit}
+                  disabled={isSharing || !newGroupName.trim()}
+                  className="bg-blue-600 text-white px-6 py-2 cursor-pointer rounded-xl text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition shadow-lg shadow-blue-200 flex items-center gap-2"
+                >
+                  {isSharing ? (
+                    <Loader2 className="animate-spin h-4 w-4" />
+                  ) : (
+                    <Plus className="h-3 w-3 -ml-0.5 mt-0.5" />
+                  )}
+                  Create Group
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ROLE MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-80 rounded-xl bg-white p-6 shadow-xl">
+            <h2 className="mb-4 text-lg font-semibold">Update Role</h2>
             <select
-              className="w-full p-2 border rounded-lg bg-gray-50"
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
+              className="w-full rounded-lg border px-3 py-2"
             >
-              <option value="">Select Role</option>
+              <option value="">Select role</option>
               <option value="6915a17ed8d70e9b7ce70ec7">Admin</option>
               <option value="692c10094167ed9d874b8f99">Client</option>
               <option value="6915ab309788ad1e00990866">Candidate</option>
             </select>
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-
+            <div className="mt-6 cursor-pointer flex justify-end gap-3">
+              <button onClick={() => setIsModalOpen(false)}>Cancel</button>
               <button
                 onClick={handleSaveRole}
                 disabled={isSaving}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 disabled:opacity-70"
+                className="rounded-lg bg-blue-600 px-4 py-2 text-white"
               >
                 {isSaving ? (
-                  <Loader2 className="animate-spin w-4 h-4" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   "Save"
                 )}
@@ -190,111 +740,6 @@ export default function UsersTable() {
           </div>
         </div>
       )}
-
-      {/* Users Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border rounded-lg shadow">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">
-                Name
-              </th>
-              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">
-                Email
-              </th>
-              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">
-                Phone
-              </th>
-              <th className="px-6 py-3 border-b text-left text-sm font-medium text-gray-700">
-                Role
-              </th>
-              <th className="px-6 py-3 border-b text-center text-sm font-medium text-gray-700">
-                Actions
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredUsers.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="text-center py-8 text-gray-500 border-b"
-                >
-                  {searchQuery ? "No users match your search" : "No users found"}
-                </td>
-              </tr>
-            ) : (
-              filteredUsers.map((user) => (
-                <tr key={user._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 border-b">
-                    {user.firstName} {user.lastName}
-                  </td>
-                  <td className="px-6 py-4 border-b">{user.email}</td>
-                  <td className="px-6 py-4 border-b">
-                    {user.phoneNumber || "N/A"}
-                  </td>
-                  <td className="px-6 py-4 border-b">
-                    <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm">
-                      {user.role?.name || "No Role"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 border-b">
-                    <div className="flex gap-4 justify-center items-center">
-                      <Pencil
-                        className="w-5 h-5 text-blue-600 cursor-pointer hover:text-blue-800"
-                        onClick={() => openModal(user)}
-                      />
-
-                      <div className="relative">
-                        <Trash2
-                          className="w-5 h-5 text-red-600 cursor-pointer hover:text-red-800"
-                          onClick={() =>
-                            setOpenDeleteMenu(
-                              openDeleteMenu === user._id ? null : user._id
-                            )
-                          }
-                        />
-
-                        {openDeleteMenu === user._id && (
-                          <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg w-32 z-20">
-                            <button
-                              onClick={() => handleDeleteUser(user._id)}
-                              className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
-                            >
-                              Delete
-                            </button>
-                            <button
-                              onClick={() => setOpenDeleteMenu(null)}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-
-            {/* Infinite scroll sentinel */}
-            <tr ref={loadMoreRef}>
-              <td colSpan={5} className="p-0 h-4" />
-            </tr>
-
-            {isFetchingNextPage && (
-              <tr>
-                <td colSpan={5} className="text-center py-6 text-gray-500">
-                  <Loader2 className="animate-spin w-5 h-5 mx-auto" />
-                  <span className="ml-2">Loading more users...</span>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
     </>
   );
 }

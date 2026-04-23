@@ -1,174 +1,399 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useState } from "react";
 
-interface ScheduleEvent {
+import React, { useState, useMemo } from "react";
+import { useGetAllInterviews } from "@/features/admin/interviews/hooks/useInterviewApi";
+import { 
+  Loader2, 
+  Mail, 
+  User, 
+  Briefcase, 
+  CalendarClock, 
+  AlertCircle, 
+  Phone, 
+  MapPin,
+  Clock,
+  Video,
+  X,
+  Calendar
+} from "lucide-react";
+
+/* ===================== TYPES ===================== */
+
+interface EventItem {
   id: string;
   time: string;
+  date: string;
+  rawDate: Date;
   title: string;
-  department: string;
-  isActive?: boolean;
+  candidateName: string;
+  recruiterEmail: string;
+  status: string;
+  originalData: any;
 }
 
 interface ScheduleProps {
-  events?: ScheduleEvent[];
   width?: string | number;
   height?: string | number;
   className?: string;
 }
 
-const Schedule: React.FC<ScheduleProps> = ({
-  events = [
-    {
-      id: "1",
-      time: "1:00PM",
-      title: "Marketing Strategy Presentation",
-      department: "Marketing",
-    },
-    {
-      id: "2",
-      time: "2:30PM",
-      title: "Client Slice have meet with dev",
-      department: "Human Resource",
-    },
-    {
-      id: "3",
-      time: "4:00PM",
-      title: "Candidate Communication",
-      department: "Human Resource",
-    },
-    {
-      id: "4",
-      time: "5:30PM",
-      title: "Candidate Communication",
-      department: "Human Resource",
-    },
-  ],
-  width,
-  height,
-  className = "",
-}) => {
+/* ===================== HELPER FUNCTIONS ===================== */
+
+const formatTime = (date: Date) => {
+  if (isNaN(date.getTime())) return "N/A";
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+const formatDate = (date: Date) => {
+  if (isNaN(date.getTime())) return "Invalid Date";
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+};
+
+const getStyleValue = (value?: string | number) => {
+  if (value === undefined) return undefined;
+  return typeof value === "number" ? `${value}px` : value;
+};
+
+/* ===================== COMPONENT ===================== */
+
+const Schedule = ({ height, className = "" }: ScheduleProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState("Today");
+  const [selectedFilter, setSelectedFilter] = useState("Today");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [selectedInterview, setSelectedInterview] = useState<any | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const dateOptions = [
-    "Today",
-    "Tomorrow",
-    "This Week",
-    "Next Week",
-    "This Month",
-  ];
+  // 1. Fetch Data
+  const { data: rawData, isLoading, error } = useGetAllInterviews();
+  console.debug("useGetAllInterviews rawData:", rawData);
 
-  const getStyleValue = (value: string | number | undefined) => {
-    if (value === undefined) return undefined;
-    return typeof value === "number" ? `${value}px` : value;
+  // 2. Filter & Map Data
+  const events = useMemo(() => {
+    let interviews: any[] = [];
+    
+    if (Array.isArray(rawData)) {
+      interviews = rawData;
+    } else if (rawData && typeof rawData === 'object') {
+       if (Array.isArray((rawData as any).data)) interviews = (rawData as any).data;
+       else if (Array.isArray((rawData as any).interviews)) interviews = (rawData as any).interviews;
+    }
+
+    if (interviews.length === 0) return [];
+
+    console.debug("mapped interviews count:", interviews.length);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return interviews
+      .map((item: any) => {
+        // Data Mapping
+        const rawDateString = item.timing || item.scheduledAt || item.date || item.createdAt;
+        const dateObj = new Date(rawDateString || '');
+
+        const title = 
+          item.jobId?.title || 
+          item.jobTitle || 
+          item.title ||
+          "Untitled Position";
+
+        const candidateName = 
+          (item.candidateId?.firstName ? `${item.candidateId.firstName} ${item.candidateId.lastName || ''}` : null) ||
+          item.candidateName || 
+          "Unknown Candidate";
+
+        const recruiterEmail = 
+          item.interviewerEmail ||
+          item.recruiterEmail || 
+          "No Recruiter";
+
+        return {
+          id: item._id || Math.random().toString(),
+          time: formatTime(dateObj),
+          date: formatDate(dateObj),
+          rawDate: dateObj,
+          title: title,
+          candidateName: candidateName,
+          recruiterEmail: recruiterEmail,
+          status: item.status || "Scheduled",
+          originalData: item,
+        };
+      })
+      .filter((event: EventItem) => {
+        if (isNaN(event.rawDate.getTime())) return true; 
+
+        switch (selectedFilter) {
+          case "Today":
+            return event.rawDate.toDateString() === today.toDateString();
+          case "Tomorrow":
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            return event.rawDate.toDateString() === tomorrow.toDateString();
+          case "All Upcoming":
+            return event.rawDate >= today;
+          default:
+            return true;
+        }
+      })
+      .sort((a: EventItem, b: EventItem) => a.rawDate.getTime() - b.rawDate.getTime());
+  }, [rawData, selectedFilter]);
+
+  /* --- MODAL DATA HELPERS --- */
+  const getModalTitle = (item: any) => item.jobId?.title || item.title || "N/A";
+  const getModalCandidate = (item: any) => (item.candidateId?.firstName ? `${item.candidateId.firstName} ${item.candidateId.lastName}` : null) || item.candidateName || "N/A";
+  const getModalDate = (item: any) => { const d = new Date(item.timing || item.scheduledAt || ''); return isNaN(d.getTime()) ? new Date() : d; };
+  
+  const getLocation = (item: any) => {
+    const loc = item.jobId?.location;
+    if (!loc) return "";
+    return [loc.city, loc.state, loc.country].filter(Boolean).join(", ");
   };
 
   return (
-    <div
-      style={{
-        width: getStyleValue(width),
-        height: getStyleValue(height),
-      }}
-      className={`bg-white rounded-2xl p-4 sm:p-6 shadow-sm ${className}`}
+    <div 
+      className={`bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col overflow-hidden ${className}`} 
+      style={{ height: getStyleValue(height) || '500px' }}
     >
-      <div className='flex justify-between items-center mb-4 sm:mb-6'>
-        <h2 className='text-xl sm:text-2xl font-semibold text-gray-900'>
-          Schedule
-        </h2>
-
-        <div className='relative'>
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between shrink-0">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Interview Schedule</h2>
+          <p className="text-xs text-gray-400 font-medium mt-1">Manage your upcoming meetings</p>
+        </div>
+        
+        <div className="relative">
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className='flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-50 rounded-lg text-blue-600 text-xs sm:text-sm font-medium hover:bg-blue-100 transition-colors'
+            className='flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-white hover:shadow-sm border border-gray-100 rounded-xl text-sm font-semibold text-gray-600 transition-all'
           >
-            <svg
-              className='w-3 h-3 sm:w-4 sm:h-4'
-              viewBox='0 0 24 24'
-              fill='none'
-              stroke='currentColor'
-              strokeWidth='2'
-            >
-              <rect x='3' y='4' width='18' height='18' rx='2' ry='2'></rect>
-              <line x1='16' y1='2' x2='16' y2='6'></line>
-              <line x1='8' y1='2' x2='8' y2='6'></line>
-              <line x1='3' y1='10' x2='21' y2='10'></line>
-            </svg>
-            <span>{selectedDate}</span>
-            <svg
-              className='w-3 h-3 sm:w-4 sm:h-4'
-              viewBox='0 0 24 24'
-              fill='none'
-              stroke='currentColor'
-              strokeWidth='2'
-            >
-              <polyline points='6 9 12 15 18 9'></polyline>
-            </svg>
+            <CalendarClock size={16} className="text-blue-500" />
+            <span>{selectedFilter}</span>
           </button>
 
           {isDropdownOpen && (
-            <div className='absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50'>
-              {dateOptions.map((option) => (
-                <button
-                  key={option}
-                  onClick={() => {
-                    setSelectedDate(option);
-                    setIsDropdownOpen(false);
-                  }}
-                  className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors'
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
+              <div className='absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-20 overflow-hidden'>
+                {["Today", "Tomorrow", "All Upcoming"].map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      setSelectedFilter(option);
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                      selectedFilter === option ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
 
-      <div className='space-y-0'>
-        {events.map((event, index) => {
-          const isHovered = hoveredId === event.id;
+      {/* Content List */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2 custom-scrollbar -mr-2 pt-2">
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center h-40 text-gray-400">
+            <Loader2 className="animate-spin mb-2" />
+            <span className="text-xs">Loading schedule...</span>
+          </div>
+        )}
 
-          return (
-            <div key={event.id} className='flex gap-2 sm:gap-4'>
-              <div className='w-14 sm:w-20 flex-shrink-0 pt-1'>
-                <span className='text-xs sm:text-sm text-gray-500 font-medium'>
-                  {event.time}
+        {error && (
+          <div className="p-4 rounded-xl bg-red-50 text-red-600 text-xs border border-red-100 flex items-center gap-2">
+            <AlertCircle size={16} />
+            <span>Error loading interviews</span>
+          </div>
+        )}
+
+        {!isLoading && events.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-48 text-center border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/50">
+            <CalendarClock size={32} className="text-gray-300 mb-2" />
+            <p className="text-sm font-semibold text-gray-500">No interviews found</p>
+            <p className="text-xs text-gray-400">for {selectedFilter.toLowerCase()}</p>
+          </div>
+        ) : (
+          <div className="space-y-5 pb-2">
+            {events.map((event: EventItem) => {
+              const isHovered = hoveredId === event.id;
+
+              return (
+                <div 
+                  key={event.id} 
+                  className="flex gap-4 group cursor-pointer"
+                  onMouseEnter={() => setHoveredId(event.id)}
+                  onMouseLeave={() => setHoveredId(null)}
+                  onClick={() => {
+                    setSelectedInterview(event.originalData);
+                    setIsModalOpen(true);
+                  }}
+                >
+                  <div className="w-[4.5rem] flex-shrink-0 flex flex-col items-end pt-1">
+                    <span className="text-sm font-bold text-gray-900 leading-none">{event.time}</span>
+                    <span className="text-[10px] font-medium text-gray-400 mt-1 uppercase tracking-wide">{event.date}</span>
+                  </div>
+
+                  <div className="flex flex-col items-center flex-shrink-0 relative">
+                    <div className={`
+                      w-3 h-3 rounded-full mt-1.5 z-10 border-[2px] border-white ring-1 transition-all duration-300
+                      ${isHovered ? 'bg-blue-600 ring-blue-200 scale-110' : 'bg-gray-300 ring-gray-100'}
+                    `} />
+                    <div className="w-[2px] flex-1 bg-gray-100 my-1 group-last:bg-transparent rounded-full"></div>
+                  </div>
+
+                  <div className="flex-1 pb-1">
+                    <div className={`
+                      p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden
+                      ${isHovered ? 'bg-white border-blue-100 shadow-md -translate-y-0.5' : 'bg-gray-50 border-transparent'}
+                    `}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className={`p-1.5 rounded-lg ${isHovered ? 'bg-blue-50 text-blue-600' : 'bg-white text-gray-400'}`}>
+                            <Briefcase size={14} />
+                          </div>
+                          <h3 className={`text-sm font-bold ${isHovered ? 'text-gray-900' : 'text-gray-700'}`}>
+                            {event.title}
+                          </h3>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5 pl-1">
+                        <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                          <User size={12} className="text-gray-400" />
+                          <span>Candidate: {event.candidateName}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <Mail size={12} className="text-gray-400" />
+                          <span className="truncate">Recruiter: {event.recruiterEmail}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* --- PROFESSIONAL MODAL --- */}
+      {isModalOpen && selectedInterview && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setIsModalOpen(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            
+            {/* 1. Top Bar */}
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <div className="flex items-center gap-2">
+                <span className={`h-2 w-2 rounded-full ${
+                  (selectedInterview.status || '').toLowerCase() === 'completed' ? 'bg-green-500' : 'bg-blue-500'
+                }`} />
+                <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">
+                  {selectedInterview.status || 'Scheduled'}
                 </span>
               </div>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-200 transition-colors"><X size={18}/></button>
+            </div>
 
-              <div className='flex flex-col items-center flex-shrink-0 relative'>
-                <div className='w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full mt-1 z-10 bg-blue-600'></div>
-                {index < events.length - 1 && (
-                  <div className='w-0.5 flex-1 bg-blue-400'></div>
+            {/* 2. Content */}
+            <div className="p-6 overflow-y-auto custom-scrollbar">
+              
+              {/* Header Info */}
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-gray-900 leading-tight">{getModalTitle(selectedInterview)}</h2>
+                {getLocation(selectedInterview) && (
+                  <p className="text-sm text-gray-500 flex items-center gap-1.5 mt-1">
+                    <MapPin size={14}/> {getLocation(selectedInterview)}
+                  </p>
                 )}
               </div>
 
-              <div className='flex-1 pb-3 sm:pb-4'>
-                <div
-                  onMouseEnter={() => setHoveredId(event.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                  style={{
-                    border: isHovered
-                      ? "2px solid rgb(59, 130, 246)"
-                      : "2px solid transparent",
-                  }}
-                  className={`rounded-xl sm:rounded-2xl p-3 sm:p-4 cursor-pointer transition-all duration-200 ${
-                    isHovered ? "bg-blue-50" : "bg-gray-100"
-                  }`}
-                >
-                  <h3 className='text-sm sm:text-base font-semibold text-gray-900 mb-1'>
-                    {event.title}
-                  </h3>
-                  <p className='text-xs sm:text-sm text-gray-500'>
-                    {event.department}
+              {/* Time Card */}
+              <div className="bg-blue-50/50 rounded-xl p-4 border border-blue-100 mb-6 flex justify-between items-center">
+                <div className="flex gap-4 items-center">
+                  <div className="bg-blue-100 text-blue-600 p-2.5 rounded-lg">
+                    <CalendarClock size={20}/>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">
+                      {getModalDate(selectedInterview).toLocaleDateString(undefined, {weekday: 'long', month: 'long', day: 'numeric'})}
+                    </p>
+                    <p className="text-xs text-blue-600 font-medium mt-0.5">
+                      {getModalDate(selectedInterview).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'})}
+                    </p>
+                  </div>
+                </div>
+                {selectedInterview.meetingLink && (
+                  <a 
+                    href={String(selectedInterview.meetingLink)} target="_blank" rel="noreferrer" 
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2 shadow-sm"
+                  >
+                    <Video size={14}/> Join
+                  </a>
+                )}
+              </div>
+
+              {/* Candidate Info - Full Width */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 pb-2">Candidate Details</h4>
+                
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-lg border border-gray-200">
+                    <User size={24}/>
+                  </div>
+                  <div>
+                    <p className="text-base font-bold text-gray-900">{getModalCandidate(selectedInterview)}</p>
+                    <p className="text-xs text-gray-500">Applicant</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2">
+                  {selectedInterview.candidateId?.email && (
+                    <div className="flex items-center gap-3 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                      <Mail size={14} className="text-gray-400"/> {selectedInterview.candidateId.email}
+                    </div>
+                  )}
+                  {(selectedInterview.candidateId?.phoneNumber || selectedInterview.candidateId?.phone) && (
+                    <div className="flex items-center gap-3 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                      <Phone size={14} className="text-gray-400"/> 
+                      {selectedInterview.candidateId?.phoneNumber || selectedInterview.candidateId?.phone}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Interviewer Section */}
+              <div className="mt-6 pt-4 border-t border-gray-100">
+                <p className="text-[10px] text-gray-400 font-medium mb-2 uppercase">Interviewer</p>
+                <div className="flex items-center gap-3 bg-orange-50/50 p-2 rounded-lg border border-orange-100 w-fit pr-4">
+                  <div className="h-6 w-6 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 text-[10px] font-bold">HR</div>
+                  <p className="text-xs font-medium text-gray-700">
+                    {selectedInterview.interviewerEmail || selectedInterview.recruiterEmail || "Not Assigned"}
                   </p>
                 </div>
               </div>
+
             </div>
-          );
-        })}
-      </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #cbd5e1; }
+      `}</style>
     </div>
   );
 };
