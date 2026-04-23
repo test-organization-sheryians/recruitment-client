@@ -364,24 +364,36 @@ export default function ApplicantsList({
         (i.candidateEmail || "").toLowerCase() === (email || "").toLowerCase()
     );
 
+  const formatInterviewTime = (value: string) => {
+    if (!value) return "-";
+    const dt = new Date(value);
+    if (Number.isNaN(dt.getTime())) return "-";
+    return dt.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
   /* ================= RENDER ================= */
   return (
     <div
-      className={`bg-white rounded-2xl shadow-lg border border-gray-100 p-5 flex flex-col overflow-hidden ${className}`}
+      className={`bg-white rounded-2xl shadow-lg border border-gray-100 p-3 md:p-5 flex flex-col overflow-hidden ${className}`}
       style={style}
     >
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <span className="text-lg font-semibold text-gray-900">
           {activeTab === "scheduled" ? "Scheduled Interviews" : "Applicants Lists"}
         </span>
 
         {selectedApplicants.length > 0 && (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <select
               value={bulkStatus}
               onChange={(e) => setBulkStatus(e.target.value as ApplicantStatus)}
-              className="border rounded-xl px-2 py-1"
+              className="border rounded-xl px-2.5 py-1.5 text-sm"
             >
               {tabs
                 .filter((t) => t !== "all")
@@ -395,7 +407,7 @@ export default function ApplicantsList({
             <button
               onClick={handleSubmit}
               disabled={isPending}
-              className={`rounded-xl px-3 py-2 text-sm font-semibold text-white ${
+              className={`rounded-xl px-3 py-2 text-sm font-semibold text-white whitespace-nowrap ${
                 isPending ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
@@ -406,39 +418,42 @@ export default function ApplicantsList({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => {
-              try {
-                const dest = buildDestForStatus(
-                  String(tab),
-                  pathname || "",
-                  (searchParams as any) ?? null
-                );
-                router.push(dest);
-              } catch (e) {
-                console.error("Failed to change tab", e);
-              }
-            }}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
-              activeTab === tab
-                ? "bg-blue-600 text-white shadow"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            {String(tab).charAt(0).toUpperCase() + String(tab).slice(1)}
-          </button>
-        ))}
+      <div className="mb-4 overflow-x-auto">
+        <div className="flex gap-2 min-w-max">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => {
+                try {
+                  const dest = buildDestForStatus(
+                    String(tab),
+                    pathname || "",
+                    (searchParams as any) ?? null
+                  );
+                  router.push(dest);
+                } catch (e) {
+                  console.error("Failed to change tab", e);
+                }
+              }}
+              className={`px-3 md:px-4 py-1.5 rounded-full text-xs md:text-sm font-medium transition whitespace-nowrap ${
+                activeTab === tab
+                  ? "bg-blue-600 text-white shadow"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              {String(tab).charAt(0).toUpperCase() + String(tab).slice(1)}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-y-auto rounded-xl border border-gray-200">
+      <div className="flex-1 overflow-auto rounded-xl border border-gray-200">
 
         {/* ===================== SCHEDULED TAB ===================== */}
         {activeTab === "scheduled" && (
-          <table className="w-full text-sm border-collapse">
+          <>
+            <table className="hidden md:table w-full min-w-[920px] text-xs md:text-sm border-collapse">
             <thead className="sticky top-0 bg-gray-50 border-b z-10">
               <tr>
                 {/* FIX: Checkbox header column added to match data rows */}
@@ -564,20 +579,13 @@ export default function ApplicantsList({
                             Join Meeting
                           </a>
                         ) : (
-                          <span className="text-gray-400 text-sm">—</span>
+                          <span className="text-gray-400 text-sm">-</span>
                         )}
                       </td>
 
                       {/* Time */}
                       <td className="px-2 py-2 text-gray-700 whitespace-nowrap">
-                        {int.Timing
-                          ? new Date(int.Timing).toLocaleString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              hour: "numeric",
-                              minute: "2-digit",
-                            })
-                          : "—"}
+                        {formatInterviewTime(int.Timing)}
                       </td>
 
                       {/* Status */}
@@ -615,12 +623,87 @@ export default function ApplicantsList({
                 })
               )}
             </tbody>
-          </table>
+            </table>
+            {/* Mobile list for scheduled interviews */}
+            <div className="md:hidden">
+              {isInterviewsLoading ? (
+                <div className="text-center py-8 text-gray-500">Loading Interviews...</div>
+              ) : scheduledInterviews.length === 0 ? (
+                <div className="text-center py-8 text-sm text-gray-500">No scheduled interviews found.</div>
+              ) : (
+                <div className="flex flex-col divide-y divide-gray-100">
+                  {scheduledInterviews.map((int) => {
+                    const mappedAppId =
+                      int.applicationId ||
+                      applicants.find(
+                        (a) =>
+                          (a.email || "").toLowerCase() ===
+                          (int.candidateEmail || "").toLowerCase()
+                      )?.id;
+
+                    const isChecked = mappedAppId
+                      ? selectedApplicants.includes(mappedAppId)
+                      : false;
+
+                    const isRescheduled = (
+                      rawInterviews.find((r: any) => r._id === int._id) as any
+                    )?.isRescheduled;
+
+                    return (
+                      <div key={int._id} className="p-3">
+                        <div className="flex items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => mappedAppId && toggleSelect(mappedAppId)}
+                            disabled={!mappedAppId}
+                            className="h-4 w-4 accent-blue-600 mt-1"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-semibold text-gray-800">{int.candidateName}</p>
+                                <p className="text-xs text-gray-500 truncate max-w-full">{int.candidateEmail}</p>
+                              </div>
+                              <div className="text-right">
+                                <div className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusColors[int.status?.toLowerCase()] || "bg-gray-100 text-gray-700"}`}>
+                                  {int.status}
+                                </div>
+                                {isRescheduled && <div className="text-[10px] mt-1 text-yellow-700">Rescheduled</div>}
+                              </div>
+                            </div>
+                            <div className="mt-2 text-sm text-gray-700">
+                              <div><strong>Interviewer: </strong>{int.interviewer}</div>
+                              <div className="mt-1"><strong>Time: </strong>{formatInterviewTime(int.Timing)}</div>
+                              <div className="mt-2">
+                                {int.status?.toLowerCase() !== "cancelled" && int.meetingLink ? (
+                                  <a href={int.meetingLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">Join Meeting</a>
+                                ) : (
+                                  <span className="text-gray-400">-</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="mt-3 flex gap-2">
+                              {int.status?.toLowerCase() !== "cancelled" && (
+                                <button onClick={() => handleCancelInterview(int._id)} className="text-white px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-xs">Cancel</button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         {/* ===================== APPLICANTS TABS ===================== */}
         {activeTab !== "scheduled" && (
-          <table className="w-full text-sm border-collapse">
+          <>
+            <table className="hidden md:table w-full min-w-[980px] text-xs md:text-sm border-collapse">
             <thead className="sticky top-0 bg-gray-50 border-b z-10">
               <tr>
                 <th className="w-10 px-3 py-3 text-center text-xs font-semibold text-gray-500">
@@ -717,7 +800,7 @@ export default function ApplicantsList({
                         className="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-100 whitespace-nowrap"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        📄 Resume
+                        Resume
                       </a>
                     </td>
 
@@ -800,7 +883,92 @@ export default function ApplicantsList({
                 ))
               )}
             </tbody>
-          </table>
+            </table>
+
+            {/* Mobile list for applicants */}
+            <div className="md:hidden">
+              {filteredApplicants.length === 0 ? (
+                <div className="text-center py-8 text-sm text-gray-500">No applicants found.</div>
+              ) : (
+                <div className="flex flex-col divide-y divide-gray-100">
+                  {filteredApplicants.map((a) => (
+                    <div key={a.id} className="p-3">
+                      <div className="flex gap-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedApplicants.includes(a.id)}
+                          onChange={() => toggleSelect(a.id)}
+                          className="h-4 w-4 accent-blue-600 mt-1"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <div className="flex-1">
+                          <div className="flex justify-between">
+                            <div>
+                              <p className="font-semibold text-gray-800">{a.name}</p>
+                              <p className="text-xs text-gray-500 truncate max-w-full">{a.email}</p>
+                            </div>
+                            <div className="text-right text-sm text-gray-700">
+                              <div>{a.role}</div>
+                              <div className="mt-1">{a.date}</div>
+                            </div>
+                          </div>
+
+                          <div className="mt-2 text-sm text-gray-700">
+                            <div><strong>Experience: </strong>{a.experience}</div>
+                            <div className="mt-2">
+                              <a href={a.resume} target="_blank" rel="noreferrer" className="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-100">Resume</a>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusColors[a.status] || "bg-gray-100 text-gray-700"}`}>{a.status}</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedApplicantData({ name: a.name, answers: a.answers || [] });
+                                setIsAnswerPopupOpen(true);
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100"
+                            >
+                              <Eye size={13} />
+                              Answers
+                            </button>
+
+                            {a.status === "interview" && (() => {
+                              const interview = getInterviewForApplicant(a.email);
+                              return interview ? (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleScheduleInterview(a.candidateUserId, a.id, "reschedule", interview._id);
+                                  }}
+                                  className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-orange-600 bg-orange-50 border border-orange-200 rounded-md hover:bg-orange-100"
+                                >
+                                  <RefreshCw size={13} />
+                                  Reschedule
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleScheduleInterview(a.candidateUserId, a.id, "schedule");
+                                  }}
+                                  className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-md hover:bg-green-100"
+                                >
+                                  <Calendar size={13} />
+                                  Schedule
+                                </button>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
 
