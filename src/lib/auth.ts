@@ -1,21 +1,21 @@
-'use server';
+"use server";
 
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
 
-export type Role = 'admin' | 'client' | 'user';
+export type Role = "admin" | "client" | "user";
 export type User = {
   id: string;
   name: string;
   email: string;
   role: Role;
-  isVerified:boolean
+  isVerified: boolean;
 };
 
 const JWT_SECRET = process.env.JWT_SECRET!;
-console.log(JWT_SECRET)
+console.log(JWT_SECRET);
 if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET is not set in environment variables');
+  throw new Error("JWT_SECRET is not set in environment variables");
 }
 
 export async function getCurrentUser(): Promise<User | null> {
@@ -23,7 +23,15 @@ export async function getCurrentUser(): Promise<User | null> {
   const token = cookieStore.get("token")?.value;
   const refreshToken = cookieStore.get("refreshToken")?.value;
 
-  const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+  if (!token && !refreshToken) {
+    console.log("🔒 Server: No tokens found - skipping getCurrentUser");
+    return null;
+  }
+
+  const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
+    /\/$/,
+    "",
+  );
   const usersMeUrl = `${apiBase}/api/users/me`;
   const refreshUrl = `${apiBase}/api/auth/refresh`;
 
@@ -63,7 +71,7 @@ export async function getCurrentUser(): Promise<User | null> {
       return null;
     }
   };
-
+  
   if (token) {
     try {
       const payload = jwt.verify(token, JWT_SECRET, {

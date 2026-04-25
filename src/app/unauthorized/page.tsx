@@ -1,13 +1,7 @@
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import Link from "next/link";
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export default async function UnauthorizedPage() {
-  const user = await getCurrentUser();
-  if (user?.role === "admin") {
-    redirect("/admin");
-  }
+export default function UnauthorizedPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-800 to-purple-900 flex items-center justify-center p-4">
       <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-8 max-w-sm w-full text-center border border-white/20">
@@ -26,12 +20,10 @@ export default async function UnauthorizedPage() {
             />
           </svg>
         </div>
-
         <p className="text-lg font-medium text-yellow-300 mb-3">Unauthorized</p>
-        <p className="text-gray-600 text-sm mb-6">
+        <p className="text-gray-300 text-sm mb-6">
           You don&#39;t have permission to access this page.
         </p>
-
         <Link
           href="/"
           className="inline-block bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-full transition"

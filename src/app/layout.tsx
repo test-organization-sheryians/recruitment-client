@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Wrapper from "@/components/hoc/Wrapper";
 import AuthProvider from "@/components/hoc/AuthProvider";
+import AuthGuard from "@/components/hoc/AuthGuard";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,7 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-  display: 'swap',
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -30,12 +31,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
-        
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
+      >
         <Wrapper>
           <AuthProvider>
-            {children}
-            <ToastContainer />
+            <AuthGuard>
+              {children}
+              <ToastContainer />
+            </AuthGuard>
           </AuthProvider>
         </Wrapper>
       </body>
