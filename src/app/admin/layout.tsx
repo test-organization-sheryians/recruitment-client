@@ -23,12 +23,10 @@ export default async function AdminLayout({
     redirect("/un-verified");
   }
 
-  console.log("User role:", user?.role);
-  const normalizedRole =
-    user && typeof user.role === "string" ? user.role.toLowerCase() : undefined;
+  const role = typeof user?.role === "string" ? user?.role.toLowerCase() : undefined
 
-  if (user && normalizedRole && normalizedRole !== "admin") {
-    redirect("/unauthorized");
+  if(role !== "admin"){
+    redirect("/unauthorized")
   }
 
   return (

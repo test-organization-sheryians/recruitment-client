@@ -23,6 +23,11 @@ export async function getCurrentUser(): Promise<User | null> {
   const token = cookieStore.get("token")?.value;
   const refreshToken = cookieStore.get("refreshToken")?.value;
 
+  if (!token && !refreshToken) {
+    console.log("🔒 Server: No tokens found - skipping getCurrentUser");
+    return null;
+  }
+
   const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
     /\/$/,
     "",
@@ -66,15 +71,25 @@ export async function getCurrentUser(): Promise<User | null> {
       return null;
     }
   };
-
+  
   if (token) {
-    // Always call /me for fresh user data, skip JWT cache
-    const meResult = await callMe();
-    if (meResult) return meResult;
-    if (refreshToken) {
-      return await callRefreshAndMe();
+    try {
+      const payload = jwt.verify(token, JWT_SECRET, {
+        ignoreExpiration: false,
+      }) as User;
+      return payload;
+    } catch (error: unknown) {
+      const err = error as { name?: string; expiredAt?: Date };
+      if (err?.name === "TokenExpiredError" || err?.name === "JsonWebTokenError") {
+        console.log("Token invalid/expired in getCurrentUser:", err?.name);
+        if (refreshToken) {
+          return await callRefreshAndMe();
+        }
+        return null;
+      }
+      console.error("Unexpected error in getCurrentUser:", error);
+      return null;
     }
-    return null;
   }
 
   // No token but maybe refresh token available

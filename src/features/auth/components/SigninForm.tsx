@@ -22,8 +22,10 @@ const SigninForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const redirect = searchParams.get("redirect");
-  const safeRedirect = redirect && redirect.startsWith("/") ? redirect : null;
+  const redirectParam =
+    searchParams.get("callbackUrl") || searchParams.get("redirect");
+  const safeRedirect =
+    redirectParam && redirectParam.startsWith("/") ? redirectParam : null;
 
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -45,6 +47,7 @@ const SigninForm = () => {
       onSuccess: (res: {
         data: {
           token: string;
+          refreshToken?: string;
           user: {
             _id: string;
             email?: string;
@@ -56,7 +59,13 @@ const SigninForm = () => {
         };
       }) => {
         const role = res.data.user?.role?.name?.toLowerCase() || "user";
-        const cookieOptions = { path: "/" };
+        const isProd = process.env.NODE_ENV === "production";
+        const cookieOptions: Cookies.CookieAttributes = {
+          path: "/",
+          secure: isProd,
+          sameSite: isProd ? "None" : "Lax",
+          expires: 7,
+        };
 
         dispatch(
           setUser({
@@ -70,11 +79,13 @@ const SigninForm = () => {
         );
 
         Cookies.set("token", res.data.token, cookieOptions);
+        Cookies.set("role", role, cookieOptions);
+        if (res.data.refreshToken) {
+          Cookies.set("refreshToken", res.data.refreshToken, cookieOptions);
+        }
 
-        setTimeout(() => {
-          window.location.href =
-            safeRedirect || (role === "admin" ? "/admin" : "/");
-        }, 100);
+        const destination = safeRedirect || (role === "admin" ? "/admin" : "/");
+        window.location.href = destination;
       },
 
       onError: (err: {
@@ -196,7 +207,6 @@ const SigninForm = () => {
             <span className="mx-4 text-gray-400 text-xs font-medium">OR</span>
             <span className="flex-1 border-t border-gray-300" />
           </div>
-          
         </form>
 
         <p
