@@ -1,20 +1,19 @@
 // config/axios.ts
 import axios from "axios";
 import Cookies from "js-cookie";
-
+import { hasRefreshToken, clearAuthTokens } from "@/lib/tokenUtils";
 
 const rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 const baseURL = rawBaseURL.replace(/\/$/, "").replace(/\/api$/, "");
 
 const publicRoutes = ["/login", "/register"] as const;
 
-
 // Updated: Check if path starts with these instead of exact match
 const isPublicRoute = (path: string) => {
   if (!path) return false;
 
   return (
-    publicRoutes.some(route => path.startsWith(route)) ||
+    publicRoutes.some((route) => path.startsWith(route)) ||
     path.includes("/user-verification")
   );
 };
@@ -61,17 +60,18 @@ api.interceptors.response.use(
 
     console.log("➡️ Public Route:", publicRoute);
 
-    // 🔥 STEP 1: TRY REFRESH
+    // 🔥 STEP 1: TRY REFRESH (only if we have a refresh token)
     if (
       !publicRoute &&
       status === 401 &&
-      !originalRequest._retry
+      !originalRequest._retry &&
+      hasRefreshToken() // ✅ NEW: Check if refresh token exists
     ) {
-      console.log("🔄 401 detected → trying refresh...");
+      console.log("🔄 401 detected & refresh token exists → trying refresh...");
       originalRequest._retry = true;
 
       try {
-        console.log("📡 Calling /api/refresh...");
+        console.log("📡 Calling /api/auth/refresh...");
 
         const refreshResponse = await api.post("/api/auth/refresh");
 
@@ -82,6 +82,8 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         console.log("❌ Refresh failed:", refreshError);
+        // Refresh failed - clear tokens
+        clearAuthTokens();
       }
     }
 
@@ -98,11 +100,10 @@ api.interceptors.response.use(
     ) {
       console.log("🚪 Logging out user");
 
-      Cookies.remove("refreshToken");
-      Cookies.remove("token");
+      clearAuthTokens();
 
       return Promise.reject(
-        new Error("Session expired. Redirecting to login...")
+        new Error("Session expired. Redirecting to login..."),
       );
     }
 
@@ -111,7 +112,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
