@@ -1,7 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MapPin, Clock } from "lucide-react";
 import JobIcon from "./jobIcon";
+import type { ButtonState } from "./types";
 
 interface LatestJobCardProps {
   jobId: string;
@@ -19,6 +22,7 @@ interface LatestJobCardProps {
   applied?: boolean;
   onDetails: (jobId: string) => void;
   onApply: (jobId: string) => void;
+  onWithdraw?: (jobId: string) => void;
 }
 
 export default function LatestJobCard({
@@ -32,11 +36,23 @@ export default function LatestJobCard({
   applied = false,
   onDetails,
   onApply,
+  onWithdraw,
 }: LatestJobCardProps) {
   const formattedPostedAt = postedAt;
 
   const visibleSkills = skills.slice(0, 4);
   const extraSkills = skills.length - visibleSkills.length;
+
+  // Get query client instance
+  const queryClient = useQueryClient();
+
+  // Simple and reliable state management
+  const [buttonState, setButtonState] = useState<ButtonState>(applied ? 'withdraw' : 'apply');
+
+  // Update button state when applied prop changes
+  useEffect(() => {
+    setButtonState(applied ? 'withdraw' : 'apply');
+  }, [applied]);
 
   return (
     <div
@@ -112,18 +128,37 @@ export default function LatestJobCard({
         </button>
 
         <button
-          disabled={applied}
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation();
-            onApply(jobId);
+            
+            // Set processing state immediately
+            const processingState = applied ? 'withdrawing' : 'applying';
+            setButtonState(processingState);
+            
+            try {
+              if (applied && onWithdraw) {
+                await onWithdraw(jobId);
+              } else if (!applied && onApply) {
+                await onApply(jobId);
+              }
+            } catch (error) {
+              console.error('Action failed:', error);
+              // Reset to original state on error
+              setButtonState(applied ? 'withdraw' : 'apply');
+            }
+            // Success case: state will be updated by useEffect when applied prop changes
           }}
+          disabled={buttonState === 'applying' || buttonState === 'withdrawing'}
           className={`px-8 py-3 rounded-lg text-[16px] font-bold ${
             applied
-              ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+              ? "bg-red-600 text-white hover:bg-red-700 cursor-pointer"
               : "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
-          }`}
+          } disabled:opacity-60 disabled:cursor-not-allowed`}
         >
-          {applied ? "Applied" : "Apply"}
+          {buttonState === 'applying' && 'Applying...'}
+          {buttonState === 'withdrawing' && 'Withdrawing...'}
+          {buttonState === 'apply' && 'Apply'}
+          {buttonState === 'withdraw' && 'Withdraw'}
         </button>
       </div>
     </div>

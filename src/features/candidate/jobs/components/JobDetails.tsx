@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { useGetJobById } from "@/features/admin/jobs/hooks/useJobApi";
 import { useApplyJob } from "@/features/applyJobs/hooks/useApplyJob";
+import { useWithdrawJob } from "@/features/applyJobs/hooks/useWithdrawJob";
 import {
   useSaveJob,
   useUnsaveJob,
@@ -39,6 +40,7 @@ export default function JobDetails() {
 
   /* -------------------- Mutations -------------------- */
   const applyJobMutation = useApplyJob();
+  const withdrawJobMutation = useWithdrawJob();
   const saveJobMutation = useSaveJob();
   const unsaveJobMutation = useUnsaveJob();
 
@@ -100,6 +102,14 @@ export default function JobDetails() {
     } catch (err) {
       toast.error("Failed to check job requirements.");
     }
+  };
+
+  const handleWithdraw = async () => {
+    if (isExpired || !job.applied) return;
+    
+    withdrawJobMutation.mutate({
+      jobId: job._id,
+    });
   };
 
   const handleBookmarkToggle = () => {
@@ -230,11 +240,13 @@ export default function JobDetails() {
           isApplied={job.applied ?? false}
           onBookmarkClick={handleBookmarkToggle}
           onApplyClick={handleApply}
+          onWithdrawClick={handleWithdraw}
           isLoadingBookmark={
             isMutationWorking(saveJobMutation) ||
             isMutationWorking(unsaveJobMutation)
           }
           isLoadingApply={isMutationWorking(applyJobMutation)}
+          isLoadingWithdraw={isMutationWorking(withdrawJobMutation)}
         />
 
         {/* Main Content + Sidebar */}

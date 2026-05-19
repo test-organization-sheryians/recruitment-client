@@ -15,8 +15,10 @@ interface JobHeaderProps {
   isApplied?: boolean;
   onBookmarkClick?: () => void;
   onApplyClick?: (jobId: string) => void;
+  onWithdrawClick?: () => void;
   isLoadingBookmark?: boolean;
   isLoadingApply?: boolean;
+  isLoadingWithdraw?: boolean;
 }
 
 export default function JobHeader({
@@ -32,8 +34,10 @@ export default function JobHeader({
   isApplied = false,
   onBookmarkClick,
   onApplyClick,
+  onWithdrawClick,
   isLoadingBookmark = false,
   isLoadingApply = false,
+  isLoadingWithdraw = false,
 }: JobHeaderProps) {
   return (
     <div className="space-y-6">
@@ -125,17 +129,25 @@ export default function JobHeader({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onApplyClick(jobId);
+                  if (isApplied && onWithdrawClick) {
+                    onWithdrawClick();
+                  } else if (!isApplied) {
+                    onApplyClick(jobId);
+                  }
                 }}
-                disabled={isExpired || isApplied || isLoadingApply}
+                disabled={isExpired || isLoadingApply || isLoadingWithdraw}
                 className={`rounded-lg px-6 py-2.5 font-semibold transition ${
-                  isExpired || isApplied
+                  isExpired
                     ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-blue-600 text-white cursor-pointer hover:bg-blue-700"
+                    : isApplied
+                      ? "bg-red-600 text-white cursor-pointer hover:bg-red-700"
+                      : "bg-blue-600 text-white cursor-pointer hover:bg-blue-700"
                 }`}
               >
                 {isApplied
-                  ? "Applied"
+                  ? isLoadingWithdraw
+                    ? "Withdrawing..."
+                    : "Withdraw"
                   : isLoadingApply
                     ? "Applying..."
                     : isExpired

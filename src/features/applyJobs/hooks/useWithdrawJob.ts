@@ -6,10 +6,10 @@ import {
   InfiniteData,
 } from "@tanstack/react-query"
 import {
-  applyJob,
-  type ApplyJobVariables,
-  type ApplyJobResponse,
-} from "@/api/jobApplication/applyJob"
+  withdrawJob,
+  type WithdrawJobVariables,
+  type WithdrawJobResponse,
+} from "@/api/jobApplication/withdrawJob"
 import { useToast } from "@/components/ui/Toast"
 import { AxiosError } from "axios"
 import { Job } from "@/types/Job"
@@ -21,21 +21,21 @@ type JobsPage = {
   data: Job[]
 }
 
-export function useApplyJob() {
+export function useWithdrawJob() {
   const toast = useToast()
   const queryClient = useQueryClient()
 
-  return useMutation<ApplyJobResponse, unknown, ApplyJobVariables>({
-    mutationFn: applyJob,
+  return useMutation<WithdrawJobResponse, unknown, WithdrawJobVariables>({
+    mutationFn: withdrawJob,
 
     onSuccess: (data, variables) => {
       const jobId = variables.jobId
-      toast.success(data.message || "Application submitted!")
+      toast.success(data.message || "Application withdrawn!")
 
       // Update single job cache
       queryClient.setQueryData<Job>(
         ["job", jobId],
-        (oldJob) => (oldJob ? { ...oldJob, applied: true } : oldJob)
+        (oldJob) => (oldJob ? { ...oldJob, applied: false } : oldJob)
       )
 
       // Update all job lists (infinite queries)
@@ -55,28 +55,21 @@ export function useApplyJob() {
 
           return {
             ...oldData,
-            pages: oldData.pages.map((page) =>({
+            pages: oldData.pages.map((page) => ({
               ...page,
               data: page.data.map((job) =>
                 job._id === jobId
-                  ? { ...job, applied: true }
+                  ? { ...job, applied: false }
                   : job
               ),
             })),
           }
         }
       )
-
-      // Reset button state after successful apply
-      setTimeout(() => {
-        queryClient.setQueryData<{ buttonState: ButtonState }>(["buttonState", jobId], () => ({
-          buttonState: 'withdraw'
-        }));
-      }, 100);
     },
 
     onError: (error) => {
-      let msg = "Failed to apply"
+      let msg = "Failed to withdraw application"
 
       if (error instanceof AxiosError) {
         msg = error.response?.data?.message || msg
