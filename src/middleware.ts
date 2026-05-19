@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-
+  // ✅ STATIC FILES (same as yours)
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/images") ||
@@ -13,16 +13,14 @@ export function middleware(req: NextRequest) {
     pathname.endsWith(".woff2") ||
     pathname.endsWith(".ttf") ||
     pathname.endsWith(".otf") ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/images") ||
     pathname.startsWith("/favicon.ico")
   ) {
     return NextResponse.next();
   }
 
-  const token = req.cookies.get("token");
-  const role = req.cookies.get("role");
-  const refreshToken = req.cookies.get("refreshToken");
+  const token = req.cookies.get("token")?.value;
+  const role = req.cookies.get("role")?.value;
+  const refreshToken = req.cookies.get("refreshToken")?.value;
 
   const publicRoutes = [
     '/',
@@ -40,30 +38,29 @@ export function middleware(req: NextRequest) {
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 
-  // ADMIN ROUTES
+  // ✅ 🔥 ADMIN ROUTES FIXED
   if (pathname.startsWith("/admin")) {
+
+    // 🔴 ALWAYS CHECK TOKEN FIRST
     if (!token) {
-      if (refreshToken) {
-        return NextResponse.next();
-      }
       const loginUrl = new URL("/login", req.url);
       loginUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(loginUrl);
+      return NextResponse.redirect(loginUrl); // ✅ FIXED
     }
 
-    if (role?.value !== "admin") {
+    // 🔴 THEN CHECK ROLE
+    if (role !== "admin") {
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
 
     return NextResponse.next();
   }
 
-  //  PROTECTED ROUTES
+  // ✅ 🔥 PROTECTED ROUTES FIXED
   if (!token && !isPublic) {
-    if (refreshToken) {
-      // Allow the app to run client refresh flow, do not instantly force login.
-      return NextResponse.next();
-    }
+
+    // ❌ REMOVED WRONG refreshToken BYPASS
+
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
