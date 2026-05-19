@@ -84,6 +84,7 @@ export default function JobQuestionsForm({
   const [error, setError] = useState("");
   const [uploaded, setUploaded] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const getOptions = (q: Question): string[] =>
     q.options?.map((o) => (typeof o === "string" ? o : o.label)) || [];
@@ -305,7 +306,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            handleChange(q.title, file);
+                            handleChange(q.title, file , "file");
                           }
                         }}
 

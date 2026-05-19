@@ -289,8 +289,8 @@ export default function ApplicantsList({
         ))}
       </div>
 
-      {/* Table Content */}
-      {/* FIXED: Removed 'pb-20' and used 'pb-0' */}
+      {/* Table Content
+      FIXED: Removed 'pb-20' and used 'pb-0' */}
       <div className="flex-1 overflow-y-auto rounded-xl border border-gray-200 pb-0">
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-gray-50 border-b z-10">
@@ -329,7 +329,7 @@ export default function ApplicantsList({
             {activeTab === 'interview' && !isInterviewsLoading && interviews.map((int) => (
               <tr key={int._id} className={`${interviewGrid} px-4 py-3 items-center hover:bg-gray-50 transition`}>
                 <td>
-                  <p className="font-semibold">{int.candidateName}</p>
+                  <p className="font-semibold">{int.candidateName}.</p>
                   <p className="text-xs text-gray-500">{int.candidateEmail}</p>
                 </td>
                 <td className="truncate" title={int.interviewer}>{int.interviewer}</td>
@@ -407,8 +407,45 @@ export default function ApplicantsList({
                   </span>
                 </td>
 
-               <td className="text-right ">
+               <td className="text-right flex justify-center items-center relative">
 
+                {a.status == "applied" && a.answers && a.answers.length >0 &&(
+                  <button
+                  onClick={(e)=>{
+                    e.stopPropagation(); // Prevent row click
+                    setSelectedApplicantData({name: a.name, answers: a.answers || []});
+                    setIsAnswerPopupOpen(true);
+
+                  }}
+                  className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
+                  > 
+                  <Eye size={14} />
+                  Answers
+                  </button>
+                )}
+
+
+
+
+
+
+
+                  {(a.status === "shortlisted" || a.status === "interview") && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveActionId(activeActionId === a.id ? null : a.id);
+
+                        }}
+                        className="p-1 rounded-full hover:bg-gray-200 transition"
+                      >
+                        <ThreeDotsIcon />
+                        
+                      </button>
+                      {activeActionId === a.id && (
+                        <div className="absolute right-8 top-1/2 -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+                          {a.answers && a.answers.length >0 && (
                   <button
 
                     onClick={(e) => {
@@ -422,32 +459,15 @@ export default function ApplicantsList({
                     }
 
                     }
-                    className="flex items-center gap-2 px-4 py-1.5 text-xs  font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors "
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition"
                     title="view screening answers"
                   >
-                    <Eye size={14} />
+                    {/* <Eye size={14} /> */}
                     Answers
 
 
-                  </button>
-
-
-
-
-                  {(a.status === "shortlisted" || a.status === "interview") && (
-                    <>
-                      {/* <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveActionId(activeActionId === a.id ? null : a.id);
-
-                        }}
-                        className="p-1 rounded-full hover:bg-gray-200 transition"
-                      >
-                        <ThreeDotsIcon />
-                      </button> */}
-                      {activeActionId === a.id && (
-                        <div className="absolute right-8 top-1/2 -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+                  </button> 
+                          )}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();

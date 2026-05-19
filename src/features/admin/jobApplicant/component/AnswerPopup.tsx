@@ -71,7 +71,7 @@ export default function AnswerPopup({
                   <span className="font-semibold text-blue-800 text-xs uppercase tracking-wider block mb-1">
                     Answer:
                   </span>
-                  {Array.isArray(item.answer) ? (
+                  {/* {Array.isArray(item.answer) ? (
                     <ul className="list-disc list-inside">
                       {item.answer.map((ans, i) => (
                         <li key={i}>{ans}</li>
@@ -79,7 +79,31 @@ export default function AnswerPopup({
                     </ul>
                   ) : (
                     <p>{item.answer || <span className="text-gray-400 italic">No answer provided</span>}</p>
-                  )}
+                  )} */}
+
+                  {Array.isArray(item.answer) ? (
+  <ul className="list-disc list-inside">
+    {item.answer.map((ans, i) => (
+      <li key={i}>{ans}</li>
+    ))}
+  </ul>
+) : typeof item.answer === "string" && (item.answer.startsWith("http") || item.answer.includes(".pdf")) ? (
+  <a 
+    href={item.answer} 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+  >
+    📄 View Submitted PDF
+  </a>
+) : (
+  <p>
+    {item.answer === "[object File]" 
+      ? <span className="text-red-500 font-medium">⚠️ Error: File was not uploaded to the server properly.</span> 
+      : item.answer || <span className="text-gray-400 italic">No answer provided</span>
+    }
+  </p>
+)}
                 </div>
               </div>
             ))
