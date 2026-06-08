@@ -68,3 +68,11 @@ export * from "./tests/updateTest";
 export * from "./tests/neRolluser";
 export * from "./tests/searchUsertest";
 export * from "./tests/getUserAttempts";
+
+/* ================= COMPANY ================= */
+export * from "./company/createCompany";
+export * from "./company/getAllCompanies";
+export * from "./company/getSingleCompany";
+export * from "./company/updateCompany";
+export * from "./company/deleteCompany";
+
