@@ -42,36 +42,18 @@ const SignupForm = () => {
   }) => {
     setServerError(null);
 
-    const formData = new FormData();
-    formData.append("firstName", data.firstName);
-    if (data.lastName) formData.append("lastName", data.lastName);
-    if (data.phoneNumber) formData.append("phoneNumber", data.phoneNumber);
-    formData.append("email", data.email);
-    formData.append("password", data.password);
-
-    registerUser(formData, {
-      onSuccess: (res: {
-        data: {
-          token: string;
-          user: {
-            _id: string;
-            email?: string;
-            firstName: string;
-            lastName?: string;
-            role?: { name: string };
-            isVerified:boolean
-          };
-        };
-      }) => {
-        Cookies.set("access", res.data.token);
+    registerUser(data, {
+      onSuccess: (res: any) => {
+        console.log("Signup res:", res);
+        Cookies.set("access", res?.data?.token || res?.token);
         dispatch(
           setUser({
-           id: res.data.user._id,
-            email: res.data.user.email,
-            firstName: res.data.user.firstName,
-            lastName: res.data.user.lastName,
-            role: res.data.user?.role?.name || "user",
-            isVerified:res.data.user.isVerified
+           id: res?.data?.user?._id || res?.user?._id,
+            email: res?.data?.user?.email || res?.user?.email,
+            firstName: res?.data?.user?.firstName || res?.user?.firstName,
+            lastName: res?.data?.user?.lastName || res?.user?.lastName,
+            role: res?.data?.user?.role?.name || res?.user?.role?.name || "user",
+            isVerified: res?.data?.user?.isVerified || res?.user?.isVerified
           })
         );
         router.push("/un-verified");
