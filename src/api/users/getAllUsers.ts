@@ -1,9 +1,11 @@
 import api from "@/config/axios";
 
-export const getAllUsers = async () => {
-  const res = await api.get("/api/users/allUser");
+export const getAllUsers = async (query?: string) => {
+  const res = await api.get("/api/users/get-users", {
+    params: {
+      query, // 👈 this is the key change
+    },
+  });
 
-  // backend returns:
-  // { success: true, data: users }
-  return res.data.data; 
+  return res.data.data;
 };

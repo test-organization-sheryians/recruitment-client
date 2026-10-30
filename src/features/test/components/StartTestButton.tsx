@@ -1,11 +1,12 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useStartTest } from "@/features/test/hooks/useStartsTest";
 import { 
   Clock, Target, Trophy, Calendar, AlertCircle, BookOpen, CheckCircle 
 } from "lucide-react";
+import axios from "axios";
 
 const StartTestPage: React.FC = () => {
   const router = useRouter();
@@ -32,9 +33,17 @@ const StartTestPage: React.FC = () => {
         // data.attemptId will come from backend
         router.push(`/test/${data.attemptId}`);
       },
-      onError: () => {
-        alert("Failed to start test. Make sure you're enrolled or logged in.");
-      },
+     onError: (error: unknown) => {
+  let message = "Failed to start test. Please try again.";
+
+  if (axios.isAxiosError(error)) {
+    message = error.response?.data?.message || message;
+  } else if (error instanceof Error) {
+    message = error.message;
+  }
+
+  alert(message);
+},
     });
   };
 

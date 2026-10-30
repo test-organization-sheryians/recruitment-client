@@ -84,11 +84,13 @@ export default function SavedJobsPage() {
               <div
                 key={_id}
                 className="rounded-xl border bg-white p-5 transition hover:shadow"
+                onClick={() => jobId?._id && router.push(`/jobs/${jobId._id}`)}
+
               >
                 {/* Title + Unsave */}
                 <div className="flex items-start justify-between">
                   <h2
-                    onClick={() => router.push(`/job-details?id=${jobId._id}`)}
+
                     className="cursor-pointer text-lg font-semibold text-gray-900"
                   >
                     {jobId.title}
@@ -108,9 +110,10 @@ export default function SavedJobsPage() {
 
                 {/* Description */}
                 {jobId.description && (
-                  <p className="mt-3 line-clamp-2 text-sm text-gray-600">
-                    {jobId.description}
-                  </p>
+                  <div
+                    className="mt-3 line-clamp-2 text-sm text-gray-600"
+                    dangerouslySetInnerHTML={{ __html: jobId.description }}
+                  />
                 )}
 
                 {/* Expiry */}

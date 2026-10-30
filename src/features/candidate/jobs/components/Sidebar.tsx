@@ -53,7 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               key={cat._id}
               onClick={() => onSelect?.(cat._id)}
               className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
-                flex items-center justify-between group
+                flex items-center justify-between group cursor-pointer
                 ${
                   selected === cat._id
                     ? "bg-blue-50 text-blue-700 border border-blue-300 shadow-sm"
