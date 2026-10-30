@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import * as api from "@/api"; 
 
 export const useRegister = () => {
@@ -32,3 +32,10 @@ export const useVerifyUser = () => {
     retry: 1,
   });
 };
+
+export const useRefreshToken = ()=>{
+  return useMutation({
+    mutationKey:["refresh-token"],
+    mutationFn:()=>api.refreshToken(),
+  })
+}

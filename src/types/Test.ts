@@ -2,9 +2,10 @@ export interface Enrollment {
   _id: string;
   testId: string;
   email: string;
-  status: string;
+  status: "passed" | "failed" | "pending" | "Disqualified" | string;
   createdAt: string;
   updatedAt: string;
+  tabSwitches?: number;
 }
 
 export interface EnrolledUser {
@@ -30,8 +31,12 @@ export interface Test {
   duration: number;
   passingScore: number;
   prompt: string;
+  skills?:string[];
   createdAt: string;
   updatedAt: string;
+
+  questionCount?: number; 
+  questionType?: "MCQ" | "THEORY";
 
   enrollments: Enrollment[];
   enrolledUsers: EnrolledUser[];
@@ -46,6 +51,7 @@ export interface Attempt {
   completedAt: string;
   createdAt: string;
   updatedAt: string;
+  tabSwitches?: number;
 }
 
 export type TestFormValues = {
@@ -58,6 +64,9 @@ export type TestFormValues = {
   prompt: string;
   showResults: boolean; // ✅ ADD THIS
   id?: string;         // ✅ OPTIONAL (needed for update)
+  questionCount: number; // added 
+  questionType: "MCQ" | "THEORY"; // added
+  skills: string[]
 };
 
 

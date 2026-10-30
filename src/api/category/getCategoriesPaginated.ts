@@ -17,6 +17,7 @@ export interface BackendPaginatedResponse<T> {
 export interface CategoryItem {
   _id: string;
   name: string;
+  jobCount?: number;
 }
 
 export const getCategoriesPaginated = async (

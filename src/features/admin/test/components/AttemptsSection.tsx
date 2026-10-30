@@ -15,7 +15,7 @@ type Attempt = {
   createdAt: string;
   score: number;
   isPassed: boolean;
-  status: "Graded" | "Failed" | "Started";
+  status: "Graded" | "Failed" | "Started" | "Disqualified";
 };
 
 export default function AttemptsSection({ testId }: Props) {
@@ -27,7 +27,7 @@ export default function AttemptsSection({ testId }: Props) {
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [filterStatus, setFilterStatus] = useState<
-    "all" | "passed" | "failed"
+    "all" | "passed" | "failed" | "disqualified"
   >("all");
 
   const [openSort, setOpenSort] = useState(false);
@@ -37,20 +37,27 @@ export default function AttemptsSection({ testId }: Props) {
     const attempts: Attempt[] = Array.isArray(response)
       ? response
       : response?.data || [];
+      console.log("RAW DATA FROM BACKEND:", attempts); // <--- ADD THIS
 
     let filtered = [...attempts];
 
     if (filterStatus === "passed") {
       filtered = filtered.filter(
-        (a) => a.isPassed === true && a.status === "Graded"
+        (a) => a.isPassed === true && a.status.toLowerCase() === "graded"
       );
     }
 
     if (filterStatus === "failed") {
       filtered = filtered.filter(
-        (a) => a.isPassed === false && a.status === "Failed"
+        (a) => a.isPassed === false && a.status.toLowerCase() === "graded"
       );
     }
+    if (filterStatus === "disqualified") {
+      filtered = filtered.filter(
+        (a) => a.status.toLowerCase() === "disqualified"
+      );
+    }
+
 
     filtered.sort((a, b) =>
       sortOrder === "asc" ? a.score - b.score : b.score - a.score
@@ -78,12 +85,44 @@ export default function AttemptsSection({ testId }: Props) {
   return (
     <div className="space-y-4">
       {/* CONTROLS */}
-      <div className="flex items-center justify-between relative z-30">
+      <div className="flex items-center gap-3 justify-end relative z-30">
+
+        {/* FILTER */}
+        <div className="relative">
+          <button
+            onClick={() => setOpenFilter((p) => !p)}
+            className="flex items-center gap-2 rounded-lg border bg-white px-4 py-2 text-sm mt-1 shadow-sm hover:bg-gray-50"
+          >
+            Filter
+            <span className="text-xs text-gray-400 capitalize">
+              {filterStatus}
+            </span>
+          </button>
+
+          {openFilter && (
+            <div className="absolute right-0 mt-2 w-44 rounded-xl border bg-white shadow-xl overflow-hidden">
+              {["all", "passed", "failed", "disqualified"].map((v) => (
+                <button
+                  key={v}
+                  onClick={() => {
+                    setFilterStatus(v as "all" | "passed" | "failed" | "disqualified");
+                    setOpenFilter(false);
+                  }}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 capitalize ${filterStatus === v ? "bg-gray-100 font-medium" : ""
+                    }`}
+                >
+                  {v === "disqualified" ? "Disqualified" : v}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* SORT */}
         <div className="relative">
           <button
             onClick={() => setOpenSort((p) => !p)}
-            className="flex items-center gap-2 rounded-lg border bg-white px-4 py-2 text-sm shadow-sm hover:bg-gray-50"
+            className="flex items-center gap-2 rounded-lg border mt-1 bg-white px-4 py-2 text-sm shadow-sm hover:bg-gray-50"
           >
             Sort
             <span className="text-xs text-gray-400">
@@ -100,9 +139,8 @@ export default function AttemptsSection({ testId }: Props) {
                     setSortOrder(v as "asc" | "desc");
                     setOpenSort(false);
                   }}
-                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${
-                    sortOrder === v ? "bg-gray-100 font-medium" : ""
-                  }`}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${sortOrder === v ? "bg-gray-100 font-medium" : ""
+                    }`}
                 >
                   {v === "desc" ? "High to Low" : "Low to High"}
                 </button>
@@ -111,37 +149,7 @@ export default function AttemptsSection({ testId }: Props) {
           )}
         </div>
 
-        {/* FILTER */}
-        <div className="relative">
-          <button
-            onClick={() => setOpenFilter((p) => !p)}
-            className="flex items-center gap-2 rounded-lg border bg-white px-4 py-2 text-sm shadow-sm hover:bg-gray-50"
-          >
-            Filter
-            <span className="text-xs text-gray-400 capitalize">
-              {filterStatus}
-            </span>
-          </button>
 
-          {openFilter && (
-            <div className="absolute right-0 mt-2 w-44 rounded-xl border bg-white shadow-xl overflow-hidden">
-              {["all", "passed", "failed"].map((v) => (
-                <button
-                  key={v}
-                  onClick={() => {
-                    setFilterStatus(v as "all" | "passed" | "failed");
-                    setOpenFilter(false);
-                  }}
-                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 capitalize ${
-                    filterStatus === v ? "bg-gray-100 font-medium" : ""
-                  }`}
-                >
-                  {v}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
       {/* LIST */}
@@ -155,19 +163,25 @@ export default function AttemptsSection({ testId }: Props) {
       ) : (
         <div className="space-y-3">
           {processedAttempts.map((a) => {
+            const currentStatus = a.status?.toLowerCase();
+
             const statusStyles =
-              a.status === "Graded" && a.isPassed
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                : a.status === "Failed"
-                ? "bg-red-50 text-red-700 border-red-200"
-                : "bg-yellow-50 text-yellow-700 border-yellow-200"; // Started
+              currentStatus === "disqualified"
+                ? "bg-red-600 text-white border-red-700"
+                : currentStatus === "graded" && a.isPassed
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : (currentStatus === "failed" || currentStatus === "graded" && !a.isPassed)
+                    ? "bg-red-50 text-red-700 border-red-200"
+                    : "bg-yellow-50 text-yellow-700 border-yellow-200";
 
             const dotStyles =
-              a.status === "Graded" && a.isPassed
-                ? "bg-emerald-500"
-                : a.status === "Failed"
-                ? "bg-red-500"
-                : "bg-yellow-500";
+             currentStatus === "disqualified"
+                ? "bg-white animate-pulse"
+                : currentStatus === "graded" && a.isPassed
+                  ? "bg-emerald-500 animate-pulse"
+                  : (currentStatus === "failed" || (currentStatus === "graded" && !a.isPassed))
+                    ? "bg-red-500"
+                    : "bg-yellow-500";
 
             return (
               <div

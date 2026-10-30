@@ -6,7 +6,7 @@ interface User {
   lastName?: string;
   email?: string;
   role: string;
-  isVerified:boolean
+  isVerified: boolean;
 }
 
 interface AuthState {

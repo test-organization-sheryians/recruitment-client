@@ -2,6 +2,79 @@ import * as api from "@/api";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Test, TestFormValues } from "@/types/Test"; 
 import { searchUserTest } from "@/api";
+import { EnrollUsersResponse } from "@/types/Enrollment";
+import { AxiosError } from "axios";
+import toast from "react-hot-toast";
+
+
+type EnrollPayload = {
+  testId: string;
+  emails: string[];
+};
+
+
+
+
+
+
+
+// export const useDeleteTest = () => {
+//   const queryClient = useQueryClient();
+
+//   return useMutation({
+//     mutationFn: (id: string) => api.deleteTest(id),
+
+//     onSuccess: async () => {
+//       await queryClient.invalidateQueries({ queryKey: ["tests"] });
+//     },
+
+//     onError: (error: any) => {
+//       // 👇 agar backend se success aa chuka hai, error ignore karo
+//       if (error?.response?.status === 404) {
+//         return;
+//       }
+
+//       console.error("Delete test failed", error);
+//     },
+//   });
+// };
+export const useDeleteTest = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => api.deleteTest(id),
+
+    // 🚀 INSTANT UI UPDATE
+  onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["tests"] });
+
+      // 1. Change <string[]> to <Test[]>
+      const previousTests = queryClient.getQueryData<Test[]>(["tests"]);
+
+      // 2. Change <string[]> to <Test[]> here too
+      queryClient.setQueryData<Test[]>(["tests"], (old) =>
+        old ? old.filter((t) => t._id !== id) : []
+      );
+
+      return { previousTests };
+    },
+
+    // ❌ rollback only if real error
+    onError: (_err, _id, context) => {
+      if (context?.previousTests) {
+        queryClient.setQueryData(["tests"], context.previousTests);
+      }
+    },
+
+    // 🔄 background refetch
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["tests"] });
+    },
+  });
+};
+
+
+
 
 
 export const useCreateTest = () => {
@@ -15,6 +88,7 @@ export const useCreateTest = () => {
     },
   });
 };
+
 
 export const useGetAllTests = () => {
   return useQuery({
@@ -63,10 +137,13 @@ export const useEnRollTest = () => {
 
 
 export const useEnrollTestuser = () => {
-  return useMutation({
+  return useMutation<
+    EnrollUsersResponse,                 // ✅ success response
+    AxiosError<{ message?: string }>,    // ✅ error type
+    EnrollPayload                        // ✅ payload
+  >({
     mutationKey: ["enrollTestuser"],
-    mutationFn: (data: { testId: string; emails: string[] }) =>
-      api.enrollTestuser(data),
+    mutationFn: (data) => api.enrollTestuser(data),
     retry: 0,
   });
 };
@@ -93,3 +170,39 @@ export const useGetUserAttempts = (id: string) => {
     retry: 0,
   });
 };
+
+export const usePublishTestResult = ()=>{
+  const queryClient=useQueryClient();
+  return useMutation({
+    mutationKey:["PublishTest"],
+    mutationFn:api.publishResult,
+    onSuccess:(testId)=>{
+            toast.success("Results published successfully");
+        queryClient.invalidateQueries({
+        queryKey: ["tests"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["testAttempts", testId],
+      });
+
+    },
+    onError: () => {
+      toast.error(
+        "Failed to publish results"
+      );
+    },
+  })
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
