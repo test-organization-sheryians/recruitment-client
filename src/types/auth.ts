@@ -7,3 +7,8 @@ export interface ResetPasswordPayload {
   newPassword: string
   confirmPassword: string
 }
+
+export interface UpdatePasswordPayload {
+  oldPassword: string
+  newPassword: string
+}

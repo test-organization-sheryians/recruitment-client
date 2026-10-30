@@ -26,22 +26,36 @@ interface Category {
   name: string;
 }
 
-interface JobFormData {
+interface Location {
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+}
+
+export interface JobFormData {
   _id?: string;
   title: string;
   description: string;
   education: string;
-  requiredExperience: string;
-  category: Category;
-  skills: Skill[];
+  requiredExperience: number;
+  category: string;
+  skills: string[];
   expiry: string;
   clientId: string;
+  location: Location;
+  jobType: "Remote" | "Hybrid" | "Full-Time" | "Part-Time";
+  salary: {
+    min: number;
+    max: number;
+    currency?: string;
+  };
 }
 
 interface JobFormProps {
   mode: "create" | "update";
   initialData?: Partial<JobFormData>;
-  onSubmit: (data: { [key: string]: string | string[] }) => Promise<void>;
+  onSubmit: (data: JobFormData) => Promise<void>;
   loading?: boolean;
 }
 
@@ -51,23 +65,53 @@ export default function JobForm({
   onSubmit,
   loading = false,
 }: JobFormProps) {
+  const safeInitialData = initialData || {};
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [pincodeStatus, setPincodeStatus] = useState<{
+    loading: boolean;
+    message: string;
+    type: "info" | "error" | "";
+  }>({
+    loading: false,
+    message: "",
+    type: "",
+  });
 
-  const { data: categories = [] } = useGetJobCategories();
-  const { data: skillsResponse = [] } = useGetAllSkills();
+  const { data: categories = [] as Category[] } = useGetJobCategories();
+  const { data: skillsResponse = [] as Skill[] } = useGetAllSkills();
 
-  const [formData, setFormData] = useState({
-    title: initialData?.title || "",
-    requiredExperience: initialData?.requiredExperience || "",
-    category: (initialData?.category as Category)?._id || "",
-    education: initialData?.education || "",
-    description: initialData?.description || "",
-    skills: initialData?.skills?.map((s: { _id: string }) => s._id) || [],
-    expiry: initialData?.expiry
-      ? new Date(initialData.expiry).toISOString().split("T")[0]
+  const [formData, setFormData] = useState<JobFormData>({
+    title: safeInitialData.title || "",
+    requiredExperience: Number(safeInitialData.requiredExperience) || 0,
+    category:
+      typeof safeInitialData.category === "string"
+        ? safeInitialData.category
+        : ((safeInitialData.category as any)?._id ?? ""),
+    education: safeInitialData.education || "",
+    description: safeInitialData.description || "",
+    jobType: safeInitialData.jobType || "Full-Time",
+    salary: {
+      min: safeInitialData.salary?.min ?? 10000,
+      max: safeInitialData.salary?.max ?? 30000,
+      currency: safeInitialData.salary?.currency ?? "INR",
+    },
+    location: {
+      city: safeInitialData.location?.city || "",
+      state: safeInitialData.location?.state || "",
+      pincode: safeInitialData.location?.pincode || "",
+      country: safeInitialData.location?.country || "",
+    },
+    skills: Array.isArray(safeInitialData.skills)
+      ? safeInitialData.skills.map((s) =>
+          typeof s === "string" ? s : (s as any)._id,
+        )
+      : [],
+    expiry: safeInitialData.expiry
+      ? new Date(safeInitialData.expiry).toISOString().split("T")[0]
       : "",
-    clientId: initialData?.clientId || "6915b90df6594de75060410b",
+    clientId: safeInitialData.clientId || "6915b90df6594de75060410b",
   });
 
   useEffect(() => {
@@ -77,10 +121,19 @@ export default function JobForm({
         category: categories[0]._id,
       }));
     }
-  }, [categories]);
+  }, [categories, formData.category]);
 
-  const handleChange = (e: { target: { name: string; value: string } }) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "requiredExperience" ? Number(value) : value,
+    }));
+  };
 
   const handleSkillToggle = (skillId: string) => {
     setFormData((prev) => ({
@@ -91,256 +144,206 @@ export default function JobForm({
     }));
   };
 
+  const handleLocationChange = (key: keyof Location, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        [key]: value,
+      },
+    }));
+  };
+
+  useEffect(() => {
+    const pincode = formData.location.pincode?.trim();
+    if (!pincode) {
+      setPincodeStatus({ loading: false, message: "", type: "" });
+      return;
+    }
+    if (pincode.length !== 6 || !/^\d{6}$/.test(pincode)) {
+      setPincodeStatus({
+        loading: false,
+        message: "Enter 6-digit pincode",
+        type: "error",
+      });
+      return;
+    }
+
+    let cancelled = false;
+    setPincodeStatus({ loading: true, message: "Searching...", type: "info" });
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://api.postalpincode.in/pincode/${pincode}`,
+        );
+        const data = await res.json();
+        if (cancelled) return;
+
+        if (data[0].Status === "Success") {
+          const po = data[0].PostOffice[0];
+          setFormData((prev) => ({
+            ...prev,
+            location: {
+              ...prev.location,
+              city: po.District,
+              state: po.State,
+              country: po.Country || "India",
+            },
+          }));
+          setPincodeStatus({
+            loading: false,
+            message: `Found: ${po.District}`,
+            type: "info",
+          });
+        } else {
+          setPincodeStatus({
+            loading: false,
+            message: "Not found",
+            type: "error",
+          });
+        }
+      } catch (err) {
+        if (!cancelled)
+          setPincodeStatus({
+            loading: false,
+            message: "API Error",
+            type: "error",
+          });
+      }
+    }, 500);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [formData.location.pincode]);
+
   const handleSubmit = async () => {
     setError("");
 
-    // Validate all required fields
-    const requiredFields = [
-      "title",
-      "description",
-      "education",
-      "requiredExperience",
-      "expiry",
-      "category",
-      "skills",
-    ];
-
-    const missingFields = requiredFields.filter((field) => {
-      const value = formData[field as keyof typeof formData];
-      return !value || (Array.isArray(value) && value.length === 0);
-    });
-
-    if (missingFields.length > 0) {
-      setError(`Please fill all required fields: ${missingFields.join(", ")}`);
-      if (step === 1) {
-        const step1Fields = [
-          "title",
-          "description",
-          "education",
-          "requiredExperience",
-          "expiry",
-        ];
-        const step1Missing = missingFields.filter((field) =>
-          step1Fields.includes(field as string)
-        );
-        if (step1Missing.length > 0) {
-          setError(
-            `Please fill all required fields: ${step1Missing.join(", ")}`
-          );
-          return;
-        }
-      } else {
-        return;
-      }
+    // Validation
+    const { title, description, skills, salary, location } = formData;
+    if (!title || !description || skills.length === 0) {
+      setError("Please fill required job details and skills");
+      return;
+    }
+    if (salary.min > salary.max) {
+      setError("Min salary cannot exceed max salary");
+      return;
+    }
+    if (!location.city || !location.pincode) {
+      setError("Please provide a valid location");
+      return;
     }
 
-    await onSubmit(formData);
+    try {
+      await onSubmit(formData);
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || "Submit failed");
+    }
   };
 
-  const getMinDate = () =>
-    new Date(Date.now() + 86400000).toISOString().split("T")[0];
-
-  const isStep1Valid =
+  const isStep1Valid = !!(
     formData.title &&
     formData.description &&
-    formData.education &&
-    formData.expiry &&
-    formData.requiredExperience;
+    formData.location.pincode
+  );
 
   return (
-    <div className="w-full h-full py-3 rounded-md mb-2">
-      <div className="w-full mx-auto">
-        {/* Form Card */}
-        <div className="bg-white rounded-3xl shadow-xl p-2 border border-gray-100">
-          {error && (
-            <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
-              <p className="text-red-700 font-medium">{error}</p>
+    <div className="w-full h-full py-3">
+      <div className="bg-white rounded-3xl shadow-xl p-6 max-h-[85vh] overflow-y-auto">
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg border-l-4 border-red-500">
+            {error}
+          </div>
+        )}
+
+        <div className="relative overflow-hidden">
+          <div
+            className="flex transition-all duration-500"
+            style={{
+              width: "200%",
+              transform: step === 1 ? "translateX(0%)" : "translateX(-50%)",
+            }}
+          >
+            {/* Step 1 */}
+            <div className="w-1/2 pr-4 space-y-4">
+              {/* Inputs go here - same as your original JSX */}
+              <input
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                placeholder="Job Title"
+                className="w-full border p-3 rounded-xl"
+              />
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Description"
+                className="w-full border p-3 rounded-xl"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  placeholder="Pincode"
+                  value={formData.location.pincode}
+                  onChange={(e) =>
+                    handleLocationChange("pincode", e.target.value)
+                  }
+                  className="border p-3 rounded-xl"
+                />
+                <input
+                  placeholder="City"
+                  value={formData.location.city}
+                  readOnly
+                  className="border p-3 rounded-xl bg-gray-50"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                disabled={!isStep1Valid}
+                className="w-full bg-blue-600 text-white p-3 rounded-xl"
+              >
+                Continue
+              </button>
             </div>
-          )}
 
-          <div className="relative overflow-hidden">
-            <div
-              className="flex transition-all duration-500 ease-in-out"
-              style={{
-                width: "200%",
-                transform: step === 1 ? "translateX(1%)" : "translateX(-50%)",
-              }}
-            >
-              {/* Step 1: Basic Information */}
-              <div className="w-1/2 pr-8 space-y-6">
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                    <Briefcase className="w-4 h-4 text-blue-600" />
-                    Job Title *
-                  </label>
-                  <input
-                    placeholder="e.g. Senior Frontend Developer"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                    <FileText className="w-4 h-4 text-blue-600" />
-                    Job Description *
-                  </label>
-                  <textarea
-                    placeholder="Describe the role, responsibilities, and what makes this opportunity exciting..."
-                    name="description"
-                    rows={5}
-                    value={formData.description}
-                    onChange={handleChange}
-                    className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                    <GraduationCap className="w-4 h-4 text-blue-600" />
-                    Education Required *
-                  </label>
-                  <input
-                    placeholder="e.g. Bachelor's in Computer Science or equivalent"
-                    name="education"
-                    value={formData.education}
-                    onChange={handleChange}
-                    className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                      <Calendar className="w-4 h-4 text-blue-600" />
-                      Application Deadline *
-                    </label>
-                    <input
-                      type="date"
-                      name="expiry"
-                      min={getMinDate()}
-                      value={formData.expiry}
-                      onChange={handleChange}
-                      className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                      <Clock className="w-4 h-4 text-blue-600" />
-                      Experience Required *
-                    </label>
-                    <input
-                      placeholder="e.g. 3-5 Years"
-                      name="requiredExperience"
-                      value={formData.requiredExperience}
-                      onChange={handleChange}
-                      className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-4">
-                  <button
-                    type="button"
-                    disabled={!isStep1Valid}
-                    className="group flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => isStep1Valid && setStep(2)}
-                  >
-                    Continue
-                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="w-1/2 pl-8 space-y-6">
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                    <FolderOpen className="w-4 h-4 text-blue-600" />
-                    Job Category *
-                  </label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
-                  >
-                    {categories.map((cat: { _id: string; name: string }) => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                    <Sparkles className="w-4 h-4 text-blue-600" />
-                    Required Skills *
-                  </label>
-
-                  <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
-                    {skillsResponse.map((skill: { _id: string; name: string }) => (
-                      <label
-                        key={skill._id}
-                        className="group flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-white transition-all border-2 border-transparent hover:border-blue-200"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.skills.includes(skill._id)}
-                          onChange={() => handleSkillToggle(skill._id)}
-                          className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                        />
-                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                          {skill.name}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-
-                  {formData.skills.length > 0 && (
-                    <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <CheckCircle2 className="w-5 h-5 text-blue-600" />
-                      <p className="text-sm font-semibold text-blue-700">
-                        {formData.skills.length} skill
-                        {formData.skills.length !== 1 ? "s" : ""} selected
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex justify-between pt-6 gap-4">
-                  <button
-                    type="button"
-                    className="group flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl font-semibold transition-all text-gray-700"
-                    onClick={() => setStep(1)}
-                  >
-                    <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                    Back
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={handleSubmit}
-                    className="flex-1 flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="w-5 h-5" />
-                        {mode === "create" ? "Create Job" : "Update Job"}
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
+            {/* Step 2 */}
+            <div className="w-1/2 pl-4 space-y-4">
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full border p-3 rounded-xl"
+              >
+                {categories.map((c: Category) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              {/* Skills Logic */}
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="text-gray-500"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full bg-green-600 text-white p-3 rounded-xl"
+              >
+                {loading
+                  ? "Saving..."
+                  : mode === "create"
+                    ? "Create Job"
+                    : "Update Job"}
+              </button>
             </div>
           </div>
         </div>

@@ -9,15 +9,9 @@ export const useSubmitResult = () => {
     mutationKey: ["submitTest"],
 
     mutationFn: async (payload: SubmitPayload) => {
-      const token =
-        Cookies.get("access") ||
-        Cookies.get("token") ||
-        localStorage.getItem("token");
-
       const attemptId = localStorage.getItem("attemptId");
       const storedEmail = localStorage.getItem("email");
 
-      if (!token) throw new Error("Login required");
       if (!attemptId) throw new Error("Attempt ID not found");
 
       if (!payload.email && storedEmail) {

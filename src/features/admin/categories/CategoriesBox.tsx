@@ -8,6 +8,7 @@ import {
   useDeleteJobCategory,
   useUpdateJobCategory,
 } from "./hooks/useJobCategoryApi";
+import { useInfiniteJobCategories } from "@/features/candidate/categories/hooks/useInfiniteCategories";
 import { JobCategory, CategoryError } from "../../../types/JobCategeory";
 import { useToast } from "../../../components/ui/Toast";
 
@@ -16,12 +17,19 @@ const CategoriesBox = () => {
   const queryClient = useQueryClient();
   const { success, error: showError } = useToast();
 
+  // Use infinite categories so we can load more if backend paginates
   const {
-    data: categories = [],
+    data,
     isLoading,
     isError,
     error,
-  } = useGetJobCategories();
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteJobCategories();
+
+  const categories = data ? data.pages.flatMap((p) => p.data) : [];
+  const totalRecords = data?.pages?.[0]?.pagination?.totalRecords ?? categories.length;
 
   const {
     mutate: deleteCategory,
@@ -39,13 +47,13 @@ const CategoriesBox = () => {
     if (deleteError) {
       showError(
         (deleteError as CategoryError)?.response?.data?.message ||
-          "Failed to delete category"
+        "Failed to delete category"
       );
     }
     if (updateError) {
       showError(
         (updateError as CategoryError)?.response?.data?.message ||
-          "Failed to update category"
+        "Failed to update category"
       );
     }
   }, [deleteError, updateError, showError]);
@@ -100,23 +108,40 @@ const CategoriesBox = () => {
         )}
 
         {!isLoading && !isError && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-2">
-            {categories.length === 0 && (
-              <div className="col-span-full text-sm text-gray-500">
-                No categories found.
-              </div>
-            )}
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-2">
+              {categories.length === 0 && (
+                <div className="col-span-full text-sm text-gray-500">
+                  No categories found.
+                </div>
+              )}
 
-            {categories.map((cat: JobCategory) => (
-              <CategoryCard
-                key={cat._id || cat.name}
-                category={cat}
-                onDelete={handleDelete}
-                onUpdate={handleUpdate}
-                isDeleting={isDeleting}
-              />
-            ))}
-          </div>
+              {categories.map((cat: JobCategory) => (
+                <CategoryCard
+                  key={cat._id || cat.name}
+                  category={cat}
+                  onDelete={handleDelete}
+                  onUpdate={handleUpdate}
+                  isDeleting={isDeleting}
+                />
+              ))}
+            </div>
+
+            {/* Load more / footer */}
+            <div className="col-span-full flex justify-center mt-4">
+              {hasNextPage ? (
+                <button
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  {isFetchingNextPage ? "Loading..." : "Load more"}
+                </button>
+              ) : (
+                <div className="text-xs text-gray-400">{categories.length === 0 ? "" : `Showing all ${totalRecords} categories`}</div>
+              )}
+            </div>
+          </>
         )}
       </div>
       {open && <AddCategory close={() => setOpen(false)} />}

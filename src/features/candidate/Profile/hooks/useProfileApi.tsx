@@ -29,6 +29,8 @@ export const useCreateProfile = () => {
   });
 };
 
+
+
 // UPDATE
 export const useUpdateProfile1 = () => {
   const queryClient = useQueryClient();
@@ -65,3 +67,33 @@ export const useUpdateAvailability = () => {
     },
   });
 };
+
+// UPDATE USER INFO (firstName, lastName, phoneNumber)
+export const useUpdateMe = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["updateMe"],
+    mutationFn: (data: api.UpdateMeInput) => api.updateMe(data),
+    onSuccess: () => {
+      // Invalidate both candidate profile and auth user to sync updates
+      queryClient.invalidateQueries({ queryKey: ["candidateProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+    },
+  });
+};
+
+export const useGithub = (user:string) => {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ["github",user],
+    queryFn:()=>api.getGithub({user})
+  })
+}
+
+export const useleetcode = (user:string) => {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ["leetcode",user],
+    queryFn:()=>api.getLeetcode({user})
+  })
+}

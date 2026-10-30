@@ -1,4 +1,3 @@
-import { CandidateProfile } from "@/types/profile";
 
 type props={
   completion:number

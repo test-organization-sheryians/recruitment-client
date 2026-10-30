@@ -28,3 +28,4 @@ export const getJobsByCategoryPage = async (
   });
   return res.data;
 };
+
