@@ -20,17 +20,20 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = req.cookies.get("access");
+  const token = req.cookies.get("token");
   const role = req.cookies.get("role");
+  const refreshToken = req.cookies.get("refreshToken");
 
   const publicRoutes = [
-    "/",
-    "/login",
-    "/register",
-    "/forgot-password",
-    "/un-verified",
-    "/unauthorized",
-    "/reset-password"
+    '/',
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/un-verified',
+    '/unauthorized',
+    '/reset-password',
+    '/user-verification',
+    '/selected-candidates',
   ];
 
   const isPublic = publicRoutes.some(
@@ -40,6 +43,9 @@ export function middleware(req: NextRequest) {
   // ADMIN ROUTES
   if (pathname.startsWith("/admin")) {
     if (!token) {
+      if (refreshToken) {
+        return NextResponse.next();
+      }
       const loginUrl = new URL("/login", req.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
@@ -54,6 +60,10 @@ export function middleware(req: NextRequest) {
 
   //  PROTECTED ROUTES
   if (!token && !isPublic) {
+    if (refreshToken) {
+      // Allow the app to run client refresh flow, do not instantly force login.
+      return NextResponse.next();
+    }
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);

@@ -12,11 +12,11 @@ export interface UpdateProfilePayload {
   githubUrl?: string;
   portfolioUrl?: string;
   key?: string;
+  leetcodeUrl?: string;
 }
 
 export const updateProfile = async (data: UpdateProfilePayload) => {
   const cleanData: Partial<UpdateProfilePayload> = {};
-  console.log(data , "this is from the api ")
   for (const [key, value] of Object.entries(data)) {
     if (value !== null && value !== undefined) {
       cleanData[key as keyof UpdateProfilePayload] = value;
@@ -28,6 +28,6 @@ export const updateProfile = async (data: UpdateProfilePayload) => {
     cleanData
   );
 
-  return response.data;
+  return response.data.data;
 };
 
